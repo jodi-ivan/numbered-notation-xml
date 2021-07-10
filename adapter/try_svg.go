@@ -202,7 +202,7 @@ func (ts *TrySVG) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httproute
 			}
 			for i, tie := range d.Ties {
 				//                                                             M1                       M1                C1                          C2
-				path := fmt.Sprintf("M%f,%d,C%f,%d %f,%d %f,%d", float64(locX[tie.StartIndex])+2.5, initialY+5, float64(locX[tie.StartIndex])+2.5, initialY+10+(i*5), float64(locX[tie.EndIndex])+3.5, initialY+10, float64(locX[tie.EndIndex])+3.5, initialY+5)
+				path := fmt.Sprintf("M%f,%d,C%f,%d %f,%d %f,%d", float64(locX[tie.StartIndex])+2.5, initialY+5, float64(locX[tie.StartIndex])+2.5, initialY+15+(i*5), float64(locX[tie.EndIndex])+3.5, initialY+15+(i*5), float64(locX[tie.EndIndex])+3.5, initialY+5)
 				s.Path(path, `fill-opacity="0"`, `stroke="#000"`, `stroke-width="1"`)
 			}
 		}

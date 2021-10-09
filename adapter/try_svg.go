@@ -3,6 +3,7 @@ package adapter
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	svg "github.com/ajstarks/svgo"
 
@@ -22,10 +23,10 @@ type NoteGoup struct {
 	Dotted []int
 }
 type Note struct {
-	Numbered int64
-	Octave   int
-	IsDotted bool
-	Length   int
+	Numbered  int64
+	Octave    int
+	NumDotted int
+	Length    int
 }
 
 type Lyric struct {
@@ -69,7 +70,8 @@ func (ts *TrySVG) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httproute
 						Numbered: 6,
 					},
 					Note{
-						Numbered: 7,
+						Numbered:  7,
+						NumDotted: 2,
 					},
 					Note{
 						Numbered: 3,
@@ -192,17 +194,17 @@ func (ts *TrySVG) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httproute
 		initialX = initialX + offset
 
 		if len(d.Notes) == 1 {
-			s.Text(initialX, initialY, fmt.Sprint(d.Notes[0].Numbered))
-			initialX += 9
+			s.Text(initialX, initialY, fmt.Sprintf("%d %s", d.Notes[0].Numbered, strings.Repeat(". ", d.Notes[0].NumDotted)))
+			initialX += 9 + (8 * d.Notes[0].NumDotted)
 		} else {
 			locX := map[int]int{}
 			for j, g := range d.Notes {
-				s.Text(initialX+(lowecaseLength*j), initialY, fmt.Sprint(g.Numbered))
-				locX[j] = initialX + (lowecaseLength * j)
+				s.Text(initialX+(lowecaseLength*j), initialY, fmt.Sprintf("%d %s", g.Numbered, strings.Repeat(". ", g.NumDotted)))
+				initialX += (8 * g.NumDotted)
+				locX[j] = initialX + (lowecaseLength * j) + (8 * g.NumDotted)
 			}
 			for i, tie := range d.Ties {
-				//                                                             M1                       M1                C1                          C2
-				path := fmt.Sprintf("M%f,%d,C%f,%d %f,%d %f,%d", float64(locX[tie.StartIndex])+2.5, initialY+5, float64(locX[tie.StartIndex])+2.5, initialY+15+(i*5), float64(locX[tie.EndIndex])+3.5, initialY+15+(i*5), float64(locX[tie.EndIndex])+3.5, initialY+5)
+				path := fmt.Sprintf("M%f,%d,C%f,%d %f,%d %f,%d", float64(locX[tie.StartIndex])+2.5, initialY+5+(i*5), float64(locX[tie.StartIndex])+2.5, initialY+15+(i*5), float64(locX[tie.EndIndex])+3.5, initialY+15+(i*5), float64(locX[tie.EndIndex])+3.5, initialY+5+(i*5))
 				s.Path(path, `fill-opacity="0"`, `stroke="#000"`, `stroke-width="1"`)
 			}
 		}
@@ -213,7 +215,18 @@ func (ts *TrySVG) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httproute
 		}
 	}
 
-	s.Path("M 10 10 C 20 20, 40 20, 50 10")
+	// for i, d := range aRow.Lyrics[1] {
+	// 	text := d.Text
+	// 	if !d.IsEndword {
+	// 		text = fmt.Sprintf("%s -", text)
+	// 	}
+	// 	if i == 0 {
+	// 		s.Text(100+int(lengthLyric[i]), 125, text)
+	// 	} else {
+	// 		s.Text(100+(lowecaseLength*i*len(aRow.Lyrics[1][i].Text)), 125, text)
+	// 	}
+	// }
+
 	// } else {
 	// 	locX := map[int]int{}
 	// 	for j, g := range d.Notes {

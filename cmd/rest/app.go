@@ -23,6 +23,7 @@ func main() {
 	}
 
 	ws.Register("GET", "/test", &adapter.TrySVG{})
+	ws.Register("GET", "/parsefile", &adapter.ReadFile{})
 
 	ws.Serve(cfg.Webserver.Port)
 

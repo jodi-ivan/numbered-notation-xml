@@ -1,7 +1,6 @@
 package adapter
 
 import (
-	"encoding/json"
 	"encoding/xml"
 	"io/ioutil"
 	"log"
@@ -9,6 +8,7 @@ import (
 	"os"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -40,10 +40,6 @@ func (rf *ReadFile) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	toDebug, _ := json.MarshalIndent(music, "", "    ")
-	log.Println(string(toDebug))
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(toDebug)
+	renderer.RenderNumbered(w, music)
 
 }

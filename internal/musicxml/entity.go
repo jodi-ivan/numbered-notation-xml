@@ -6,6 +6,7 @@ type MusicXML struct {
 	XMLName xml.Name `xml:"score-partwise"`
 	Credit  Credit   `xml:"credit"`
 	Part    Part     `xml:"part"`
+	Work    Work     `xml:"work"`
 }
 
 type CreditType string
@@ -13,6 +14,10 @@ type CreditType string
 type Credit struct {
 	Type  CreditType `xml:"credit-type"`
 	Words string     `xml:"credit-words"`
+}
+
+type Work struct {
+	Title string `xml:"work-title"`
 }
 
 type locationAttr struct {
@@ -45,7 +50,8 @@ type Measure struct {
 
 type Attribute struct {
 	Key struct {
-		Fifth int `xml:"fifths"`
+		Fifth int    `xml:"fifths"`
+		Mode  string `xml:"mode"`
 	} `xml:"key"`
 	Time struct {
 		Beats    int `xml:"beats"`

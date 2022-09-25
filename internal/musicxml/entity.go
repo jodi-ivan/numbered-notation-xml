@@ -48,11 +48,13 @@ type Measure struct {
 	Barline *Barline `xml:"barline" json:",omitempty"`
 }
 
+type KeySignature struct {
+	Fifth int    `xml:"fifths"`
+	Mode  string `xml:"mode"`
+}
+
 type Attribute struct {
-	Key struct {
-		Fifth int    `xml:"fifths"`
-		Mode  string `xml:"mode"`
-	} `xml:"key"`
+	Key  KeySignature `xml:"key"`
 	Time struct {
 		Beats    int `xml:"beats"`
 		BeatType int `xml:"beat-type"`
@@ -61,15 +63,38 @@ type Attribute struct {
 
 type NoteType string
 
+type NoteAccidental string
+
+const (
+	NoteAccidentalNatural     NoteAccidental = "natural"
+	NoteAccidentalSharp       NoteAccidental = "sharp"
+	NoteAccidentalFlat        NoteAccidental = "flat"
+	NoteAccidentalDoubleSharp NoteAccidental = "double-sharp"
+	NoteAccidentalDoubleFlat  NoteAccidental = "double-flat"
+)
+
+func (na NoteAccidental) GetAccidental() string {
+	sign := map[string]string{
+		"natural":      "",
+		"sharp":        "#",
+		"flat":         "b",
+		"double-sharp": "x",
+		"double-flat":  "bb",
+	}
+
+	return sign[string(na)]
+}
+
 type Note struct {
 	Pitch struct {
 		Step   string `xml:"step"`
 		Octave int    `xml:"octave"`
 	} `xml:"pitch"`
-	Type      NoteType      `xml:"type"`
-	Beam      *NoteBeam     `xml:"beam" json:",omitempty"`
-	Notations *NoteNotation `xml:"notations" json:",omitempty"`
-	Lyric     []Lyric       `xml:"lyric"`
+	Type       NoteType       `xml:"type"`
+	Beam       *NoteBeam      `xml:"beam" json:",omitempty"`
+	Notations  *NoteNotation  `xml:"notations" json:",omitempty"`
+	Lyric      []Lyric        `xml:"lyric"`
+	Accidental NoteAccidental `xml:"accidental"`
 }
 
 type NoteBeam struct {

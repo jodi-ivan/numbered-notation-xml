@@ -61,7 +61,21 @@ type Attribute struct {
 	} `xml:"time"`
 }
 
-type NoteType string
+type NoteLength string
+
+const (
+	NoteLength256th   NoteLength = "256th"
+	NoteLength128th   NoteLength = "128th"
+	NoteLength64th    NoteLength = "64th"
+	NoteLength32nd    NoteLength = "32nd"
+	NoteLength16th    NoteLength = "16th"
+	NoteLengthEighth  NoteLength = "eighth"
+	NoteLengthQuarter NoteLength = "quarter"
+	NoteLengthHalf    NoteLength = "half"
+	NoteLengthWhole   NoteLength = "whole"
+	NoteLengthBreve   NoteLength = "breve"
+	NoteLengthLong    NoteLength = "long"
+)
 
 type NoteAccidental string
 
@@ -71,6 +85,14 @@ const (
 	NoteAccidentalFlat        NoteAccidental = "flat"
 	NoteAccidentalDoubleSharp NoteAccidental = "double-sharp"
 	NoteAccidentalDoubleFlat  NoteAccidental = "double-flat"
+)
+
+type LyricSyllabic string
+
+const (
+	LyricSyllabicTypeBegin  LyricSyllabic = "begin"
+	LyricSyllabicTypeMiddle LyricSyllabic = "middle"
+	LyricSyllabicTypeEnd    LyricSyllabic = "end"
 )
 
 func (na NoteAccidental) GetAccidental() string {
@@ -85,16 +107,21 @@ func (na NoteAccidental) GetAccidental() string {
 	return sign[string(na)]
 }
 
+type Dot struct {
+	Name xml.Name `xml:"dot"`
+}
+
 type Note struct {
 	Pitch struct {
 		Step   string `xml:"step"`
 		Octave int    `xml:"octave"`
 	} `xml:"pitch"`
-	Type       NoteType       `xml:"type"`
+	Type       NoteLength     `xml:"type"`
 	Beam       *NoteBeam      `xml:"beam" json:",omitempty"`
 	Notations  *NoteNotation  `xml:"notations" json:",omitempty"`
 	Lyric      []Lyric        `xml:"lyric"`
 	Accidental NoteAccidental `xml:"accidental"`
+	Dot        []*Dot         `xml:"dot"`
 }
 
 type NoteBeam struct {
@@ -124,7 +151,7 @@ type Lyric struct {
 		Underline int    `xml:"underline,attr"`
 		Value     string `xml:",chardata"`
 	} `xml:"text"`
-	Syllabic string `xml:"syllabic"`
+	Syllabic LyricSyllabic `xml:"syllabic"`
 }
 
 type Barline struct {

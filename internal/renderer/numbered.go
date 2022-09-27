@@ -46,7 +46,9 @@ var minorAccidental = map[int][]string{
 }
 
 const LOWERCASE_LENGTH = 15
+const UPPERCASE_LENGTH = 20
 const LAYOUT_INDENT_LENGTH = 50
+const LAYOUT_WIDTH = 1000
 
 var majorKeySignature = map[int]string{
 	7:  "cis", // C#
@@ -331,11 +333,11 @@ func RenderNumbered(w http.ResponseWriter, music musicxml.MusicXML) {
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.WriteHeader(200)
 	s := svg.New(w)
-	s.Start(1000, 1000)
+	s.Start(LAYOUT_WIDTH, 1000)
 
 	relativeY := 100
 	// render title
-	titleX := (1000 / 2) - ((len(music.Credit.Words) * LOWERCASE_LENGTH) / 2) - (LAYOUT_INDENT_LENGTH * 2)
+	titleX := (LAYOUT_WIDTH / 2) - ((len(music.Credit.Words) * LOWERCASE_LENGTH) / 2) + (LAYOUT_INDENT_LENGTH * 2)
 	s.Text(titleX, relativeY, music.Credit.Words)
 
 	// render key signature
@@ -353,16 +355,9 @@ func RenderNumbered(w http.ResponseWriter, music musicxml.MusicXML) {
 	// - time signature changing happens on the top and not on the measure
 	beat := music.Part.Measures[0].Attribute.Time
 	s.Text(LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
-	relativeY += 30
-	for _, measure := range music.Part.Measures {
-		txt := ""
-		for _, note := range measure.Notes {
-			n, _, _ := keySignature.GetNumberedNotation(note)
-			txt = fmt.Sprintf("%s %d", txt, n)
-		}
-		s.Text(LAYOUT_INDENT_LENGTH, relativeY, txt)
-		relativeY += 25
-	}
+	relativeY += 50
+
+	RenderMeasures(s, LAYOUT_INDENT_LENGTH, relativeY, music.Part)
 
 	s.End()
 }
@@ -413,8 +408,94 @@ func isPitchEqual(one, two string) bool {
 	return result
 }
 
-func RenderMeasure(s *svg.SVG, measure musicxml.Measure, attributes musicxml.Attribute) {
+/*                Numbered stuff                              */
 
-	// map the key signature
+type Lyric struct {
+	Text     string
+	Syllabic musicxml.LyricSyllabic
+}
+type NoteRenderer struct {
+	PositionX    int
+	PositionY    int
+	Note         int
+	Octave       int
+	Striketrough bool
+	NoteLength   musicxml.NoteLength
+	BarType      string
+	Lyric        Lyric
+}
+
+func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
+
+	keySignature := NewKeySignature(measures.Measures[0].Attribute.Key)
+
+	var locationX int
+	locationX = x
+
+	for _, measure := range measures.Measures {
+
+		notes := []*NoteRenderer{}
+		for _, note := range measure.Notes {
+
+			n, octave, strikethrough := keySignature.GetNumberedNotation(note)
+
+			renderer := &NoteRenderer{
+				PositionX:    x,
+				PositionY:    y,
+				Note:         n,
+				NoteLength:   note.Type,
+				Octave:       octave,
+				Striketrough: strikethrough,
+			}
+
+			var lyricWidth, noteWidth int
+
+			if len(note.Lyric) > 0 {
+				renderer.Lyric = Lyric{
+					Text:     note.Lyric[0].Text.Value,
+					Syllabic: note.Lyric[0].Syllabic,
+				}
+
+				lyricWidth = len(note.Lyric[0].Text.Value) * UPPERCASE_LENGTH
+			}
+
+			noteWidth = LOWERCASE_LENGTH
+			switch note.Type {
+			case musicxml.NoteLengthWhole:
+
+				// whole note in musical number notation will add 3 dots in front of the note
+				// C whole note will represent as
+				//      1 . . . |
+				noteWidth = 3 * LOWERCASE_LENGTH * 3
+
+			case musicxml.NoteLengthHalf:
+				// half  note in musical number notation will add 1 dots in front of the note
+				// C half note will represent as
+				//      1 . |
+				noteWidth = LOWERCASE_LENGTH * 2
+			}
+
+			notes = append(notes, renderer)
+			x += LOWERCASE_LENGTH
+
+		}
+		//    rough calculation of measure
+		if x+((len(notes)+1)*LOWERCASE_LENGTH) > (LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH) {
+			y = y + 65
+			locationX = LAYOUT_INDENT_LENGTH
+			x = LAYOUT_INDENT_LENGTH
+		}
+
+		for _, n := range notes {
+
+			s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
+			n.PositionX = locationX
+			n.PositionY = y
+			locationX += LOWERCASE_LENGTH
+		}
+		s.Text(locationX, y, " | ")
+		locationX += LOWERCASE_LENGTH
+
+	}
 
 }

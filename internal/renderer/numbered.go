@@ -2,7 +2,10 @@ package renderer
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	svg "github.com/ajstarks/svgo"
@@ -329,11 +332,38 @@ func ConvertPitchToNumbered(ks KeySignature, pitch string) (numbered int, strike
 
 }
 
+const (
+	gwfURI  = "https://fonts.googleapis.com/css?family="
+	fontfmt = "<style type=\"text/css\">\n<![CDATA[\n%s]]>\n</style>\n"
+	gfmt    = "fill:white;font-size:36pt;text-anchor:middle"
+)
+
+func googlefont(f string) []byte {
+	empty := []byte{}
+	r, err := http.Get(gwfURI + url.QueryEscape(f))
+	log.Println("error call", err)
+	if err != nil {
+		return empty
+	}
+	defer r.Body.Close()
+	b, rerr := ioutil.ReadAll(r.Body)
+	log.Println(rerr, r.Status, string(b))
+	if rerr != nil || r.StatusCode != http.StatusOK {
+		return empty
+	}
+
+	return b
+}
+
 func RenderNumbered(w http.ResponseWriter, music musicxml.MusicXML) {
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.WriteHeader(200)
 	s := svg.New(w)
 	s.Start(LAYOUT_WIDTH, 1000)
+
+	s.Def()
+	fmt.Fprintf(s.Writer, fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music")))
+	s.DefEnd()
 
 	relativeY := 100
 	// render title
@@ -358,7 +388,6 @@ func RenderNumbered(w http.ResponseWriter, music musicxml.MusicXML) {
 	relativeY += 50
 
 	RenderMeasures(s, LAYOUT_INDENT_LENGTH, relativeY, music.Part)
-
 	s.End()
 }
 
@@ -422,6 +451,7 @@ type NoteRenderer struct {
 	Striketrough bool
 	NoteLength   musicxml.NoteLength
 	BarType      string
+	Width        int
 	Lyric        Lyric
 }
 
@@ -456,7 +486,7 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 					Syllabic: note.Lyric[0].Syllabic,
 				}
 
-				lyricWidth = len(note.Lyric[0].Text.Value) * UPPERCASE_LENGTH
+				lyricWidth = len(note.Lyric[0].Text.Value) * LOWERCASE_LENGTH
 			}
 
 			noteWidth = LOWERCASE_LENGTH
@@ -475,8 +505,16 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 				noteWidth = LOWERCASE_LENGTH * 2
 			}
 
+			if noteWidth > lyricWidth {
+				x += noteWidth
+				renderer.Width = noteWidth
+			} else {
+				x += lyricWidth
+				renderer.Width = lyricWidth
+
+			}
+
 			notes = append(notes, renderer)
-			x += LOWERCASE_LENGTH
 
 		}
 		//    rough calculation of measure
@@ -488,14 +526,22 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 		for _, n := range notes {
 
-			s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
+			s.Text(locationX, y, fmt.Sprintf("%d", n.Note), "font-family:Old Standard TT;font-weight:600")
+
 			n.PositionX = locationX
 			n.PositionY = y
-			locationX += LOWERCASE_LENGTH
+			locationX += n.Width
+
 		}
-		s.Text(locationX, y, " | ")
+
+		for _, n := range notes {
+			s.Text(n.PositionX, n.PositionY+25, n.Lyric.Text, "font-family:Caladea")
+		}
+		s.Text(locationX, y, " | ", "font-family:Noto Music")
 		locationX += LOWERCASE_LENGTH
 
 	}
 
+	alphabet := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", ",", ".", "!", ";"}
+	_ = alphabet
 }

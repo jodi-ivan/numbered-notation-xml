@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -197,7 +198,6 @@ func (ks KeySignature) GetNumberedNotation(note musicxml.Note) (numberedNote int
 		accidentals = majorAccidental[ks.Fifth]
 	} else if ks.Mode == KeySignatureModeMinor {
 		accidentals = minorAccidental[ks.Fifth]
-	} else {
 	}
 
 	if contains(accidentals, pitch) >= 0 {
@@ -453,6 +453,92 @@ type NoteRenderer struct {
 	BarType      string
 	Width        int
 	Lyric        Lyric
+	Slur         []int
+}
+
+type Coordinate struct {
+	X float32
+	Y float32
+}
+
+// for (svg.SVG).Qbez
+type SlurBezier struct {
+	Start Coordinate
+	End   Coordinate
+	Pull  Coordinate
+}
+
+func RenderSlur(s *svg.SVG, notes []NoteRenderer) {
+
+}
+
+func CalculateLyricWidth(txt string) float64 {
+	width := map[string]float64{
+		"1": 9.28,
+		"A": 9.59,
+		"B": 9.27,
+		"C": 8.1,
+		"D": 10,
+		"E": 8.65,
+		"F": 8.15,
+		"G": 8.63,
+		"H": 11.15,
+		"I": 5.49,
+		"J": 4.99,
+		"K": 10.08,
+		"L": 8.02,
+		"M": 14.21,
+		"N": 11.09,
+		"O": 9.59,
+		"P": 8.53,
+		"Q": 9.59,
+		"R": 9.81,
+		"S": 7.25,
+		"T": 8.92,
+		"U": 11,
+		"V": 9.57,
+		"W": 14.23,
+		"X": 9.95,
+		"Y": 8.92,
+		"Z": 8.11,
+		"a": 7.52,
+		"b": 8.32,
+		"c": 6.74,
+		"d": 8.32,
+		"e": 7.06,
+		"f": 5.87,
+		"g": 7.35,
+		"h": 8.86,
+		"i": 4.44,
+		"j": 4.76,
+		"k": 8.43,
+		"l": 4.34,
+		"m": 13.01,
+		"n": 8.94,
+		"o": 7.69,
+		"p": 8.32,
+		"q": 8.02,
+		"r": 6.34,
+		"s": 6.28,
+		"t": 5.21,
+		"u": 8.74,
+		"v": 8.08,
+		"w": 12.08,
+		"x": 7.78,
+		"y": 8.18,
+		"z": 6.85,
+		",": 3.28,
+		".": 3.3,
+		"!": 4.58,
+		";": 4.23,
+	}
+	res := 0.0
+
+	for _, l := range txt {
+		res += width[string(l)]
+	}
+
+	return res
 }
 
 func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
@@ -486,7 +572,10 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 					Syllabic: note.Lyric[0].Syllabic,
 				}
 
-				lyricWidth = len(note.Lyric[0].Text.Value) * LOWERCASE_LENGTH
+				lyricWidth = int(math.Ceil(CalculateLyricWidth(note.Lyric[0].Text.Value)))
+				if note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeEnd || note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeSingle {
+					lyricWidth += 7 // space
+				}
 			}
 
 			noteWidth = LOWERCASE_LENGTH
@@ -524,24 +613,40 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 			x = LAYOUT_INDENT_LENGTH
 		}
 
+		s.Gstyle("font-family:Old Standard TT;font-weight:600")
 		for _, n := range notes {
 
-			s.Text(locationX, y, fmt.Sprintf("%d", n.Note), "font-family:Old Standard TT;font-weight:600")
+			s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
 
 			n.PositionX = locationX
 			n.PositionY = y
 			locationX += n.Width
 
 		}
-
-		for _, n := range notes {
-			s.Text(n.PositionX, n.PositionY+25, n.Lyric.Text, "font-family:Caladea")
-		}
+		s.Gend()
 		s.Text(locationX, y, " | ", "font-family:Noto Music")
+
+		s.Gstyle("font-family:Caladea")
+		for _, n := range notes {
+			if n.Lyric.Text != "" {
+				s.Text(n.PositionX, n.PositionY+20, n.Lyric.Text)
+			}
+		}
+		s.Gend()
 		locationX += LOWERCASE_LENGTH
 
 	}
 
-	alphabet := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", ",", ".", "!", ";"}
-	_ = alphabet
+	// alphabet := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", ",", ".", "!", ";"}
+	// posX := LAYOUT_INDENT_LENGTH
+	// posY := y + 60
+
+	// for _, a := range alphabet {
+	// 	s.Text(posX, posY, string(a), "font-family:Caladea")
+	// 	posX += 15
+	// 	if posX >= LAYOUT_WIDTH {
+	// 		posX = LAYOUT_INDENT_LENGTH
+	// 		posY += 60
+	// 	}
+	// }
 }

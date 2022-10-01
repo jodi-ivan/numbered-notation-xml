@@ -93,6 +93,7 @@ const (
 	LyricSyllabicTypeBegin  LyricSyllabic = "begin"
 	LyricSyllabicTypeMiddle LyricSyllabic = "middle"
 	LyricSyllabicTypeEnd    LyricSyllabic = "end"
+	LyricSyllabicTypeSingle LyricSyllabic = "single"
 )
 
 func (na NoteAccidental) GetAccidental() string {
@@ -130,7 +131,7 @@ type NoteBeam struct {
 }
 
 type NoteNotation struct {
-	Slur         *NotationSlur         `xml:"slur" json:",omitempty"`
+	Slur         []NotationSlur        `xml:"slur" json:",omitempty"`
 	Articulation *NotationArticulation `xml:"articulations" json:",omitempty"`
 }
 

@@ -96,6 +96,13 @@ const (
 	LyricSyllabicTypeSingle LyricSyllabic = "single"
 )
 
+type NoteSlurType string
+
+const (
+	NoteSlurTypeStart NoteSlurType = "start"
+	NoteSlurTypeStop  NoteSlurType = "stop"
+)
+
 func (na NoteAccidental) GetAccidental() string {
 	sign := map[string]string{
 		"natural":      "",
@@ -141,8 +148,8 @@ type NotationArticulation struct {
 	} `xml:"breath-mark"`
 }
 type NotationSlur struct {
-	Type   string `xml:"type,attr"`
-	Number int    `xml:"number,attr"`
+	Type   NoteSlurType `xml:"type,attr"`
+	Number int          `xml:"number,attr"`
 }
 
 type Lyric struct {

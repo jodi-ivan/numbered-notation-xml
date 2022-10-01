@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -220,7 +221,7 @@ func (ks KeySignature) GetNumberedNotation(note musicxml.Note) (numberedNote int
 }
 
 func getNextHalfStep(pitch string) string {
-	step := []string{"A", "B", "C", "D", "E", "F", "G"}
+	step := []string{"C", "D", "E", "F", "G", "A", "B"}
 
 	wholeStep := func(p string) string {
 		index := contains(step, p)
@@ -443,6 +444,11 @@ type Lyric struct {
 	Text     string
 	Syllabic musicxml.LyricSyllabic
 }
+
+type Slur struct {
+	Number int
+	Type   musicxml.NoteSlurType
+}
 type NoteRenderer struct {
 	PositionX    int
 	PositionY    int
@@ -453,23 +459,108 @@ type NoteRenderer struct {
 	BarType      string
 	Width        int
 	Lyric        Lyric
-	Slur         []int
+	Slur         map[int]Slur
 }
 
-type Coordinate struct {
-	X float32
-	Y float32
+type CoordinateWithOctave struct {
+	X      float32
+	Y      float32
+	Octave int
 }
 
 // for (svg.SVG).Qbez
 type SlurBezier struct {
-	Start Coordinate
-	End   Coordinate
-	Pull  Coordinate
+	Start CoordinateWithOctave
+	End   CoordinateWithOctave
+	Pull  CoordinateWithOctave
 }
 
-func RenderSlur(s *svg.SVG, notes []NoteRenderer) {
+func RenderSlur(canvas *svg.SVG, notes []*NoteRenderer) {
+	slurs := map[int]SlurBezier{}
+	sets := []SlurBezier{}
 
+	for _, note := range notes {
+		for _, s := range note.Slur {
+			if s.Type == musicxml.NoteSlurTypeStart {
+				slurs[s.Number] = SlurBezier{
+					Start: CoordinateWithOctave{
+						X:      float32(note.PositionX),
+						Y:      float32(note.PositionY),
+						Octave: note.Octave,
+					},
+				}
+			} else if s.Type == musicxml.NoteSlurTypeStop {
+				temp := slurs[s.Number]
+				temp.End = CoordinateWithOctave{
+					X:      float32(note.PositionX),
+					Y:      float32(note.PositionY),
+					Octave: note.Octave,
+				}
+				slurs[s.Number] = temp
+
+				sets = append(sets, slurs[s.Number])
+				delete(slurs, s.Number)
+			}
+		}
+	}
+
+	for _, s := range sets {
+		pull := CoordinateWithOctave{
+			X: s.Start.X + ((s.End.X - s.Start.X) / 2) + 5,
+			Y: s.Start.Y + 15,
+		}
+
+		slurResult := SlurBezier{
+			Start: CoordinateWithOctave{
+				X:      s.Start.X + 5,
+				Y:      s.Start.Y + 5,
+				Octave: s.Start.Octave,
+			},
+			End: CoordinateWithOctave{
+				X:      s.End.X + 5,
+				Y:      s.End.Y + 5,
+				Octave: s.End.Octave,
+			},
+			Pull: pull,
+		}
+
+		if slurResult.Start.Octave < 0 {
+			slurResult.Start = CoordinateWithOctave{
+				X: slurResult.Start.X + 5,
+				Y: slurResult.Start.Y + 5,
+			}
+		}
+
+		if slurResult.End.Octave < 0 {
+			slurResult.End = CoordinateWithOctave{
+				X: slurResult.End.X - 5,
+				Y: slurResult.End.Y - 5,
+			}
+		}
+
+		canvas.Qbez(
+			int(slurResult.Start.X),
+			int(slurResult.Start.Y),
+			int(pull.X),
+			int(pull.Y),
+			int(slurResult.End.X),
+			int(slurResult.End.Y),
+			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5",
+		)
+	}
+
+}
+
+func RenderOctave(canvas *svg.SVG, notes []*NoteRenderer) {
+	for _, note := range notes {
+		if note.Octave < 0 {
+			canvas.Circle(note.PositionX+5, note.PositionY+20, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.3")
+		}
+
+		if note.Octave > 0 {
+			canvas.Circle(note.PositionX+5, note.PositionY-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.3")
+		}
+	}
 }
 
 func CalculateLyricWidth(txt string) float64 {
@@ -564,6 +655,16 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 				Striketrough: strikethrough,
 			}
 
+			if note.Notations != nil && len(note.Notations.Slur) > 0 {
+				renderer.Slur = map[int]Slur{}
+				for _, slur := range note.Notations.Slur {
+					renderer.Slur[slur.Number] = Slur{
+						Number: slur.Number,
+						Type:   slur.Type,
+					}
+				}
+			}
+
 			var lyricWidth, noteWidth int
 
 			if len(note.Lyric) > 0 {
@@ -603,12 +704,15 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 			}
 
-			notes = append(notes, renderer)
+			raw, _ := json.Marshal(renderer)
+			log.Println(string(raw))
 
+			notes = append(notes, renderer)
 		}
+
 		//    rough calculation of measure
 		if x+((len(notes)+1)*LOWERCASE_LENGTH) > (LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH) {
-			y = y + 65
+			y = y + 70
 			locationX = LAYOUT_INDENT_LENGTH
 			x = LAYOUT_INDENT_LENGTH
 		}
@@ -629,24 +733,14 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 		s.Gstyle("font-family:Caladea")
 		for _, n := range notes {
 			if n.Lyric.Text != "" {
-				s.Text(n.PositionX, n.PositionY+20, n.Lyric.Text)
+				s.Text(n.PositionX, n.PositionY+25, n.Lyric.Text)
 			}
 		}
 		s.Gend()
 		locationX += LOWERCASE_LENGTH
+		RenderOctave(s, notes)
+		RenderSlur(s, notes)
 
 	}
 
-	// alphabet := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", ",", ".", "!", ";"}
-	// posX := LAYOUT_INDENT_LENGTH
-	// posY := y + 60
-
-	// for _, a := range alphabet {
-	// 	s.Text(posX, posY, string(a), "font-family:Caladea")
-	// 	posX += 15
-	// 	if posX >= LAYOUT_WIDTH {
-	// 		posX = LAYOUT_INDENT_LENGTH
-	// 		posY += 60
-	// 	}
-	// }
 }

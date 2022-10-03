@@ -187,9 +187,17 @@ func (ks *KeySignature) String() string {
 	return ks.Humanized
 }
 
-func (ks KeySignature) GetNumberedNotation(note musicxml.Note) (numberedNote int, octave int, strikethrough bool) {
-	octave = note.Pitch.Octave - 4
+func (ks *KeySignature) GetBasedPitch() string {
+	result := ""
+	if ks.Mode == KeySignatureModeMajor {
+		result = majorLetteredKeySignature[ks.Fifth]
+	} else if ks.Mode == KeySignatureModeMinor {
+		result = minorLetteredKeySignature[ks.Fifth]
+	}
+	return result
+}
 
+func (ks KeySignature) GetPitchWithAccidental(note musicxml.Note) string {
 	pitch := note.Pitch.Step
 	var accidental musicxml.NoteAccidental
 	var accidentals []string
@@ -212,11 +220,33 @@ func (ks KeySignature) GetNumberedNotation(note musicxml.Note) (numberedNote int
 	if note.Accidental != "" {
 		accidental = note.Accidental
 	}
-
 	pitch = fmt.Sprintf("%s%s", pitch, accidental.GetAccidental())
 
+	return pitch
+}
+
+func (ks KeySignature) GetNumberedNotation(note musicxml.Note) (numberedNote int, octave int, strikethrough bool) {
+	octave = ks.GetOctave(note)
+
+	pitch := ks.GetPitchWithAccidental(note)
 	numberedNote, strikethrough = ConvertPitchToNumbered(ks, pitch)
+
 	return numberedNote, octave, strikethrough
+}
+
+func (ks KeySignature) GetOctave(note musicxml.Note) int {
+	pitch := ks.GetPitchWithAccidental(note)
+	if ks.Mode == KeySignatureModeMajor && ks.Fifth == 0 { // C major
+		return note.Pitch.Octave - 4
+	}
+
+	do := ks.GetBasedPitch()
+	direction := comparePitch(do, pitch)
+	if direction == 1 { // below do
+		return note.Pitch.Octave - 4 - 1
+	}
+
+	return note.Pitch.Octave - 4
 
 }
 
@@ -438,6 +468,38 @@ func isPitchEqual(one, two string) bool {
 	return result
 }
 
+// compare pitch
+// returns
+//    0 -> both pitch are equal
+//    1 -> 1st param > 2nd param
+//   -1 -> 1st param < 2nd param
+// Assume both pitch on the same octave between C4 -> B4
+func comparePitch(one, two string) int {
+	if isPitchEqual(one, two) {
+		return 0
+	}
+
+	pitches := []string{"C", "D", "E", "F", "G", "A", "B"}
+
+	if string(one[0]) != string(two[0]) {
+
+		oneIndex := contains(pitches, string(one[0]))
+		twoIndex := contains(pitches, string(two[0]))
+
+		if oneIndex > twoIndex {
+			return 1
+		}
+
+		return -1
+	}
+	if len(two) > 1 {
+		return 1
+	}
+
+	return -1
+
+}
+
 /*                Numbered stuff                              */
 
 type Lyric struct {
@@ -463,8 +525,8 @@ type NoteRenderer struct {
 }
 
 type CoordinateWithOctave struct {
-	X      float32
-	Y      float32
+	X      float64
+	Y      float64
 	Octave int
 }
 
@@ -484,16 +546,16 @@ func RenderSlur(canvas *svg.SVG, notes []*NoteRenderer) {
 			if s.Type == musicxml.NoteSlurTypeStart {
 				slurs[s.Number] = SlurBezier{
 					Start: CoordinateWithOctave{
-						X:      float32(note.PositionX),
-						Y:      float32(note.PositionY),
+						X:      float64(note.PositionX),
+						Y:      float64(note.PositionY),
 						Octave: note.Octave,
 					},
 				}
 			} else if s.Type == musicxml.NoteSlurTypeStop {
 				temp := slurs[s.Number]
 				temp.End = CoordinateWithOctave{
-					X:      float32(note.PositionX),
-					Y:      float32(note.PositionY),
+					X:      float64(note.PositionX),
+					Y:      float64(note.PositionY),
 					Octave: note.Octave,
 				}
 				slurs[s.Number] = temp
@@ -505,10 +567,6 @@ func RenderSlur(canvas *svg.SVG, notes []*NoteRenderer) {
 	}
 
 	for _, s := range sets {
-		pull := CoordinateWithOctave{
-			X: s.Start.X + ((s.End.X - s.Start.X) / 2) + 5,
-			Y: s.Start.Y + 15,
-		}
 
 		slurResult := SlurBezier{
 			Start: CoordinateWithOctave{
@@ -521,30 +579,36 @@ func RenderSlur(canvas *svg.SVG, notes []*NoteRenderer) {
 				Y:      s.End.Y + 5,
 				Octave: s.End.Octave,
 			},
-			Pull: pull,
 		}
 
 		if slurResult.Start.Octave < 0 {
 			slurResult.Start = CoordinateWithOctave{
-				X: slurResult.Start.X + 5,
-				Y: slurResult.Start.Y + 5,
+				X: slurResult.Start.X + 3,
+				Y: slurResult.Start.Y + 3,
 			}
 		}
 
 		if slurResult.End.Octave < 0 {
+
 			slurResult.End = CoordinateWithOctave{
-				X: slurResult.End.X - 5,
-				Y: slurResult.End.Y - 5,
+				X: slurResult.End.X - 3,
+				Y: slurResult.End.Y + 3,
 			}
 		}
 
+		pull := CoordinateWithOctave{
+			X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
+			Y: slurResult.Start.Y + 7.5,
+		}
+		slurResult.Pull = pull
+
 		canvas.Qbez(
-			int(slurResult.Start.X),
-			int(slurResult.Start.Y),
-			int(pull.X),
-			int(pull.Y),
-			int(slurResult.End.X),
-			int(slurResult.End.Y),
+			int(math.Round(slurResult.Start.X)),
+			int(math.Round(slurResult.Start.Y)),
+			int(math.Round(pull.X)),
+			int(math.Round(pull.Y)),
+			int(math.Round(slurResult.End.X)),
+			int(math.Round(slurResult.End.Y)),
 			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5",
 		)
 	}
@@ -554,11 +618,11 @@ func RenderSlur(canvas *svg.SVG, notes []*NoteRenderer) {
 func RenderOctave(canvas *svg.SVG, notes []*NoteRenderer) {
 	for _, note := range notes {
 		if note.Octave < 0 {
-			canvas.Circle(note.PositionX+5, note.PositionY+20, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.3")
+			canvas.Circle(note.PositionX+5, note.PositionY+5, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
 		}
 
 		if note.Octave > 0 {
-			canvas.Circle(note.PositionX+5, note.PositionY-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.3")
+			canvas.Circle(note.PositionX+5, note.PositionY-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
 		}
 	}
 }
@@ -740,7 +804,5 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 		locationX += LOWERCASE_LENGTH
 		RenderOctave(s, notes)
 		RenderSlur(s, notes)
-
 	}
-
 }

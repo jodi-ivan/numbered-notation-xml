@@ -2,6 +2,8 @@ package renderer
 
 import (
 	"testing"
+
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
 func TestConvertPitchToNumbered(t *testing.T) {
@@ -397,6 +399,186 @@ func Test_getNextHalfStep(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getNextHalfStep(tt.args.pitch); got != tt.want {
 				t.Errorf("getNextHalfStep() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestKeySignature_GetOctave(t *testing.T) {
+	type fields struct {
+		Key       string
+		Mode      KeySignatureMode
+		Humanized string
+		Fifth     int
+	}
+	type args struct {
+		note musicxml.Note
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   int
+	}{
+		{
+			name: "C major octave 0",
+			fields: fields{
+				Key:       "c",
+				Mode:      KeySignatureModeMajor,
+				Humanized: "do = c",
+				Fifth:     0,
+			},
+			args: args{
+				musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "D",
+						Octave: 4,
+					},
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "C major octave -1",
+			fields: fields{
+				Key:       "c",
+				Mode:      KeySignatureModeMajor,
+				Humanized: "do = c",
+				Fifth:     0,
+			},
+			args: args{
+				musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "D",
+						Octave: 3,
+					},
+				},
+			},
+			want: -1,
+		},
+		{
+			name: "C major octave (+)1",
+			fields: fields{
+				Key:       "c",
+				Mode:      KeySignatureModeMajor,
+				Humanized: "do = c",
+				Fifth:     0,
+			},
+			args: args{
+				musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "D",
+						Octave: 5,
+					},
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "(C4) ti/si on D major",
+			fields: fields{
+				Key:       "d",
+				Mode:      KeySignatureModeMajor,
+				Humanized: "do = d",
+				Fifth:     2,
+			},
+			args: args{
+				musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "C",
+						Octave: 4,
+					},
+				},
+			},
+			want: -1,
+		},
+		{
+			name: "E4 - re - on D major",
+			fields: fields{
+				Key:       "d",
+				Mode:      KeySignatureModeMajor,
+				Humanized: "do = d",
+				Fifth:     2,
+			},
+			args: args{
+				musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "E",
+						Octave: 4,
+					},
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "C5 - si - on D major",
+			fields: fields{
+				Key:       "d",
+				Mode:      KeySignatureModeMajor,
+				Humanized: "do = d",
+				Fifth:     2,
+			},
+			args: args{
+				musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "C",
+						Octave: 5,
+					},
+					Accidental: musicxml.NoteAccidentalNatural,
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "D5 - do - on D major",
+			fields: fields{
+				Key:       "d",
+				Mode:      KeySignatureModeMajor,
+				Humanized: "do = d",
+				Fifth:     2,
+			},
+			args: args{
+				musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "D",
+						Octave: 5,
+					},
+				},
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ks := KeySignature{
+				Key:       tt.fields.Key,
+				Mode:      tt.fields.Mode,
+				Humanized: tt.fields.Humanized,
+				Fifth:     tt.fields.Fifth,
+			}
+			if got := ks.GetOctave(tt.args.note); got != tt.want {
+				t.Errorf("KeySignature.GetOctave() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -1,7 +1,6 @@
 package renderer
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -411,9 +410,8 @@ func RenderNumbered(w http.ResponseWriter, music musicxml.MusicXML) {
 	s.Text(LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
 
 	// render time signature
-	// TODO:
-	// - check the time signature on github issue
-	// - time signature changing happens on the top and not on the measure
+	// TODO: check the time signature on github issue
+	// TODO: time signature changing happens on the top and not on the measure
 	beat := music.Part.Measures[0].Attribute.Time
 	s.Text(LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
 	relativeY += 50
@@ -511,7 +509,14 @@ type Slur struct {
 	Number int
 	Type   musicxml.NoteSlurType
 }
+
+type Beam struct {
+	Number int
+	Type   musicxml.NoteBeamType
+}
+
 type NoteRenderer struct {
+	IsDotted     bool
 	PositionX    int
 	PositionY    int
 	Note         int
@@ -522,11 +527,16 @@ type NoteRenderer struct {
 	Width        int
 	Lyric        Lyric
 	Slur         map[int]Slur
+	Beam         map[int]Beam
+}
+
+type Coordinate struct {
+	X float64
+	Y float64
 }
 
 type CoordinateWithOctave struct {
-	X      float64
-	Y      float64
+	Coordinate
 	Octave int
 }
 
@@ -537,68 +547,117 @@ type SlurBezier struct {
 	Pull  CoordinateWithOctave
 }
 
-func RenderSlur(canvas *svg.SVG, notes []*NoteRenderer) {
+type BeamLine struct {
+	Start Coordinate
+	End   Coordinate
+}
+
+func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 	slurs := map[int]SlurBezier{}
-	sets := []SlurBezier{}
+	slurSets := []SlurBezier{}
+
+	beams := map[int]BeamLine{}
+	beamSets := []BeamLine{}
 
 	for _, note := range notes {
+
 		for _, s := range note.Slur {
 			if s.Type == musicxml.NoteSlurTypeStart {
 				slurs[s.Number] = SlurBezier{
 					Start: CoordinateWithOctave{
-						X:      float64(note.PositionX),
-						Y:      float64(note.PositionY),
+						Coordinate: Coordinate{
+							X: float64(note.PositionX),
+							Y: float64(note.PositionY),
+						},
 						Octave: note.Octave,
 					},
 				}
 			} else if s.Type == musicxml.NoteSlurTypeStop {
 				temp := slurs[s.Number]
 				temp.End = CoordinateWithOctave{
-					X:      float64(note.PositionX),
-					Y:      float64(note.PositionY),
+					Coordinate: Coordinate{
+						X: float64(note.PositionX),
+						Y: float64(note.PositionY),
+					},
 					Octave: note.Octave,
 				}
 				slurs[s.Number] = temp
 
-				sets = append(sets, slurs[s.Number])
+				slurSets = append(slurSets, slurs[s.Number])
 				delete(slurs, s.Number)
 			}
 		}
+
+		// TODO: team beam only support 2 notes grouping
+		for _, b := range note.Beam {
+			if b.Type == musicxml.NoteBeamTypeBegin {
+				beams[b.Number] = BeamLine{
+					Start: Coordinate{
+						X: float64(note.PositionX),
+						Y: float64(note.PositionY - 18 - ((b.Number - 1) * 3)),
+					},
+				}
+			} else if b.Type == musicxml.NoteBeamTypeEnd {
+				beam := beams[b.Number]
+				beam.End = Coordinate{
+					X: float64(note.PositionX) + 8,
+					Y: beam.Start.Y,
+				}
+
+				beams[b.Number] = beam
+
+				beamSets = append(beamSets, beams[b.Number])
+
+				delete(beams, b.Number)
+			}
+
+		}
+
 	}
 
-	for _, s := range sets {
+	for _, s := range slurSets {
 
 		slurResult := SlurBezier{
 			Start: CoordinateWithOctave{
-				X:      s.Start.X + 5,
-				Y:      s.Start.Y + 5,
+				Coordinate: Coordinate{
+					X: s.Start.X + 5,
+					Y: s.Start.Y + 5,
+				},
 				Octave: s.Start.Octave,
 			},
 			End: CoordinateWithOctave{
-				X:      s.End.X + 5,
-				Y:      s.End.Y + 5,
+				Coordinate: Coordinate{
+					X: s.End.X + 5,
+					Y: s.End.Y + 5,
+				},
 				Octave: s.End.Octave,
 			},
 		}
 
 		if slurResult.Start.Octave < 0 {
 			slurResult.Start = CoordinateWithOctave{
-				X: slurResult.Start.X + 3,
-				Y: slurResult.Start.Y + 3,
+				Coordinate: Coordinate{
+					X: slurResult.Start.X + 3,
+					Y: slurResult.Start.Y + 3,
+				},
 			}
 		}
 
 		if slurResult.End.Octave < 0 {
 
 			slurResult.End = CoordinateWithOctave{
-				X: slurResult.End.X - 3,
-				Y: slurResult.End.Y + 3,
+				Coordinate: Coordinate{
+					X: slurResult.End.X - 3,
+					Y: slurResult.End.Y + 3,
+				},
 			}
 		}
 
 		pull := CoordinateWithOctave{
-			X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
-			Y: slurResult.Start.Y + 7.5,
+			Coordinate: Coordinate{
+				X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
+				Y: slurResult.Start.Y + 7.5,
+			},
 		}
 		slurResult.Pull = pull
 
@@ -613,6 +672,15 @@ func RenderSlur(canvas *svg.SVG, notes []*NoteRenderer) {
 		)
 	}
 
+	for _, b := range beamSets {
+		canvas.Line(
+			int(math.Round(b.Start.X)),
+			int(math.Round(b.Start.Y)),
+			int(math.Round(b.End.X)),
+			int(math.Round(b.End.Y)),
+			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.2",
+		)
+	}
 }
 
 func RenderOctave(canvas *svg.SVG, notes []*NoteRenderer) {
@@ -729,6 +797,17 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 				}
 			}
 
+			if len(note.Beam) > 0 {
+				renderer.Beam = map[int]Beam{}
+				for _, beam := range note.Beam {
+					renderer.Beam[beam.Number] = Beam{
+						Number: beam.Number,
+						Type:   beam.State,
+					}
+				}
+
+			}
+
 			var lyricWidth, noteWidth int
 
 			if len(note.Lyric) > 0 {
@@ -744,6 +823,8 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 			}
 
 			noteWidth = LOWERCASE_LENGTH
+
+			// TODO: beat counter to dotted and beam
 			switch note.Type {
 			case musicxml.NoteLengthWhole:
 
@@ -768,9 +849,6 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 			}
 
-			raw, _ := json.Marshal(renderer)
-			log.Println(string(raw))
-
 			notes = append(notes, renderer)
 		}
 
@@ -781,9 +859,9 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 			x = LAYOUT_INDENT_LENGTH
 		}
 
-		s.Gstyle("font-family:Old Standard TT;font-weight:600")
+		s.Gstyle("font-family:Old Standard TT;font-weight:500")
 		for _, n := range notes {
-
+			// TODO: render strikethrough
 			s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
 
 			n.PositionX = locationX
@@ -803,6 +881,6 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 		s.Gend()
 		locationX += LOWERCASE_LENGTH
 		RenderOctave(s, notes)
-		RenderSlur(s, notes)
+		RenderSlurAndBeam(s, notes)
 	}
 }

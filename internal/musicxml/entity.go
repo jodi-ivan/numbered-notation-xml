@@ -103,6 +103,16 @@ const (
 	NoteSlurTypeStop  NoteSlurType = "stop"
 )
 
+type NoteBeamType string
+
+const (
+	NoteBeamTypeBegin        NoteBeamType = "begin"
+	NoteBeamTypeContinue     NoteBeamType = "continue"
+	NoteBeamTypeEnd          NoteBeamType = "end"
+	NoteBeamTypeForwardHook  NoteBeamType = "forward hook"
+	NoteBeamTypeBackwardHook NoteBeamType = "backward hook"
+)
+
 func (na NoteAccidental) GetAccidental() string {
 	sign := map[string]string{
 		"natural":      "",
@@ -125,7 +135,7 @@ type Note struct {
 		Octave int    `xml:"octave"`
 	} `xml:"pitch"`
 	Type       NoteLength     `xml:"type"`
-	Beam       *NoteBeam      `xml:"beam" json:",omitempty"`
+	Beam       []*NoteBeam    `xml:"beam" json:",omitempty"`
 	Notations  *NoteNotation  `xml:"notations" json:",omitempty"`
 	Lyric      []Lyric        `xml:"lyric"`
 	Accidental NoteAccidental `xml:"accidental"`
@@ -133,8 +143,8 @@ type Note struct {
 }
 
 type NoteBeam struct {
-	Number int    `xml:"number,attr"`
-	State  string `xml:",chardata"`
+	Number int          `xml:"number,attr"`
+	State  NoteBeamType `xml:",chardata"`
 }
 
 type NoteNotation struct {

@@ -696,6 +696,8 @@ func RenderOctave(canvas *svg.SVG, notes []*NoteRenderer) {
 }
 
 func CalculateLyricWidth(txt string) float64 {
+	// TODO: margin left of the lyric
+	// TODO: continues syllable
 	width := map[string]float64{
 		"1": 9.28,
 		"A": 9.59,
@@ -751,6 +753,7 @@ func CalculateLyricWidth(txt string) float64 {
 		"y": 8.18,
 		"z": 6.85,
 		",": 3.28,
+		"'": 3.28,
 		".": 3.3,
 		"!": 4.58,
 		";": 4.23,
@@ -852,6 +855,7 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 			notes = append(notes, renderer)
 		}
 
+		// TODO: align justify
 		//    rough calculation of measure
 		if x+((len(notes)+1)*LOWERCASE_LENGTH) > (LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH) {
 			y = y + 70
@@ -870,6 +874,7 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 		}
 		s.Gend()
+		// FIXME: Print it as glyph
 		s.Text(locationX, y, " | ", "font-family:Noto Music")
 
 		s.Gstyle("font-family:Caladea")

@@ -51,6 +51,7 @@ var minorAccidental = map[int][]string{
 
 const LOWERCASE_LENGTH = 15
 const UPPERCASE_LENGTH = 20
+const SPACE_LENGTH = 7
 const LAYOUT_INDENT_LENGTH = 50
 const LAYOUT_WIDTH = 1000
 
@@ -225,6 +226,9 @@ func (ks KeySignature) GetPitchWithAccidental(note musicxml.Note) string {
 }
 
 func (ks KeySignature) GetNumberedNotation(note musicxml.Note) (numberedNote int, octave int, strikethrough bool) {
+	if note.Rest != nil {
+		return 0, 0, false
+	}
 	octave = ks.GetOctave(note)
 
 	pitch := ks.GetPitchWithAccidental(note)
@@ -517,6 +521,7 @@ type Beam struct {
 
 type NoteRenderer struct {
 	IsDotted     bool
+	IsRest       bool
 	PositionX    int
 	PositionY    int
 	Note         int
@@ -590,14 +595,16 @@ func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 
 		// TODO: team beam only support 2 notes grouping
 		for _, b := range note.Beam {
-			if b.Type == musicxml.NoteBeamTypeBegin {
+			switch b.Type {
+			case musicxml.NoteBeamTypeBegin:
 				beams[b.Number] = BeamLine{
 					Start: Coordinate{
 						X: float64(note.PositionX),
 						Y: float64(note.PositionY - 18 - ((b.Number - 1) * 3)),
 					},
 				}
-			} else if b.Type == musicxml.NoteBeamTypeEnd {
+			case musicxml.NoteBeamTypeEnd:
+
 				beam := beams[b.Number]
 				beam.End = Coordinate{
 					X: float64(note.PositionX) + 8,
@@ -609,6 +616,9 @@ func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 				beamSets = append(beamSets, beams[b.Number])
 
 				delete(beams, b.Number)
+
+			case musicxml.NoteBeamTypeContinue:
+
 			}
 
 		}
@@ -788,6 +798,7 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 				NoteLength:   note.Type,
 				Octave:       octave,
 				Striketrough: strikethrough,
+				IsRest:       (note.Rest != nil),
 			}
 
 			if note.Notations != nil && len(note.Notations.Slur) > 0 {
@@ -821,43 +832,78 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 				lyricWidth = int(math.Ceil(CalculateLyricWidth(note.Lyric[0].Text.Value)))
 				if note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeEnd || note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeSingle {
-					lyricWidth += 7 // space
+					lyricWidth += SPACE_LENGTH
 				}
 			}
 
 			noteWidth = LOWERCASE_LENGTH
 
-			// TODO: beat counter to dotted and beam
-			switch note.Type {
-			case musicxml.NoteLengthWhole:
+			/*
 
-				// whole note in musical number notation will add 3 dots in front of the note
-				// C whole note will represent as
-				//      1 . . . |
-				noteWidth = 3 * LOWERCASE_LENGTH * 3
 
-			case musicxml.NoteLengthHalf:
-				// half  note in musical number notation will add 1 dots in front of the note
-				// C half note will represent as
-				//      1 . |
-				noteWidth = LOWERCASE_LENGTH * 2
-			}
+
+				// TODO: beat counter to dotted and beam
+				switch note.Type {
+				case musicxml.NoteLengthWhole:
+
+					// whole note in musical number notation will add 3 dots in front of the note
+					// C whole note will represent as
+					//      1 .1 . . |
+					noteWidth = 3 * LOWERCASE_LENGTH * 3
+
+				case musicxml.NoteLengthHalf:
+					// half  note in musical number notation will add 1 dots in front of the note
+					// C half note will represent as
+					//      1 . |
+					noteWidth = LOWERCASE_LENGTH * 2
+				}
+
+			*/
 
 			if noteWidth > lyricWidth {
 				x += noteWidth
 				renderer.Width = noteWidth
 			} else {
-				x += lyricWidth
-				renderer.Width = lyricWidth
+				if note.Type == musicxml.NoteLengthWhole || note.Type == musicxml.NoteLengthHalf {
+					x += noteWidth
+					renderer.Width = noteWidth
+				} else {
 
+					x += lyricWidth
+					renderer.Width = lyricWidth
+				}
 			}
 
 			notes = append(notes, renderer)
+
+			switch note.Type {
+			case musicxml.NoteLengthHalf: // TODO: add support for whole note
+				// TODO: add support for other time signature. currently only support 4/4
+				addDotCounter := 1
+				if len(note.Dot) == 1 {
+					addDotCounter = 2
+				}
+				for i := 0; i < addDotCounter; i++ {
+					notes = append(notes, &NoteRenderer{
+						PositionX: renderer.PositionX + (SPACE_LENGTH * i),
+						PositionY: y,
+						IsDotted:  true,
+						Width:     int(CalculateLyricWidth(".")) + SPACE_LENGTH,
+					})
+					x += SPACE_LENGTH + int(CalculateLyricWidth("."))
+				}
+
+			}
 		}
 
 		// TODO: align justify
 		//    rough calculation of measure
-		if x+((len(notes)+1)*LOWERCASE_LENGTH) > (LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH) {
+
+		overallWidth := 0
+		for _, n := range notes {
+			overallWidth += n.Width
+		}
+		if (x + overallWidth) > (LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH) {
 			y = y + 70
 			locationX = LAYOUT_INDENT_LENGTH
 			x = LAYOUT_INDENT_LENGTH
@@ -866,7 +912,11 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 		s.Gstyle("font-family:Old Standard TT;font-weight:500")
 		for _, n := range notes {
 			// TODO: render strikethrough
-			s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
+			if n.IsDotted {
+				s.Text(locationX, y, ".")
+			} else {
+				s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
+			}
 
 			n.PositionX = locationX
 			n.PositionY = y

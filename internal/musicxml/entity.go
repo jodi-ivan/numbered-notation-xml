@@ -129,6 +129,10 @@ type Dot struct {
 	Name xml.Name `xml:"dot"`
 }
 
+type Rest struct {
+	Name xml.Name `xml:"rest"`
+}
+
 type Note struct {
 	Pitch struct {
 		Step   string `xml:"step"`
@@ -140,6 +144,7 @@ type Note struct {
 	Lyric      []Lyric        `xml:"lyric"`
 	Accidental NoteAccidental `xml:"accidental"`
 	Dot        []*Dot         `xml:"dot"`
+	Rest       *Rest          `xml:"rest"`
 }
 
 type NoteBeam struct {

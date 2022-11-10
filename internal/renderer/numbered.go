@@ -510,6 +510,8 @@ type Lyric struct {
 }
 
 type Slur struct {
+	// Number attributes for slur
+	// Pitch note for ties
 	Number int
 	Type   musicxml.NoteSlurType
 }
@@ -533,6 +535,7 @@ type NoteRenderer struct {
 	Lyric        Lyric
 	Slur         map[int]Slur
 	Beam         map[int]Beam
+	Tie          *Slur
 }
 
 type Coordinate struct {
@@ -563,6 +566,12 @@ func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}
+
+	// FIXME: support for multi-octave
+	// currently it support multi-ties based on the pitch
+	// since there is no indicator for what octave it could colliding with each other
+	ties := map[int]SlurBezier{}
+	tiesSet := []SlurBezier{}
 
 	for _, note := range notes {
 
@@ -617,70 +626,40 @@ func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 
 				delete(beams, b.Number)
 
-			case musicxml.NoteBeamTypeContinue:
-
 			}
+		}
 
+		if note.Tie != nil {
+			if note.Tie.Type == musicxml.NoteSlurTypeStart {
+				ties[note.Note] = SlurBezier{
+					Start: CoordinateWithOctave{
+						Coordinate: Coordinate{
+							X: float64(note.PositionX),
+							Y: float64(note.PositionY),
+						},
+						Octave: note.Octave,
+					},
+				}
+			} else if note.Tie.Type == musicxml.NoteSlurTypeStop {
+				temp := ties[note.Note]
+				temp.End = CoordinateWithOctave{
+					Coordinate: Coordinate{
+						X: float64(note.PositionX),
+						Y: float64(note.PositionY),
+					},
+					Octave: note.Octave,
+				}
+				ties[note.Note] = temp
+
+				tiesSet = append(tiesSet, ties[note.Note])
+				delete(slurs, note.Note)
+			}
 		}
 
 	}
 
-	for _, s := range slurSets {
-
-		slurResult := SlurBezier{
-			Start: CoordinateWithOctave{
-				Coordinate: Coordinate{
-					X: s.Start.X + 5,
-					Y: s.Start.Y + 5,
-				},
-				Octave: s.Start.Octave,
-			},
-			End: CoordinateWithOctave{
-				Coordinate: Coordinate{
-					X: s.End.X + 5,
-					Y: s.End.Y + 5,
-				},
-				Octave: s.End.Octave,
-			},
-		}
-
-		if slurResult.Start.Octave < 0 {
-			slurResult.Start = CoordinateWithOctave{
-				Coordinate: Coordinate{
-					X: slurResult.Start.X + 3,
-					Y: slurResult.Start.Y + 3,
-				},
-			}
-		}
-
-		if slurResult.End.Octave < 0 {
-
-			slurResult.End = CoordinateWithOctave{
-				Coordinate: Coordinate{
-					X: slurResult.End.X - 3,
-					Y: slurResult.End.Y + 3,
-				},
-			}
-		}
-
-		pull := CoordinateWithOctave{
-			Coordinate: Coordinate{
-				X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
-				Y: slurResult.Start.Y + 7.5,
-			},
-		}
-		slurResult.Pull = pull
-
-		canvas.Qbez(
-			int(math.Round(slurResult.Start.X)),
-			int(math.Round(slurResult.Start.Y)),
-			int(math.Round(pull.X)),
-			int(math.Round(pull.Y)),
-			int(math.Round(slurResult.End.X)),
-			int(math.Round(slurResult.End.Y)),
-			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5",
-		)
-	}
+	RenderBezier(slurSets, canvas)
+	RenderBezier(tiesSet, canvas)
 
 	for _, b := range beamSets {
 		canvas.Line(
@@ -801,14 +780,24 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 				IsRest:       (note.Rest != nil),
 			}
 
-			if note.Notations != nil && len(note.Notations.Slur) > 0 {
-				renderer.Slur = map[int]Slur{}
-				for _, slur := range note.Notations.Slur {
+			if note.Notations != nil {
+				for i, slur := range note.Notations.Slur {
+					if i == 0 {
+						renderer.Slur = map[int]Slur{}
+					}
 					renderer.Slur[slur.Number] = Slur{
 						Number: slur.Number,
 						Type:   slur.Type,
 					}
 				}
+
+				if note.Notations.Tied != nil {
+					renderer.Tie = &Slur{
+						Number: n,
+						Type:   note.Notations.Tied.Type,
+					}
+				}
+
 			}
 
 			if len(note.Beam) > 0 {
@@ -877,7 +866,8 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 			notes = append(notes, renderer)
 
 			switch note.Type {
-			case musicxml.NoteLengthHalf: // TODO: add support for whole note
+			case musicxml.NoteLengthHalf:
+				// TODO: add support for whole note
 				// TODO: add support for other time signature. currently only support 4/4
 				addDotCounter := 1
 				if len(note.Dot) == 1 {
@@ -937,5 +927,64 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 		locationX += LOWERCASE_LENGTH
 		RenderOctave(s, notes)
 		RenderSlurAndBeam(s, notes)
+	}
+}
+
+func RenderBezier(set []SlurBezier, canvas *svg.SVG) {
+	for _, s := range set {
+
+		slurResult := SlurBezier{
+			Start: CoordinateWithOctave{
+				Coordinate: Coordinate{
+					X: s.Start.X + 5,
+					Y: s.Start.Y + 5,
+				},
+				Octave: s.Start.Octave,
+			},
+			End: CoordinateWithOctave{
+				Coordinate: Coordinate{
+					X: s.End.X + 5,
+					Y: s.End.Y + 5,
+				},
+				Octave: s.End.Octave,
+			},
+		}
+
+		if slurResult.Start.Octave < 0 {
+			slurResult.Start = CoordinateWithOctave{
+				Coordinate: Coordinate{
+					X: slurResult.Start.X + 3,
+					Y: slurResult.Start.Y + 3,
+				},
+			}
+		}
+
+		if slurResult.End.Octave < 0 {
+
+			slurResult.End = CoordinateWithOctave{
+				Coordinate: Coordinate{
+					X: slurResult.End.X - 3,
+					Y: slurResult.End.Y + 3,
+				},
+			}
+		}
+
+		pull := CoordinateWithOctave{
+			Coordinate: Coordinate{
+				X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
+				Y: slurResult.Start.Y + 7.5,
+			},
+		}
+		slurResult.Pull = pull
+
+		canvas.Qbez(
+			int(math.Round(slurResult.Start.X)),
+			int(math.Round(slurResult.Start.Y)),
+			int(math.Round(pull.X)),
+			int(math.Round(pull.Y)),
+			int(math.Round(slurResult.End.X)),
+			int(math.Round(slurResult.End.Y)),
+			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5",
+		)
 	}
 }

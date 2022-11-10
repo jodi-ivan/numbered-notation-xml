@@ -133,6 +133,11 @@ type Rest struct {
 	Name xml.Name `xml:"rest"`
 }
 
+type Tie struct {
+	Name xml.Name     `xml:"tied"`
+	Type NoteSlurType `xml:"type,attr"`
+}
+
 type Note struct {
 	Pitch struct {
 		Step   string `xml:"step"`
@@ -154,6 +159,7 @@ type NoteBeam struct {
 
 type NoteNotation struct {
 	Slur         []NotationSlur        `xml:"slur" json:",omitempty"`
+	Tied         *Tie                  `xml:"tied" json:",omitempty"`
 	Articulation *NotationArticulation `xml:"articulations" json:",omitempty"`
 }
 

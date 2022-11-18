@@ -501,11 +501,13 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 		s.Gstyle("font-family:Old Standard TT;font-weight:500")
 		for _, n := range notes {
-			// TODO: render strikethrough
 			if n.IsDotted {
 				s.Text(locationX, y, ".")
 			} else {
 				s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
+				if n.Striketrough {
+					s.Line(locationX+10, y-16, locationX, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
+				}
 			}
 
 			n.PositionX = locationX

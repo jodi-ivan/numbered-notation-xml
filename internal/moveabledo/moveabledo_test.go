@@ -1,14 +1,15 @@
-package renderer
+package moveabledo
 
 import (
 	"testing"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
 func TestConvertPitchToNumbered(t *testing.T) {
 	type args struct {
-		ks    KeySignature
+		ks    keysig.KeySignature
 		pitch string
 	}
 	tests := []struct {
@@ -20,10 +21,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input C",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "c",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = c",
 				},
 				pitch: "C",
@@ -34,10 +35,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input C#",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "c",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = c",
 				},
 				pitch: "C#",
@@ -48,10 +49,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input E",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "c",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = c",
 				},
 				pitch: "E",
@@ -62,10 +63,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input F",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "c",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = c",
 				},
 				pitch: "F",
@@ -76,10 +77,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input F#",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "c",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = c",
 				},
 				pitch: "F#",
@@ -90,10 +91,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input B",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "c",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = c",
 				},
 				pitch: "B",
@@ -104,10 +105,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input D",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "d",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = d",
 				},
 				pitch: "D",
@@ -118,10 +119,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input B",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "d",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = d",
 				},
 				pitch: "B",
@@ -132,10 +133,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input F#",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "d",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = d",
 				},
 				pitch: "F#",
@@ -146,10 +147,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input C#",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "d",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = d",
 				},
 				pitch: "C#",
@@ -160,10 +161,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input A",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "a",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = a",
 				},
 				pitch: "A",
@@ -174,10 +175,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input B",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "a",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = a",
 				},
 				pitch: "B",
@@ -188,10 +189,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input C",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "a",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = a",
 				},
 				pitch: "C",
@@ -202,10 +203,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input C#",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "a",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = a",
 				},
 				pitch: "C#",
@@ -216,10 +217,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input G",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     0,
 					Key:       "a",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = a",
 				},
 				pitch: "G",
@@ -248,10 +249,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input B",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "b",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = b",
 				},
 				pitch: "B",
@@ -262,10 +263,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input C#",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "b",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = b",
 				},
 				pitch: "C#",
@@ -276,10 +277,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input C",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "b",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = b",
 				},
 				pitch: "C",
@@ -290,10 +291,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input F#",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     2,
 					Key:       "b",
-					Mode:      KeySignatureModeMinor,
+					Mode:      keysig.NewMode("minor"),
 					Humanized: "la = b",
 				},
 				pitch: "F#",
@@ -304,10 +305,10 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "F major input Bb",
 			args: args{
-				ks: KeySignature{
+				ks: keysig.KeySignature{
 					Fifth:     -1,
 					Key:       "f",
-					Mode:      KeySignatureModeMajor,
+					Mode:      keysig.NewMode("major"),
 					Humanized: "do = f",
 				},
 				pitch: "Bb",
@@ -329,87 +330,12 @@ func TestConvertPitchToNumbered(t *testing.T) {
 	}
 }
 
-func Test_getNextHalfStep(t *testing.T) {
-	type args struct {
-		pitch string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "C",
-			args: args{
-				pitch: "C",
-			},
-			want: "C#",
-		},
-		{
-			name: "C#",
-			args: args{
-				pitch: "C#",
-			},
-			want: "D",
-		},
-		{
-			name: "D",
-			args: args{
-				pitch: "D",
-			},
-			want: "D#",
-		},
-		{
-			name: "D#",
-			args: args{
-				pitch: "D#",
-			},
-			want: "E",
-		},
-		{
-			name: "E",
-			args: args{
-				pitch: "E",
-			},
-			want: "F",
-		},
-		{
-			name: "B",
-			args: args{
-				pitch: "B",
-			},
-			want: "C",
-		},
-		{
-			name: "B#",
-			args: args{
-				pitch: "B#",
-			},
-			want: "C#",
-		},
-		{
-			name: "Bx",
-			args: args{
-				pitch: "Bx",
-			},
-			want: "D",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getNextHalfStep(tt.args.pitch); got != tt.want {
-				t.Errorf("getNextHalfStep() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestKeySignature_GetOctave(t *testing.T) {
+func TestGetOctave(t *testing.T) {
 	type fields struct {
 		Key       string
-		Mode      KeySignatureMode
 		Humanized string
 		Fifth     int
+		Mode      keysig.KeySignatureMode
 	}
 	type args struct {
 		note musicxml.Note
@@ -424,12 +350,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 			name: "C major octave 0",
 			fields: fields{
 				Key:       "c",
-				Mode:      KeySignatureModeMajor,
 				Humanized: "do = c",
 				Fifth:     0,
+				Mode:      keysig.KeySignatureModeMajor,
 			},
 			args: args{
-				musicxml.Note{
+				note: musicxml.Note{
 					Pitch: struct {
 						Step   string `xml:"step"`
 						Octave int    `xml:"octave"`
@@ -445,12 +371,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 			name: "C major octave -1",
 			fields: fields{
 				Key:       "c",
-				Mode:      KeySignatureModeMajor,
 				Humanized: "do = c",
 				Fifth:     0,
+				Mode:      keysig.KeySignatureModeMajor,
 			},
 			args: args{
-				musicxml.Note{
+				note: musicxml.Note{
 					Pitch: struct {
 						Step   string `xml:"step"`
 						Octave int    `xml:"octave"`
@@ -466,12 +392,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 			name: "C major octave (+)1",
 			fields: fields{
 				Key:       "c",
-				Mode:      KeySignatureModeMajor,
 				Humanized: "do = c",
 				Fifth:     0,
+				Mode:      keysig.KeySignatureModeMajor,
 			},
 			args: args{
-				musicxml.Note{
+				note: musicxml.Note{
 					Pitch: struct {
 						Step   string `xml:"step"`
 						Octave int    `xml:"octave"`
@@ -487,12 +413,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 			name: "(C4) ti/si on D major",
 			fields: fields{
 				Key:       "d",
-				Mode:      KeySignatureModeMajor,
 				Humanized: "do = d",
 				Fifth:     2,
+				Mode:      keysig.KeySignatureModeMajor,
 			},
 			args: args{
-				musicxml.Note{
+				note: musicxml.Note{
 					Pitch: struct {
 						Step   string `xml:"step"`
 						Octave int    `xml:"octave"`
@@ -508,12 +434,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 			name: "E4 - re - on D major",
 			fields: fields{
 				Key:       "d",
-				Mode:      KeySignatureModeMajor,
 				Humanized: "do = d",
 				Fifth:     2,
+				Mode:      keysig.KeySignatureModeMajor,
 			},
 			args: args{
-				musicxml.Note{
+				note: musicxml.Note{
 					Pitch: struct {
 						Step   string `xml:"step"`
 						Octave int    `xml:"octave"`
@@ -529,12 +455,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 			name: "C5 - si - on D major",
 			fields: fields{
 				Key:       "d",
-				Mode:      KeySignatureModeMajor,
 				Humanized: "do = d",
 				Fifth:     2,
+				Mode:      keysig.KeySignatureModeMajor,
 			},
 			args: args{
-				musicxml.Note{
+				note: musicxml.Note{
 					Pitch: struct {
 						Step   string `xml:"step"`
 						Octave int    `xml:"octave"`
@@ -551,12 +477,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 			name: "D5 - do - on D major",
 			fields: fields{
 				Key:       "d",
-				Mode:      KeySignatureModeMajor,
 				Humanized: "do = d",
 				Fifth:     2,
+				Mode:      keysig.KeySignatureModeMajor,
 			},
 			args: args{
-				musicxml.Note{
+				note: musicxml.Note{
 					Pitch: struct {
 						Step   string `xml:"step"`
 						Octave int    `xml:"octave"`
@@ -571,13 +497,12 @@ func TestKeySignature_GetOctave(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ks := KeySignature{
+			ks := keysig.KeySignature{
 				Key:       tt.fields.Key,
-				Mode:      tt.fields.Mode,
 				Humanized: tt.fields.Humanized,
 				Fifth:     tt.fields.Fifth,
 			}
-			if got := ks.GetOctave(tt.args.note); got != tt.want {
+			if got := GetOctave(ks, tt.args.note); got != tt.want {
 				t.Errorf("KeySignature.GetOctave() = %v, want %v", got, tt.want)
 			}
 		})

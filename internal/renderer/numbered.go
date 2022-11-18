@@ -198,7 +198,7 @@ func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 				beams[b.Number] = BeamLine{
 					Start: Coordinate{
 						X: float64(note.PositionX),
-						Y: float64(note.PositionY - 18 - ((b.Number - 1) * 3)),
+						Y: float64(note.PositionY - 20 + ((b.Number - 1) * 3)),
 					},
 				}
 			case musicxml.NoteBeamTypeEnd:

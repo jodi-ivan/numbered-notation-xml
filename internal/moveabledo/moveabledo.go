@@ -54,12 +54,18 @@ func GetOctave(ks keysig.KeySignature, note musicxml.Note) int {
 		return note.Pitch.Octave - 4
 	}
 
+	offset := 0
+
+	if ks.Fifth == -2 && ks.Mode.Mode == keysig.KeySignatureModeMajor {
+		offset = +1
+	}
+
 	do := ks.GetBasedPitch()
 	direction := utils.ComparePitch(do, pitch)
 	if direction == 1 { // below do
-		return note.Pitch.Octave - 4 - 1
+		return note.Pitch.Octave - 4 - 1 + offset
 	}
 
-	return note.Pitch.Octave - 4
+	return note.Pitch.Octave - 4 + offset
 
 }

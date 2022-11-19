@@ -27,13 +27,11 @@ func NewKeySignature(key musicxml.KeySignature) KeySignature {
 	}
 	fifths := key.Fifth
 
-	var letterKey string
-
 	mode := NewMode(keyMode)
 
 	return KeySignature{
 		Fifth:     fifths,
-		Key:       letterKey,
+		Key:       mode.GetRoot(fifths),
 		Mode:      mode,
 		Humanized: mode.GetHumanized(fifths),
 	}

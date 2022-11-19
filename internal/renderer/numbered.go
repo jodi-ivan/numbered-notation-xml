@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,6 +13,8 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 )
 
 const LOWERCASE_LENGTH = 15
@@ -43,7 +46,7 @@ func googlefont(f string) []byte {
 	return b
 }
 
-func RenderNumbered(w http.ResponseWriter, music musicxml.MusicXML) {
+func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.MusicXML) {
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.WriteHeader(200)
 	s := svg.New(w)
@@ -83,7 +86,7 @@ func RenderNumbered(w http.ResponseWriter, music musicxml.MusicXML) {
 	s.Text(LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
 	relativeY += 50
 
-	RenderMeasures(s, LAYOUT_INDENT_LENGTH, relativeY, music.Part)
+	RenderMeasures(r.Context(), s, LAYOUT_INDENT_LENGTH, relativeY, music.Part)
 	s.End()
 }
 
@@ -345,13 +348,16 @@ func CalculateLyricWidth(txt string) float64 {
 	return res
 }
 
-func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
+func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml.Part) {
 
 	keySignature := keysig.NewKeySignature(measures.Measures[0].Attribute.Key)
 
 	var locationX int
 	locationX = x
 	totalMeasure := len(measures.Measures)
+	restBeginning := false
+
+	timeSignature := timesig.NewTimeSignatures(ctx, measures.Measures)
 
 	for _, measure := range measures.Measures {
 
@@ -360,9 +366,19 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 		for notePosInMeasure, note := range measure.Notes {
 
 			// don't print anything when rest on the beginning on the music
-			if measure.Number == 1 && note.Rest != nil && notePosInMeasure == 0 {
-				continue
+			if note.Rest != nil && measure.Number == 1 {
+
+				if notePosInMeasure == 0 {
+					restBeginning = true
+					continue
+				}
+
+				if restBeginning {
+					continue
+				}
 			}
+
+			restBeginning = false
 
 			// don't print when rest on the last of the music
 			if measure.Number == totalMeasure && (notePosInMeasure+1) == totalNotes && note.Rest != nil {
@@ -371,6 +387,10 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 
+			noteLength := timeSignature.GetNoteLength(ctx, measure.Number, note)
+			additionalRaw := numbered.RenderLengthNote(ctx, timeSignature, note, noteLength)
+
+			aditiomal := &NoteRenderer{}
 			renderer := &NoteRenderer{
 				PositionX:    x,
 				PositionY:    y,
@@ -428,28 +448,6 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 			noteWidth = LOWERCASE_LENGTH
 
-			/*
-
-
-
-				// TODO: beat counter to dotted and beam
-				switch note.Type {
-				case musicxml.NoteLengthWhole:
-
-					// whole note in musical number notation will add 3 dots in front of the note
-					// C whole note will represent as
-					//      1 .1 . . |
-					noteWidth = 3 * LOWERCASE_LENGTH * 3
-
-				case musicxml.NoteLengthHalf:
-					// half  note in musical number notation will add 1 dots in front of the note
-					// C half note will represent as
-					//      1 . |
-					noteWidth = LOWERCASE_LENGTH * 2
-				}
-
-			*/
-
 			if noteWidth > lyricWidth {
 				x += noteWidth
 				renderer.Width = noteWidth
@@ -467,25 +465,6 @@ func RenderMeasures(s *svg.SVG, x, y int, measures musicxml.Part) {
 
 			notes = append(notes, renderer)
 
-			switch note.Type {
-			case musicxml.NoteLengthHalf:
-				// TODO: add support for whole note
-				// TODO: add support for other time signature. currently only support 4/4
-				addDotCounter := 1
-				if len(note.Dot) == 1 {
-					addDotCounter = 2
-				}
-				for i := 0; i < addDotCounter; i++ {
-					notes = append(notes, &NoteRenderer{
-						PositionX: renderer.PositionX + (SPACE_LENGTH * i),
-						PositionY: y,
-						IsDotted:  true,
-						Width:     int(CalculateLyricWidth(".")) + SPACE_LENGTH,
-					})
-					x += SPACE_LENGTH + int(CalculateLyricWidth("."))
-				}
-
-			}
 		}
 
 		// TODO: align justify

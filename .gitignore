@@ -18,6 +18,7 @@ vendor/
 #musescore related 
 *.mscz
 .mscbackup/
+*.musicxml
 
 #vscode related
 .vscode/

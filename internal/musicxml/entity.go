@@ -55,7 +55,7 @@ type KeySignature struct {
 
 type Attribute struct {
 	Key  KeySignature `xml:"key"`
-	Time struct {
+	Time *struct {
 		Beats    int `xml:"beats"`
 		BeatType int `xml:"beat-type"`
 	} `xml:"time"`

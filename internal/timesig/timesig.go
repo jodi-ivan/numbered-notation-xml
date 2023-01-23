@@ -30,6 +30,7 @@ func (t *Time) String() string {
 	return t.GetNotated()
 }
 
+// calculateNoteLength in beat
 func (t *Time) calculateNoteLength(ctx context.Context, note musicxml.Note) float64 {
 	// cases
 

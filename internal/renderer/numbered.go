@@ -148,7 +148,107 @@ type BeamLine struct {
 	End   Coordinate
 }
 
-func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
+// cleanAdditionalBeams cleans the beam for the renderer
+// merge the additional beam (from the length note calculation)
+// FIXME: flatten the 4beat type optional to no 1
+// TODO: grouping 2x2 or 3x2
+func cleanAdditionalBeams(ctx context.Context, notes []*NoteRenderer) []*NoteRenderer {
+
+	// clean the additional
+
+	switches := map[int]musicxml.NoteBeamType{}
+
+	var prev *NoteRenderer
+
+	for indexNote, note := range notes {
+		if indexNote == len(notes)-1 {
+			prev = note
+			continue
+		}
+
+		newBeam := map[int]Beam{}
+
+		for k, v := range note.Beam {
+			newBeam[k] = v
+		}
+
+		if len(note.Beam) == 0 {
+			if indexNote == 0 {
+				prev = note
+				continue
+			} else {
+
+				if _, ok := switches[INDEX_BEAM_ADDITIONAL]; !ok {
+					continue
+				}
+
+				prev.Beam[INDEX_BEAM_ADDITIONAL] = Beam{
+					Number: INDEX_BEAM_ADDITIONAL,
+					Type:   musicxml.NoteBeamTypeEnd,
+				}
+
+				delete(switches, INDEX_BEAM_ADDITIONAL)
+			}
+		}
+
+		for index := range note.Beam {
+			if index != INDEX_BEAM_ADDITIONAL {
+				if indexNote == 0 {
+					continue
+				} else {
+					if t, ok := switches[INDEX_BEAM_ADDITIONAL]; ok && t == musicxml.NoteBeamTypeBegin {
+
+						if _, ok := prev.Beam[INDEX_BEAM_ADDITIONAL]; ok {
+
+							prev.Beam[INDEX_BEAM_ADDITIONAL] = Beam{
+								Number: INDEX_BEAM_ADDITIONAL,
+								Type:   musicxml.NoteBeamTypeEnd,
+							}
+
+						}
+						delete(switches, INDEX_BEAM_ADDITIONAL)
+					}
+
+				}
+			} else {
+				if _, ok := switches[index]; !ok {
+
+					switches[index] = musicxml.NoteBeamTypeBegin
+					newBeam[index] = Beam{
+						Number: index,
+						Type:   musicxml.NoteBeamTypeBegin,
+					}
+				}
+
+				note.Beam = newBeam
+			}
+
+		}
+		prev = note
+
+	}
+
+	if len(prev.Beam) > 0 {
+		additional, ok := prev.Beam[INDEX_BEAM_ADDITIONAL]
+		if ok {
+			if additional.Type != musicxml.NoteBeamTypeEnd {
+				newBeam := prev.Beam
+
+				newBeam[INDEX_BEAM_ADDITIONAL] = Beam{
+					Type:   musicxml.NoteBeamTypeEnd,
+					Number: INDEX_BEAM_ADDITIONAL,
+				}
+
+				prev.Beam = newBeam
+			}
+		}
+	}
+
+	return notes
+
+}
+
+func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRenderer) {
 	slurs := map[int]SlurBezier{}
 	slurSets := []SlurBezier{}
 
@@ -159,13 +259,13 @@ func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}
 
-	// FIXME: support for multi-octave
+	// FIXED: support for multi-octave
 	// currently it support multi-ties based on the pitch
 	// since there is no indicator for what octave it could colliding with each other
 	ties := map[int]SlurBezier{}
 	tiesSet := []SlurBezier{}
 
-	for _, note := range notes {
+	for _, note := range cleanAdditionalBeams(ctx, notes) {
 
 		for _, s := range note.Slur {
 			if s.Type == musicxml.NoteSlurTypeStart {
@@ -195,13 +295,16 @@ func RenderSlurAndBeam(canvas *svg.SVG, notes []*NoteRenderer) {
 		}
 
 		// TODO: team beam only support 2 notes grouping
+		// TODO add support for backward hook and forward hook
+		// TODO: add support for signular note notebeam type
 		for _, b := range note.Beam {
+
 			switch b.Type {
 			case musicxml.NoteBeamTypeBegin:
 				beams[b.Number] = BeamLine{
 					Start: Coordinate{
 						X: float64(note.PositionX),
-						Y: float64(note.PositionY - 20 + ((b.Number - 1) * 3)),
+						Y: float64(note.PositionY - 20 + ((b.Number) * 3)),
 					},
 				}
 			case musicxml.NoteBeamTypeEnd:
@@ -388,9 +491,9 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 
 			noteLength := timeSignature.GetNoteLength(ctx, measure.Number, note)
-			additionalRaw := numbered.RenderLengthNote(ctx, timeSignature, note, noteLength)
+			additionalRenderer := numbered.RenderLengthNote(ctx, timeSignature, measure.Number, noteLength)
 
-			aditiomal := &NoteRenderer{}
+			// aditiomal := &NoteRenderer{}
 			renderer := &NoteRenderer{
 				PositionX:    x,
 				PositionY:    y,
@@ -399,6 +502,17 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 				Octave:       octave,
 				Striketrough: strikethrough,
 				IsRest:       (note.Rest != nil),
+				Beam:         map[int]Beam{},
+			}
+
+			if len(additionalRenderer) > 0 {
+				addRenderer := additionalRenderer[0]
+				if addRenderer.Type == musicxml.NoteLengthEighth {
+					renderer.Beam[INDEX_BEAM_ADDITIONAL] = Beam{
+						Number: INDEX_BEAM_ADDITIONAL,
+						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
+					}
+				}
 			}
 
 			if note.Notations != nil {
@@ -422,12 +536,15 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			}
 
 			if len(note.Beam) > 0 {
-				renderer.Beam = map[int]Beam{}
-				for _, beam := range note.Beam {
-					renderer.Beam[beam.Number] = Beam{
-						Number: beam.Number,
-						Type:   beam.State,
+				currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
+				if currTimesig.BeatType != 4 {
+					for _, beam := range note.Beam {
+						renderer.Beam[beam.Number] = Beam{
+							Number: beam.Number,
+							Type:   beam.State,
+						}
 					}
+
 				}
 
 			}
@@ -440,10 +557,11 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 					Syllabic: note.Lyric[0].Syllabic,
 				}
 
-				lyricWidth = int(math.Ceil(CalculateLyricWidth(note.Lyric[0].Text.Value)))
+				lyricWidth = int(math.Trunc(CalculateLyricWidth(note.Lyric[0].Text.Value)))
 				if note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeEnd || note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeSingle {
 					lyricWidth += SPACE_LENGTH
 				}
+				lyricWidth = lyricWidth + 4 // lyric padding
 			}
 
 			noteWidth = LOWERCASE_LENGTH
@@ -452,18 +570,32 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 				x += noteWidth
 				renderer.Width = noteWidth
 			} else {
-				if note.Type == musicxml.NoteLengthWhole || note.Type == musicxml.NoteLengthHalf {
-
-					x += noteWidth
-					renderer.Width = noteWidth
-				} else {
-
-					x += lyricWidth
-					renderer.Width = lyricWidth
-				}
+				x += lyricWidth
+				renderer.Width = lyricWidth
 			}
 
 			notes = append(notes, renderer)
+
+			for i, additional := range additionalRenderer {
+				if i == 0 {
+					continue
+				}
+				additionalNote := &NoteRenderer{
+					PositionY: y,
+					Width:     LOWERCASE_LENGTH,
+					IsDotted:  additional.IsDotted,
+				}
+
+				if additional.Type == musicxml.NoteLengthEighth {
+					additionalNote.Beam = map[int]Beam{
+						INDEX_BEAM_ADDITIONAL: Beam{
+							Number: INDEX_BEAM_ADDITIONAL,
+							Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
+						},
+					}
+				}
+				notes = append(notes, additionalNote)
+			}
 
 		}
 
@@ -476,14 +608,31 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			y = y + 70
 			locationX = LAYOUT_INDENT_LENGTH
 			x = LAYOUT_INDENT_LENGTH
+
 		}
 
 		s.Gstyle("font-family:Old Standard TT;font-weight:500")
-		for _, n := range notes {
+		xNotes := 0
+		continueDot := false
+		lastDotLoc := 0
+
+		revisionX := map[int]int{}
+		for i, n := range notes {
 			if n.IsDotted {
-				s.Text(locationX, y, ".")
+				if continueDot {
+					s.Text(lastDotLoc+UPPERCASE_LENGTH, y, ".")
+					revisionX[i] = lastDotLoc + UPPERCASE_LENGTH
+					lastDotLoc = lastDotLoc + UPPERCASE_LENGTH
+				} else {
+					s.Text(xNotes+UPPERCASE_LENGTH, y, ".")
+					revisionX[i] = xNotes + UPPERCASE_LENGTH
+					lastDotLoc = xNotes + UPPERCASE_LENGTH
+				}
+				continueDot = true
 			} else {
 				s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
+				xNotes = locationX
+				continueDot = false
 				if n.Striketrough {
 					s.Line(locationX+10, y-16, locationX, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
 				}
@@ -505,9 +654,18 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			}
 		}
 		s.Gend()
+
 		locationX += LOWERCASE_LENGTH
+
+		for i, rev := range revisionX {
+			note := notes[i]
+
+			note.PositionX = rev
+			notes[i] = note
+		}
 		RenderOctave(s, notes)
-		RenderSlurAndBeam(s, notes)
+		RenderSlurAndBeam(ctx, s, notes)
+
 	}
 }
 

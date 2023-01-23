@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"encoding/xml"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,8 +17,10 @@ type ReadFile struct {
 }
 
 func (rf *ReadFile) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	filelocation := "files/scores/kj-001.musicxml"
 
+	fileName := r.FormValue("file")
+
+	filelocation := fmt.Sprintf("files/scores/%v", fileName)
 	xmlFile, err := os.Open(filelocation)
 	if err != nil {
 		log.Println("failed to read file: ", err.Error())
@@ -40,6 +43,6 @@ func (rf *ReadFile) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	renderer.RenderNumbered(w, music)
+	renderer.RenderNumbered(w, r, music)
 
 }

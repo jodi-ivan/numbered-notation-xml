@@ -111,6 +111,10 @@ const (
 	NoteBeamTypeEnd          NoteBeamType = "end"
 	NoteBeamTypeForwardHook  NoteBeamType = "forward hook"
 	NoteBeamTypeBackwardHook NoteBeamType = "backward hook"
+
+	// additional beam. used for internal used for rendering the numbered notes
+	// location 0
+	NoteBeam_INTERNAL_TypeAdditional NoteBeamType = "additional"
 )
 
 func (na NoteAccidental) GetAccidental() string {

@@ -124,6 +124,9 @@ type NoteRenderer struct {
 	Slur         map[int]Slur
 	Beam         map[int]Beam
 	Tie          *Slur
+
+	// internal use
+	isLengthTakenFromLyric bool
 }
 
 type Coordinate struct {
@@ -356,6 +359,7 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 	RenderBezier(slurSets, canvas)
 	RenderBezier(tiesSet, canvas)
 
+	canvas.Group("class='beam'")
 	for _, b := range beamSets {
 		canvas.Line(
 			int(math.Round(b.Start.X)),
@@ -365,9 +369,11 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.2",
 		)
 	}
+	canvas.Gend()
 }
 
 func RenderOctave(canvas *svg.SVG, notes []*NoteRenderer) {
+	canvas.Group("class='octaves'")
 	for _, note := range notes {
 		if note.Octave < 0 {
 			canvas.Circle(note.PositionX+5, note.PositionY+5, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
@@ -377,6 +383,7 @@ func RenderOctave(canvas *svg.SVG, notes []*NoteRenderer) {
 			canvas.Circle(note.PositionX+5, note.PositionY-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
 		}
 	}
+	canvas.Gend()
 }
 
 func CalculateLyricWidth(txt string) float64 {
@@ -454,15 +461,16 @@ func CalculateLyricWidth(txt string) float64 {
 func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml.Part) {
 
 	keySignature := keysig.NewKeySignature(measures.Measures[0].Attribute.Key)
+	x = LAYOUT_INDENT_LENGTH
 
-	var locationX int
-	locationX = x
 	totalMeasure := len(measures.Measures)
 	restBeginning := false
 
 	timeSignature := timesig.NewTimeSignatures(ctx, measures.Measures)
 
 	for _, measure := range measures.Measures {
+
+		s.Group("class='measure'", fmt.Sprintf("id='measure-%d'", measure.Number))
 
 		notes := []*NoteRenderer{}
 		totalNotes := len(measure.Notes)
@@ -556,7 +564,7 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 					Text:     note.Lyric[0].Text.Value,
 					Syllabic: note.Lyric[0].Syllabic,
 				}
-
+				// FIXED: next position notes is wrong (there like more space than it should) when the width of lyric > note
 				lyricWidth = int(math.Trunc(CalculateLyricWidth(note.Lyric[0].Text.Value)))
 				if note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeEnd || note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeSingle {
 					lyricWidth += SPACE_LENGTH
@@ -567,11 +575,11 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			noteWidth = LOWERCASE_LENGTH
 
 			if noteWidth > lyricWidth {
-				x += noteWidth
 				renderer.Width = noteWidth
+				renderer.isLengthTakenFromLyric = false
 			} else {
-				x += lyricWidth
 				renderer.Width = lyricWidth
+				renderer.isLengthTakenFromLyric = true
 			}
 
 			notes = append(notes, renderer)
@@ -602,20 +610,22 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 		// TODO: align justify
 		overallWidth := 0
 		for _, n := range notes {
+			//FIXED [Maybe] width is unreliable, especially when the width is the lyric. calculation seems correct. but next note placement is wrong. makes the
+			//	page calculation incorrect
 			overallWidth += n.Width
 		}
 		if (x + overallWidth) > (LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH) {
 			y = y + 70
-			locationX = LAYOUT_INDENT_LENGTH
 			x = LAYOUT_INDENT_LENGTH
 
 		}
 
-		s.Gstyle("font-family:Old Standard TT;font-weight:500")
+		s.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		xNotes := 0
 		continueDot := false
 		lastDotLoc := 0
 
+		var prev *NoteRenderer
 		revisionX := map[int]int{}
 		for i, n := range notes {
 			if n.IsDotted {
@@ -630,24 +640,31 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 				}
 				continueDot = true
 			} else {
-				s.Text(locationX, y, fmt.Sprintf("%d", n.Note))
-				xNotes = locationX
+				s.Text(x, y, fmt.Sprintf("%d", n.Note))
+				xNotes = x
 				continueDot = false
 				if n.Striketrough {
-					s.Line(locationX+10, y-16, locationX, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
+					s.Line(x+10, y-16, x, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
 				}
 			}
 
-			n.PositionX = locationX
+			n.PositionX = x
 			n.PositionY = y
-			locationX += n.Width
+			x += n.Width
+			if prev != nil && prev.isLengthTakenFromLyric && n.IsDotted {
+				lyricWidth := CalculateLyricWidth(prev.Lyric.Text)
+				if lyricWidth > float64(LOWERCASE_LENGTH+LOWERCASE_LENGTH) { // the note and the dot
+					x = x - n.Width
+				}
+			}
+			prev = n
 
 		}
 		s.Gend()
 		// FIXME: Print it as glyph
-		s.Text(locationX, y, " | ", "font-family:Noto Music")
+		s.Text(x, y, " | ", "font-family:Noto Music")
 
-		s.Gstyle("font-family:Caladea")
+		s.Group("class='lyric'", "style='font-family:Caladea'")
 		for _, n := range notes {
 			if n.Lyric.Text != "" {
 				s.Text(n.PositionX, n.PositionY+25, n.Lyric.Text)
@@ -655,7 +672,7 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 		}
 		s.Gend()
 
-		locationX += LOWERCASE_LENGTH
+		x += LOWERCASE_LENGTH
 
 		for i, rev := range revisionX {
 			note := notes[i]
@@ -665,11 +682,13 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 		}
 		RenderOctave(s, notes)
 		RenderSlurAndBeam(ctx, s, notes)
+		s.Gend()
 
 	}
 }
 
 func RenderBezier(set []SlurBezier, canvas *svg.SVG) {
+	canvas.Group("class='slurties'")
 	// TODO: check ties across measure bar
 	for _, s := range set {
 
@@ -727,4 +746,5 @@ func RenderBezier(set []SlurBezier, canvas *svg.SVG) {
 			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5",
 		)
 	}
+	canvas.Gend()
 }

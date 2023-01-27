@@ -151,79 +151,93 @@ type BeamLine struct {
 	End   Coordinate
 }
 
-// cleanAdditionalBeams cleans the beam for the renderer
-// merge the additional beam (from the length note calculation)
-// FIXME: flatten the 4beat type optional to no 1
-// TODO: grouping 2x2 or 3x2
-func cleanAdditionalBeams(ctx context.Context, notes []*NoteRenderer) []*NoteRenderer {
-
-	// clean the additional
+func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber int) []*NoteRenderer {
 
 	switches := map[int]musicxml.NoteBeamType{}
 
 	var prev *NoteRenderer
 
 	for indexNote, note := range notes {
-		if indexNote == len(notes)-1 {
+
+		if indexNote == len(notes)-1 { // ignore last note or no beam
 			prev = note
 			continue
 		}
 
-		newBeam := map[int]Beam{}
-
-		for k, v := range note.Beam {
-			newBeam[k] = v
-		}
-
-		if len(note.Beam) == 0 {
+		if len(note.Beam) == 0 { // stopping the beam
 			if indexNote == 0 {
 				prev = note
 				continue
 			} else {
 
-				if _, ok := switches[INDEX_BEAM_ADDITIONAL]; !ok {
+				if _, ok := switches[beamNumber]; !ok {
+					prev = note
 					continue
 				}
 
-				prev.Beam[INDEX_BEAM_ADDITIONAL] = Beam{
-					Number: INDEX_BEAM_ADDITIONAL,
+				prev.Beam[beamNumber] = Beam{
+					Number: beamNumber,
 					Type:   musicxml.NoteBeamTypeEnd,
 				}
 
-				delete(switches, INDEX_BEAM_ADDITIONAL)
+				delete(switches, beamNumber)
 			}
 		}
 
-		for index := range note.Beam {
-			if index != INDEX_BEAM_ADDITIONAL {
-				if indexNote == 0 {
-					continue
-				} else {
-					if t, ok := switches[INDEX_BEAM_ADDITIONAL]; ok && t == musicxml.NoteBeamTypeBegin {
+		if t, ok := switches[beamNumber]; !ok {
 
-						if _, ok := prev.Beam[INDEX_BEAM_ADDITIONAL]; ok {
+			if _, hasBeam := note.Beam[beamNumber]; !hasBeam {
+				prev = note
+				continue
+			}
+			newBeam := map[int]Beam{}
 
-							prev.Beam[INDEX_BEAM_ADDITIONAL] = Beam{
-								Number: INDEX_BEAM_ADDITIONAL,
-								Type:   musicxml.NoteBeamTypeEnd,
-							}
+			for k, v := range note.Beam {
+				newBeam[k] = v
+			}
 
-						}
-						delete(switches, INDEX_BEAM_ADDITIONAL)
-					}
+			switches[beamNumber] = musicxml.NoteBeamTypeBegin
+			newBeam[beamNumber] = Beam{
+				Number: beamNumber,
+				Type:   musicxml.NoteBeamTypeBegin,
+			}
+			note.Beam = newBeam
+		} else {
 
+			if prev == nil {
+				prev = note
+				continue
+			}
+
+			if _, hasBeam := note.Beam[beamNumber]; hasBeam {
+				newBeam := map[int]Beam{}
+
+				for k, v := range note.Beam {
+					newBeam[k] = v
 				}
-			} else {
-				if _, ok := switches[index]; !ok {
 
-					switches[index] = musicxml.NoteBeamTypeBegin
-					newBeam[index] = Beam{
-						Number: index,
-						Type:   musicxml.NoteBeamTypeBegin,
-					}
+				switches[beamNumber] = musicxml.NoteBeamTypeBegin
+				newBeam[beamNumber] = Beam{
+					Number: beamNumber,
+					Type:   musicxml.NoteBeamTypeContinue,
 				}
-
 				note.Beam = newBeam
+				prev = note
+				continue
+			}
+
+			if t == musicxml.NoteBeamTypeBegin {
+				if _, ok := prev.Beam[beamNumber]; !ok {
+					prev = note
+					continue
+				}
+
+				prev.Beam[beamNumber] = Beam{
+					Number: beamNumber,
+					Type:   musicxml.NoteBeamTypeEnd,
+				}
+
+				delete(switches, beamNumber)
 			}
 
 		}
@@ -232,32 +246,37 @@ func cleanAdditionalBeams(ctx context.Context, notes []*NoteRenderer) []*NoteRen
 	}
 
 	if len(prev.Beam) > 0 {
-		additional, ok := prev.Beam[INDEX_BEAM_ADDITIONAL]
+		additional, ok := prev.Beam[beamNumber]
 		if ok {
 			if additional.Type != musicxml.NoteBeamTypeEnd {
 				newBeam := prev.Beam
 
-				newBeam[INDEX_BEAM_ADDITIONAL] = Beam{
+				newBeam[beamNumber] = Beam{
 					Type:   musicxml.NoteBeamTypeEnd,
-					Number: INDEX_BEAM_ADDITIONAL,
+					Number: beamNumber,
 				}
 
 				prev.Beam = newBeam
+			} else {
+				if _, ok := switches[beamNumber]; !ok {
+					newBeam := prev.Beam
+					newBeam[beamNumber] = Beam{
+						Type:   musicxml.NoteBeamTypeBackwardHook,
+						Number: beamNumber,
+					}
+					prev.Beam = newBeam
+
+				}
 			}
 		}
 	}
-
 	return notes
-
 }
 
-func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRenderer) {
+func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRenderer, measureNo int) {
 	slurs := map[int]SlurBezier{}
 	slurSets := []SlurBezier{}
 
-	// [ ] note length
-	// [ ] hook start
-	// [ ] hook end
 	// [ ] 6/8 time signature
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}
@@ -267,8 +286,9 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 	// since there is no indicator for what octave it could colliding with each other
 	ties := map[int]SlurBezier{}
 	tiesSet := []SlurBezier{}
-
-	for _, note := range cleanAdditionalBeams(ctx, notes) {
+	cleanedNote := cleanBeamByNumber(ctx, notes, 1)
+	cleanedNote = cleanBeamByNumber(ctx, cleanedNote, 2)
+	for _, note := range cleanedNote {
 
 		for _, s := range note.Slur {
 			if s.Type == musicxml.NoteSlurTypeStart {
@@ -301,24 +321,39 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 		// TODO add support for backward hook and forward hook
 		// TODO: add support for signular note notebeam type
 		for _, b := range note.Beam {
+			positionY := float64(note.PositionY - 20 + ((b.Number) * 3))
 
 			switch b.Type {
 			case musicxml.NoteBeamTypeBegin:
 				beams[b.Number] = BeamLine{
 					Start: Coordinate{
 						X: float64(note.PositionX),
-						Y: float64(note.PositionY - 20 + ((b.Number) * 3)),
+						Y: positionY,
 					},
 				}
 			case musicxml.NoteBeamTypeEnd:
 
 				beam := beams[b.Number]
-				beam.End = Coordinate{
-					X: float64(note.PositionX) + 8,
-					Y: beam.Start.Y,
-				}
 
-				beams[b.Number] = beam
+				if beam.Start.X == 0 {
+					beams[b.Number] = BeamLine{
+						Start: Coordinate{
+							X: float64(note.PositionX),
+							Y: positionY,
+						},
+						End: Coordinate{
+							X: float64(note.PositionX) + 8,
+							Y: positionY,
+						},
+					}
+
+				} else {
+					beam.End = Coordinate{
+						X: float64(note.PositionX) + 8,
+						Y: beam.Start.Y,
+					}
+					beams[b.Number] = beam
+				}
 
 				beamSets = append(beamSets, beams[b.Number])
 
@@ -515,9 +550,16 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 
 			if len(additionalRenderer) > 0 {
 				addRenderer := additionalRenderer[0]
-				if addRenderer.Type == musicxml.NoteLengthEighth {
-					renderer.Beam[INDEX_BEAM_ADDITIONAL] = Beam{
-						Number: INDEX_BEAM_ADDITIONAL,
+				switch addRenderer.Type {
+				case musicxml.NoteLength16th:
+					renderer.Beam[2] = Beam{
+						Number: 2,
+						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
+					}
+					fallthrough
+				case musicxml.NoteLengthEighth:
+					renderer.Beam[1] = Beam{
+						Number: 1,
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
 				}
@@ -589,17 +631,24 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 					continue
 				}
 				additionalNote := &NoteRenderer{
-					PositionY: y,
-					Width:     LOWERCASE_LENGTH,
-					IsDotted:  additional.IsDotted,
+					PositionY:  y,
+					Width:      LOWERCASE_LENGTH,
+					IsDotted:   additional.IsDotted,
+					NoteLength: additional.Type,
+					Beam:       map[int]Beam{},
 				}
 
-				if additional.Type == musicxml.NoteLengthEighth {
-					additionalNote.Beam = map[int]Beam{
-						INDEX_BEAM_ADDITIONAL: Beam{
-							Number: INDEX_BEAM_ADDITIONAL,
-							Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-						},
+				switch additional.Type {
+				case musicxml.NoteLength16th:
+					additionalNote.Beam[2] = Beam{
+						Number: 2,
+						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
+					}
+					fallthrough
+				case musicxml.NoteLengthEighth:
+					additionalNote.Beam[1] = Beam{
+						Number: 1,
+						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
 				}
 				notes = append(notes, additionalNote)
@@ -652,10 +701,7 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			n.PositionY = y
 			x += n.Width
 			if prev != nil && prev.isLengthTakenFromLyric && n.IsDotted {
-				lyricWidth := CalculateLyricWidth(prev.Lyric.Text)
-				if lyricWidth > float64(LOWERCASE_LENGTH+LOWERCASE_LENGTH) { // the note and the dot
-					x = x - n.Width
-				}
+				x = x - n.Width
 			}
 			prev = n
 
@@ -681,7 +727,7 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			notes[i] = note
 		}
 		RenderOctave(s, notes)
-		RenderSlurAndBeam(ctx, s, notes)
+		RenderSlurAndBeam(ctx, s, notes, measure.Number)
 		s.Gend()
 
 	}

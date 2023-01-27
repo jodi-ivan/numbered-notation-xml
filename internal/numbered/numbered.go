@@ -26,10 +26,27 @@ func RenderLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int
 			},
 		}
 
+		if noteLength == 0.75 {
+			return []renderedNote{
+				renderedNote{
+					Type: musicxml.NoteLengthEighth,
+				},
+				renderedNote{IsDotted: true, Type: musicxml.NoteLength16th},
+			}
+		}
+
 		if noteLength == 0.5 {
 			return []renderedNote{
 				renderedNote{
 					Type: musicxml.NoteLengthEighth,
+				},
+			}
+		}
+
+		if noteLength == 0.25 {
+			return []renderedNote{
+				renderedNote{
+					Type: musicxml.NoteLength16th,
 				},
 			}
 		}

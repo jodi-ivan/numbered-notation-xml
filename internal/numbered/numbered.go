@@ -14,7 +14,6 @@ type renderedNote struct {
 }
 
 //RenderLengthNote give the data that needed for the numbered
-// TODO: add support got 8th beat and more
 func RenderLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []renderedNote {
 
 	currentTimeSig := ts.GetTimesignatureOnMeasure(ctx, measure)

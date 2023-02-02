@@ -17,6 +17,7 @@ vendor/
 
 #musescore related 
 *.mscz
+*.mscz.autosave
 .mscbackup/
 *.musicxml
 

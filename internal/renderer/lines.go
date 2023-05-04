@@ -119,7 +119,6 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 			}
 		}
 
-		// TODO: team beam only support 2 notes grouping
 		for _, b := range note.Beam {
 			positionY := float64(note.PositionY - 20 + ((b.Number) * 3))
 
@@ -216,10 +215,6 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 	var prev *NoteRenderer
 
 	for indexNote, note := range notes {
-
-		if indexNote == len(notes)-1 { // ignore last note or no beam
-			continue
-		}
 
 		if len(note.Beam) == 0 { // stopping the beam
 			if indexNote == 0 {

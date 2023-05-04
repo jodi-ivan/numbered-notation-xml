@@ -135,6 +135,8 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			}
 
 			if len(additionalRenderer) > 0 {
+
+				// the first additional notes is always altering the current note
 				addRenderer := additionalRenderer[0]
 				switch addRenderer.Type {
 				case musicxml.NoteLength16th:
@@ -207,6 +209,9 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			} else {
 				renderer.Width = lyricWidth
 				renderer.isLengthTakenFromLyric = true
+				if float64(lyricWidth) > float64(noteWidth+UPPERCASE_LENGTH) {
+					renderer.Width = UPPERCASE_LENGTH * 1.5
+				}
 			}
 
 			notes = append(notes, renderer)
@@ -272,6 +277,10 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 				}
 				continueDot = true
 			} else {
+				if continueDot {
+					// FIXED:the dotted does not adding pad to the next notes
+					x += LOWERCASE_LENGTH
+				}
 				s.Text(x, y, fmt.Sprintf("%d", n.Note))
 				xNotes = x
 				continueDot = false
@@ -288,6 +297,10 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			}
 			n.indexPosition = i
 			prev = n
+			// FIXED: the dotted does not give proper space at the end of measure
+			if n.IsDotted && i == len(notes)-1 {
+				x += LOWERCASE_LENGTH / 2
+			}
 
 		}
 		s.Gend()

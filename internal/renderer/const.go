@@ -1,12 +1,5 @@
 package renderer
 
-type contextKey string
-
-var (
-	contextKeyMeasure       contextKey = "measure"
-	contextKeyTimeSignature contextKey = "timesignature"
-)
-
 const LOWERCASE_LENGTH = 15
 const UPPERCASE_LENGTH = 20
 const SPACE_LENGTH = 7

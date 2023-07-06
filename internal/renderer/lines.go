@@ -5,6 +5,7 @@ import (
 	"math"
 
 	svg "github.com/ajstarks/svgo"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
@@ -87,6 +88,7 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 
 	cleanedNote, beamSegments[1] = cleanBeamByNumber(ctx, notes, 1)
 	cleanedNote, beamSegments[2] = cleanBeamByNumber(ctx, cleanedNote, 2)
+	// TODO: more than 16th beam support check
 
 	cleanedNote = splitBeam(ctx, cleanedNote, beamSegments)
 
@@ -362,9 +364,10 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 }
 
 // TODO: 7 and 8 notes
+// FIXME: the dotted shouldnot be spliitted
 func splitBeam(ctx context.Context, notes []*NoteRenderer, segments map[int][]beamSplitMarker) []*NoteRenderer {
 
-	measure, _ := ctx.Value(contextKeyMeasure).(int)
+	measure, _ := ctx.Value(constant.CtxKeyMeasureNum).(int)
 
 	_ = measure
 	if len(segments[1]) == 0 && len(segments[2]) == 0 {

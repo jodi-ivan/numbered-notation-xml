@@ -10,6 +10,7 @@ import (
 	"net/url"
 
 	svg "github.com/ajstarks/svgo"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -78,6 +79,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	s.End()
 }
 
+// TODO: breath mark
 func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml.Part) {
 
 	keySignature := keysig.NewKeySignature(measures.Measures[0].Attribute.Key)
@@ -95,6 +97,8 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 		notes := []*NoteRenderer{}
 		totalNotes := len(measure.Notes)
 		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
+		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
+		rctx = context.WithValue(rctx, constant.CtxKeyTimeSignature, currTimesig)
 		for notePosInMeasure, note := range measure.Notes {
 
 			// don't print anything when rest on the beginning on the music
@@ -119,8 +123,8 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 
-			noteLength := timeSignature.GetNoteLength(ctx, measure.Number, note)
-			additionalRenderer := numbered.RenderLengthNote(ctx, timeSignature, measure.Number, noteLength)
+			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
+			additionalRenderer := numbered.RenderLengthNote(rctx, timeSignature, measure.Number, noteLength)
 
 			// aditiomal := &NoteRenderer{}
 			renderer := &NoteRenderer{
@@ -210,7 +214,7 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 				renderer.Width = lyricWidth
 				renderer.isLengthTakenFromLyric = true
 				if float64(lyricWidth) > float64(noteWidth+UPPERCASE_LENGTH) {
-					renderer.Width = UPPERCASE_LENGTH * 1.5
+					renderer.Width = UPPERCASE_LENGTH * 1.7
 				}
 			}
 
@@ -324,9 +328,6 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			notes[i] = note
 		}
 		RenderOctave(s, notes)
-
-		rctx := context.WithValue(ctx, contextKeyMeasure, measure.Number)
-		rctx = context.WithValue(rctx, contextKeyTimeSignature, currTimesig)
 
 		RenderSlurAndBeam(rctx, s, notes, measure.Number)
 		s.Gend()

@@ -37,6 +37,9 @@ func (m *Mode) GetHumanized(fifth int) string {
 		return m.humanized
 	}
 
+	// <the mode> =  <the root key>
+	// for example D Major would be
+	// do = D
 	humanized := fmt.Sprintf("%s = %s", m.Mode.GetNumberedRoot(), getSpelledNumberedNotation(m.GetRoot(fifth)))
 	m.humanized = humanized
 

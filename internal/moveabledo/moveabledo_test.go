@@ -508,3 +508,63 @@ func TestGetOctave(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNumberedNotation(t *testing.T) {
+	type args struct {
+		ks   keysig.KeySignature
+		note musicxml.Note
+	}
+	tests := []struct {
+		name              string
+		args              args
+		wantNumberedNote  int
+		wantOctave        int
+		wantStrikethrough bool
+	}{
+		{
+			name: "everything went fine",
+			args: args{
+				ks: keysig.KeySignature{
+					Fifth:     2,
+					Key:       "d",
+					Mode:      keysig.NewMode("major"),
+					Humanized: "do = d",
+				},
+				note: musicxml.Note{
+					Pitch: struct {
+						Step   string `xml:"step"`
+						Octave int    `xml:"octave"`
+					}{
+						Step:   "F",
+						Octave: 5,
+					},
+				},
+			},
+			wantNumberedNote:  3,
+			wantOctave:        1,
+			wantStrikethrough: false,
+		},
+		{
+			name: "it's a rest",
+			args: args{
+				note: musicxml.Note{
+					Rest: &musicxml.Rest{},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotNumberedNote, gotOctave, gotStrikethrough := GetNumberedNotation(tt.args.ks, tt.args.note)
+			if gotNumberedNote != tt.wantNumberedNote {
+				t.Errorf("GetNumberedNotation() gotNumberedNote = %v, want %v", gotNumberedNote, tt.wantNumberedNote)
+			}
+			if gotOctave != tt.wantOctave {
+				t.Errorf("GetNumberedNotation() gotOctave = %v, want %v", gotOctave, tt.wantOctave)
+			}
+			if gotStrikethrough != tt.wantStrikethrough {
+				t.Errorf("GetNumberedNotation() gotStrikethrough = %v, want %v", gotStrikethrough, tt.wantStrikethrough)
+			}
+		})
+	}
+}

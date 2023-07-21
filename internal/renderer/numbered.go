@@ -79,7 +79,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	s.End()
 }
 
-// TODO: breath mark
+// TODO: breakline
 func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml.Part) {
 
 	keySignature := keysig.NewKeySignature(measures.Measures[0].Attribute.Key)
@@ -157,7 +157,11 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 				}
 			}
 
+			hasBreathMark := false
+
 			if note.Notations != nil {
+
+				// slur
 				for i, slur := range note.Notations.Slur {
 					if i == 0 {
 						renderer.Slur = map[int]Slur{}
@@ -174,6 +178,10 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 						Type:   note.Notations.Tied.Type,
 					}
 				}
+
+				// breath mark
+				hasBreathMark = note.Notations.Articulation != nil &&
+					note.Notations.Articulation.BreathMark != nil
 
 			}
 
@@ -246,6 +254,16 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 					}
 				}
 				notes = append(notes, additionalNote)
+
+				if hasBreathMark {
+					// FIXME: the breath mark stopped the continuation of the beam
+					notes = append(notes, &NoteRenderer{
+						Articulation: &Articulation{
+							BreathMark: &ArticulationTypesBreathMark,
+						},
+						Width: 0,
+					})
+				}
 			}
 
 		}
@@ -280,6 +298,8 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 					lastDotLoc = xNotes + UPPERCASE_LENGTH
 				}
 				continueDot = true
+			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
+				// breath mark
 			} else {
 				if continueDot {
 					// FIXED:the dotted does not adding pad to the next notes
@@ -327,8 +347,8 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 			note.PositionX = rev
 			notes[i] = note
 		}
-		RenderOctave(s, notes)
-
+		RenderOctave(rctx, s, notes)
+		RenderBreath(rctx, s, notes)
 		RenderSlurAndBeam(rctx, s, notes, measure.Number)
 		s.Gend()
 

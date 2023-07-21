@@ -34,6 +34,7 @@ type NoteRenderer struct {
 	Slur         map[int]Slur
 	Beam         map[int]Beam
 	Tie          *Slur
+	Articulation *Articulation
 
 	// internal use
 	isLengthTakenFromLyric bool
@@ -81,3 +82,12 @@ type beamSplitMarker struct {
 	StartIndex int
 	EndIndex   int
 }
+
+type Articulation struct {
+	BreathMark *ArticulationTypes
+}
+type ArticulationTypes string
+
+var (
+	ArticulationTypesBreathMark ArticulationTypes = "breathMark"
+)

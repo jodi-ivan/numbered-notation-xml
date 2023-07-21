@@ -1,8 +1,12 @@
 package renderer
 
-import svg "github.com/ajstarks/svgo"
+import (
+	"context"
 
-func RenderOctave(canvas *svg.SVG, notes []*NoteRenderer) {
+	svg "github.com/ajstarks/svgo"
+)
+
+func RenderOctave(ctx context.Context, canvas *svg.SVG, notes []*NoteRenderer) {
 	canvas.Group("class='octaves'")
 	for _, note := range notes {
 		if note.Octave < 0 {

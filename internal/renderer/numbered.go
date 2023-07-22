@@ -255,15 +255,15 @@ func RenderMeasures(ctx context.Context, s *svg.SVG, x, y int, measures musicxml
 				}
 				notes = append(notes, additionalNote)
 
-				if hasBreathMark {
-					// FIXME: the breath mark stopped the continuation of the beam
-					notes = append(notes, &NoteRenderer{
-						Articulation: &Articulation{
-							BreathMark: &ArticulationTypesBreathMark,
-						},
-						Width: 0,
-					})
-				}
+			}
+			if hasBreathMark {
+				// FIXME: the breath mark stopped the continuation of the beam
+				notes = append(notes, &NoteRenderer{
+					Articulation: &Articulation{
+						BreathMark: &ArticulationTypesBreathMark,
+					},
+					Width: 5,
+				})
 			}
 
 		}

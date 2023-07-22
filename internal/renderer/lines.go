@@ -4,13 +4,13 @@ import (
 	"context"
 	"math"
 
-	svg "github.com/ajstarks/svgo"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderBezier(set []SlurBezier, canvas *svg.SVG) {
-	canvas.Group("class='slurties'")
+func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
+	canv.Group("class='slurties'")
 	// TODO: check ties across measure bar
 	for _, s := range set {
 
@@ -50,15 +50,22 @@ func RenderBezier(set []SlurBezier, canvas *svg.SVG) {
 			}
 		}
 
+		pullY := slurResult.Start.Y
+		if int((slurResult.End.X-slurResult.Start.X)/UPPERCASE_LENGTH) < 5 {
+			pullY += 7.5
+		} else {
+			pullY += 10
+		}
+
 		pull := CoordinateWithOctave{
 			Coordinate: Coordinate{
 				X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
-				Y: slurResult.Start.Y + 7.5,
+				Y: pullY,
 			},
 		}
 		slurResult.Pull = pull
 
-		canvas.Qbez(
+		canv.Qbez(
 			int(math.Round(slurResult.Start.X)),
 			int(math.Round(slurResult.Start.Y)),
 			int(math.Round(pull.X)),
@@ -68,19 +75,113 @@ func RenderBezier(set []SlurBezier, canvas *svg.SVG) {
 			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5",
 		)
 	}
-	canvas.Gend()
+	canv.Gend()
 }
 
-func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRenderer, measureNo int) {
+func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer, maxXPosition float64) {
 	slurs := map[int]SlurBezier{}
 	slurSets := []SlurBezier{}
 
-	// [ ] 6/8 time signature
-	beams := map[int]BeamLine{}
-	beamSets := []BeamLine{}
-
 	ties := map[int]SlurBezier{}
 	tiesSet := []SlurBezier{}
+
+	for _, note := range notes {
+		for _, s := range note.Slur {
+			if s.Type == musicxml.NoteSlurTypeStop || s.Type == musicxml.NoteSlurTypeHop {
+				temp := slurs[s.Number]
+				temp.End = CoordinateWithOctave{
+					Coordinate: Coordinate{
+						X: float64(note.PositionX - 2),
+						Y: float64(note.PositionY),
+					},
+					Octave: note.Octave,
+				}
+
+				if temp.Start.X == 0 && temp.Start.Y == 0 {
+					temp.Start = CoordinateWithOctave{
+						Coordinate: Coordinate{
+							X: float64(note.PositionX - UPPERCASE_LENGTH),
+							Y: float64(note.PositionY),
+						},
+						Octave: 0,
+					}
+				}
+				slurs[s.Number] = temp
+
+				slurSets = append(slurSets, slurs[s.Number])
+
+				delete(slurs, s.Number)
+
+			}
+
+			if s.Type == musicxml.NoteSlurTypeStart || s.Type == musicxml.NoteSlurTypeHop {
+				slurs[s.Number] = SlurBezier{
+					Start: CoordinateWithOctave{
+						Coordinate: Coordinate{
+							X: float64(note.PositionX + 2),
+							Y: float64(note.PositionY),
+						},
+						Octave: note.Octave,
+					},
+				}
+			}
+
+		}
+
+		if note.Tie != nil {
+			if note.Tie.Type == musicxml.NoteSlurTypeStart {
+				ties[note.Note] = SlurBezier{
+					Start: CoordinateWithOctave{
+						Coordinate: Coordinate{
+							X: float64(note.PositionX),
+							Y: float64(note.PositionY),
+						},
+						Octave: note.Octave,
+					},
+				}
+			} else if note.Tie.Type == musicxml.NoteSlurTypeStop {
+				temp := ties[note.Note]
+				temp.End = CoordinateWithOctave{
+					Coordinate: Coordinate{
+						X: float64(note.PositionX),
+						Y: float64(note.PositionY),
+					},
+					Octave: note.Octave,
+				}
+				ties[note.Note] = temp
+
+				tiesSet = append(tiesSet, ties[note.Note])
+				delete(slurs, note.Note)
+			}
+		}
+
+	}
+
+	if len(slurs) > 0 { // there is start, but no end
+		for _, slur := range slurs {
+			temp := slur
+			if temp.End.Coordinate.X == 0 && temp.End.Coordinate.Y == 0 {
+				temp.End = CoordinateWithOctave{
+					Coordinate: Coordinate{
+						X: float64(maxXPosition - 5),
+						Y: float64(temp.Start.Y),
+					},
+					Octave: 0,
+				}
+			}
+			slurSets = append(slurSets, temp)
+		}
+	}
+
+	RenderBezier(slurSets, canv)
+	RenderBezier(tiesSet, canv)
+
+}
+
+func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer, measureNo int) {
+
+	beams := map[int]BeamLine{}
+	beamSets := []BeamLine{}
 
 	beamSegments := map[int][]beamSplitMarker{}
 
@@ -93,33 +194,6 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 	cleanedNote = splitBeam(ctx, cleanedNote, beamSegments)
 
 	for _, note := range cleanedNote {
-
-		for _, s := range note.Slur {
-			if s.Type == musicxml.NoteSlurTypeStart {
-				slurs[s.Number] = SlurBezier{
-					Start: CoordinateWithOctave{
-						Coordinate: Coordinate{
-							X: float64(note.PositionX),
-							Y: float64(note.PositionY),
-						},
-						Octave: note.Octave,
-					},
-				}
-			} else if s.Type == musicxml.NoteSlurTypeStop {
-				temp := slurs[s.Number]
-				temp.End = CoordinateWithOctave{
-					Coordinate: Coordinate{
-						X: float64(note.PositionX),
-						Y: float64(note.PositionY),
-					},
-					Octave: note.Octave,
-				}
-				slurs[s.Number] = temp
-
-				slurSets = append(slurSets, slurs[s.Number])
-				delete(slurs, s.Number)
-			}
-		}
 
 		for _, b := range note.Beam {
 			positionY := float64(note.PositionY - 20 + ((b.Number) * 3))
@@ -163,41 +237,11 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 			}
 		}
 
-		if note.Tie != nil {
-			if note.Tie.Type == musicxml.NoteSlurTypeStart {
-				ties[note.Note] = SlurBezier{
-					Start: CoordinateWithOctave{
-						Coordinate: Coordinate{
-							X: float64(note.PositionX),
-							Y: float64(note.PositionY),
-						},
-						Octave: note.Octave,
-					},
-				}
-			} else if note.Tie.Type == musicxml.NoteSlurTypeStop {
-				temp := ties[note.Note]
-				temp.End = CoordinateWithOctave{
-					Coordinate: Coordinate{
-						X: float64(note.PositionX),
-						Y: float64(note.PositionY),
-					},
-					Octave: note.Octave,
-				}
-				ties[note.Note] = temp
-
-				tiesSet = append(tiesSet, ties[note.Note])
-				delete(slurs, note.Note)
-			}
-		}
-
 	}
 
-	RenderBezier(slurSets, canvas)
-	RenderBezier(tiesSet, canvas)
-
-	canvas.Group("class='beam'")
+	canv.Group("class='beam'")
 	for _, b := range beamSets {
-		canvas.Line(
+		canv.Line(
 			int(math.Round(b.Start.X)),
 			int(math.Round(b.Start.Y)),
 			int(math.Round(b.End.X)),
@@ -205,7 +249,7 @@ func RenderSlurAndBeam(ctx context.Context, canvas *svg.SVG, notes []*NoteRender
 			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.2",
 		)
 	}
-	canvas.Gend()
+	canv.Gend()
 }
 
 func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber int) ([]*NoteRenderer, []beamSplitMarker) {

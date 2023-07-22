@@ -35,7 +35,7 @@ type Part struct {
 type Measure struct {
 	Number    int        `xml:"number,attr"`
 	Attribute *Attribute `xml:"attributes" json:",omitempty"`
-	Notes     []Note     `xml:"note"`
+	Notes     []Note     `xml:"note" json:",omitempty"`
 	Direction []struct {
 		Placement string `xml:"placement,attr"`
 		Type      struct {
@@ -46,8 +46,19 @@ type Measure struct {
 		} `xml:"direction-type"`
 	} `xml:"direction" json:",omitempty"`
 	Barline *Barline `xml:"barline" json:",omitempty"`
+	Print   *Print   `xml:"print" json:",omitempty"`
 }
 
+type PrintNewSystemType string
+
+const (
+	PrintNewSystemTypeYes = "yes"
+	PrintNewSystemTypeNo  = "no"
+)
+
+type Print struct {
+	NewSystem PrintNewSystemType `xml:"new-system,attr"`
+}
 type KeySignature struct {
 	Fifth int    `xml:"fifths"`
 	Mode  string `xml:"mode"`
@@ -101,6 +112,11 @@ type NoteSlurType string
 const (
 	NoteSlurTypeStart NoteSlurType = "start"
 	NoteSlurTypeStop  NoteSlurType = "stop"
+
+	// used for internal used only
+	// indicates that the same note with the same slur number
+	// as stop and start at the same time
+	NoteSlurTypeHop NoteSlurType = "hop"
 )
 
 type NoteBeamType string

@@ -3,19 +3,19 @@ package renderer
 import (
 	"context"
 
-	svg "github.com/ajstarks/svgo"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderOctave(ctx context.Context, canvas *svg.SVG, notes []*NoteRenderer) {
-	canvas.Group("class='octaves'")
+func RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer) {
+	canv.Group("class='octaves'")
 	for _, note := range notes {
 		if note.Octave < 0 {
-			canvas.Circle(note.PositionX+5, note.PositionY+5, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
+			canv.Circle(note.PositionX+5, note.PositionY+5, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
 		}
 
 		if note.Octave > 0 {
-			canvas.Circle(note.PositionX+5, note.PositionY-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
+			canv.Circle(note.PositionX+5, note.PositionY-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
 		}
 	}
-	canvas.Gend()
+	canv.Gend()
 }

@@ -3,13 +3,13 @@ package renderer
 import (
 	"context"
 
-	svg "github.com/ajstarks/svgo"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderBreath(ctx context.Context, canvas *svg.SVG, notes []*NoteRenderer) {
+func RenderBreath(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer) {
 	for _, note := range notes {
 		if note.Articulation != nil && note.Articulation.BreathMark != nil {
-			canvas.Text(note.PositionX+2, note.PositionY-10, ",")
+			canv.Text(note.PositionX+5, note.PositionY-10, ",")
 		}
 	}
 }

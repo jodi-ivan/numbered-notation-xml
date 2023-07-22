@@ -29,6 +29,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 		notes := []*NoteRenderer{}
 
 		canv.Group("class='measure'", fmt.Sprintf("id='measure-%d'", measure.Number))
+
 		for notePos, note := range measure.Notes {
 
 			// don't print anything when rest on the beginning on the music
@@ -200,6 +201,20 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 			// canv.Gend()
 		}
 
+		if len(measure.Barline) > 1 {
+			RenderBarline(ctx, canv, measure.Barline[0], Coordinate{
+				X: float64(x),
+				Y: float64(y),
+			})
+
+			x += 5
+
+			if measure.Barline[0].Repeat != nil {
+				//FIXME: the x value does not add
+				x += UPPERCASE_LENGTH
+			}
+		}
+
 		// part x
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		xNotes := 0
@@ -255,8 +270,25 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 
 		// lyric
 
-		// FIXME: Print it as glyph
-		canv.Text(x, y, " | ", "font-family:Noto Music")
+		// FIXED: Print it as glyph
+		// FIXME: skip if it has next forward bar line
+		barline := musicxml.Barline{
+			BarStyle: musicxml.BarLineStyleRegular,
+		}
+		if len(measure.Barline) == 1 {
+			barline = measure.Barline[0]
+		} else if len(measure.Barline) == 2 {
+			barline = measure.Barline[1]
+		}
+
+		if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
+			x += LOWERCASE_LENGTH
+		}
+		RenderBarline(ctx, canv, barline, Coordinate{
+			X: float64(x),
+			Y: float64(y),
+		})
+
 		lastXCoordinate = math.Max(lastXCoordinate, float64(x))
 
 		canv.Group("class='lyric'", "style='font-family:Caladea'")

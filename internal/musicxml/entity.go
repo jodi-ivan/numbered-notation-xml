@@ -45,8 +45,8 @@ type Measure struct {
 			} `xml:"words"`
 		} `xml:"direction-type"`
 	} `xml:"direction" json:",omitempty"`
-	Barline *Barline `xml:"barline" json:",omitempty"`
-	Print   *Print   `xml:"print" json:",omitempty"`
+	Barline []Barline `xml:"barline" json:",omitempty"`
+	Print   *Print    `xml:"print" json:",omitempty"`
 }
 
 type PrintNewSystemType string
@@ -203,7 +203,29 @@ type Lyric struct {
 	Syllabic LyricSyllabic `xml:"syllabic"`
 }
 
+type BarLineStyle string
+
+const (
+	BarLineStyleRegular    BarLineStyle = "regular"
+	BarLineStyleLightHeavy BarLineStyle = "light-heavy"
+	BarLineStyleLightLight BarLineStyle = "light-light"
+	BarLineStyleHeavyHeavy BarLineStyle = "heavy-heavy"
+	BarLineStyleHeavyLight BarLineStyle = "heavy-light"
+)
+
+type BarLineRepeatDirection string
+
+const (
+	BarLineRepeatDirectionBackward BarLineRepeatDirection = "backward"
+	BarLineRepeatDirectionForward  BarLineRepeatDirection = "forward"
+)
+
 type Barline struct {
-	Location string `xml:"location,attr"`
-	BarStyle string `xml:"bar-style"`
+	Location string         `xml:"location,attr"`
+	BarStyle BarLineStyle   `xml:"bar-style"`
+	Repeat   *BarLineRepeat `xml:"repeat"`
+}
+
+type BarLineRepeat struct {
+	Direction BarLineRepeatDirection `xml:"direction,attr"`
 }

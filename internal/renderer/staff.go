@@ -220,11 +220,13 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 		xNotes := 0
 		continueDot := false
 		lastDotLoc := 0
+		dotCount := 0
 
 		var prev *NoteRenderer
 		revisionX := map[int]int{}
 		for i, n := range notes {
 			if n.IsDotted {
+				dotCount++
 				if continueDot {
 					canv.Text(lastDotLoc+UPPERCASE_LENGTH, y, ".")
 					revisionX[i] = lastDotLoc + UPPERCASE_LENGTH
@@ -249,6 +251,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 				if n.Striketrough {
 					canv.Line(x+10, y-16, x, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
 				}
+				dotCount = 0
 			}
 
 			n.PositionX = x
@@ -260,7 +263,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 			n.indexPosition = i
 			prev = n
 			// FIXED: the dotted does not give proper space at the end of measure
-			if n.IsDotted && i == len(notes)-1 {
+			// FIXED: the one dot on the last measure give uncessary space
+			if n.IsDotted && i == len(notes)-1 && dotCount > 1 {
 				x += LOWERCASE_LENGTH
 			}
 

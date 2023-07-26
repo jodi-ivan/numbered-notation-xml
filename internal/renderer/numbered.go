@@ -77,8 +77,8 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	staff := SplitLines(ctx, music.Part)
 
 	for _, st := range staff {
-		RenderStaff(ctx, s, relativeY, keySignature, timeSignature, st)
-		relativeY += 70
+		marginBottom := RenderStaff(ctx, s, relativeY, keySignature, timeSignature, st)
+		relativeY = relativeY + 70 + marginBottom
 	}
 	s.End()
 }

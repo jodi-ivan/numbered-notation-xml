@@ -14,7 +14,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure) {
+func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure) (marginBottom int) {
 	x := LAYOUT_INDENT_LENGTH
 	restBeginning := false
 
@@ -134,15 +134,23 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 			var lyricWidth, noteWidth int
 
 			if len(note.Lyric) > 0 {
-				renderer.Lyric = Lyric{
-					Text:     note.Lyric[0].Text.Value,
-					Syllabic: note.Lyric[0].Syllabic,
+				marginBottom = ((len(note.Lyric) - 1) * 25)
+				renderer.Lyric = make([]Lyric, len(note.Lyric))
+				for i, lyric := range note.Lyric {
+					renderer.Lyric[i] = Lyric{
+						Text:     lyric.Text.Value,
+						Syllabic: lyric.Syllabic,
+					}
+					currWidth := int(math.Round(CalculateLyricWidth(lyric.Text.Value)))
+					if lyric.Syllabic == musicxml.LyricSyllabicTypeEnd || lyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
+						//FIXME: edge cases kj-101, [ki]dung ma[laikat] no spaces between them
+						currWidth += LOWERCASE_LENGTH
+					}
+					currWidth += 4 // lyric padding
+
+					lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
 				}
-				lyricWidth = int(math.Trunc(CalculateLyricWidth(note.Lyric[0].Text.Value)))
-				if note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeEnd || note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeSingle {
-					lyricWidth += SPACE_LENGTH
-				}
-				lyricWidth = lyricWidth + 4 // lyric padding
+
 			}
 
 			noteWidth = LOWERCASE_LENGTH
@@ -198,7 +206,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 				})
 			}
 
-			// canv.Gend()
 		}
 
 		if len(measure.Barline) > 1 {
@@ -297,8 +304,13 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 
 		canv.Group("class='lyric'", "style='font-family:Caladea'")
 		for _, n := range notes {
-			if n.Lyric.Text != "" {
-				canv.Text(n.PositionX, n.PositionY+25, n.Lyric.Text)
+			if len(n.Lyric) > 0 {
+				for i, l := range n.Lyric {
+					if l.Text != "" {
+						canv.Text(n.PositionX, n.PositionY+25+(i*20), l.Text)
+					}
+
+				}
 			}
 		}
 		canv.Gend()
@@ -319,4 +331,5 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 	RenderSlurTies(ctx, canv, slurTiesRenderer, lastXCoordinate)
 	canv.Gend() // staff group
 
+	return
 }

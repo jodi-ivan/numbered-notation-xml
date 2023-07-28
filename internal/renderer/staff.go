@@ -202,7 +202,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 					Articulation: &Articulation{
 						BreathMark: &ArticulationTypesBreathMark,
 					},
-					Width: 5,
 				})
 			}
 
@@ -245,7 +244,10 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 				}
 				continueDot = true
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-				canv.Text(x+LOWERCASE_LENGTH, y-10, ",")
+				if prev != nil && prev.isLengthTakenFromLyric {
+					x -= prev.Width - LOWERCASE_LENGTH
+				}
+				canv.Text(x, y-10, ",")
 				x += LOWERCASE_LENGTH
 			} else {
 				if continueDot {

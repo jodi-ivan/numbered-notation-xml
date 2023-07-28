@@ -208,7 +208,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 
 		}
 
-		if len(measure.Barline) > 1 {
+		if len(measure.Barline) > 0 && measure.Barline[0].Location == musicxml.BarlineLocationLeft {
 			RenderBarline(ctx, canv, measure.Barline[0], Coordinate{
 				X: float64(x),
 				Y: float64(y),
@@ -217,7 +217,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 			x += 5
 
 			if measure.Barline[0].Repeat != nil {
-				//FIXME: the x value does not add
+				//FIXED: the x value does not add
 				x += UPPERCASE_LENGTH
 			}
 		}
@@ -286,14 +286,15 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 		barline := musicxml.Barline{
 			BarStyle: musicxml.BarLineStyleRegular,
 		}
-		if len(measure.Barline) == 1 {
-			barline = measure.Barline[0]
-		} else if len(measure.Barline) == 2 {
-			barline = measure.Barline[1]
+
+		if len(measure.Barline) > 0 {
+			if measure.Barline[0].Location == musicxml.BarlineLocationRight {
+				barline = measure.Barline[0]
+			}
 		}
 
 		if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-			x += LOWERCASE_LENGTH
+			x += 5
 		}
 		RenderBarline(ctx, canv, barline, Coordinate{
 			X: float64(x),

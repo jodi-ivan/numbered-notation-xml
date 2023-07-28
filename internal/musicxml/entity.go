@@ -220,6 +220,13 @@ const (
 	BarLineRepeatDirectionForward  BarLineRepeatDirection = "forward"
 )
 
+type BarlineLocation string
+
+const (
+	BarlineLocationLeft  = "left"
+	BarlineLocationRight = "right"
+)
+
 type Barline struct {
 	Location string         `xml:"location,attr"`
 	BarStyle BarLineStyle   `xml:"bar-style"`

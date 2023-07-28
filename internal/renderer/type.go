@@ -30,7 +30,7 @@ type NoteRenderer struct {
 	NoteLength   musicxml.NoteLength
 	BarType      string
 	Width        int
-	Lyric        Lyric
+	Lyric        []Lyric
 	Slur         map[int]Slur
 	Beam         map[int]Beam
 	Tie          *Slur

@@ -7,6 +7,7 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
@@ -24,6 +25,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 	var nextMeasure musicxml.Measure
 	canv.Group("class='staff'")
 	for measureIndex, measure := range measures {
+		measure.Build()
 		if measureIndex < len(measures)-1 {
 			nextMeasure = measures[measureIndex+1]
 		}
@@ -140,13 +142,13 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 			if len(note.Lyric) > 0 {
 				marginBottom = ((len(note.Lyric) - 1) * 25)
 				renderer.Lyric = make([]Lyric, len(note.Lyric))
-				for i, lyric := range note.Lyric {
+				for i, currLyric := range note.Lyric {
 					renderer.Lyric[i] = Lyric{
-						Text:     lyric.Text.Value,
-						Syllabic: lyric.Syllabic,
+						Text:     currLyric.Text.Value,
+						Syllabic: currLyric.Syllabic,
 					}
-					currWidth := int(math.Round(CalculateLyricWidth(lyric.Text.Value)))
-					if lyric.Syllabic == musicxml.LyricSyllabicTypeEnd || lyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
+					currWidth := int(math.Round(lyric.CalculateLyricWidth(currLyric.Text.Value)))
+					if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
 						//FIXME: edge cases kj-101, [ki]dung ma[laikat] no spaces between them
 						currWidth += LOWERCASE_LENGTH
 					}
@@ -346,6 +348,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 
 		canv.Gend() // measure group
 	}
+	// align shit here
 	RenderSlurTies(ctx, canv, slurTiesRenderer, lastXCoordinate)
 	canv.Gend() // staff group
 

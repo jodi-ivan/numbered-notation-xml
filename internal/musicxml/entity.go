@@ -1,6 +1,39 @@
 package musicxml
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"log"
+	"strings"
+)
+
+type Element struct {
+	// FIXME: mechanism to check wheter it is notes / direction
+	// currently by checking pitch | rest -> notes
+	// checking direction-type -> direction
+	Content string `xml:",innerxml"`
+}
+
+func (e *Element) ParseAsNote() (Note, error) {
+	wrapped := `<note>`
+	wrapped += e.Content
+	wrapped += `</note>`
+
+	result := Note{}
+
+	err := xml.Unmarshal([]byte(wrapped), &result)
+	return result, err
+}
+
+func (e *Element) ParseAsDirection() (*Direction, error) {
+	wrapped := `<direction>`
+	wrapped += e.Content
+	wrapped += `</direction>`
+
+	result := &Direction{}
+
+	err := xml.Unmarshal([]byte(wrapped), &result)
+	return result, err
+}
 
 type MusicXML struct {
 	XMLName xml.Name `xml:"score-partwise"`
@@ -33,20 +66,43 @@ type Part struct {
 }
 
 type Measure struct {
-	Number    int        `xml:"number,attr"`
-	Attribute *Attribute `xml:"attributes" json:",omitempty"`
-	Notes     []Note     `xml:"note" json:",omitempty"`
-	Direction []struct {
-		Placement string `xml:"placement,attr"`
-		Type      struct {
-			Words struct {
-				locationAttr
-				Word string `xml:",chardata"`
-			} `xml:"words"`
-		} `xml:"direction-type"`
-	} `xml:"direction" json:",omitempty"`
-	Barline []Barline `xml:"barline" json:",omitempty"`
-	Print   *Print    `xml:"print" json:",omitempty"`
+	Appendix     []Element  `xml:",any"`
+	Number       int        `xml:"number,attr"`
+	Attribute    *Attribute `xml:"attributes" json:",omitempty"`
+	Notes        []Note     `xml:"-" json:",omitempty"`
+	Barline      []Barline  `xml:"barline" json:",omitempty"`
+	Print        *Print     `xml:"print" json:",omitempty"`
+	NewLineIndex int        `xml:"-"`
+	// 	Direction    *Direction `xml:"-"`
+}
+
+func (m *Measure) Build() error {
+	m.NewLineIndex = -1
+	for i, elmnt := range m.Appendix {
+		cleanedContent := strings.TrimSpace(elmnt.Content)
+		if strings.HasPrefix(cleanedContent, "\u003cpitch\u003e") ||
+			strings.Contains(cleanedContent, "\u003crest/\u003e") {
+			if m.Number == 12 {
+				log.Println("note line at index", i)
+			}
+			n, err := elmnt.ParseAsNote()
+			if err != nil {
+				log.Println("error parsing note, err:", err.Error())
+				return err
+			}
+			m.Notes = append(m.Notes, n)
+		} else if strings.HasPrefix(cleanedContent, "\u003cdirection-type\u003e") {
+			d, err := elmnt.ParseAsDirection()
+			if err != nil {
+				return err
+			}
+			if d.DirectionType.Word.Value == "__layout=br" {
+				m.NewLineIndex = i - 1
+			}
+		}
+	}
+
+	return nil
 }
 
 type PrintNewSystemType string
@@ -156,6 +212,17 @@ type Rest struct {
 type Tie struct {
 	Name xml.Name     `xml:"tied"`
 	Type NoteSlurType `xml:"type,attr"`
+}
+
+type Direction struct {
+	Placement     string        `xml:"placement,attr"`
+	DirectionType DirectionType `xml:"direction-type"`
+}
+
+type DirectionType struct {
+	Word struct {
+		Value string `xml:",chardata"`
+	} `xml:"words"`
 }
 
 type Note struct {

@@ -1,4 +1,4 @@
-package renderer
+package lyric
 
 func CalculateLyricWidth(txt string) float64 {
 	// TODO: margin left of the lyric
@@ -62,6 +62,7 @@ func CalculateLyricWidth(txt string) float64 {
 		".": 3.3,
 		"!": 4.58,
 		";": 4.23,
+		" ": 4,
 	}
 	res := 0.0
 

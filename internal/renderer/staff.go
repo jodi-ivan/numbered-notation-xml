@@ -335,7 +335,11 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			if len(n.Lyric) > 0 {
 				for i, l := range n.Lyric {
 					if l.Text != "" {
-						canv.Text(n.PositionX, n.PositionY+25+(i*20), l.Text)
+						xPos := n.PositionX
+						if n.PositionX == LAYOUT_INDENT_LENGTH {
+							xPos += int(lyric.CalculateMarginLeft(l.Text))
+						}
+						canv.Text(xPos, n.PositionY+25+(i*20), l.Text)
 					}
 
 				}

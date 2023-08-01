@@ -82,9 +82,6 @@ func (m *Measure) Build() error {
 		cleanedContent := strings.TrimSpace(elmnt.Content)
 		if strings.HasPrefix(cleanedContent, "\u003cpitch\u003e") ||
 			strings.Contains(cleanedContent, "\u003crest/\u003e") {
-			if m.Number == 12 {
-				log.Println("note line at index", i)
-			}
 			n, err := elmnt.ParseAsNote()
 			if err != nil {
 				log.Println("error parsing note, err:", err.Error())

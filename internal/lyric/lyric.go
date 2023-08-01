@@ -1,10 +1,41 @@
 package lyric
 
+import "regexp"
+
+var numberedLyric *regexp.Regexp
+
+func init() {
+	if numberedLyric == nil {
+		numberedLyric, _ = regexp.Compile(`^\d*\.\s{0,1}`)
+	}
+}
+
+func CalculateMarginLeft(txt string) float64 {
+	if numberedLyric.Match([]byte(txt)) {
+		subStr := numberedLyric.FindStringSubmatch(txt)
+		if len(subStr) == 0 {
+			return 0
+		}
+
+		return CalculateLyricWidth(subStr[0]) * -1
+	}
+	return 0
+}
+
 func CalculateLyricWidth(txt string) float64 {
 	// TODO: margin left of the lyric
 	// TODO: continues syllable
 	width := map[string]float64{
 		"1": 9.28,
+		"2": 7.55,
+		"3": 7.43,
+		"4": 8.57,
+		"5": 7.61,
+		"6": 7.53,
+		"7": 7.53,
+		"8": 8,
+		"9": 7.65,
+		"0": 8.57,
 		"A": 9.59,
 		"B": 9.27,
 		"C": 8.1,

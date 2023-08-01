@@ -15,8 +15,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure) (marginBottom int) {
-	x := LAYOUT_INDENT_LENGTH
+func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure) (multiline bool, marginBottom, marginLeft int) {
 	restBeginning := false
 
 	slurTiesRenderer := []*NoteRenderer{}
@@ -66,6 +65,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 				Striketrough: strikethrough,
 				IsRest:       (note.Rest != nil),
 				Beam:         map[int]Beam{},
+				isNewLine:    measure.NewLineIndex == notePos,
 			}
 
 			if len(additionalRenderer) > 0 {
@@ -276,6 +276,11 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 			if prev != nil && prev.isLengthTakenFromLyric && n.IsDotted {
 				x = x - n.Width
 			}
+			if n.isNewLine {
+				x = LAYOUT_INDENT_LENGTH
+				multiline = multiline || true
+				y += 70 + marginBottom
+			}
 			n.indexPosition = i
 			prev = n
 			// FIXED: the dotted does not give proper space at the end of measure
@@ -321,6 +326,9 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, y int, keySignature ke
 		}
 
 		lastXCoordinate = math.Max(lastXCoordinate, float64(x))
+		if multiline {
+			marginLeft = int(x) + LOWERCASE_LENGTH
+		}
 
 		canv.Group("class='lyric'", "style='font-family:Caladea'")
 		for _, n := range notes {

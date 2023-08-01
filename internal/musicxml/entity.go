@@ -97,7 +97,7 @@ func (m *Measure) Build() error {
 				return err
 			}
 			if d.DirectionType.Word.Value == "__layout=br" {
-				m.NewLineIndex = i - 1
+				m.NewLineIndex = i
 			}
 		}
 	}

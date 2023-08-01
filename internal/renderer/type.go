@@ -39,6 +39,7 @@ type NoteRenderer struct {
 	// internal use
 	isLengthTakenFromLyric bool
 	indexPosition          int
+	isNewLine              bool
 }
 
 func (nr *NoteRenderer) UpdateBeam(beamNum int, beamType musicxml.NoteBeamType) {

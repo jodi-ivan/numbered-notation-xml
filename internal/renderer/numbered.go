@@ -75,10 +75,15 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 
 	// RenderMeasures(r.Context(), s, LAYOUT_INDENT_LENGTH, relativeY, music.Part)
 	staff := SplitLines(ctx, music.Part)
-
+	x := LAYOUT_INDENT_LENGTH
 	for _, st := range staff {
-		marginBottom := RenderStaff(ctx, s, relativeY, keySignature, timeSignature, st)
+		multiline, marginBottom, marginLeft := RenderStaff(ctx, s, x, relativeY, keySignature, timeSignature, st)
 		relativeY = relativeY + 70 + marginBottom
+		if multiline {
+			x = marginLeft
+		} else {
+			x = LAYOUT_INDENT_LENGTH
+		}
 	}
 	s.End()
 }

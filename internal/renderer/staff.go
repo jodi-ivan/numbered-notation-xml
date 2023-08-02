@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
@@ -18,7 +19,7 @@ import (
 func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure) (multiline bool, marginBottom, marginLeft int) {
 	restBeginning := false
 
-	slurTiesRenderer := []*NoteRenderer{}
+	slurTiesRenderer := []*entity.NoteRenderer{}
 	lastXCoordinate := float64(0)
 
 	var nextMeasure musicxml.Measure
@@ -31,7 +32,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
 		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
 		rctx = context.WithValue(rctx, constant.CtxKeyTimeSignature, currTimesig)
-		notes := []*NoteRenderer{}
+		notes := []*entity.NoteRenderer{}
 
 		canv.Group("class='measure'", fmt.Sprintf("id='measure-%d'", measure.Number))
 
@@ -56,7 +57,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 			additionalRenderer := numbered.RenderLengthNote(rctx, timeSignature, measure.Number, noteLength)
 
-			renderer := &NoteRenderer{
+			renderer := &entity.NoteRenderer{
 				PositionX:    x,
 				PositionY:    int(y),
 				Note:         n,
@@ -64,8 +65,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				Octave:       octave,
 				Striketrough: strikethrough,
 				IsRest:       (note.Rest != nil),
-				Beam:         map[int]Beam{},
-				isNewLine:    measure.NewLineIndex == notePos,
+				Beam:         map[int]entity.Beam{},
+				IsNewLine:    measure.NewLineIndex == notePos,
 			}
 
 			if len(additionalRenderer) > 0 {
@@ -74,13 +75,13 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				addRenderer := additionalRenderer[0]
 				switch addRenderer.Type {
 				case musicxml.NoteLength16th:
-					renderer.Beam[2] = Beam{
+					renderer.Beam[2] = entity.Beam{
 						Number: 2,
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
 					fallthrough
 				case musicxml.NoteLengthEighth:
-					renderer.Beam[1] = Beam{
+					renderer.Beam[1] = entity.Beam{
 						Number: 1,
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
@@ -93,17 +94,17 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 				for i, slur := range note.Notations.Slur {
 					if i == 0 {
-						renderer.Slur = map[int]Slur{}
+						renderer.Slur = map[int]entity.Slur{}
 					}
 
 					_, existing := renderer.Slur[slur.Number]
 					if !existing {
-						renderer.Slur[slur.Number] = Slur{
+						renderer.Slur[slur.Number] = entity.Slur{
 							Number: slur.Number,
 							Type:   slur.Type,
 						}
 					} else {
-						renderer.Slur[slur.Number] = Slur{
+						renderer.Slur[slur.Number] = entity.Slur{
 							Number: slur.Number,
 							Type:   musicxml.NoteSlurTypeHop,
 						}
@@ -112,7 +113,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				}
 
 				if note.Notations.Tied != nil {
-					renderer.Tie = &Slur{
+					renderer.Tie = &entity.Slur{
 						Number: n,
 						Type:   note.Notations.Tied.Type,
 					}
@@ -128,7 +129,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			if len(note.Beam) > 0 {
 				if currTimesig.BeatType != 4 {
 					for _, beam := range note.Beam {
-						renderer.Beam[beam.Number] = Beam{
+						renderer.Beam[beam.Number] = entity.Beam{
 							Number: beam.Number,
 							Type:   beam.State,
 						}
@@ -141,9 +142,9 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 			if len(note.Lyric) > 0 {
 				marginBottom = ((len(note.Lyric) - 1) * 25)
-				renderer.Lyric = make([]Lyric, len(note.Lyric))
+				renderer.Lyric = make([]entity.Lyric, len(note.Lyric))
 				for i, currLyric := range note.Lyric {
-					renderer.Lyric[i] = Lyric{
+					renderer.Lyric[i] = entity.Lyric{
 						Text:     currLyric.Text.Value,
 						Syllabic: currLyric.Syllabic,
 					}
@@ -163,10 +164,10 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 			if noteWidth > lyricWidth {
 				renderer.Width = noteWidth
-				renderer.isLengthTakenFromLyric = false
+				renderer.IsLengthTakenFromLyric = false
 			} else {
 				renderer.Width = lyricWidth
-				renderer.isLengthTakenFromLyric = true
+				renderer.IsLengthTakenFromLyric = true
 				if float64(lyricWidth) > float64(noteWidth+UPPERCASE_LENGTH) {
 					renderer.Width = UPPERCASE_LENGTH * 1.7
 				}
@@ -178,23 +179,23 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				if i == 0 {
 					continue
 				}
-				additionalNote := &NoteRenderer{
+				additionalNote := &entity.NoteRenderer{
 					PositionY:  int(y),
 					Width:      LOWERCASE_LENGTH,
 					IsDotted:   additional.IsDotted,
 					NoteLength: additional.Type,
-					Beam:       map[int]Beam{},
+					Beam:       map[int]entity.Beam{},
 				}
 
 				switch additional.Type {
 				case musicxml.NoteLength16th:
-					additionalNote.Beam[2] = Beam{
+					additionalNote.Beam[2] = entity.Beam{
 						Number: 2,
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
 					fallthrough
 				case musicxml.NoteLengthEighth:
-					additionalNote.Beam[1] = Beam{
+					additionalNote.Beam[1] = entity.Beam{
 						Number: 1,
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
@@ -204,9 +205,9 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			}
 			if hasBreathMark {
 				// FIXME: the breath mark stopped the continuation of the beam
-				notes = append(notes, &NoteRenderer{
-					Articulation: &Articulation{
-						BreathMark: &ArticulationTypesBreathMark,
+				notes = append(notes, &entity.NoteRenderer{
+					Articulation: &entity.Articulation{
+						BreathMark: &entity.ArticulationTypesBreathMark,
 					},
 				})
 			}
@@ -234,7 +235,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		lastDotLoc := 0
 		dotCount := 0
 
-		var prev *NoteRenderer
+		var prev *entity.NoteRenderer
 		revisionX := map[int]int{}
 		for i, n := range notes {
 			if n.IsDotted {
@@ -250,7 +251,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				}
 				continueDot = true
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-				if prev != nil && prev.isLengthTakenFromLyric {
+				if prev != nil && prev.IsLengthTakenFromLyric {
 					x -= prev.Width - LOWERCASE_LENGTH
 				}
 				x += 5
@@ -273,15 +274,15 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			n.PositionX = x
 			n.PositionY = y
 			x += n.Width
-			if prev != nil && prev.isLengthTakenFromLyric && n.IsDotted {
+			if prev != nil && prev.IsLengthTakenFromLyric && n.IsDotted {
 				x = x - n.Width
 			}
-			if n.isNewLine {
+			if n.IsNewLine {
 				x = LAYOUT_INDENT_LENGTH
 				multiline = multiline || true
 				y += 70 + marginBottom
 			}
-			n.indexPosition = i
+			n.IndexPosition = i
 			prev = n
 			// FIXED: the dotted does not give proper space at the end of measure
 			// FIXED: the one dot on the last measure give uncessary space

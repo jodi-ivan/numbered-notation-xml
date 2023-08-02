@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -78,7 +79,7 @@ func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 	canv.Gend()
 }
 
-func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer, maxXPosition float64) {
+func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
 	slurs := map[int]SlurBezier{}
 	slurSets := []SlurBezier{}
 
@@ -178,14 +179,14 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*NoteRender
 
 }
 
-func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer, measureNo int) {
+func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, measureNo int) {
 
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}
 
 	beamSegments := map[int][]beamSplitMarker{}
 
-	var cleanedNote []*NoteRenderer
+	var cleanedNote []*entity.NoteRenderer
 
 	cleanedNote, beamSegments[1] = cleanBeamByNumber(ctx, notes, 1)
 	cleanedNote, beamSegments[2] = cleanBeamByNumber(ctx, cleanedNote, 2)
@@ -252,13 +253,13 @@ func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer, 
 	canv.Gend()
 }
 
-func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber int) ([]*NoteRenderer, []beamSplitMarker) {
+func cleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, beamNumber int) ([]*entity.NoteRenderer, []beamSplitMarker) {
 
 	switches := map[int]beamMarker{}
 
 	markers := make([]beamSplitMarker, 0)
 
-	var prev *NoteRenderer
+	var prev *entity.NoteRenderer
 
 	for indexNote, note := range notes {
 
@@ -274,7 +275,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 					continue
 				}
 
-				prev.Beam[beamNumber] = Beam{
+				prev.Beam[beamNumber] = entity.Beam{
 					Number: beamNumber,
 					Type:   musicxml.NoteBeamTypeEnd,
 				}
@@ -295,7 +296,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 				prev = note
 				continue
 			}
-			newBeam := map[int]Beam{}
+			newBeam := map[int]entity.Beam{}
 
 			for k, v := range note.Beam {
 				newBeam[k] = v
@@ -306,7 +307,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 				NoteBeginIndex: indexNote,
 			}
 
-			newBeam[beamNumber] = Beam{
+			newBeam[beamNumber] = entity.Beam{
 				Number: beamNumber,
 				Type:   musicxml.NoteBeamTypeBegin,
 			}
@@ -318,7 +319,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 			}
 
 			if _, hasBeam := note.Beam[beamNumber]; hasBeam {
-				newBeam := map[int]Beam{}
+				newBeam := map[int]entity.Beam{}
 
 				for k, v := range note.Beam {
 					newBeam[k] = v
@@ -329,7 +330,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 					NoteBeginIndex: switches[beamNumber].NoteBeginIndex,
 				}
 
-				newBeam[beamNumber] = Beam{
+				newBeam[beamNumber] = entity.Beam{
 					Number: beamNumber,
 					Type:   musicxml.NoteBeamTypeContinue,
 				}
@@ -345,7 +346,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 					continue
 				}
 
-				prev.Beam[beamNumber] = Beam{
+				prev.Beam[beamNumber] = entity.Beam{
 					Number: beamNumber,
 					Type:   musicxml.NoteBeamTypeEnd,
 				}
@@ -371,7 +372,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 			if additional.Type != musicxml.NoteBeamTypeEnd {
 				newBeam := prev.Beam
 
-				newBeam[beamNumber] = Beam{
+				newBeam[beamNumber] = entity.Beam{
 					Type:   musicxml.NoteBeamTypeEnd,
 					Number: beamNumber,
 				}
@@ -382,22 +383,22 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 
 					markers = append(markers, beamSplitMarker{
 						StartIndex: t.NoteBeginIndex,
-						EndIndex:   prev.indexPosition,
+						EndIndex:   prev.IndexPosition,
 					})
 				}
 
 			} else {
 				if _, ok := switches[beamNumber]; !ok {
 					newBeam := prev.Beam
-					newBeam[beamNumber] = Beam{
+					newBeam[beamNumber] = entity.Beam{
 						Type:   musicxml.NoteBeamTypeBackwardHook,
 						Number: beamNumber,
 					}
 					prev.Beam = newBeam
 				}
 				markers = append(markers, beamSplitMarker{
-					StartIndex: prev.indexPosition,
-					EndIndex:   prev.indexPosition,
+					StartIndex: prev.IndexPosition,
+					EndIndex:   prev.IndexPosition,
 				})
 			}
 
@@ -409,7 +410,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*NoteRenderer, beamNumber in
 
 // TODO: 7 and 8 notes
 // FIXME: the dotted shouldnot be spliitted
-func splitBeam(ctx context.Context, notes []*NoteRenderer, segments map[int][]beamSplitMarker) []*NoteRenderer {
+func splitBeam(ctx context.Context, notes []*entity.NoteRenderer, segments map[int][]beamSplitMarker) []*entity.NoteRenderer {
 
 	measure, _ := ctx.Value(constant.CtxKeyMeasureNum).(int)
 

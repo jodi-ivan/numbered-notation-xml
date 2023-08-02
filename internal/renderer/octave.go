@@ -3,10 +3,11 @@ package renderer
 import (
 	"context"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*NoteRenderer) {
+func RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 	canv.Group("class='octaves'")
 	for _, note := range notes {
 		if note.Octave < 0 {

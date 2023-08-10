@@ -7,9 +7,11 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	svg "github.com/ajstarks/svgo"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -44,8 +46,13 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 
 	relativeY := 100
 	// render title
-	titleX := (LAYOUT_WIDTH / 2) - ((len(music.Credit.Words) * LOWERCASE_LENGTH) / 2) + (LAYOUT_INDENT_LENGTH * 2)
-	s.Text(titleX, relativeY, music.Credit.Words)
+	workTitle := strings.ToUpper(music.Work.Title)
+	if workTitle == "" {
+		workTitle = strings.ToUpper(music.Credit.Words)
+	}
+	titleWidth := lyric.CalculateLyricWidth(workTitle)
+	titleX := (LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
+	s.Text(int(titleX), relativeY, workTitle)
 
 	// render key signature
 	relativeY += 25

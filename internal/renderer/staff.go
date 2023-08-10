@@ -2,8 +2,6 @@ package renderer
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -332,14 +330,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			}
 		}
 
-		if measure.Number == 12 {
-			raw, _ := json.MarshalIndent(notes, "", "   ")
-			log.Println(string(raw), indexNewLine)
-		}
-
 		alignMeasures = append(alignMeasures, filteredNotes...)
 		if staffInfo.Multiline {
-			log.Println("index for new line is ", indexNewLine)
 			for i, note := range notes {
 				if i > 0 && note.IndexPosition == 0 {
 					break

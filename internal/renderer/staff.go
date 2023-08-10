@@ -2,7 +2,8 @@ package renderer
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
+	"log"
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -16,27 +17,59 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure) (multiline bool, marginBottom, marginLeft int) {
+func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
 	restBeginning := false
 
-	slurTiesRenderer := []*entity.NoteRenderer{}
-	lastXCoordinate := float64(0)
-
+	// slurTiesRenderer := []*entity.NoteRenderer{}
+	// lastXCoordinate := float64(0)
+	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 	var nextMeasure musicxml.Measure
-	canv.Group("class='staff'")
+	// canv.Group("class='staff'")
+
+	align := [][]*entity.NoteRenderer{}
+	if len(prevNotes) > 0 {
+		align = append(align, prevNotes)
+	}
+	// newLine := []*entity.NoteRenderer{}
 	for measureIndex, measure := range measures {
 		measure.Build()
 		if measureIndex < len(measures)-1 {
 			nextMeasure = measures[measureIndex+1]
 		}
+		notes := []*entity.NoteRenderer{}
 		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
 		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
 		rctx = context.WithValue(rctx, constant.CtxKeyTimeSignature, currTimesig)
-		notes := []*entity.NoteRenderer{}
+		alignMeasures := []*entity.NoteRenderer{}
 
-		canv.Group("class='measure'", fmt.Sprintf("id='measure-%d'", measure.Number))
+		// canv.Group("class='measure'", fmt.Sprintf("id='measure-%d'", measure.Number))
 
+		// barline
+		var skipPrintBarline bool
+		for _, barlineNextMeasure := range nextMeasure.Barline {
+			if barlineNextMeasure.Location == musicxml.BarlineLocationLeft {
+				// there is left barline on the next measure, skipp the regular barline
+				skipPrintBarline = true
+				break
+			}
+		}
+
+		if !skipPrintBarline && len(measure.Barline) > 0 && measure.Barline[0].Location == musicxml.BarlineLocationLeft {
+			alignMeasures = append(alignMeasures, &entity.NoteRenderer{
+				PositionX: x,
+				Width:     int(barlineWidth[measure.Barline[0].BarStyle]),
+				Barline:   &measure.Barline[0],
+			})
+
+			x += 5
+
+			if measure.Barline[0].Repeat != nil {
+				//FIXED: the x value does not add
+				x += UPPERCASE_LENGTH
+			}
+		}
 		for notePos, note := range measure.Notes {
+
 			// FIXME: use the hidden attributes on the musicxml files instead of forcing hide every beginnning rest
 			// don't print anything when rest on the beginning on the music
 			if note.Rest != nil && measure.Number == 1 {
@@ -119,7 +152,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 					}
 				}
 
-				slurTiesRenderer = append(slurTiesRenderer, renderer)
+				// slurTiesRenderer = append(slurTiesRenderer, renderer)
 
 				// breath mark
 				hasBreathMark = note.Notations.Articulation != nil &&
@@ -141,7 +174,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			var lyricWidth, noteWidth int
 
 			if len(note.Lyric) > 0 {
-				marginBottom = ((len(note.Lyric) - 1) * 25)
+				staffInfo.MarginBottom = ((len(note.Lyric) - 1) * 25)
 				renderer.Lyric = make([]entity.Lyric, len(note.Lyric))
 				for i, currLyric := range note.Lyric {
 					renderer.Lyric[i] = entity.Lyric{
@@ -214,31 +247,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 		}
 
-		var skipPrintBarline bool
-		// FIXED: skip if it has next forward bar line
-		for _, barlineNextMeasure := range nextMeasure.Barline {
-			if barlineNextMeasure.Location == musicxml.BarlineLocationLeft {
-				// there is left barline on the next measure, skipp the regular barline
-				skipPrintBarline = true
-				break
-			}
-		}
-		if !skipPrintBarline && len(measure.Barline) > 0 && measure.Barline[0].Location == musicxml.BarlineLocationLeft {
-			RenderBarline(ctx, canv, measure.Barline[0], Coordinate{
-				X: float64(x),
-				Y: float64(y),
-			})
-
-			x += 5
-
-			if measure.Barline[0].Repeat != nil {
-				//FIXED: the x value does not add
-				x += UPPERCASE_LENGTH
-			}
-		}
-
 		// part x
-		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
+		// canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		xNotes := 0
 		continueDot := false
 		lastDotLoc := 0
@@ -250,11 +260,11 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			if n.IsDotted {
 				dotCount++
 				if continueDot {
-					canv.Text(lastDotLoc+UPPERCASE_LENGTH, y, ".")
+					// canv.Text(lastDotLoc+UPPERCASE_LENGTH, y, ".")
 					revisionX[i] = lastDotLoc + UPPERCASE_LENGTH
 					lastDotLoc = lastDotLoc + UPPERCASE_LENGTH
 				} else {
-					canv.Text(xNotes+UPPERCASE_LENGTH, y, ".")
+					// canv.Text(xNotes+UPPERCASE_LENGTH, y, ".")
 					revisionX[i] = xNotes + UPPERCASE_LENGTH
 					lastDotLoc = xNotes + UPPERCASE_LENGTH
 				}
@@ -263,20 +273,20 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				if prev != nil && prev.IsLengthTakenFromLyric {
 					x -= prev.Width - LOWERCASE_LENGTH
 				}
-				x += 5
-				canv.Text(x, y-10, ",")
 				x += LOWERCASE_LENGTH
+				// canv.Text(x, y-10, ",")
+				// x += LOWERCASE_LENGTH
 			} else {
 				if continueDot {
 					// FIXED:the dotted does not adding pad to the next notes
 					x += LOWERCASE_LENGTH
 				}
-				canv.Text(x, y, fmt.Sprintf("%d", n.Note))
+				// canv.Text(x, y, fmt.Sprintf("%d", n.Note))
 				xNotes = x
 				continueDot = false
-				if n.Striketrough {
-					canv.Line(x+10, y-16, x, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
-				}
+				// if n.Striketrough {
+				// 	// canv.Line(x+10, y-16, x, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
+				// }
 				dotCount = 0
 			}
 
@@ -288,8 +298,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			}
 			if n.IsNewLine {
 				x = LAYOUT_INDENT_LENGTH
-				multiline = multiline || true
-				y += 70 + marginBottom
+				staffInfo.Multiline = staffInfo.Multiline || true
+				// y += 70
 			}
 			n.IndexPosition = i
 			prev = n
@@ -301,7 +311,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 		}
 
-		canv.Gend() // note group
+		// canv.Gend() // note group
 
 		barline := musicxml.Barline{
 			BarStyle: musicxml.BarLineStyleRegular,
@@ -316,36 +326,14 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				barline = measure.Barline[1]
 			}
 		}
-
 		if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
 			x += 5
 		}
-		RenderBarline(ctx, canv, barline, Coordinate{
-			X: float64(x),
-			Y: float64(y),
-		})
+		barlineX := x
 
-		lastXCoordinate = math.Max(lastXCoordinate, float64(x))
-		if multiline {
-			marginLeft = int(x) + LOWERCASE_LENGTH
+		if staffInfo.Multiline {
+			staffInfo.MarginLeft = int(x) + LOWERCASE_LENGTH
 		}
-
-		canv.Group("class='lyric'", "style='font-family:Caladea'")
-		for _, n := range notes {
-			if len(n.Lyric) > 0 {
-				for i, l := range n.Lyric {
-					if l.Text != "" {
-						xPos := n.PositionX
-						if n.PositionX == LAYOUT_INDENT_LENGTH {
-							xPos += int(lyric.CalculateMarginLeft(l.Text))
-						}
-						canv.Text(xPos, n.PositionY+25+(i*20), l.Text)
-					}
-
-				}
-			}
-		}
-		canv.Gend()
 
 		x += LOWERCASE_LENGTH
 
@@ -355,14 +343,48 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			note.PositionX = rev
 			notes[i] = note
 		}
-		RenderOctave(rctx, canv, notes)
-		RenderBeam(rctx, canv, notes, measure.Number)
 
-		canv.Gend() // measure group
+		filteredNotes := []*entity.NoteRenderer{}
+		indexNewLine := -1
+		for i, note := range notes {
+			filteredNotes = append(filteredNotes, note)
+			if note.IsNewLine {
+				indexNewLine = i
+				break
+			}
+		}
+
+		if measure.Number == 12 {
+			raw, _ := json.MarshalIndent(notes, "", "   ")
+			log.Println(string(raw), indexNewLine)
+		}
+
+		alignMeasures = append(alignMeasures, filteredNotes...)
+		if staffInfo.Multiline {
+			log.Println("index for new line is ", indexNewLine)
+			for i, note := range notes {
+				if i > 0 && note.IndexPosition == 0 {
+					break
+				}
+				if i > indexNewLine {
+					staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
+				}
+			}
+			staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, &entity.NoteRenderer{
+				Barline:   &barline,
+				PositionX: barlineX,
+			})
+
+		} else {
+			alignMeasures = append(alignMeasures, &entity.NoteRenderer{
+				Barline:   &barline,
+				PositionX: barlineX,
+			})
+		}
+
+		align = append(align, alignMeasures)
 	}
-	// align shit here
-	RenderSlurTies(ctx, canv, slurTiesRenderer, lastXCoordinate)
-	canv.Gend() // staff group
+	RenderWithAlign(ctx, canv, y, align)
 
 	return
 }

@@ -12,7 +12,7 @@ import (
 
 func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 	canv.Group("class='slurties'")
-	// TODO: check ties across measure bar
+	// DONE: check ties across measure bar
 	for _, s := range set {
 
 		slurResult := SlurBezier{

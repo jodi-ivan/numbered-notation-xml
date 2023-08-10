@@ -9,6 +9,7 @@ import (
 )
 
 // only support noto-music font
+// FIXED: Print barline it as glyph
 var unicode = map[musicxml.BarLineStyle]string{
 	musicxml.BarLineStyleRegular:    `&#x01D100;`,
 	musicxml.BarLineStyleLightHeavy: `&#x01D102;`,

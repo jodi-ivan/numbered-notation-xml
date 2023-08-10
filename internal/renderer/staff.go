@@ -37,7 +37,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		canv.Group("class='measure'", fmt.Sprintf("id='measure-%d'", measure.Number))
 
 		for notePos, note := range measure.Notes {
-
+			// FIXME: use the hidden attributes on the musicxml files instead of forcing hide every beginnning rest
 			// don't print anything when rest on the beginning on the music
 			if note.Rest != nil && measure.Number == 1 {
 
@@ -214,7 +214,16 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 		}
 
-		if len(measure.Barline) > 0 && measure.Barline[0].Location == musicxml.BarlineLocationLeft {
+		var skipPrintBarline bool
+		// FIXED: skip if it has next forward bar line
+		for _, barlineNextMeasure := range nextMeasure.Barline {
+			if barlineNextMeasure.Location == musicxml.BarlineLocationLeft {
+				// there is left barline on the next measure, skipp the regular barline
+				skipPrintBarline = true
+				break
+			}
+		}
+		if !skipPrintBarline && len(measure.Barline) > 0 && measure.Barline[0].Location == musicxml.BarlineLocationLeft {
 			RenderBarline(ctx, canv, measure.Barline[0], Coordinate{
 				X: float64(x),
 				Y: float64(y),
@@ -294,37 +303,27 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 		canv.Gend() // note group
 
-		var skipPrintBarline bool
+		barline := musicxml.Barline{
+			BarStyle: musicxml.BarLineStyleRegular,
+		}
 
-		// FIXED: Print it as glyph
-		// FIXED: skip if it has next forward bar line
-		for _, barlineNextMeasure := range nextMeasure.Barline {
-			if barlineNextMeasure.Location == musicxml.BarlineLocationLeft {
-				// there is left barline on the next measure, skipp the regular barline
-				skipPrintBarline = true
-				break
+		if len(measure.Barline) == 1 {
+			if measure.Barline[0].Location == musicxml.BarlineLocationRight {
+				barline = measure.Barline[0]
+			}
+		} else if len(measure.Barline) > 1 {
+			if measure.Barline[1].Location == musicxml.BarlineLocationRight {
+				barline = measure.Barline[1]
 			}
 		}
 
-		if !skipPrintBarline {
-			barline := musicxml.Barline{
-				BarStyle: musicxml.BarLineStyleRegular,
-			}
-
-			if len(measure.Barline) > 0 {
-				if measure.Barline[0].Location == musicxml.BarlineLocationRight {
-					barline = measure.Barline[0]
-				}
-			}
-
-			if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-				x += 5
-			}
-			RenderBarline(ctx, canv, barline, Coordinate{
-				X: float64(x),
-				Y: float64(y),
-			})
+		if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
+			x += 5
 		}
+		RenderBarline(ctx, canv, barline, Coordinate{
+			X: float64(x),
+			Y: float64(y),
+		})
 
 		lastXCoordinate = math.Max(lastXCoordinate, float64(x))
 		if multiline {

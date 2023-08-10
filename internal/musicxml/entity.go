@@ -292,9 +292,9 @@ const (
 )
 
 type Barline struct {
-	Location string         `xml:"location,attr"`
-	BarStyle BarLineStyle   `xml:"bar-style"`
-	Repeat   *BarLineRepeat `xml:"repeat"`
+	Location BarlineLocation `xml:"location,attr"`
+	BarStyle BarLineStyle    `xml:"bar-style"`
+	Repeat   *BarLineRepeat  `xml:"repeat"`
 }
 
 type BarLineRepeat struct {

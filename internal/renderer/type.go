@@ -1,6 +1,16 @@
 package renderer
 
-import "github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+import (
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+)
+
+type StaffInfo struct {
+	Multiline        bool
+	MarginBottom     int
+	MarginLeft       int
+	NextLineRenderer []*entity.NoteRenderer
+}
 
 type Coordinate struct {
 	X float64

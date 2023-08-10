@@ -36,14 +36,14 @@ type NoteRenderer struct {
 	Octave       int
 	Striketrough bool
 	NoteLength   musicxml.NoteLength
-	BarType      string
+	// BarType      string
 	Width        int
 	Lyric        []Lyric
 	Slur         map[int]Slur
 	Beam         map[int]Beam
 	Tie          *Slur
 	Articulation *Articulation
-
+	Barline      *musicxml.Barline
 	// internal use
 	IsLengthTakenFromLyric bool
 	IndexPosition          int

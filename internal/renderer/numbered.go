@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	svg "github.com/ajstarks/svgo"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -83,11 +84,14 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	// RenderMeasures(r.Context(), s, LAYOUT_INDENT_LENGTH, relativeY, music.Part)
 	staff := SplitLines(ctx, music.Part)
 	x := LAYOUT_INDENT_LENGTH
+	info := StaffInfo{
+		NextLineRenderer: []*entity.NoteRenderer{},
+	}
 	for _, st := range staff {
-		multiline, marginBottom, marginLeft := RenderStaff(ctx, s, x, relativeY, keySignature, timeSignature, st)
-		relativeY = relativeY + 70 + marginBottom
-		if multiline {
-			x = marginLeft
+		info = RenderStaff(ctx, s, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
+		relativeY = relativeY + 70 + info.MarginBottom
+		if info.Multiline {
+			x = info.MarginLeft
 		} else {
 			x = LAYOUT_INDENT_LENGTH
 		}

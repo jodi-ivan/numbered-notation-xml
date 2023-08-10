@@ -179,7 +179,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 
 }
 
-func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, measureNo int) {
+func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}

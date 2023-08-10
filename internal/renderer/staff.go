@@ -20,17 +20,13 @@ import (
 func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
 	restBeginning := false
 
-	// slurTiesRenderer := []*entity.NoteRenderer{}
-	// lastXCoordinate := float64(0)
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 	var nextMeasure musicxml.Measure
-	// canv.Group("class='staff'")
 
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
 		align = append(align, prevNotes)
 	}
-	// newLine := []*entity.NoteRenderer{}
 	for measureIndex, measure := range measures {
 		measure.Build()
 		if measureIndex < len(measures)-1 {
@@ -41,8 +37,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
 		rctx = context.WithValue(rctx, constant.CtxKeyTimeSignature, currTimesig)
 		alignMeasures := []*entity.NoteRenderer{}
-
-		// canv.Group("class='measure'", fmt.Sprintf("id='measure-%d'", measure.Number))
 
 		// barline
 		var skipPrintBarline bool
@@ -152,8 +146,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 					}
 				}
 
-				// slurTiesRenderer = append(slurTiesRenderer, renderer)
-
 				// breath mark
 				hasBreathMark = note.Notations.Articulation != nil &&
 					note.Notations.Articulation.BreathMark != nil
@@ -247,8 +239,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 		}
 
-		// part x
-		// canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		xNotes := 0
 		continueDot := false
 		lastDotLoc := 0
@@ -260,11 +250,9 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			if n.IsDotted {
 				dotCount++
 				if continueDot {
-					// canv.Text(lastDotLoc+UPPERCASE_LENGTH, y, ".")
 					revisionX[i] = lastDotLoc + UPPERCASE_LENGTH
 					lastDotLoc = lastDotLoc + UPPERCASE_LENGTH
 				} else {
-					// canv.Text(xNotes+UPPERCASE_LENGTH, y, ".")
 					revisionX[i] = xNotes + UPPERCASE_LENGTH
 					lastDotLoc = xNotes + UPPERCASE_LENGTH
 				}
@@ -274,19 +262,12 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 					x -= prev.Width - LOWERCASE_LENGTH
 				}
 				x += LOWERCASE_LENGTH
-				// canv.Text(x, y-10, ",")
-				// x += LOWERCASE_LENGTH
 			} else {
 				if continueDot {
-					// FIXED:the dotted does not adding pad to the next notes
 					x += LOWERCASE_LENGTH
 				}
-				// canv.Text(x, y, fmt.Sprintf("%d", n.Note))
 				xNotes = x
 				continueDot = false
-				// if n.Striketrough {
-				// 	// canv.Line(x+10, y-16, x, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
-				// }
 				dotCount = 0
 			}
 
@@ -299,7 +280,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			if n.IsNewLine {
 				x = LAYOUT_INDENT_LENGTH
 				staffInfo.Multiline = staffInfo.Multiline || true
-				// y += 70
 			}
 			n.IndexPosition = i
 			prev = n
@@ -310,8 +290,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			}
 
 		}
-
-		// canv.Gend() // note group
 
 		barline := musicxml.Barline{
 			BarStyle: musicxml.BarLineStyleRegular,

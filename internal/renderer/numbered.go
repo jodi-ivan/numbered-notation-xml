@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	svg "github.com/ajstarks/svgo"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
@@ -39,7 +40,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.WriteHeader(200)
 	s := canvas.NewCanvas(svg.New(w))
-	s.Start(LAYOUT_WIDTH, 1000)
+	s.Start(constant.LAYOUT_WIDTH, 1000)
 	ctx := r.Context()
 	s.Def()
 	fmt.Fprintf(s.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music")))
@@ -52,7 +53,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 		workTitle = strings.ToUpper(music.Credit.Words)
 	}
 	titleWidth := lyric.CalculateLyricWidth(workTitle)
-	titleX := (LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
+	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
 	s.Text(int(titleX), relativeY, workTitle)
 
 	// render key signature
@@ -63,7 +64,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 
 	humanizedKeySignature := keySignature.String()
 
-	s.Text(LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
+	s.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
 
 	// render time signature
 	// TODO: check the time signature on github issue
@@ -78,12 +79,12 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 		2/4
 	*/
 	beat := music.Part.Measures[0].Attribute.Time
-	s.Text(LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
+	s.Text(constant.LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
 	relativeY += 50
 
-	// RenderMeasures(r.Context(), s, LAYOUT_INDENT_LENGTH, relativeY, music.Part)
+	// RenderMeasures(r.Context(), s, constant.LAYOUT_INDENT_LENGTH, relativeY, music.Part)
 	staff := SplitLines(ctx, music.Part)
-	x := LAYOUT_INDENT_LENGTH
+	x := constant.LAYOUT_INDENT_LENGTH
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
@@ -93,7 +94,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 		if info.Multiline {
 			x = info.MarginLeft
 		} else {
-			x = LAYOUT_INDENT_LENGTH
+			x = constant.LAYOUT_INDENT_LENGTH
 		}
 	}
 	s.End()

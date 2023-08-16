@@ -12,13 +12,8 @@ type StaffInfo struct {
 	NextLineRenderer []*entity.NoteRenderer
 }
 
-type Coordinate struct {
-	X float64
-	Y float64
-}
-
 type CoordinateWithOctave struct {
-	Coordinate
+	entity.Coordinate
 	Octave int
 }
 
@@ -30,8 +25,8 @@ type SlurBezier struct {
 }
 
 type BeamLine struct {
-	Start Coordinate
-	End   Coordinate
+	Start entity.Coordinate
+	End   entity.Coordinate
 }
 
 type beamMarker struct {

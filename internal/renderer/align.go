@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -19,13 +20,14 @@ var barlineWidth = map[musicxml.BarLineStyle]float64{
 }
 
 func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
+
 	// get the note
 	lastMeasure := noteRenderer[len(noteRenderer)-1]
 	lastNote := lastMeasure[len(lastMeasure)-1]
 
-	remaining := (LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH) - lastNote.PositionX
+	remaining := (constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH) - lastNote.PositionX
 
-	lastPos := LAYOUT_WIDTH - LAYOUT_INDENT_LENGTH
+	lastPos := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH
 	lastNote.PositionX = lastPos
 	if lastNote.Barline != nil {
 		remaining -= int(barlineWidth[lastNote.Barline.BarStyle])
@@ -80,7 +82,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
 				canv.Text(n.PositionX, y-10, ",")
 			} else if n.Barline != nil {
-				RenderBarline(ctx, canv, *n.Barline, Coordinate{
+				RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
 					X: float64(n.PositionX),
 					Y: float64(y),
 				})
@@ -93,16 +95,47 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 
 		}
 
+		lyricPos := map[int][]lyric.LyricPosition{}
 		canv.Group("class='lyric'", "style='font-family:Caladea'")
 		for _, n := range measure {
 			if len(n.Lyric) > 0 {
 				for i, l := range n.Lyric {
 					if l.Text != "" {
 						xPos := n.PositionX
-						if n.PositionX == LAYOUT_INDENT_LENGTH {
+						if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
 							xPos += int(lyric.CalculateMarginLeft(l.Text))
 						}
 						canv.Text(xPos, n.PositionY+25+(i*20), l.Text)
+
+						if l.Syllabic != musicxml.LyricSyllabicTypeSingle {
+							if len(lyricPos[i]) < 2 {
+								if l.Syllabic == musicxml.LyricSyllabicTypeBegin {
+									lyricPos[i] = []lyric.LyricPosition{
+										lyric.LyricPosition{
+											Coordinate: entity.Coordinate{
+												X: float64(n.PositionX),
+												Y: float64(n.PositionY),
+											},
+											Lyrics: n.Lyric[i],
+										},
+									}
+								}
+								lyricPos[i] = append(lyricPos[i], lyric.LyricPosition{
+									Coordinate: entity.Coordinate{
+										X: float64(n.PositionX),
+										Y: float64(n.PositionY),
+									},
+									Lyrics: n.Lyric[i],
+								})
+							}
+							if len(lyricPos[i]) == 2 {
+								locs := lyric.CalculateHypen(ctx, lyricPos[i][0], lyricPos[i][1])
+								for _, loc := range locs {
+									canv.Text(int(loc.X), int(loc.Y)+25+(i*20), "-")
+								}
+								delete(lyricPos, i)
+							}
+						}
 					}
 
 				}

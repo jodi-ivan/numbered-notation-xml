@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -18,7 +19,7 @@ var unicode = map[musicxml.BarLineStyle]string{
 	musicxml.BarLineStyleHeavyLight: `&#x01D103;`,
 }
 
-func RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate Coordinate) {
+func RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate) {
 	forward := ""
 	backward := ""
 

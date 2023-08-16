@@ -17,14 +17,14 @@ func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 
 		slurResult := SlurBezier{
 			Start: CoordinateWithOctave{
-				Coordinate: Coordinate{
+				Coordinate: entity.Coordinate{
 					X: s.Start.X + 5,
 					Y: s.Start.Y + 5,
 				},
 				Octave: s.Start.Octave,
 			},
 			End: CoordinateWithOctave{
-				Coordinate: Coordinate{
+				Coordinate: entity.Coordinate{
 					X: s.End.X + 5,
 					Y: s.End.Y + 5,
 				},
@@ -34,7 +34,7 @@ func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 
 		if slurResult.Start.Octave < 0 {
 			slurResult.Start = CoordinateWithOctave{
-				Coordinate: Coordinate{
+				Coordinate: entity.Coordinate{
 					X: slurResult.Start.X + 3,
 					Y: slurResult.Start.Y + 3,
 				},
@@ -44,7 +44,7 @@ func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		if slurResult.End.Octave < 0 {
 
 			slurResult.End = CoordinateWithOctave{
-				Coordinate: Coordinate{
+				Coordinate: entity.Coordinate{
 					X: slurResult.End.X - 3,
 					Y: slurResult.End.Y + 3,
 				},
@@ -59,7 +59,7 @@ func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		}
 
 		pull := CoordinateWithOctave{
-			Coordinate: Coordinate{
+			Coordinate: entity.Coordinate{
 				X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
 				Y: pullY,
 			},
@@ -91,7 +91,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 			if s.Type == musicxml.NoteSlurTypeStop || s.Type == musicxml.NoteSlurTypeHop {
 				temp := slurs[s.Number]
 				temp.End = CoordinateWithOctave{
-					Coordinate: Coordinate{
+					Coordinate: entity.Coordinate{
 						X: float64(note.PositionX - 2),
 						Y: float64(note.PositionY),
 					},
@@ -100,7 +100,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 
 				if temp.Start.X == 0 && temp.Start.Y == 0 {
 					temp.Start = CoordinateWithOctave{
-						Coordinate: Coordinate{
+						Coordinate: entity.Coordinate{
 							X: float64(note.PositionX - UPPERCASE_LENGTH),
 							Y: float64(note.PositionY),
 						},
@@ -118,7 +118,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 			if s.Type == musicxml.NoteSlurTypeStart || s.Type == musicxml.NoteSlurTypeHop {
 				slurs[s.Number] = SlurBezier{
 					Start: CoordinateWithOctave{
-						Coordinate: Coordinate{
+						Coordinate: entity.Coordinate{
 							X: float64(note.PositionX + 2),
 							Y: float64(note.PositionY),
 						},
@@ -133,7 +133,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 			if note.Tie.Type == musicxml.NoteSlurTypeStart {
 				ties[note.Note] = SlurBezier{
 					Start: CoordinateWithOctave{
-						Coordinate: Coordinate{
+						Coordinate: entity.Coordinate{
 							X: float64(note.PositionX),
 							Y: float64(note.PositionY),
 						},
@@ -143,7 +143,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 			} else if note.Tie.Type == musicxml.NoteSlurTypeStop {
 				temp := ties[note.Note]
 				temp.End = CoordinateWithOctave{
-					Coordinate: Coordinate{
+					Coordinate: entity.Coordinate{
 						X: float64(note.PositionX),
 						Y: float64(note.PositionY),
 					},
@@ -163,7 +163,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 			temp := slur
 			if temp.End.Coordinate.X == 0 && temp.End.Coordinate.Y == 0 {
 				temp.End = CoordinateWithOctave{
-					Coordinate: Coordinate{
+					Coordinate: entity.Coordinate{
 						X: float64(maxXPosition - 5),
 						Y: float64(temp.Start.Y),
 					},
@@ -202,7 +202,7 @@ func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRen
 			switch b.Type {
 			case musicxml.NoteBeamTypeBegin:
 				beams[b.Number] = BeamLine{
-					Start: Coordinate{
+					Start: entity.Coordinate{
 						X: float64(note.PositionX),
 						Y: positionY,
 					},
@@ -213,18 +213,18 @@ func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRen
 
 				if beam.Start.X == 0 {
 					beams[b.Number] = BeamLine{
-						Start: Coordinate{
+						Start: entity.Coordinate{
 							X: float64(note.PositionX),
 							Y: positionY,
 						},
-						End: Coordinate{
+						End: entity.Coordinate{
 							X: float64(note.PositionX) + 8,
 							Y: positionY,
 						},
 					}
 
 				} else {
-					beam.End = Coordinate{
+					beam.End = entity.Coordinate{
 						X: float64(note.PositionX) + 8,
 						Y: beam.Start.Y,
 					}

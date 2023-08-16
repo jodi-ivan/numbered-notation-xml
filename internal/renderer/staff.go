@@ -276,7 +276,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				x = x - n.Width
 			}
 			if n.IsNewLine {
-				x = LAYOUT_INDENT_LENGTH
+				x = constant.LAYOUT_INDENT_LENGTH
 				staffInfo.Multiline = staffInfo.Multiline || true
 			}
 			n.IndexPosition = i

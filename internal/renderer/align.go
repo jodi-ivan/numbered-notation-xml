@@ -95,7 +95,6 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 
 		}
 
-		lyricPos := map[int][]lyric.LyricPosition{}
 		canv.Group("class='lyric'", "style='font-family:Caladea'")
 		for _, n := range measure {
 			if len(n.Lyric) > 0 {
@@ -106,41 +105,12 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 							xPos += int(lyric.CalculateMarginLeft(l.Text))
 						}
 						canv.Text(xPos, n.PositionY+25+(i*20), l.Text)
-
-						if l.Syllabic != musicxml.LyricSyllabicTypeSingle {
-							if len(lyricPos[i]) < 2 {
-								if l.Syllabic == musicxml.LyricSyllabicTypeBegin {
-									lyricPos[i] = []lyric.LyricPosition{
-										lyric.LyricPosition{
-											Coordinate: entity.Coordinate{
-												X: float64(n.PositionX),
-												Y: float64(n.PositionY),
-											},
-											Lyrics: n.Lyric[i],
-										},
-									}
-								}
-								lyricPos[i] = append(lyricPos[i], lyric.LyricPosition{
-									Coordinate: entity.Coordinate{
-										X: float64(n.PositionX),
-										Y: float64(n.PositionY),
-									},
-									Lyrics: n.Lyric[i],
-								})
-							}
-							if len(lyricPos[i]) == 2 {
-								locs := lyric.CalculateHypen(ctx, lyricPos[i][0], lyricPos[i][1])
-								for _, loc := range locs {
-									canv.Text(int(loc.X), int(loc.Y)+25+(i*20), "-")
-								}
-								delete(lyricPos, i)
-							}
-						}
 					}
-
 				}
 			}
 		}
+		//TODO: render on staff level, like slurties
+		lyric.RenderHypen(ctx, canv, measure)
 		canv.Gend()
 
 		RenderOctave(ctx, canv, measure)

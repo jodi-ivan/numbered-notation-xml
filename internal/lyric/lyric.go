@@ -94,6 +94,7 @@ func CalculateLyricWidth(txt string) float64 {
 		"!": 4.58,
 		";": 4.23,
 		" ": 4,
+		"-": 5.27,
 	}
 	res := 0.0
 

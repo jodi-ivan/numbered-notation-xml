@@ -21,6 +21,7 @@ var barlineWidth = map[musicxml.BarLineStyle]float64{
 
 func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
 
+	flatten := []*entity.NoteRenderer{}
 	// get the note
 	lastMeasure := noteRenderer[len(noteRenderer)-1]
 	lastNote := lastMeasure[len(lastMeasure)-1]
@@ -49,6 +50,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 	slurTiesNote := []*entity.NoteRenderer{}
 	canv.Group("staff")
 	for mi, measure := range noteRenderer {
+		flatten = append(flatten, measure...)
 
 		for i, note := range measure {
 			note.PositionY = y
@@ -109,15 +111,16 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 				}
 			}
 		}
-		//TODO: render on staff level, like slurties
-		lyric.RenderHypen(ctx, canv, measure)
+
 		canv.Gend()
 
 		RenderOctave(ctx, canv, measure)
 		RenderBeam(ctx, canv, measure)
 		canv.Gend()
 		canv.Gend()
+
 	}
+	lyric.RenderHypen(ctx, canv, flatten)
 	RenderSlurTies(ctx, canv, slurTiesNote, float64(lastPos))
 	canv.Gend()
 

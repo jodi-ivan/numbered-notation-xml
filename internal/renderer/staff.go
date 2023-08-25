@@ -48,9 +48,10 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 		if !skipPrintBarline && len(measure.Barline) > 0 && measure.Barline[0].Location == musicxml.BarlineLocationLeft {
 			alignMeasures = append(alignMeasures, &entity.NoteRenderer{
-				PositionX: x,
-				Width:     int(barlineWidth[measure.Barline[0].BarStyle]),
-				Barline:   &measure.Barline[0],
+				PositionX:     x,
+				Width:         int(barlineWidth[measure.Barline[0].BarStyle]),
+				Barline:       &measure.Barline[0],
+				MeasureNumber: measure.Number,
 			})
 
 			x += 5
@@ -83,15 +84,16 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			additionalRenderer := numbered.RenderLengthNote(rctx, timeSignature, measure.Number, noteLength)
 
 			renderer := &entity.NoteRenderer{
-				PositionX:    x,
-				PositionY:    int(y),
-				Note:         n,
-				NoteLength:   note.Type,
-				Octave:       octave,
-				Striketrough: strikethrough,
-				IsRest:       (note.Rest != nil),
-				Beam:         map[int]entity.Beam{},
-				IsNewLine:    measure.NewLineIndex == notePos,
+				PositionX:     x,
+				PositionY:     int(y),
+				Note:          n,
+				NoteLength:    note.Type,
+				Octave:        octave,
+				Striketrough:  strikethrough,
+				IsRest:        (note.Rest != nil),
+				Beam:          map[int]entity.Beam{},
+				IsNewLine:     measure.NewLineIndex == notePos,
+				MeasureNumber: measure.Number,
 			}
 
 			if len(additionalRenderer) > 0 {
@@ -203,11 +205,12 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 					continue
 				}
 				additionalNote := &entity.NoteRenderer{
-					PositionY:  int(y),
-					Width:      LOWERCASE_LENGTH,
-					IsDotted:   additional.IsDotted,
-					NoteLength: additional.Type,
-					Beam:       map[int]entity.Beam{},
+					PositionY:     int(y),
+					Width:         LOWERCASE_LENGTH,
+					IsDotted:      additional.IsDotted,
+					NoteLength:    additional.Type,
+					Beam:          map[int]entity.Beam{},
+					MeasureNumber: measure.Number,
 				}
 
 				switch additional.Type {
@@ -232,6 +235,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 					Articulation: &entity.Articulation{
 						BreathMark: &entity.ArticulationTypesBreathMark,
 					},
+					MeasureNumber: measure.Number,
 				})
 			}
 
@@ -341,14 +345,16 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				}
 			}
 			staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, &entity.NoteRenderer{
-				Barline:   &barline,
-				PositionX: barlineX,
+				Barline:       &barline,
+				PositionX:     barlineX,
+				MeasureNumber: measure.Number,
 			})
 
 		} else {
 			alignMeasures = append(alignMeasures, &entity.NoteRenderer{
-				Barline:   &barline,
-				PositionX: barlineX,
+				Barline:       &barline,
+				PositionX:     barlineX,
+				MeasureNumber: measure.Number,
 			})
 		}
 

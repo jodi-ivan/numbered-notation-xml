@@ -50,16 +50,15 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 	slurTiesNote := []*entity.NoteRenderer{}
 	canv.Group("staff")
 	for mi, measure := range noteRenderer {
-		flatten = append(flatten, measure...)
 
 		for i, note := range measure {
+
 			note.PositionY = y
+			flatten = append(flatten, note)
 
 			if note.Tie != nil || note.Slur != nil {
 				slurTiesNote = append(slurTiesNote, note)
 			}
-
-			// TODO: from outer to inner
 
 			// do not add left spacing on first not first measure
 			if i == 0 && mi == 0 {

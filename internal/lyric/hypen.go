@@ -59,12 +59,15 @@ func CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition)
 func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	pos := map[int][2]*LyricPosition{}
 
+	// for tracking the pair of begin to end
+	hs := NewHypenStack()
+
 	hypenLocation := []entity.Coordinate{}
 	for notePos, n := range measure {
 
 		// TODO: new line inside the measure
 		// TODO: multi line lyrics
-		if pos[0][0] != nil && (notePos == (len(measure) - 1)) {
+		if pos[0][0] != nil && (notePos == (len(measure) - 1)) && !hs.IsEmpty() {
 			endNotePos := entity.Coordinate{
 				X: float64(n.PositionX),
 				Y: float64(n.PositionY) + 25,
@@ -87,6 +90,7 @@ func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.Note
 		}
 
 		for i, l := range n.Lyric {
+			hs.Process(ctx, l.Syllabic)
 			if len(pos[i]) == 0 {
 				pos[i] = [2]*LyricPosition{}
 			}

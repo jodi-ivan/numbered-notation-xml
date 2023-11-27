@@ -236,7 +236,15 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 						BreathMark: &entity.ArticulationTypesBreathMark,
 					},
 					MeasureNumber: measure.Number,
+
+					// move the new line indicator to this
+					IsNewLine: renderer.IsNewLine,
 				})
+
+				if renderer.IsNewLine {
+					// remove the new line, since it is transferrerd to the breathmark
+					renderer.IsNewLine = false
+				}
 			}
 
 		}

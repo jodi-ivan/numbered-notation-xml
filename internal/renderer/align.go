@@ -72,6 +72,9 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 
 			note.PositionX += (added * count)
 			count++
+
+			//TODO: reposition if distance betweeb 2 lyrics are zless than 2spaces and 1 dashes space.
+			// move the prev to -x distance
 		}
 
 		canv.Group("measure-align")
@@ -114,11 +117,13 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 		canv.Gend()
 
 		RenderOctave(ctx, canv, measure)
+		RenderMeasureText(ctx, canv, measure)
 		RenderBeam(ctx, canv, measure)
 		canv.Gend()
 		canv.Gend()
 
 	}
+
 	lyric.RenderHypen(ctx, canv, flatten)
 	RenderSlurTies(ctx, canv, slurTiesNote, float64(lastPos))
 	canv.Gend()

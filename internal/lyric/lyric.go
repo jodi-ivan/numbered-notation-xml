@@ -24,7 +24,6 @@ func CalculateMarginLeft(txt string) float64 {
 
 func CalculateLyricWidth(txt string) float64 {
 	// DONE: margin left of the lyric
-	// TODO: continues syllable
 	width := map[string]float64{
 		"1": 9.28,
 		"2": 7.55,

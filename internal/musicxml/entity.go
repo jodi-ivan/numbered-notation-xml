@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+type TextAlignment string
+
+const (
+	TextAlignmentRight TextAlignment = "right"
+	TextAlignmentLeft  TextAlignment = "left"
+)
+
 type Element struct {
 	// FIXME: mechanism to check wheter it is notes / direction
 	// currently by checking pitch | rest -> notes
@@ -65,6 +72,12 @@ type Part struct {
 	Measures []Measure `xml:"measure"`
 }
 
+type MeasureText struct {
+	Text          string
+	RelativeY     float64
+	TextAlignment TextAlignment
+}
+
 type Measure struct {
 	Appendix     []Element  `xml:",any"`
 	Number       int        `xml:"number,attr"`
@@ -73,11 +86,14 @@ type Measure struct {
 	Barline      []Barline  `xml:"barline" json:",omitempty"`
 	Print        *Print     `xml:"print" json:",omitempty"`
 	NewLineIndex int        `xml:"-"`
-	// 	Direction    *Direction `xml:"-"`
+
+	// FIXME: one centralized place for the measured text
+	RightMeasureText *MeasureText
 }
 
 func (m *Measure) Build() error {
 	m.NewLineIndex = -1
+	var measureText *MeasureText
 	for i, elmnt := range m.Appendix {
 		cleanedContent := strings.TrimSpace(elmnt.Content)
 		if strings.HasPrefix(cleanedContent, "\u003cpitch\u003e") ||
@@ -87,6 +103,19 @@ func (m *Measure) Build() error {
 				log.Println("error parsing note, err:", err.Error())
 				return err
 			}
+
+			if measureText != nil {
+				if n.MeasureText == nil {
+					n.MeasureText = []MeasureText{}
+				}
+
+				n.MeasureText = append(n.MeasureText, MeasureText{
+					Text:      measureText.Text,
+					RelativeY: measureText.RelativeY,
+				})
+
+				measureText = nil
+			}
 			m.Notes = append(m.Notes, n)
 		} else if strings.HasPrefix(cleanedContent, "\u003cdirection-type\u003e") {
 			d, err := elmnt.ParseAsDirection()
@@ -95,7 +124,22 @@ func (m *Measure) Build() error {
 			}
 			if d.DirectionType.Word.Value == "__layout=br" {
 				m.NewLineIndex = i
+			} else if d.DirectionType.Word.Value == "D.C. al Fine" {
+				continue
+			} else {
+
+				measureText = &MeasureText{
+					Text:      d.DirectionType.Word.Value,
+					RelativeY: d.DirectionType.Word.RelativeY,
+				}
 			}
+		}
+	}
+
+	if measureText != nil {
+		m.RightMeasureText = &MeasureText{
+			Text:      measureText.Text,
+			RelativeY: measureText.RelativeY,
 		}
 	}
 
@@ -218,7 +262,8 @@ type Direction struct {
 
 type DirectionType struct {
 	Word struct {
-		Value string `xml:",chardata"`
+		Value     string  `xml:",chardata"`
+		RelativeY float64 `xml:"relative-y,attr"`
 	} `xml:"words"`
 }
 
@@ -234,6 +279,8 @@ type Note struct {
 	Accidental NoteAccidental `xml:"accidental"`
 	Dot        []*Dot         `xml:"dot"`
 	Rest       *Rest          `xml:"rest"`
+
+	MeasureText []MeasureText `xml:"-"`
 }
 
 type NoteBeam struct {

@@ -94,6 +94,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				Beam:          map[int]entity.Beam{},
 				IsNewLine:     measure.NewLineIndex == notePos,
 				MeasureNumber: measure.Number,
+				MeasureText:   note.MeasureText,
 			}
 
 			if len(additionalRenderer) > 0 {
@@ -359,11 +360,22 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			})
 
 		} else {
-			alignMeasures = append(alignMeasures, &entity.NoteRenderer{
+			barlineRenderer := &entity.NoteRenderer{
 				Barline:       &barline,
 				PositionX:     barlineX,
 				MeasureNumber: measure.Number,
-			})
+			}
+			if measure.RightMeasureText != nil {
+				barlineRenderer.MeasureText = []musicxml.MeasureText{
+					musicxml.MeasureText{
+						Text:          measure.RightMeasureText.Text,
+						RelativeY:     measure.RightMeasureText.RelativeY,
+						TextAlignment: musicxml.TextAlignmentRight,
+					},
+				}
+
+			}
+			alignMeasures = append(alignMeasures, barlineRenderer)
 		}
 
 		align = append(align, alignMeasures)

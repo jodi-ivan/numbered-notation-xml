@@ -80,7 +80,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	*/
 	beat := music.Part.Measures[0].Attribute.Time
 	s.Text(constant.LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
-	relativeY += 50
+	relativeY += 70
 
 	// RenderMeasures(r.Context(), s, constant.LAYOUT_INDENT_LENGTH, relativeY, music.Part)
 	staff := SplitLines(ctx, music.Part)
@@ -90,7 +90,7 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	}
 	for _, st := range staff {
 		info = RenderStaff(ctx, s, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
-		relativeY = relativeY + 70 + info.MarginBottom
+		relativeY = relativeY + 80 + info.MarginBottom
 		if info.Multiline {
 			x = info.MarginLeft
 		} else {

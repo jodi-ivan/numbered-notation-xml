@@ -49,6 +49,8 @@ type NoteRenderer struct {
 	IndexPosition          int
 	IsNewLine              bool
 	MeasureNumber          int
+
+	MeasureText []musicxml.MeasureText
 }
 
 func (nr *NoteRenderer) UpdateBeam(beamNum int, beamType musicxml.NoteBeamType) {

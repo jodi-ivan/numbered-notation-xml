@@ -126,6 +126,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 	}
 
 	lyric.RenderHypen(ctx, canv, flatten)
+	RenderMeasureTopping(ctx, canv, flatten)
 	RenderSlurTies(ctx, canv, slurTiesNote, float64(lastPos))
 	canv.Gend()
 

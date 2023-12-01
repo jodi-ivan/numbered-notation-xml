@@ -376,8 +376,23 @@ type Barline struct {
 	Location BarlineLocation `xml:"location,attr"`
 	BarStyle BarLineStyle    `xml:"bar-style"`
 	Repeat   *BarLineRepeat  `xml:"repeat"`
+	Ending   *BarlineEnding  `xml:"ending"`
 }
 
 type BarLineRepeat struct {
 	Direction BarLineRepeatDirection `xml:"direction,attr"`
+}
+
+type BarlineEndingType string
+
+const (
+	BarlineEndingTypeStart       = "start"
+	BarlineEndingTypeStop        = "stop"
+	BarlineEndingTypeDiscontinue = "discontinue"
+)
+
+type BarlineEnding struct {
+	Name   xml.Name          `xml:"ending"`
+	Number string            `xml:"number,attr"`
+	Type   BarlineEndingType `xml:"type,attr"`
 }

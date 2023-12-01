@@ -19,17 +19,15 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 	restBeginning := false
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
-	var nextMeasure musicxml.Measure
+
+	var lastRightBarlinePosition *entity.Coordinate
 
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
 		align = append(align, prevNotes)
 	}
-	for measureIndex, measure := range measures {
+	for _, measure := range measures {
 		measure.Build()
-		if measureIndex < len(measures)-1 {
-			nextMeasure = measures[measureIndex+1]
-		}
 		notes := []*entity.NoteRenderer{}
 		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
 		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
@@ -37,28 +35,26 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		alignMeasures := []*entity.NoteRenderer{}
 
 		// barline
-		var skipPrintBarline bool
-		for _, barlineNextMeasure := range nextMeasure.Barline {
-			if barlineNextMeasure.Location == musicxml.BarlineLocationLeft {
-				// there is left barline on the next measure, skipp the regular barline
-				skipPrintBarline = true
-				break
-			}
-		}
+		if len(measure.Barline) > 0 {
 
-		if !skipPrintBarline && len(measure.Barline) > 0 && measure.Barline[0].Location == musicxml.BarlineLocationLeft {
-			alignMeasures = append(alignMeasures, &entity.NoteRenderer{
-				PositionX:     x,
-				Width:         int(barlineWidth[measure.Barline[0].BarStyle]),
-				Barline:       &measure.Barline[0],
-				MeasureNumber: measure.Number,
-			})
+			leftBarline := measure.Barline[0]
+			if (leftBarline.Location == musicxml.BarlineLocationLeft) && (leftBarline.BarStyle != musicxml.BarLineStyleRegular) {
+				pos := x
+				if lastRightBarlinePosition != nil {
+					pos = int(lastRightBarlinePosition.X)
+				}
+				alignMeasures = append(alignMeasures, &entity.NoteRenderer{
+					PositionX:     pos,
+					Width:         int(barlineWidth[leftBarline.BarStyle]),
+					Barline:       &leftBarline,
+					MeasureNumber: measure.Number,
+				})
 
-			x += 5
+				x += 5
 
-			if measure.Barline[0].Repeat != nil {
-				//FIXED: the x value does not add
-				x += UPPERCASE_LENGTH
+				if leftBarline.Repeat != nil {
+					x += UPPERCASE_LENGTH
+				}
 			}
 		}
 		for notePos, note := range measure.Notes {
@@ -368,6 +364,10 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				Barline:       &barline,
 				PositionX:     barlineX,
 				MeasureNumber: measure.Number,
+			}
+			lastRightBarlinePosition = &entity.Coordinate{
+				X: float64(barlineX),
+				Y: float64(y),
 			}
 			if measure.RightMeasureText != nil {
 				barlineRenderer.MeasureText = []musicxml.MeasureText{

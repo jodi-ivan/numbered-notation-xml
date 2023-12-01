@@ -95,6 +95,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				IsNewLine:     measure.NewLineIndex == notePos,
 				MeasureNumber: measure.Number,
 				MeasureText:   note.MeasureText,
+
+				TimeMofication: note.TimeModification,
 			}
 
 			if len(additionalRenderer) > 0 {
@@ -150,6 +152,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				// breath mark
 				hasBreathMark = note.Notations.Articulation != nil &&
 					note.Notations.Articulation.BreathMark != nil
+
+				renderer.Tuplet = note.Notations.Tuplet
 			}
 
 			if len(note.Beam) > 0 {

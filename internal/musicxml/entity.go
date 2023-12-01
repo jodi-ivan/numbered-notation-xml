@@ -267,6 +267,23 @@ type DirectionType struct {
 	} `xml:"words"`
 }
 
+type Bool string
+
+const (
+	BoolYes Bool = "yes"
+	BoolNo  Bool = "no"
+)
+
+type ChardataInt struct {
+	Value int `xml:",chardata"`
+}
+
+type TimeModification struct {
+	Name        xml.Name    `xml:"time-modification"`
+	ActualNotes ChardataInt `xml:"actual-notes"`
+	NormalNotes ChardataInt `xml:"normal-notes"`
+}
+
 type Note struct {
 	Pitch struct {
 		Step   string `xml:"step"`
@@ -280,6 +297,8 @@ type Note struct {
 	Dot        []*Dot         `xml:"dot"`
 	Rest       *Rest          `xml:"rest"`
 
+	TimeModification *TimeModification `xml:"time-modification"`
+
 	MeasureText []MeasureText `xml:"-"`
 }
 
@@ -288,10 +307,25 @@ type NoteBeam struct {
 	State  NoteBeamType `xml:",chardata"`
 }
 
+type TupletType string
+
+const (
+	TupletTypeStart TupletType = "start"
+	TupletTypeStop  TupletType = "stop"
+)
+
+type Tuplet struct {
+	Type   TupletType `xml:"type,attr"`
+	Braket Bool       `xml:"braket,attr"`
+}
+
 type NoteNotation struct {
 	Slur         []NotationSlur        `xml:"slur" json:",omitempty"`
 	Tied         *Tie                  `xml:"tied" json:",omitempty"`
 	Articulation *NotationArticulation `xml:"articulations" json:",omitempty"`
+
+	// TODO: stacking tuplets / tuplet inside the tuplet
+	Tuplet *Tuplet `xml:"tuplet"`
 }
 
 type NotationArticulation struct {

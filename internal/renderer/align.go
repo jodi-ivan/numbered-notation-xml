@@ -119,6 +119,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 		RenderOctave(ctx, canv, measure)
 		RenderMeasureText(ctx, canv, measure)
 		RenderBeam(ctx, canv, measure)
+		RenderTuplet(ctx, canv, measure)
 		canv.Gend()
 		canv.Gend()
 

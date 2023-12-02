@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	svg "github.com/ajstarks/svgo"
+	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/julienschmidt/httprouter"
@@ -21,6 +22,10 @@ func (cdh *CanvasDelegatorHTTP) OnBeforeStartWrite() {
 }
 
 func (cdh *CanvasDelegatorHTTP) OnError(err error) canvas.DelegatorErrorFlowControl {
+	if err == repository.ErrHymnNotFound {
+		// metadata is not found
+		return canvas.DelegatorErrorFlowControlIgnore
+	}
 	cdh.w.WriteHeader(http.StatusInternalServerError)
 	cdh.w.Write([]byte(err.Error()))
 

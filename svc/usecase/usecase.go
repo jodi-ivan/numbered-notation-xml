@@ -33,17 +33,16 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 	music, err := i.repo.GetMusicXML(ctx, filepath)
 	if err != nil {
 		flow := canv.Delegator().OnError(err)
-		if flow == canvas.DelegatorErrorFlowControlStop {
+		if flow != canvas.DelegatorErrorFlowControlIgnore {
 			return err
 		}
 	}
 	metaData, err := i.repo.GetHymnMetaData(ctx, hymnNum)
 	if err != nil {
 		flow := canv.Delegator().OnError(err)
-		if flow == canvas.DelegatorErrorFlowControlStop {
+		if flow != canvas.DelegatorErrorFlowControlIgnore {
 			return err
 		}
-		return err
 	}
 
 	canv.Delegator().OnBeforeStartWrite()

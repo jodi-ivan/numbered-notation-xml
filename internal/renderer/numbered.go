@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -38,7 +37,11 @@ func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv ca
 
 	relativeY := 100
 	// render title
-	workTitle := fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
+
+	workTitle := ""
+	if metadata != nil {
+		workTitle = fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
+	}
 	titleWidth := lyric.CalculateLyricWidth(workTitle)
 	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
 	canv.Text(int(titleX), relativeY, workTitle)
@@ -77,13 +80,11 @@ func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv ca
 func googlefont(f string) []byte {
 	empty := []byte{}
 	r, err := http.Get(gwfURI + url.QueryEscape(f))
-	log.Println("error call", err)
 	if err != nil {
 		return empty
 	}
 	defer r.Body.Close()
 	b, rerr := io.ReadAll(r.Body)
-	log.Println(rerr, r.Status, string(b))
 	if rerr != nil || r.StatusCode != http.StatusOK {
 		return empty
 	}

@@ -19,6 +19,8 @@ type ResponseWriterWithStatus struct {
 	status  int
 	err     *ErrorResponse
 	message string
+
+	size int64
 }
 
 func (rwws *ResponseWriterWithStatus) Header() http.Header {
@@ -26,7 +28,12 @@ func (rwws *ResponseWriterWithStatus) Header() http.Header {
 }
 
 func (rwws *ResponseWriterWithStatus) Write(data []byte) (int, error) {
-	return rwws.w.Write(data)
+	size, err := rwws.w.Write(data)
+	if err == nil {
+		rwws.size += int64(size)
+	}
+
+	return size, err
 }
 
 func (rwws *ResponseWriterWithStatus) WriteHeader(statusCode int) {
@@ -34,7 +41,7 @@ func (rwws *ResponseWriterWithStatus) WriteHeader(statusCode int) {
 	rwws.w.WriteHeader(statusCode)
 }
 
-//HTTPAdapter
+// HTTPAdapter
 type HTTPAdapter interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 }
@@ -59,11 +66,7 @@ func commonMiddleware(wg *sync.WaitGroup, next httprouter.Handle) httprouter.Han
 
 		next(responseWriter, r, ps)
 
-		if responseWriter.err != nil {
-			log.Printf("[Webserver][%d ms] %s %s -> %d. %s: %s.\n", time.Since(t).Milliseconds(), strings.ToUpper(r.Method), r.URL.Path, responseWriter.status, responseWriter.err.Source.Pointer, responseWriter.err.Detail)
-		} else {
-			log.Printf("[Webserver][%d ms] %s %s -> %d. %s.\n", time.Since(t).Milliseconds(), strings.ToUpper(r.Method), r.URL.Path, responseWriter.status, responseWriter.message)
-		}
+		log.Printf("[Webserver][%d ms][%d bytes] %s %s -> Status code: %d\n", time.Since(t).Milliseconds(), responseWriter.size, strings.ToUpper(r.Method), r.URL.Path, responseWriter.status)
 	}
 }
 

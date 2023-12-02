@@ -3,7 +3,7 @@ package renderer
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -16,8 +16,63 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
+
+type Delegator interface {
+	Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnData)
+}
+
+type delegator struct{}
+
+func NewDelegator() Delegator {
+	return &delegator{}
+}
+
+func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnData) {
+	canv.Start(constant.LAYOUT_WIDTH, 1000)
+	canv.Def()
+	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music")))
+	canv.DefEnd()
+
+	relativeY := 100
+	// render title
+	workTitle := fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
+	titleWidth := lyric.CalculateLyricWidth(workTitle)
+	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
+	canv.Text(int(titleX), relativeY, workTitle)
+
+	relativeY += 25
+
+	keySignature := keysig.NewKeySignature(music.Part.Measures[0].Attribute.Key)
+	timeSignature := timesig.NewTimeSignatures(ctx, music.Part.Measures)
+
+	humanizedKeySignature := keySignature.String()
+
+	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
+
+	beat := music.Part.Measures[0].Attribute.Time
+	canv.Text(constant.LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
+	relativeY += 70
+
+	staff := SplitLines(ctx, music.Part)
+	x := constant.LAYOUT_INDENT_LENGTH
+	info := StaffInfo{
+		NextLineRenderer: []*entity.NoteRenderer{},
+	}
+	for _, st := range staff {
+		info = RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
+		relativeY = relativeY + 80 + info.MarginBottom
+		if info.Multiline {
+			x = info.MarginLeft
+		} else {
+			x = constant.LAYOUT_INDENT_LENGTH
+		}
+	}
+	canv.End()
+
+}
 
 func googlefont(f string) []byte {
 	empty := []byte{}
@@ -27,7 +82,7 @@ func googlefont(f string) []byte {
 		return empty
 	}
 	defer r.Body.Close()
-	b, rerr := ioutil.ReadAll(r.Body)
+	b, rerr := io.ReadAll(r.Body)
 	log.Println(rerr, r.Status, string(b))
 	if rerr != nil || r.StatusCode != http.StatusOK {
 		return empty
@@ -36,6 +91,7 @@ func googlefont(f string) []byte {
 	return b
 }
 
+// Deprecated: RenderNumbered use the delegator insteed
 func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.MusicXML) {
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.WriteHeader(200)
@@ -67,7 +123,6 @@ func RenderNumbered(w http.ResponseWriter, r *http.Request, music musicxml.Music
 	s.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
 
 	// render time signature
-	// TODO: check the time signature on github issue
 	// TODO: time signature changing happens on the top and not on the measure
 	/*
 		time signatures

@@ -8,10 +8,21 @@ import (
 
 type Config struct {
 	Webserver WebServerConfig
+	MusicXML  MusicXMLConfig
+	SQLite    SQLiteConfig
+}
+
+type MusicXMLConfig struct {
+	Path       string
+	FilePrefix string
 }
 
 type WebServerConfig struct {
 	Port string
+}
+
+type SQLiteConfig struct {
+	DBPath string
 }
 
 func InitConfig(env string) (Config, error) {

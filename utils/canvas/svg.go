@@ -6,6 +6,26 @@ import (
 	svg "github.com/ajstarks/svgo"
 )
 
+type DelegatorErrorFlowControl string
+
+const (
+	DelegatorErrorFlowControlIgnore DelegatorErrorFlowControl = "ignore"
+	DelegatorErrorFlowControlStop   DelegatorErrorFlowControl = "stop"
+)
+
+type Delegator interface {
+	OnBeforeStartWrite()
+	OnError(error) DelegatorErrorFlowControl
+}
+
+type delegatorDiscard struct {
+}
+
+func (dd *delegatorDiscard) OnBeforeStartWrite() {}
+func (dd *delegatorDiscard) OnError(error) DelegatorErrorFlowControl {
+	return DelegatorErrorFlowControlIgnore
+}
+
 type Canvas interface {
 	Start(w int, h int, ns ...string)
 	End()
@@ -23,10 +43,13 @@ type Canvas interface {
 	Qbezier(sx int, sy int, cx int, cy int, ex int, ey int, tx int, ty int, s ...string)
 	Text(x int, y int, t string, s ...string)
 	Writer() io.Writer
+
+	Delegator() Delegator
 }
 
 type _canvas struct {
 	s *svg.SVG
+	d Delegator
 }
 
 func (c *_canvas) Start(w int, h int, ns ...string) {
@@ -70,9 +93,23 @@ func (c *_canvas) Writer() io.Writer {
 	return c.s.Writer
 }
 
+func (c *_canvas) Delegator() Delegator {
+	if c.d == nil {
+		return &delegatorDiscard{}
+	}
+	return c.d
+}
+
 func NewCanvas(s *svg.SVG) Canvas {
 
 	return &_canvas{
 		s: s,
+	}
+}
+
+func NewCanvasWithDelegator(s *svg.SVG, delegator Delegator) Canvas {
+	return &_canvas{
+		s: s,
+		d: delegator,
 	}
 }

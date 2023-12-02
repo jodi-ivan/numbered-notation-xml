@@ -65,7 +65,7 @@ func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.Note
 	hypenLocation := []entity.Coordinate{}
 	for notePos, n := range measure {
 
-		// TODO: new line inside the measure
+		// DONE: new line inside the measure
 		// TODO: multi line lyrics
 		if pos[0][0] != nil && (notePos == (len(measure) - 1)) && !hs.IsEmpty() {
 			endNotePos := entity.Coordinate{

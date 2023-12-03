@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -111,9 +112,9 @@ func RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.
 
 			for i, t := range note.MeasureText {
 				xPos := note.PositionX
-				if t.TextAlignment == musicxml.TextAlignmentRight {
-					textLength := lyric.CalculateLyricWidth(t.Text)
-					xPos = xPos - int(textLength)
+				textLength := lyric.CalculateLyricWidth(t.Text)
+				if xPos+int(textLength) > constant.LAYOUT_WIDTH-(constant.LAYOUT_INDENT_LENGTH) {
+					xPos = int((constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH) - textLength)
 				}
 				canv.Text(xPos, note.PositionY-28-(i*-15), t.Text, `font-style="italic"`)
 			}

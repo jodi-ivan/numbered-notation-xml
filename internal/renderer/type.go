@@ -38,3 +38,7 @@ type beamSplitMarker struct {
 	StartIndex int
 	EndIndex   int
 }
+
+type VerseInfo struct {
+	MarginBottom int
+}

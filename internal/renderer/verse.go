@@ -13,7 +13,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) {
+func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
 	canv.Group("class='verse'", "style='font-family:Caladea'")
 	initialY := y
 
@@ -80,4 +80,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 	}
 
 	canv.Gend()
+	return VerseInfo{
+		MarginBottom: y,
+	}
 }

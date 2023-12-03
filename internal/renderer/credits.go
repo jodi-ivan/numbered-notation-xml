@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -23,6 +24,24 @@ func RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repo
 		y += 15
 		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, fmt.Sprintf("Lagu : %s", metadata.Music))
 
+	}
+
+	ref := ""
+	if metadata.RefBE.Valid {
+		ref += fmt.Sprintf("BE  %d", metadata.RefBE.Int16)
+	}
+
+	if metadata.RefNR.Valid {
+		if ref != "" {
+			ref += ", "
+		}
+
+		ref += fmt.Sprintf("NR  %d", metadata.RefNR.Int16)
+	}
+
+	if ref != "" {
+		l := lyric.CalculateLyricWidth(ref)
+		canv.Text(constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH-int(l), y, ref)
 	}
 
 	canv.Gend()

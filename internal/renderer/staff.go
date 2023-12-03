@@ -299,9 +299,6 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				if prev != nil && prev.IsLengthTakenFromLyric {
 					x -= prev.Width - LOWERCASE_LENGTH
 				}
-				if continueDot {
-					x += LOWERCASE_LENGTH
-				}
 			} else {
 				if continueDot {
 					x += LOWERCASE_LENGTH

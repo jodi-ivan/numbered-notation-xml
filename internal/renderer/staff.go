@@ -90,9 +90,23 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				Beam:          map[int]entity.Beam{},
 				IsNewLine:     measure.NewLineIndex == notePos,
 				MeasureNumber: measure.Number,
-				MeasureText:   note.MeasureText,
 
 				TimeMofication: note.TimeModification,
+			}
+
+			for _, mt := range note.MeasureText {
+				if renderer.MeasureText != nil {
+					renderer.MeasureText = []musicxml.MeasureText{}
+				}
+				alignment := musicxml.TextAlignmentLeft
+				if notePos == len(measure.Notes)-1 {
+					alignment = musicxml.TextAlignmentRight
+				}
+				renderer.MeasureText = append(renderer.MeasureText, musicxml.MeasureText{
+					Text:          mt.Text,
+					RelativeY:     mt.RelativeY,
+					TextAlignment: alignment,
+				})
 			}
 
 			if len(additionalRenderer) > 0 {
@@ -272,7 +286,9 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				if prev != nil && prev.IsLengthTakenFromLyric {
 					x -= prev.Width - LOWERCASE_LENGTH
 				}
-				x += LOWERCASE_LENGTH
+				if continueDot {
+					x += LOWERCASE_LENGTH
+				}
 			} else {
 				if continueDot {
 					x += LOWERCASE_LENGTH

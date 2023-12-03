@@ -76,7 +76,7 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 			// vertical line at start
 			canv.Line(
 				x1,
-				int(math.Round(pair[0].Y))-18,
+				int(math.Round(pair[0].Y))-19,
 				x1,
 				int(math.Round(pair[1].Y))-25,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
@@ -91,7 +91,7 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 			// vertical line at end
 			canv.Line(
 				x2,
-				int(math.Round(pair[0].Y))-18,
+				int(math.Round(pair[0].Y))-19,
 				x2,
 				int(math.Round(pair[1].Y))-25,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
@@ -112,9 +112,9 @@ func RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.
 
 			for i, t := range note.MeasureText {
 				xPos := note.PositionX
-				textLength := lyric.CalculateLyricWidth(t.Text)
-				if xPos+int(textLength) > constant.LAYOUT_WIDTH-(constant.LAYOUT_INDENT_LENGTH) {
-					xPos = int((constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH) - textLength)
+				if t.TextAlignment == musicxml.TextAlignmentRight {
+					textLength := lyric.CalculateLyricWidth(t.Text)
+					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
 				}
 				canv.Text(xPos, note.PositionY-28-(i*-15), t.Text, `font-style="italic"`)
 			}

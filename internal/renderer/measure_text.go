@@ -26,8 +26,12 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 	}
 
 	offsetStart := map[musicxml.BarLineStyle]int{
-		musicxml.BarLineStyleRegular:    8,
-		musicxml.BarLineStyleLightHeavy: 4,
+		musicxml.BarLineStyleRegular:    7,
+		musicxml.BarLineStyleLightHeavy: 2,
+	}
+
+	offsetEnd := map[musicxml.BarLineStyle]int{
+		musicxml.BarLineStyleLightHeavy: -3,
 	}
 	for _, note := range notes {
 		if note.Barline != nil && note.Barline.Ending != nil {
@@ -66,7 +70,7 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 
 		for i, pair := range pairs {
 			x1 := int(math.Round(pair[0].X)) - offsetStart[pairsBar[i][0]]
-			x2 := int(math.Round(pair[1].X))
+			x2 := int(math.Round(pair[1].X)) - offsetEnd[pairsBar[i][1]]
 			canv.Text(x1+3, int(math.Round(pair[0].Y))-12, pairsData[i], `style="font-weight:bold;font-size:90%"`)
 			// vertical line at start
 			canv.Line(

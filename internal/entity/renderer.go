@@ -1,9 +1,26 @@
 package entity
 
-import "github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+import (
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+)
 
+type LyricVal []Text
+
+func (lv LyricVal) String() string {
+	result := ""
+	for _, l := range lv {
+		result += l.Value
+	}
+
+	return result
+}
+
+type Text struct {
+	Value     string
+	Underline int
+}
 type Lyric struct {
-	Text     string
+	Text     []Text
 	Syllabic musicxml.LyricSyllabic
 }
 

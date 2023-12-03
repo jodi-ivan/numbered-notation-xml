@@ -18,7 +18,7 @@ func CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition)
 
 	hypenWidth := CalculateLyricWidth("-")
 
-	startPosition := prevLyric.Coordinate.X + CalculateLyricWidth(prevLyric.Lyrics.Text)
+	startPosition := prevLyric.Coordinate.X + CalculateLyricWidth(entity.LyricVal(prevLyric.Lyrics.Text).String())
 	endPostion := currentLyric.Coordinate.X
 	distance := endPostion - startPosition
 	if distance < hypenWidth {

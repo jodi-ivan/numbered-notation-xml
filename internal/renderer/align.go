@@ -103,12 +103,30 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 		for _, n := range measure {
 			if len(n.Lyric) > 0 {
 				for i, l := range n.Lyric {
-					if l.Text != "" {
+					if len(l.Text) > 0 {
+						lyricVal := entity.LyricVal(l.Text).String()
 						xPos := n.PositionX
 						if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
-							xPos += int(lyric.CalculateMarginLeft(l.Text))
+							xPos += int(lyric.CalculateMarginLeft(lyricVal))
 						}
-						canv.Text(xPos, n.PositionY+25+(i*20), l.Text)
+						canv.Text(xPos, n.PositionY+25+(i*20), lyricVal)
+
+						offsetLyric := ""
+						for _, t := range l.Text {
+
+							if t.Underline == 1 {
+								currTextLength := lyric.CalculateLyricWidth(t.Value)
+								offset := lyric.CalculateLyricWidth(offsetLyric)
+								canv.Qbez(
+									xPos+int(offset), n.PositionY+28,
+									xPos+int(offset)+int(currTextLength/2), n.PositionY+28+6,
+									xPos+int(offset)+int(currTextLength), n.PositionY+28,
+									"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
+								)
+							} else {
+								offsetLyric += t.Value
+							}
+						}
 					}
 				}
 			}

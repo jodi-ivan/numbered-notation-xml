@@ -184,11 +184,24 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				staffInfo.MarginBottom = ((len(note.Lyric) - 1) * 25)
 				renderer.Lyric = make([]entity.Lyric, len(note.Lyric))
 				for i, currLyric := range note.Lyric {
-					renderer.Lyric[i] = entity.Lyric{
-						Text:     currLyric.Text.Value,
+					lyricText := ""
+					l := entity.Lyric{
 						Syllabic: currLyric.Syllabic,
 					}
-					currWidth := int(math.Round(lyric.CalculateLyricWidth(currLyric.Text.Value)))
+
+					texts := []entity.Text{}
+					for _, t := range currLyric.Text {
+						lyricText += t.Value
+						texts = append(texts, entity.Text{
+							Value:     t.Value,
+							Underline: t.Underline,
+						})
+					}
+
+					l.Text = texts
+
+					renderer.Lyric[i] = l
+					currWidth := int(math.Round(lyric.CalculateLyricWidth(lyricText)))
 					if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
 						//FIXME: edge cases kj-101, [ki]dung ma[laikat] no spaces between them
 						currWidth += LOWERCASE_LENGTH

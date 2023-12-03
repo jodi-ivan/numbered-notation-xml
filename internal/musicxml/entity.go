@@ -341,7 +341,7 @@ type NotationSlur struct {
 type Lyric struct {
 	locationAttr
 	Number int `xml:"number,attr"`
-	Text   struct {
+	Text   []struct {
 		Underline int    `xml:"underline,attr"`
 		Value     string `xml:",chardata"`
 	} `xml:"text"`

@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 4.0.2</software>
-      <encoding-date>2023-07-30</encoding-date>
+      <encoding-date>2023-08-01</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="no"/>
@@ -826,6 +826,11 @@
           <text>sa</text>
           </lyric>
         </note>
+      <direction placement="above">
+        <direction-type>
+          <words>__layout=br</words>
+          </direction-type>
+        </direction>
       <note>
         <pitch>
           <step>C</step>
@@ -842,11 +847,6 @@
           <text>me</text>
           </lyric>
         </note>
-      <direction placement="above">
-        <direction-type>
-          <words>__layout=br</words>
-          </direction-type>
-        </direction>
       <note>
         <pitch>
           <step>B</step>
@@ -1029,6 +1029,11 @@
           <text>nyak</text>
           </lyric>
         </note>
+      <direction placement="above">
+        <direction-type>
+          <words>__layout=br</words>
+          </direction-type>
+        </direction>
       <note>
         <pitch>
           <step>E</step>

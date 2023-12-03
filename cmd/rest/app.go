@@ -40,8 +40,6 @@ func main() {
 
 	httpRender := adapter.New(usecaseMod)
 
-	// ws.Register("GET", "/test", &adapter.TrySVG{})
-	ws.Register("GET", "/parsefile", &adapter.ReadFile{})
 	ws.Register("GET", "/kidung-jemaat/render/:number", httpRender)
 
 	ws.Serve(cfg.Webserver.Port)

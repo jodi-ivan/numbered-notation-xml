@@ -7,8 +7,18 @@ import (
 
 var ErrHymnNotFound = errors.New("hymn not found")
 
+type HymnDB struct {
+	HymnData
+	HymnVerse
+}
+
+type HymnMetadata struct {
+	HymnData
+	Verse []HymnVerse
+}
+
 type HymnData struct {
-	ID             int            `db:"id"`
+	HymnID         int            `db:"hymn_id"`
 	Number         int            `db:"hymn_number"`
 	Variant        sql.NullInt16  `db:"hymn_variant"`
 	Title          string         `db:"title"`
@@ -20,4 +30,12 @@ type HymnData struct {
 	RefBE          sql.NullInt16  `db:"be_number"`
 	Copyright      sql.NullString `db:"copyright"`
 	IsForKids      sql.NullInt16  `db:"kids_starred"`
+}
+
+type HymnVerse struct {
+	VerseID  sql.NullInt32  `db:"verse_id"`
+	Number   sql.NullInt32  `db:"hymn_num"`
+	VerseNum sql.NullInt32  `db:"verse_num"`
+	StyleRow sql.NullInt32  `db:"style_row"`
+	Content  sql.NullString `db:"content"`
 }

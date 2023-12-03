@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"encoding/xml"
 	"io"
 	"os"
@@ -12,7 +11,7 @@ import (
 )
 
 type Repository interface {
-	GetHymnMetaData(ctx context.Context, hymnNum int) (*HymnData, error)
+	GetHymnMetaData(ctx context.Context, hymnNum int) (*HymnMetadata, error)
 	GetMusicXML(ctx context.Context, filepath string) (musicxml.MusicXML, error)
 }
 
@@ -26,20 +25,29 @@ func New(ctx context.Context, db *sqlx.DB) Repository {
 	}
 }
 
-func (r *repository) GetHymnMetaData(ctx context.Context, hymnNum int) (*HymnData, error) {
+func (r *repository) GetHymnMetaData(ctx context.Context, hymnNum int) (*HymnMetadata, error) {
 
 	query := sqlx.Rebind(sqlx.QUESTION, qryHymnData)
-	row := r.db.QueryRowx(query, hymnNum)
-	result := &HymnData{}
-
-	err := row.StructScan(result)
+	rows := []*HymnDB{}
+	err := r.db.Select(&rows, query, hymnNum)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrHymnNotFound
-		}
-
 		return nil, err
+	}
+
+	if len(rows) == 0 {
+		return nil, ErrHymnNotFound
+	}
+
+	result := &HymnMetadata{
+		HymnData: rows[0].HymnData,
+		Verse:    []HymnVerse{},
+	}
+
+	for _, verse := range rows {
+		if verse.VerseID.Valid {
+			result.Verse = append(result.Verse, verse.HymnVerse)
+		}
 	}
 
 	return result, nil

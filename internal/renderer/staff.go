@@ -264,6 +264,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 						BreathMark: &entity.ArticulationTypesBreathMark,
 					},
 					MeasureNumber: measure.Number,
+					Width:         int(lyric.CalculateLyricWidth(",")) * 2,
 
 					// move the new line indicator to this
 					IsNewLine: renderer.IsNewLine,

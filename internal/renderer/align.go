@@ -34,6 +34,9 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 		remaining -= int(barlineWidth[lastNote.Barline.BarStyle])
 	} else if lastNote.Articulation != nil && lastNote.Articulation.BreathMark != nil {
 		// TODO: the breakmark last notess
+		lastTwo := lastMeasure[len(lastMeasure)-2]
+
+		remaining -= (lastTwo.Width - int(lyric.CalculateLyricWidth(",")))
 	} else {
 		lastNote.PositionX -= lastNote.Width
 		remaining -= lastNote.Width
@@ -44,7 +47,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 	for _, measure := range noteRenderer {
 		totalNotes += len(measure)
 	}
-	added := remaining / totalNotes
+	added := float64(remaining) / (float64(totalNotes) - 2)
 
 	count := 1
 	slurTiesNote := []*entity.NoteRenderer{}
@@ -70,7 +73,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 				continue
 			}
 
-			note.PositionX += (added * count)
+			note.PositionX += int(added * float64(count))
 			count++
 
 			//TODO: reposition if distance betweeb 2 lyrics are zless than 2spaces and 1 dashes space.

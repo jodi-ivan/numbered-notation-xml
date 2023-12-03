@@ -27,8 +27,8 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 	}
 
 	offsetStart := map[musicxml.BarLineStyle]int{
-		musicxml.BarLineStyleRegular:    7,
-		musicxml.BarLineStyleLightHeavy: 2,
+		musicxml.BarLineStyleRegular:    9,
+		musicxml.BarLineStyleLightHeavy: 4,
 	}
 
 	offsetEnd := map[musicxml.BarLineStyle]int{

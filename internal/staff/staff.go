@@ -15,6 +15,25 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
+type Staff interface {
+	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
+	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
+}
+
+type staffInteractor struct{}
+
+func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo {
+	return RenderStaff(ctx, canv, x, y, keySignature, timeSignature, measures, prevNotes...)
+}
+
+func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
+	return SplitLines(ctx, part)
+}
+
+func NewStaff() Staff {
+	return &staffInteractor{}
+}
+
 type StaffInfo struct {
 	Multiline        bool
 	MarginBottom     int

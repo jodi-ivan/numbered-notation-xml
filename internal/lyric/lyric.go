@@ -1,6 +1,12 @@
 package lyric
 
-import "regexp"
+import (
+	"context"
+	"regexp"
+
+	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+)
 
 var numberedLyric *regexp.Regexp
 
@@ -12,12 +18,17 @@ func init() {
 
 type Lyric interface {
 	CalculateLyricWidth(string) float64
+	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo
 }
 
 type lyricInteractor struct{}
 
 func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 	return CalculateLyricWidth(txt)
+}
+
+func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
+	return RenderVerse(ctx, canv, y, verses)
 }
 
 func NewLyric() Lyric {

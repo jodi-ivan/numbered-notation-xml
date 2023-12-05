@@ -1,4 +1,4 @@
-package renderer
+package credits
 
 import (
 	"context"
@@ -10,6 +10,20 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
+
+type Credits interface {
+	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData)
+}
+
+type creditsInteractor struct{}
+
+func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
+	RenderCredits(ctx, canv, y, metadata)
+}
+
+func NewCredits() Credits {
+	return &creditsInteractor{}
+}
 
 func RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)

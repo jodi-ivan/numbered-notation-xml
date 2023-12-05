@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
@@ -24,12 +25,16 @@ type Renderer interface {
 }
 
 type rendererInteractor struct {
-	Lyric lyric.Lyric
+	Lyric   lyric.Lyric
+	Staff   staff.Staff
+	Credits credits.Credits
 }
 
 func NewRenderer() Renderer {
 	return &rendererInteractor{
-		Lyric: lyric.NewLyric(),
+		Lyric:   lyric.NewLyric(),
+		Staff:   staff.NewStaff(),
+		Credits: credits.NewCredits(),
 	}
 }
 
@@ -63,13 +68,14 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	canv.Text(constant.LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*constant.LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
 	relativeY += 70
 
-	staffes := SplitLines(ctx, music.Part)
+	staffes := ir.Staff.SplitLines(ctx, music.Part)
 	x := constant.LAYOUT_INDENT_LENGTH
 	info := staff.StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
+
 	for _, st := range staffes {
-		info = staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
+		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
 		relativeY = relativeY + 80 + info.MarginBottom
 		if info.Multiline {
 			x = info.MarginLeft
@@ -79,10 +85,10 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	}
 
 	if metadata != nil {
-		verseInfo := lyric.RenderVerse(ctx, canv, relativeY, metadata.Verse)
+		verseInfo := ir.Lyric.RenderVerse(ctx, canv, relativeY, metadata.Verse)
 		relativeY = verseInfo.MarginBottom
 
-		RenderCredits(ctx, canv, relativeY, metadata.HymnData)
+		ir.Credits.RenderCredits(ctx, canv, relativeY, metadata.HymnData)
 
 	}
 	canv.End()
@@ -91,7 +97,9 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 
 func googlefont(f string) []byte {
 	empty := []byte{}
-	r, err := http.Get(gwfURI + url.QueryEscape(f))
+
+	link := gwfURI + url.QueryEscape(f)
+	r, err := http.Get(link)
 	if err != nil {
 		return empty
 	}
@@ -102,25 +110,4 @@ func googlefont(f string) []byte {
 	}
 
 	return b
-}
-
-// SplitLines split the measure in the lines manner
-func SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
-	result := [][]musicxml.Measure{}
-	currentLine := []musicxml.Measure{}
-	for _, measure := range part.Measures {
-
-		if measure.Print != nil && measure.Print.NewSystem == musicxml.PrintNewSystemTypeYes {
-			finishLine := make([]musicxml.Measure, len(currentLine))
-			copy(finishLine, currentLine)
-
-			result = append(result, finishLine)
-
-			currentLine = []musicxml.Measure{}
-		}
-		currentLine = append(currentLine, measure)
-
-	}
-
-	return append(result, currentLine)
 }

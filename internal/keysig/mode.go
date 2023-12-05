@@ -17,6 +17,11 @@ func NewMode(mode string) Mode {
 		"dorian": KeySignatureModeDorian,
 	}
 	currentMode := modeMapper[mode]
+
+	if mode == "" {
+		currentMode = modeMapper["major"]
+	}
+
 	return Mode{
 		Mode: currentMode,
 	}

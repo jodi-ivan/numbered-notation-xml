@@ -2,8 +2,9 @@ package staff
 
 import (
 	"context"
-	"math"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
@@ -11,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -20,28 +22,19 @@ type Staff interface {
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
 }
 
-type staffInteractor struct{}
-
-func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo {
-	return RenderStaff(ctx, canv, x, y, keySignature, timeSignature, measures, prevNotes...)
-}
-
-func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
-	return SplitLines(ctx, part)
+type staffInteractor struct {
+	Barline barline.Barline
+	Lyric   lyric.Lyric
 }
 
 func NewStaff() Staff {
-	return &staffInteractor{}
+	return &staffInteractor{
+		Barline: barline.NewBarline(),
+		Lyric:   lyric.NewLyric(),
+	}
 }
 
-type StaffInfo struct {
-	Multiline        bool
-	MarginBottom     int
-	MarginLeft       int
-	NextLineRenderer []*entity.NoteRenderer
-}
-
-func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
+func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
 	restBeginning := false
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
@@ -63,24 +56,10 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		// barline
 		if len(measure.Barline) > 0 {
 
-			leftBarline := measure.Barline[0]
-			if (leftBarline.Location == musicxml.BarlineLocationLeft) && (leftBarline.BarStyle != musicxml.BarLineStyleRegular) {
-				pos := x
-				if lastRightBarlinePosition != nil {
-					pos = int(lastRightBarlinePosition.X)
-				}
-				alignMeasures = append(alignMeasures, &entity.NoteRenderer{
-					PositionX:     pos,
-					Width:         int(barlineWidth[leftBarline.BarStyle]),
-					Barline:       &leftBarline,
-					MeasureNumber: measure.Number,
-				})
-
-				x += 5
-
-				if leftBarline.Repeat != nil {
-					x += constant.UPPERCASE_LENGTH
-				}
+			leftBarlineRenderer, barlineInfo := si.Barline.GetRendererLeftBarline(measure, x, lastRightBarlinePosition)
+			if leftBarlineRenderer != nil {
+				alignMeasures = append(alignMeasures, leftBarlineRenderer)
+				x += barlineInfo.XIncrement
 			}
 		}
 		for notePos, note := range measure.Notes {
@@ -120,20 +99,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				TimeMofication: note.TimeModification,
 			}
 
-			for _, mt := range note.MeasureText {
-				if renderer.MeasureText != nil {
-					renderer.MeasureText = []musicxml.MeasureText{}
-				}
-				alignment := musicxml.TextAlignmentLeft
-				if notePos == len(measure.Notes)-1 {
-					alignment = musicxml.TextAlignmentRight
-				}
-				renderer.MeasureText = append(renderer.MeasureText, musicxml.MeasureText{
-					Text:          mt.Text,
-					RelativeY:     mt.RelativeY,
-					TextAlignment: alignment,
-				})
-			}
+			// text above the measure
+			SetMeasureTextRenderer(renderer, note, notePos == len(measure.Notes)-1)
 
 			if len(additionalRenderer) > 0 {
 
@@ -154,106 +121,18 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				}
 			}
 
-			hasBreathMark := false
-
-			if note.Notations != nil {
-
-				for i, slur := range note.Notations.Slur {
-					if i == 0 {
-						renderer.Slur = map[int]entity.Slur{}
-					}
-
-					_, existing := renderer.Slur[slur.Number]
-					if !existing {
-						renderer.Slur[slur.Number] = entity.Slur{
-							Number: slur.Number,
-							Type:   slur.Type,
-						}
-					} else {
-						renderer.Slur[slur.Number] = entity.Slur{
-							Number: slur.Number,
-							Type:   musicxml.NoteSlurTypeHop,
-						}
-					}
-
-				}
-
-				if note.Notations.Tied != nil {
-					renderer.Tie = &entity.Slur{
-						Number: n,
-						Type:   note.Notations.Tied.Type,
-					}
-				}
-
-				// breath mark
-				hasBreathMark = note.Notations.Articulation != nil &&
-					note.Notations.Articulation.BreathMark != nil
-
-				renderer.Tuplet = note.Notations.Tuplet
-			}
-
-			if len(note.Beam) > 0 {
-				if currTimesig.BeatType != 4 {
-					for _, beam := range note.Beam {
-						renderer.Beam[beam.Number] = entity.Beam{
-							Number: beam.Number,
-							Type:   beam.State,
-						}
-					}
-				}
-			}
+			// set the beam, slur and ties
+			rhythm.SetRhythmNotation(renderer, note, n)
 
 			// lyric
-			var lyricWidth, noteWidth int
-
-			if len(note.Lyric) > 0 {
-				staffInfo.MarginBottom = ((len(note.Lyric) - 1) * 25)
-				renderer.Lyric = make([]entity.Lyric, len(note.Lyric))
-				for i, currLyric := range note.Lyric {
-					lyricText := ""
-					l := entity.Lyric{
-						Syllabic: currLyric.Syllabic,
-					}
-
-					texts := []entity.Text{}
-					for _, t := range currLyric.Text {
-						lyricText += t.Value
-						texts = append(texts, entity.Text{
-							Value:     t.Value,
-							Underline: t.Underline,
-						})
-					}
-
-					l.Text = texts
-
-					renderer.Lyric[i] = l
-					currWidth := int(math.Round(lyric.CalculateLyricWidth(lyricText)))
-					if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
-						//FIXME: edge cases kj-101, [ki]dung ma[laikat] no spaces between them
-						currWidth += constant.LOWERCASE_LENGTH
-					}
-					currWidth += 4 // lyric padding
-
-					lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
-				}
-
-			}
-
-			noteWidth = constant.LOWERCASE_LENGTH
-
-			if noteWidth > lyricWidth {
-				renderer.Width = noteWidth
-				renderer.IsLengthTakenFromLyric = false
-			} else {
-				renderer.Width = lyricWidth
-				renderer.IsLengthTakenFromLyric = true
-				if float64(lyricWidth) > float64(noteWidth+constant.UPPERCASE_LENGTH) {
-					renderer.Width = constant.UPPERCASE_LENGTH * 1.7
-				}
-			}
+			verseInfo := si.Lyric.SetLyricRenderer(renderer, note)
+			staffInfo.MarginBottom = verseInfo.MarginBottom
 
 			notes = append(notes, renderer)
 
+			// additional renderer is a several new renderer because of
+			// the conversion to numbered
+			// for example, a half note, means an additional note for the dot
 			for i, additional := range additionalRenderer {
 				if i == 0 {
 					continue
@@ -283,23 +162,9 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				notes = append(notes, additionalNote)
 
 			}
-			if hasBreathMark {
-				// FIXME: the breath mark stopped the continuation of the beam
-				notes = append(notes, &entity.NoteRenderer{
-					Articulation: &entity.Articulation{
-						BreathMark: &entity.ArticulationTypesBreathMark,
-					},
-					MeasureNumber: measure.Number,
-					Width:         int(lyric.CalculateLyricWidth(",")) * 2,
-
-					// move the new line indicator to this
-					IsNewLine: renderer.IsNewLine,
-				})
-
-				if renderer.IsNewLine {
-					// remove the new line, since it is transferrerd to the breathmark
-					renderer.IsNewLine = false
-				}
+			breathPauseRenderer := breathpause.SetAndGetBreathPauseRenderer(renderer, note)
+			if breathPauseRenderer != nil {
+				notes = append(notes, breathPauseRenderer)
 			}
 
 		}
@@ -310,6 +175,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		dotCount := 0
 
 		var prev *entity.NoteRenderer
+
 		revisionX := map[int]int{}
 		for i, n := range notes {
 			if n.IsDotted {
@@ -347,31 +213,12 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			}
 			n.IndexPosition = i
 			prev = n
-			// FIXED: the dotted does not give proper space at the end of measure
-			// FIXED: the one dot on the last measure give uncessary space
 			if n.IsDotted && i == len(notes)-1 && dotCount > 1 {
 				x += constant.LOWERCASE_LENGTH
 			}
-
 		}
 
-		barline := musicxml.Barline{
-			BarStyle: musicxml.BarLineStyleRegular,
-		}
-
-		if len(measure.Barline) == 1 {
-			if measure.Barline[0].Location == musicxml.BarlineLocationRight {
-				barline = measure.Barline[0]
-			}
-		} else if len(measure.Barline) > 1 {
-			if measure.Barline[1].Location == musicxml.BarlineLocationRight {
-				barline = measure.Barline[1]
-			}
-		}
-		if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-			x += 5
-		}
-		barlineX := x
+		barlineX, rightBarlineRenderer := si.Barline.GetRendererRightBarline(measure, x)
 
 		if staffInfo.Multiline {
 			staffInfo.MarginLeft = int(x) + constant.LOWERCASE_LENGTH
@@ -406,24 +253,16 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 					staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
 				}
 			}
-			staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, &entity.NoteRenderer{
-				Barline:       &barline,
-				PositionX:     barlineX,
-				MeasureNumber: measure.Number,
-			})
+			staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, rightBarlineRenderer)
 
 		} else {
-			barlineRenderer := &entity.NoteRenderer{
-				Barline:       &barline,
-				PositionX:     barlineX,
-				MeasureNumber: measure.Number,
-			}
+
 			lastRightBarlinePosition = &entity.Coordinate{
 				X: float64(barlineX),
 				Y: float64(y),
 			}
 			if measure.RightMeasureText != nil {
-				barlineRenderer.MeasureText = []musicxml.MeasureText{
+				rightBarlineRenderer.MeasureText = []musicxml.MeasureText{
 					musicxml.MeasureText{
 						Text:          measure.RightMeasureText.Text,
 						RelativeY:     measure.RightMeasureText.RelativeY,
@@ -432,7 +271,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				}
 
 			}
-			alignMeasures = append(alignMeasures, barlineRenderer)
+			alignMeasures = append(alignMeasures, rightBarlineRenderer)
 		}
 
 		align = append(align, alignMeasures)
@@ -440,4 +279,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 	RenderWithAlign(ctx, canv, y, align)
 
 	return
+}
+
+func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
+	return SplitLines(ctx, part)
 }

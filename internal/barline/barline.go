@@ -4,19 +4,76 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-// only support noto-music font
-// FIXED: Print barline it as glyph
-var unicode = map[musicxml.BarLineStyle]string{
-	musicxml.BarLineStyleRegular:    `&#x01D100;`,
-	musicxml.BarLineStyleLightHeavy: `&#x01D102;`,
-	musicxml.BarLineStyleLightLight: `&#x01D101;`,
-	musicxml.BarLineStyleHeavyHeavy: `&#x01D101;`,
-	musicxml.BarLineStyleHeavyLight: `&#x01D103;`,
+type Barline interface {
+	GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *entity.Coordinate) (*entity.NoteRenderer, *BarlineInfo)
+	GetRendererRightBarline(measure musicxml.Measure, x int) (int, *entity.NoteRenderer)
+}
+
+type barlineInteractor struct{}
+
+func NewBarline() Barline {
+	return &barlineInteractor{}
+}
+
+func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *entity.Coordinate) (*entity.NoteRenderer, *BarlineInfo) {
+	leftBarline := measure.Barline[0]
+	if (leftBarline.Location == musicxml.BarlineLocationLeft) && (leftBarline.BarStyle != musicxml.BarLineStyleRegular) {
+		pos := x
+		if lastRightBarlinePosition != nil {
+			pos = int(lastRightBarlinePosition.X)
+		}
+		result := &entity.NoteRenderer{
+			PositionX:     pos,
+			Width:         int(barlineWidth[leftBarline.BarStyle]),
+			Barline:       &leftBarline,
+			MeasureNumber: measure.Number,
+		}
+
+		incr := 5
+
+		if leftBarline.Repeat != nil {
+			incr += constant.UPPERCASE_LENGTH
+		}
+
+		return result, &BarlineInfo{
+			XIncrement: incr,
+		}
+
+	}
+
+	return nil, nil
+}
+
+func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x int) (int, *entity.NoteRenderer) {
+	barline := musicxml.Barline{
+		BarStyle: musicxml.BarLineStyleRegular,
+	}
+
+	if len(measure.Barline) == 1 {
+		if measure.Barline[0].Location == musicxml.BarlineLocationRight {
+			barline = measure.Barline[0]
+		}
+	} else if len(measure.Barline) > 1 {
+		if measure.Barline[1].Location == musicxml.BarlineLocationRight {
+			barline = measure.Barline[1]
+		}
+	}
+	if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
+		x += 5
+	}
+
+	barlineRenderer := &entity.NoteRenderer{
+		MeasureNumber: measure.Number,
+		PositionX:     x,
+		Barline:       &barline,
+	}
+	return x, barlineRenderer
 }
 
 func RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate) {

@@ -166,3 +166,21 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 		canv.Gend()
 	}
 }
+
+func SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool) {
+
+	for _, mt := range note.MeasureText {
+		if noteRenderer.MeasureText != nil {
+			noteRenderer.MeasureText = []musicxml.MeasureText{}
+		}
+		alignment := musicxml.TextAlignmentLeft
+		if isLastNote {
+			alignment = musicxml.TextAlignmentRight
+		}
+		noteRenderer.MeasureText = append(noteRenderer.MeasureText, musicxml.MeasureText{
+			Text:          mt.Text,
+			RelativeY:     mt.RelativeY,
+			TextAlignment: alignment,
+		})
+	}
+}

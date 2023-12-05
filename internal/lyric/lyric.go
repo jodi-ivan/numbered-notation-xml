@@ -2,8 +2,12 @@ package lyric
 
 import (
 	"context"
+	"math"
 	"regexp"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -19,6 +23,7 @@ func init() {
 type Lyric interface {
 	CalculateLyricWidth(string) float64
 	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo
+	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
 }
 
 type lyricInteractor struct{}
@@ -29,6 +34,61 @@ func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 
 func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
 	return RenderVerse(ctx, canv, y, verses)
+}
+
+func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo {
+	// lyric
+	var lyricWidth, noteWidth, marginBottom int
+
+	if len(note.Lyric) > 0 {
+		marginBottom = ((len(note.Lyric) - 1) * 25)
+		noteRenderer.Lyric = make([]entity.Lyric, len(note.Lyric))
+		for i, currLyric := range note.Lyric {
+			lyricText := ""
+			l := entity.Lyric{
+				Syllabic: currLyric.Syllabic,
+			}
+
+			texts := []entity.Text{}
+			for _, t := range currLyric.Text {
+				lyricText += t.Value
+				texts = append(texts, entity.Text{
+					Value:     t.Value,
+					Underline: t.Underline,
+				})
+			}
+
+			l.Text = texts
+
+			noteRenderer.Lyric[i] = l
+			currWidth := int(math.Round(li.CalculateLyricWidth(lyricText)))
+			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
+				//FIXME: edge cases kj-101, [ki]dung ma[laikat] no spaces between them
+				currWidth += constant.LOWERCASE_LENGTH
+			}
+			currWidth += 4 // lyric padding
+
+			lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
+		}
+
+	}
+
+	noteWidth = constant.LOWERCASE_LENGTH
+
+	if noteWidth > lyricWidth {
+		noteRenderer.Width = noteWidth
+		noteRenderer.IsLengthTakenFromLyric = false
+	} else {
+		noteRenderer.Width = lyricWidth
+		noteRenderer.IsLengthTakenFromLyric = true
+		if float64(lyricWidth) > float64(noteWidth+constant.UPPERCASE_LENGTH) {
+			noteRenderer.Width = constant.UPPERCASE_LENGTH * 1.7
+		}
+	}
+
+	return VerseInfo{
+		MarginBottom: marginBottom,
+	}
 }
 
 func NewLyric() Lyric {

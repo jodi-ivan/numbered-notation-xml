@@ -17,10 +17,10 @@ type Usecase interface {
 type interactor struct {
 	config   config.Config
 	repo     repository.Repository
-	renderer renderer.Delegator
+	renderer renderer.Renderer
 }
 
-func New(config config.Config, repo repository.Repository, renderer renderer.Delegator) Usecase {
+func New(config config.Config, repo repository.Repository, renderer renderer.Renderer) Usecase {
 	return &interactor{
 		config:   config,
 		repo:     repo,

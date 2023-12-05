@@ -10,6 +10,20 @@ func init() {
 	}
 }
 
+type Lyric interface {
+	CalculateLyricWidth(string) float64
+}
+
+type lyricInteractor struct{}
+
+func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
+	return CalculateLyricWidth(txt)
+}
+
+func NewLyric() Lyric {
+	return &lyricInteractor{}
+}
+
 func CalculateMarginLeft(txt string) float64 {
 	if numberedLyric.Match([]byte(txt)) {
 		subStr := numberedLyric.FindStringSubmatch(txt)
@@ -23,7 +37,7 @@ func CalculateMarginLeft(txt string) float64 {
 }
 
 func CalculateLyricWidth(txt string) float64 {
-	// DONE: margin left of the lyric
+	// Only for Caladea font
 	width := map[string]float64{
 		"1": 9.28,
 		"2": 7.55,

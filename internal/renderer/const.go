@@ -1,9 +1,5 @@
 package renderer
 
-const LOWERCASE_LENGTH = 15
-const UPPERCASE_LENGTH = 20
-const SPACE_LENGTH = 7
-
 const (
 	gwfURI  = "https://fonts.googleapis.com/css?family="
 	fontfmt = "<style type=\"text/css\">\n<![CDATA[\n%s]]>\n</style>\n"

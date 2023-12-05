@@ -36,7 +36,7 @@ func main() {
 
 	repo := repository.New(context.Background(), db)
 
-	usecaseMod := usecase.New(cfg, repo, renderer.NewDelegator())
+	usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer())
 
 	httpRender := adapter.New(usecaseMod)
 

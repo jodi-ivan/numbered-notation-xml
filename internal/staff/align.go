@@ -1,13 +1,16 @@
-package renderer
+package staff
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -89,7 +92,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
 				canv.Text(n.PositionX, y-10, ",")
 			} else if n.Barline != nil {
-				RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
+				barline.RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
 					X: float64(n.PositionX),
 					Y: float64(y),
 				})
@@ -137,9 +140,9 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 
 		canv.Gend()
 
-		RenderOctave(ctx, canv, measure)
+		numbered.RenderOctave(ctx, canv, measure)
 		RenderMeasureText(ctx, canv, measure)
-		RenderBeam(ctx, canv, measure)
+		rhythm.RenderBeam(ctx, canv, measure)
 		RenderTuplet(ctx, canv, measure)
 		canv.Gend()
 		canv.Gend()
@@ -148,7 +151,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 
 	lyric.RenderHypen(ctx, canv, flatten)
 	RenderMeasureTopping(ctx, canv, flatten)
-	RenderSlurTies(ctx, canv, slurTiesNote, float64(lastPos))
+	rhythm.RenderSlurTies(ctx, canv, slurTiesNote, float64(lastPos))
 	canv.Gend()
 
 }

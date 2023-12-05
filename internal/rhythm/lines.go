@@ -1,4 +1,4 @@
-package renderer
+package rhythm
 
 import (
 	"context"
@@ -52,7 +52,7 @@ func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		}
 
 		pullY := slurResult.Start.Y
-		if int((slurResult.End.X-slurResult.Start.X)/UPPERCASE_LENGTH) < 5 {
+		if int((slurResult.End.X-slurResult.Start.X)/constant.UPPERCASE_LENGTH) < 5 {
 			pullY += 7.5
 		} else {
 			pullY += 10
@@ -101,7 +101,7 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 				if temp.Start.X == 0 && temp.Start.Y == 0 {
 					temp.Start = CoordinateWithOctave{
 						Coordinate: entity.Coordinate{
-							X: float64(note.PositionX - UPPERCASE_LENGTH),
+							X: float64(note.PositionX - constant.UPPERCASE_LENGTH),
 							Y: float64(note.PositionY),
 						},
 						Octave: 0,

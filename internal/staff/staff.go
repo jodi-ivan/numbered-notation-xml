@@ -1,4 +1,4 @@
-package renderer
+package staff
 
 import (
 	"context"
@@ -14,6 +14,13 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
+
+type StaffInfo struct {
+	Multiline        bool
+	MarginBottom     int
+	MarginLeft       int
+	NextLineRenderer []*entity.NoteRenderer
+}
 
 func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
 	restBeginning := false
@@ -53,7 +60,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				x += 5
 
 				if leftBarline.Repeat != nil {
-					x += UPPERCASE_LENGTH
+					x += constant.UPPERCASE_LENGTH
 				}
 			}
 		}
@@ -204,7 +211,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 					currWidth := int(math.Round(lyric.CalculateLyricWidth(lyricText)))
 					if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
 						//FIXME: edge cases kj-101, [ki]dung ma[laikat] no spaces between them
-						currWidth += LOWERCASE_LENGTH
+						currWidth += constant.LOWERCASE_LENGTH
 					}
 					currWidth += 4 // lyric padding
 
@@ -213,7 +220,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 
 			}
 
-			noteWidth = LOWERCASE_LENGTH
+			noteWidth = constant.LOWERCASE_LENGTH
 
 			if noteWidth > lyricWidth {
 				renderer.Width = noteWidth
@@ -221,8 +228,8 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			} else {
 				renderer.Width = lyricWidth
 				renderer.IsLengthTakenFromLyric = true
-				if float64(lyricWidth) > float64(noteWidth+UPPERCASE_LENGTH) {
-					renderer.Width = UPPERCASE_LENGTH * 1.7
+				if float64(lyricWidth) > float64(noteWidth+constant.UPPERCASE_LENGTH) {
+					renderer.Width = constant.UPPERCASE_LENGTH * 1.7
 				}
 			}
 
@@ -234,7 +241,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 				}
 				additionalNote := &entity.NoteRenderer{
 					PositionY:     int(y),
-					Width:         LOWERCASE_LENGTH,
+					Width:         constant.LOWERCASE_LENGTH,
 					IsDotted:      additional.IsDotted,
 					NoteLength:    additional.Type,
 					Beam:          map[int]entity.Beam{},
@@ -289,20 +296,20 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			if n.IsDotted {
 				dotCount++
 				if continueDot {
-					revisionX[i] = lastDotLoc + UPPERCASE_LENGTH
-					lastDotLoc = lastDotLoc + UPPERCASE_LENGTH
+					revisionX[i] = lastDotLoc + constant.UPPERCASE_LENGTH
+					lastDotLoc = lastDotLoc + constant.UPPERCASE_LENGTH
 				} else {
-					revisionX[i] = xNotes + UPPERCASE_LENGTH
-					lastDotLoc = xNotes + UPPERCASE_LENGTH
+					revisionX[i] = xNotes + constant.UPPERCASE_LENGTH
+					lastDotLoc = xNotes + constant.UPPERCASE_LENGTH
 				}
 				continueDot = true
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
 				if prev != nil && prev.IsLengthTakenFromLyric {
-					x -= prev.Width - LOWERCASE_LENGTH
+					x -= prev.Width - constant.LOWERCASE_LENGTH
 				}
 			} else {
 				if continueDot {
-					x += LOWERCASE_LENGTH
+					x += constant.LOWERCASE_LENGTH
 				}
 				xNotes = x
 				continueDot = false
@@ -324,7 +331,7 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 			// FIXED: the dotted does not give proper space at the end of measure
 			// FIXED: the one dot on the last measure give uncessary space
 			if n.IsDotted && i == len(notes)-1 && dotCount > 1 {
-				x += LOWERCASE_LENGTH
+				x += constant.LOWERCASE_LENGTH
 			}
 
 		}
@@ -348,10 +355,10 @@ func RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature
 		barlineX := x
 
 		if staffInfo.Multiline {
-			staffInfo.MarginLeft = int(x) + LOWERCASE_LENGTH
+			staffInfo.MarginLeft = int(x) + constant.LOWERCASE_LENGTH
 		}
 
-		x += LOWERCASE_LENGTH
+		x += constant.LOWERCASE_LENGTH
 
 		for i, rev := range revisionX {
 			note := notes[i]

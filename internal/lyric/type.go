@@ -27,3 +27,7 @@ type LyricWordVerse struct {
 	Breakdown []LyricPartVerse `json:"breakdown"`
 	Dash      bool             `json:"dash"`
 }
+
+type VerseInfo struct {
+	MarginBottom int
+}

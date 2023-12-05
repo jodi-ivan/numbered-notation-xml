@@ -1,4 +1,4 @@
-package renderer
+package lyric
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -24,7 +23,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 	for _, verse := range verses {
 
 		combine := [][2]entity.Coordinate{}
-		whole := [][]lyric.LyricWordVerse{}
+		whole := [][]LyricWordVerse{}
 
 		err := json.Unmarshal([]byte(verse.Content.String), &whole)
 		if err != nil {
@@ -43,15 +42,15 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 						x2 := float64(0)
 						for _, v := range p.Breakdown {
 							if v.Underline {
-								x2 = x1 + lyric.CalculateLyricWidth(v.Text)
+								x2 = x1 + CalculateLyricWidth(v.Text)
 								break
 							} else {
-								x1 += lyric.CalculateLyricWidth(v.Text)
+								x1 += CalculateLyricWidth(v.Text)
 
 							}
 						}
 
-						startPosition := lyric.CalculateLyricWidth(lineText) + lyric.CalculateLyricWidth(wordPart)
+						startPosition := CalculateLyricWidth(lineText) + CalculateLyricWidth(wordPart)
 						combine = append(combine, [2]entity.Coordinate{
 							entity.Coordinate{
 								X: startPosition + x1,
@@ -68,7 +67,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 				lineText = lineText + " " + word.Word
 
 			}
-			lineLength = math.Max(lineLength, lyric.CalculateLyricWidth(lineText))
+			lineLength = math.Max(lineLength, CalculateLyricWidth(lineText))
 			blob = append(blob, lineText)
 		}
 		allVerse[int(verse.VerseNum.Int32)] = blob
@@ -86,7 +85,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 		currentVerse := allVerse[i+1]
 
 		// number verse
-		canv.Text(x-5-int(lyric.CalculateLyricWidth(fmt.Sprintf("%d. ", i+1))), y, fmt.Sprintf("%d. ", i+1))
+		canv.Text(x-5-int(CalculateLyricWidth(fmt.Sprintf("%d. ", i+1))), y, fmt.Sprintf("%d. ", i+1))
 		for _, liveVerse := range currentVerse {
 			canv.Text(x, y, liveVerse)
 			y += 25

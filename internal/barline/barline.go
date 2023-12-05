@@ -1,4 +1,4 @@
-package renderer
+package barline
 
 import (
 	"context"

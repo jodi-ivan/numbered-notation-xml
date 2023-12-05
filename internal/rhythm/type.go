@@ -1,15 +1,13 @@
-package renderer
+package rhythm
 
 import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
-type StaffInfo struct {
-	Multiline        bool
-	MarginBottom     int
-	MarginLeft       int
-	NextLineRenderer []*entity.NoteRenderer
+type beamMarker struct {
+	NoteBeamType   musicxml.NoteBeamType
+	NoteBeginIndex int
 }
 
 type CoordinateWithOctave struct {
@@ -29,16 +27,7 @@ type BeamLine struct {
 	End   entity.Coordinate
 }
 
-type beamMarker struct {
-	NoteBeamType   musicxml.NoteBeamType
-	NoteBeginIndex int
-}
-
 type beamSplitMarker struct {
 	StartIndex int
 	EndIndex   int
-}
-
-type VerseInfo struct {
-	MarginBottom int
 }

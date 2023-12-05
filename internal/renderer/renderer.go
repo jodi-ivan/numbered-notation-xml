@@ -13,22 +13,27 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-type Delegator interface {
+type Renderer interface {
 	Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnMetadata)
 }
 
-type delegator struct{}
-
-func NewDelegator() Delegator {
-	return &delegator{}
+type rendererInteractor struct {
+	Lyric lyric.Lyric
 }
 
-func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnMetadata) {
+func NewRenderer() Renderer {
+	return &rendererInteractor{
+		Lyric: lyric.NewLyric(),
+	}
+}
+
+func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnMetadata) {
 	canv.Start(constant.LAYOUT_WIDTH, 1500)
 	canv.Def()
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music|Figtree")))
@@ -41,7 +46,7 @@ func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv ca
 	if metadata != nil {
 		workTitle = fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
 	}
-	titleWidth := lyric.CalculateLyricWidth(workTitle)
+	titleWidth := ir.Lyric.CalculateLyricWidth(workTitle)
 	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
 	canv.Text(int(titleX), relativeY, workTitle)
 
@@ -55,16 +60,16 @@ func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv ca
 	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
 
 	beat := music.Part.Measures[0].Attribute.Time
-	canv.Text(constant.LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
+	canv.Text(constant.LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*constant.LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
 	relativeY += 70
 
-	staff := SplitLines(ctx, music.Part)
+	staffes := SplitLines(ctx, music.Part)
 	x := constant.LAYOUT_INDENT_LENGTH
-	info := StaffInfo{
+	info := staff.StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
-	for _, st := range staff {
-		info = RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
+	for _, st := range staffes {
+		info = staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
 		relativeY = relativeY + 80 + info.MarginBottom
 		if info.Multiline {
 			x = info.MarginLeft
@@ -74,7 +79,7 @@ func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv ca
 	}
 
 	if metadata != nil {
-		verseInfo := RenderVerse(ctx, canv, relativeY, metadata.Verse)
+		verseInfo := lyric.RenderVerse(ctx, canv, relativeY, metadata.Verse)
 		relativeY = verseInfo.MarginBottom
 
 		RenderCredits(ctx, canv, relativeY, metadata.HymnData)

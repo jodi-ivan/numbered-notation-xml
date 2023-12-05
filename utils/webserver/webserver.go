@@ -14,6 +14,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type ResponseWriter interface {
+	Header() http.Header
+	Write(data []byte) (int, error)
+	WriteHeader(statusCode int)
+}
 type ResponseWriterWithStatus struct {
 	w       http.ResponseWriter
 	status  int

@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/mattn/go-sqlite3 v1.14.18

@@ -10,14 +10,20 @@ type LyricPosition struct {
 	Lyrics     entity.Lyric
 }
 
+type LyricStylePart struct {
+	Text      string `json:"text"`
+	Underline bool   `json:"underline"`
+}
+
 type LyricPartVerse struct {
-	Text    string                 `json:"text"`
-	Type    musicxml.LyricSyllabic `json:"type"`
-	Combine bool                   `json:"combine"`
-	Dash    bool                   `json:"dash"`
+	Text      string                 `json:"text"`
+	Type      musicxml.LyricSyllabic `json:"type"`
+	Combine   bool                   `json:"combine"`
+	Breakdown []LyricStylePart       `json:"breakdown"`
 }
 
 type LyricWordVerse struct {
 	Word      string           `json:"word"`
 	Breakdown []LyricPartVerse `json:"breakdown"`
+	Dash      bool             `json:"dash"`
 }

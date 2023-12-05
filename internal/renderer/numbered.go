@@ -29,7 +29,7 @@ func NewDelegator() Delegator {
 }
 
 func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnMetadata) {
-	canv.Start(constant.LAYOUT_WIDTH, 1000)
+	canv.Start(constant.LAYOUT_WIDTH, 1500)
 	canv.Def()
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music|Figtree")))
 	canv.DefEnd()
@@ -74,10 +74,10 @@ func (d *delegator) Render(ctx context.Context, music musicxml.MusicXML, canv ca
 	}
 
 	if metadata != nil {
-		verseInfo := RenderVerse(ctx, canv, relativeY+20, metadata.Verse)
+		verseInfo := RenderVerse(ctx, canv, relativeY, metadata.Verse)
 		relativeY = verseInfo.MarginBottom
 
-		RenderCredits(ctx, canv, relativeY+50, metadata.HymnData)
+		RenderCredits(ctx, canv, relativeY, metadata.HymnData)
 
 	}
 	canv.End()

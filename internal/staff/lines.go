@@ -7,7 +7,7 @@ import (
 )
 
 // SplitLines split the measure in the lines manner
-func SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
+func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
 	result := [][]musicxml.Measure{}
 	currentLine := []musicxml.Measure{}
 	for _, measure := range part.Measures {

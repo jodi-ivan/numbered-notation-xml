@@ -8,54 +8,68 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 )
 
-type renderedNote struct {
+type NoteLength struct {
 	IsDotted bool
 	Type     musicxml.NoteLength
 }
 
+type Numbered interface {
+	GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength
+}
+
+type numberedInteractor struct{}
+
+func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength {
+	return RenderLengthNote(ctx, ts, measure, noteLength)
+}
+
+func New() Numbered {
+	return &numberedInteractor{}
+}
+
 // RenderLengthNote give the data that needed for the numbered
-func RenderLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []renderedNote {
+func RenderLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength {
 
 	currentTimeSig := ts.GetTimesignatureOnMeasure(ctx, measure)
 
 	if currentTimeSig.BeatType == 4 {
-		result := []renderedNote{
-			renderedNote{
+		result := []NoteLength{
+			NoteLength{
 				Type: musicxml.NoteLengthQuarter,
 			},
 		}
 
 		if noteLength == 0.75 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthEighth,
 				},
-				renderedNote{IsDotted: true, Type: musicxml.NoteLength16th},
+				NoteLength{IsDotted: true, Type: musicxml.NoteLength16th},
 			}
 		}
 
 		if noteLength == 0.5 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthEighth,
 				},
 			}
 		}
 
 		if noteLength == 0.25 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLength16th,
 				},
 			}
 		}
 
 		for i := 1; i <= int(math.Trunc(noteLength))-1; i++ {
-			result = append(result, renderedNote{IsDotted: true})
+			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthQuarter})
 		}
 
 		if math.Trunc(noteLength) != noteLength { // decimal dotted beat
-			result = append(result, renderedNote{IsDotted: true, Type: musicxml.NoteLengthEighth})
+			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthEighth})
 		}
 
 		return result
@@ -63,68 +77,68 @@ func RenderLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int
 	}
 
 	if currentTimeSig.BeatType == 8 {
-		result := []renderedNote{}
+		result := []NoteLength{}
 
 		if noteLength == 1 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthEighth,
 				},
 			}
 		}
 
 		if noteLength == 0.75 { // 3
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthEighth,
 				},
-				renderedNote{
+				NoteLength{
 					IsDotted: true,
 				},
 			}
 		}
 
 		if noteLength == 0.5 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLength16th,
 				},
 			}
 		}
 
 		if noteLength == 0.25 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLength32nd,
 				},
 			}
 		}
 
 		if noteLength == 0.125 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLength64th,
 				},
 			}
 		}
 
 		if noteLength == 0.0625 {
-			return []renderedNote{
-				renderedNote{
+			return []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLength128th,
 				},
 			}
 		}
 
-		result = append(result, renderedNote{
+		result = append(result, NoteLength{
 			Type: musicxml.NoteLengthEighth,
 		})
 		for i := 1; i <= int(math.Trunc(noteLength))-1; i++ {
-			result = append(result, renderedNote{IsDotted: true, Type: musicxml.NoteLengthEighth})
+			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthEighth})
 		}
 
 		if math.Trunc(noteLength) != noteLength { // decimal dotted beat
-			result = append(result, renderedNote{IsDotted: true, Type: musicxml.NoteLengthEighth})
+			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthEighth})
 		}
 
 		return result

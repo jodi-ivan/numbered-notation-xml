@@ -139,7 +139,7 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 						Y: float64(n.PositionY),
 					},
 				})
-				pairData = append(pairData, n.TimeMofication.ActualNotes.Value)
+				pairData = append(pairData, n.TimeModifications.ActualNotes.Value)
 			case musicxml.TupletTypeStop:
 				curr := pairs[len(pairs)-1]
 				curr[1] = entity.Coordinate{
@@ -167,7 +167,7 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 	}
 }
 
-func SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool) {
+func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool) {
 
 	for _, mt := range note.MeasureText {
 		if noteRenderer.MeasureText != nil {

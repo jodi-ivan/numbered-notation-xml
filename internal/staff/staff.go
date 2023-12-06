@@ -20,17 +20,26 @@ import (
 type Staff interface {
 	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
+	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool)
 }
 
 type staffInteractor struct {
-	Barline barline.Barline
-	Lyric   lyric.Lyric
+	Barline     barline.Barline
+	Lyric       lyric.Lyric
+	Numbered    numbered.Numbered
+	BreathPause breathpause.BreathPause
+	Rhythm      rhythm.Rhythm
+	RenderAlign RenderStaffWithAlign
 }
 
 func NewStaff() Staff {
 	return &staffInteractor{
-		Barline: barline.NewBarline(),
-		Lyric:   lyric.NewLyric(),
+		Barline:     barline.NewBarline(),
+		Lyric:       lyric.NewLyric(),
+		Numbered:    numbered.New(),
+		BreathPause: breathpause.New(),
+		Rhythm:      rhythm.New(),
+		RenderAlign: NewRenderAlign(),
 	}
 }
 
@@ -82,25 +91,27 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
-			additionalRenderer := numbered.RenderLengthNote(rctx, timeSignature, measure.Number, noteLength)
 
+			additionalRenderer := si.Numbered.GetLengthNote(rctx, timeSignature, measure.Number, noteLength)
 			renderer := &entity.NoteRenderer{
 				PositionX:     x,
 				PositionY:     int(y),
 				Note:          n,
 				NoteLength:    note.Type,
 				Octave:        octave,
-				Striketrough:  strikethrough,
+				Strikethrough: strikethrough,
 				IsRest:        (note.Rest != nil),
 				Beam:          map[int]entity.Beam{},
 				IsNewLine:     measure.NewLineIndex == notePos,
 				MeasureNumber: measure.Number,
 
-				TimeMofication: note.TimeModification,
+				TimeModifications: note.TimeModification,
 			}
 
+			staffInfo.Multiline = staffInfo.Multiline || renderer.IsNewLine
+
 			// text above the measure
-			SetMeasureTextRenderer(renderer, note, notePos == len(measure.Notes)-1)
+			si.SetMeasureTextRenderer(renderer, note, notePos == len(measure.Notes)-1)
 
 			if len(additionalRenderer) > 0 {
 
@@ -120,9 +131,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					}
 				}
 			}
-
 			// set the beam, slur and ties
-			rhythm.SetRhythmNotation(renderer, note, n)
+			si.Rhythm.SetRhythmNotation(renderer, note, n)
 
 			// lyric
 			verseInfo := si.Lyric.SetLyricRenderer(renderer, note)
@@ -159,64 +169,20 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
 				}
+				//FIXME: the new newline on current renderer has to be transferred to this new dotted renderer
+				// currently usually handled by the breathmark, but still handled by the renderer without dotted
+				// case test on kj 226. kj 309
 				notes = append(notes, additionalNote)
 
 			}
-			breathPauseRenderer := breathpause.SetAndGetBreathPauseRenderer(renderer, note)
+			breathPauseRenderer := si.BreathPause.SetAndGetBreathPauseRenderer(renderer, note)
 			if breathPauseRenderer != nil {
 				notes = append(notes, breathPauseRenderer)
 			}
 
 		}
 
-		xNotes := 0
-		continueDot := false
-		lastDotLoc := 0
-		dotCount := 0
-
-		var prev *entity.NoteRenderer
-
-		revisionX := map[int]int{}
-		for i, n := range notes {
-			if n.IsDotted {
-				dotCount++
-				if continueDot {
-					revisionX[i] = lastDotLoc + constant.UPPERCASE_LENGTH
-					lastDotLoc = lastDotLoc + constant.UPPERCASE_LENGTH
-				} else {
-					revisionX[i] = xNotes + constant.UPPERCASE_LENGTH
-					lastDotLoc = xNotes + constant.UPPERCASE_LENGTH
-				}
-				continueDot = true
-			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-				if prev != nil && prev.IsLengthTakenFromLyric {
-					x -= prev.Width - constant.LOWERCASE_LENGTH
-				}
-			} else {
-				if continueDot {
-					x += constant.LOWERCASE_LENGTH
-				}
-				xNotes = x
-				continueDot = false
-				dotCount = 0
-			}
-
-			n.PositionX = x
-			n.PositionY = y
-			x += n.Width
-			if prev != nil && prev.IsLengthTakenFromLyric && n.IsDotted {
-				x = x - n.Width
-			}
-			if n.IsNewLine {
-				x = constant.LAYOUT_INDENT_LENGTH
-				staffInfo.Multiline = staffInfo.Multiline || true
-			}
-			n.IndexPosition = i
-			prev = n
-			if n.IsDotted && i == len(notes)-1 && dotCount > 1 {
-				x += constant.LOWERCASE_LENGTH
-			}
-		}
+		x, y = si.Rhythm.AdjustMultiDottedRenderer(notes, x, y)
 
 		barlineX, rightBarlineRenderer := si.Barline.GetRendererRightBarline(measure, x)
 
@@ -225,13 +191,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		x += constant.LOWERCASE_LENGTH
-
-		for i, rev := range revisionX {
-			note := notes[i]
-
-			note.PositionX = rev
-			notes[i] = note
-		}
 
 		filteredNotes := []*entity.NoteRenderer{}
 		indexNewLine := -1
@@ -247,6 +206,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if staffInfo.Multiline {
 			for i, note := range notes {
 				if i > 0 && note.IndexPosition == 0 {
+					// TODO: check what the heck is this?
 					break
 				}
 				if i > indexNewLine {
@@ -276,11 +236,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 		align = append(align, alignMeasures)
 	}
-	RenderWithAlign(ctx, canv, y, align)
+
+	si.RenderAlign.RenderWithAlign(ctx, canv, y, align)
 
 	return
-}
-
-func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
-	return SplitLines(ctx, part)
 }

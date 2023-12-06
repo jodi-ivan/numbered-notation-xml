@@ -8,21 +8,22 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-var barlineWidth = map[musicxml.BarLineStyle]float64{
-	musicxml.BarLineStyleRegular:    4.16,
-	musicxml.BarLineStyleLightHeavy: 7.7,
-	musicxml.BarLineStyleLightLight: 6.28,
-	musicxml.BarLineStyleHeavyHeavy: 8,
-	musicxml.BarLineStyleHeavyLight: 7.7,
+type RenderStaffWithAlign interface {
+	RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer)
 }
 
-func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
+func NewRenderAlign() RenderStaffWithAlign {
+	return &renderStaffAlign{}
+}
+
+type renderStaffAlign struct{}
+
+func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
 
 	flatten := []*entity.NoteRenderer{}
 	// get the note
@@ -34,7 +35,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 	lastPos := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH
 	lastNote.PositionX = lastPos
 	if lastNote.Barline != nil {
-		remaining -= int(barlineWidth[lastNote.Barline.BarStyle])
+		remaining -= int(barline.GetBarlineWidth(lastNote.Barline.BarStyle))
 	} else if lastNote.Articulation != nil && lastNote.Articulation.BreathMark != nil {
 		// TODO: the breakmark last notess
 		lastTwo := lastMeasure[len(lastMeasure)-2]
@@ -98,7 +99,7 @@ func RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRendere
 				})
 			} else {
 				canv.Text(n.PositionX, y, fmt.Sprintf("%d", n.Note))
-				if n.Striketrough {
+				if n.Strikethrough {
 					canv.Line(n.PositionX+10, y-16, n.PositionX, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
 				}
 			}

@@ -18,7 +18,7 @@ func TestRenderLengthNote(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []renderedNote
+		want []NoteLength
 	}{
 		{
 			name: "quarter .5 beat",
@@ -33,8 +33,8 @@ func TestRenderLengthNote(t *testing.T) {
 				measure:    1,
 				noteLength: 0.5,
 			},
-			want: []renderedNote{
-				renderedNote{
+			want: []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthEighth,
 				},
 			},
@@ -52,8 +52,8 @@ func TestRenderLengthNote(t *testing.T) {
 				measure:    1,
 				noteLength: 1,
 			},
-			want: []renderedNote{
-				renderedNote{
+			want: []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthQuarter,
 				},
 			},
@@ -71,11 +71,11 @@ func TestRenderLengthNote(t *testing.T) {
 				measure:    1,
 				noteLength: 1.5,
 			},
-			want: []renderedNote{ /// 1 ^.
-				renderedNote{
+			want: []NoteLength{ /// 1 ^.
+				NoteLength{
 					Type: musicxml.NoteLengthQuarter,
 				},
-				renderedNote{
+				NoteLength{
 					Type:     musicxml.NoteLengthEighth,
 					IsDotted: true,
 				},
@@ -94,11 +94,11 @@ func TestRenderLengthNote(t *testing.T) {
 				measure:    1,
 				noteLength: 2,
 			},
-			want: []renderedNote{
-				renderedNote{
+			want: []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthQuarter,
 				},
-				renderedNote{
+				NoteLength{
 					IsDotted: true,
 				},
 			},
@@ -116,14 +116,14 @@ func TestRenderLengthNote(t *testing.T) {
 				measure:    1,
 				noteLength: 2.5,
 			},
-			want: []renderedNote{ /// 1 ^.
-				renderedNote{
+			want: []NoteLength{ /// 1 ^.
+				NoteLength{
 					Type: musicxml.NoteLengthQuarter,
 				},
-				renderedNote{
+				NoteLength{
 					IsDotted: true,
 				},
-				renderedNote{
+				NoteLength{
 					Type:     musicxml.NoteLengthEighth,
 					IsDotted: true,
 				},
@@ -142,14 +142,14 @@ func TestRenderLengthNote(t *testing.T) {
 				measure:    1,
 				noteLength: 3,
 			},
-			want: []renderedNote{
-				renderedNote{
+			want: []NoteLength{
+				NoteLength{
 					Type: musicxml.NoteLengthQuarter,
 				},
-				renderedNote{
+				NoteLength{
 					IsDotted: true,
 				},
-				renderedNote{
+				NoteLength{
 					IsDotted: true,
 				},
 			},

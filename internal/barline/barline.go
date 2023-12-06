@@ -99,3 +99,7 @@ func RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Bar
 		coordinate.X,
 		coordinate.Y+6, unicode[barline.BarStyle], forward)
 }
+
+func GetBarlineWidth(barlineStyle musicxml.BarLineStyle) float64 {
+	return barlineWidth[barlineStyle]
+}

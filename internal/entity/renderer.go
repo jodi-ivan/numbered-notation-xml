@@ -45,14 +45,14 @@ var (
 )
 
 type NoteRenderer struct {
-	IsDotted     bool
-	IsRest       bool
-	PositionX    int
-	PositionY    int
-	Note         int
-	Octave       int
-	Striketrough bool
-	NoteLength   musicxml.NoteLength
+	IsDotted      bool
+	IsRest        bool
+	PositionX     int
+	PositionY     int
+	Note          int
+	Octave        int
+	Strikethrough bool
+	NoteLength    musicxml.NoteLength
 	// BarType      string
 	Width        int
 	Lyric        []Lyric
@@ -67,9 +67,9 @@ type NoteRenderer struct {
 	IsNewLine              bool
 	MeasureNumber          int
 
-	MeasureText    []musicxml.MeasureText
-	Tuplet         *musicxml.Tuplet
-	TimeMofication *musicxml.TimeModification
+	MeasureText       []musicxml.MeasureText
+	Tuplet            *musicxml.Tuplet
+	TimeModifications *musicxml.TimeModification
 }
 
 func (nr *NoteRenderer) UpdateBeam(beamNum int, beamType musicxml.NoteBeamType) {

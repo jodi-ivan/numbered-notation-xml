@@ -5,13 +5,12 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 )
 
-func SetAndAdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int) (int, int, bool, map[int]int) {
+func AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int) (int, int) {
+
 	xNotes := 0
 	continueDot := false
 	lastDotLoc := 0
 	dotCount := 0
-
-	multiline := false
 
 	var prev *entity.NoteRenderer
 
@@ -27,9 +26,10 @@ func SetAndAdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int)
 				lastDotLoc = xNotes + constant.UPPERCASE_LENGTH
 			}
 			continueDot = true
+
 		} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-			if prev != nil && prev.IsLengthTakenFromLyric {
-				x -= prev.Width - constant.LOWERCASE_LENGTH
+			if prev != nil && prev.IsDotted {
+				n.PositionX -= constant.LOWERCASE_LENGTH
 			}
 		} else {
 			if continueDot {
@@ -46,16 +46,23 @@ func SetAndAdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int)
 		if prev != nil && prev.IsLengthTakenFromLyric && n.IsDotted {
 			x = x - n.Width
 		}
-		if n.IsNewLine {
-			x = constant.LAYOUT_INDENT_LENGTH
-			multiline = multiline || true
-		}
+
 		n.IndexPosition = i
 		prev = n
 		if n.IsDotted && i == len(notes)-1 && dotCount > 1 {
 			x += constant.LOWERCASE_LENGTH
 		}
+		if n.IsNewLine {
+			x = constant.LAYOUT_INDENT_LENGTH
+		}
 	}
 
-	return x, y, multiline, revisionX
+	for i, rev := range revisionX {
+		note := notes[i]
+
+		note.PositionX = rev
+		notes[i] = note
+	}
+
+	return x, y
 }

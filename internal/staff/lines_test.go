@@ -109,7 +109,8 @@ func TestSplitLines(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := SplitLines(context.Background(), tt.args.part); !assert.Equal(t, tt.want, got) {
+			si := staffInteractor{}
+			if got := si.SplitLines(context.Background(), tt.args.part); !assert.Equal(t, tt.want, got) {
 				t.Errorf("SplitLines() = %v, want %v", got, tt.want)
 			}
 		})

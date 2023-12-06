@@ -5,6 +5,20 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
+type BreathPause interface {
+	SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer
+}
+
+type breathPauseInteractor struct{}
+
+func (bpi *breathPauseInteractor) SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer {
+	return SetAndGetBreathPauseRenderer(noteRenderer, note)
+}
+
+func New() BreathPause {
+	return &breathPauseInteractor{}
+}
+
 func SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer {
 	hasBreathMark := note.Notations != nil &&
 		note.Notations.Articulation != nil &&

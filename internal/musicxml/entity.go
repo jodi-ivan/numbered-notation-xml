@@ -100,7 +100,7 @@ func (m *Measure) Build() error {
 			strings.Contains(cleanedContent, "\u003crest/\u003e") {
 			n, err := elmnt.ParseAsNote()
 			if err != nil {
-				log.Println("error parsing note, err:", err.Error())
+				log.Println("error parsing note, err:", err.Error(), "\n\n", elmnt.Content)
 				return err
 			}
 

@@ -2,6 +2,7 @@ package lyric
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -18,7 +19,9 @@ func CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition)
 
 	hypenWidth := CalculateLyricWidth("-")
 
-	startPosition := prevLyric.Coordinate.X + CalculateLyricWidth(entity.LyricVal(prevLyric.Lyrics.Text).String())
+	lyricText := entity.LyricVal(prevLyric.Lyrics.Text).String()
+
+	startPosition := prevLyric.Coordinate.X + CalculateLyricWidth(lyricText)
 	endPostion := currentLyric.Coordinate.X
 	distance := endPostion - startPosition
 	if distance < hypenWidth {
@@ -160,7 +163,7 @@ func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.Note
 	}
 	canv.Group("hyphens")
 	for _, hl := range hypenLocation {
-		canv.Text(int(hl.X), int(hl.Y), "-")
+		fmt.Fprintf(canv.Writer(), `<text x="%.4f" y="%.0f">-</text>`, hl.X, hl.Y)
 	}
 	canv.Gend()
 }

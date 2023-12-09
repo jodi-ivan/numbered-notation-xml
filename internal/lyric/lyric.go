@@ -63,7 +63,6 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 			noteRenderer.Lyric[i] = l
 			currWidth := int(math.Round(li.CalculateLyricWidth(lyricText)))
 			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
-				//FIXME: edge cases kj-101, [ki]dung ma[laikat] no spaces between them
 				currWidth += constant.LOWERCASE_LENGTH
 			}
 			currWidth += 4 // lyric padding

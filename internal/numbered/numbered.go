@@ -4,8 +4,10 @@ import (
 	"context"
 	"math"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 type NoteLength struct {
@@ -15,12 +17,17 @@ type NoteLength struct {
 
 type Numbered interface {
 	GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength
+	RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer)
 }
 
 type numberedInteractor struct{}
 
 func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength {
 	return RenderLengthNote(ctx, ts, measure, noteLength)
+}
+
+func (ni *numberedInteractor) RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+	RenderOctave(ctx, canv, notes)
 }
 
 func New() Numbered {

@@ -9,7 +9,9 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	entity "github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	timesig "github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 // MockNumbered is a mock of Numbered interface.
@@ -47,4 +49,16 @@ func (m *MockNumbered) GetLengthNote(ctx context.Context, ts timesig.TimeSignatu
 func (mr *MockNumberedMockRecorder) GetLengthNote(ctx, ts, measure, noteLength interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLengthNote", reflect.TypeOf((*MockNumbered)(nil).GetLengthNote), ctx, ts, measure, noteLength)
+}
+
+// RenderOctave mocks base method.
+func (m *MockNumbered) RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderOctave", ctx, canv, notes)
+}
+
+// RenderOctave indicates an expected call of RenderOctave.
+func (mr *MockNumberedMockRecorder) RenderOctave(ctx, canv, notes interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderOctave", reflect.TypeOf((*MockNumbered)(nil).RenderOctave), ctx, canv, notes)
 }

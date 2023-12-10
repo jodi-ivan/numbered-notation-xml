@@ -5,11 +5,13 @@
 package barline
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 	entity "github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	musicxml "github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 // MockBarline is a mock of Barline interface.
@@ -63,4 +65,16 @@ func (m *MockBarline) GetRendererRightBarline(measure musicxml.Measure, x int) (
 func (mr *MockBarlineMockRecorder) GetRendererRightBarline(measure, x interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRendererRightBarline", reflect.TypeOf((*MockBarline)(nil).GetRendererRightBarline), measure, x)
+}
+
+// RenderBarline mocks base method.
+func (m *MockBarline) RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderBarline", ctx, canv, barline, coordinate)
+}
+
+// RenderBarline indicates an expected call of RenderBarline.
+func (mr *MockBarlineMockRecorder) RenderBarline(ctx, canv, barline, coordinate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderBarline", reflect.TypeOf((*MockBarline)(nil).RenderBarline), ctx, canv, barline, coordinate)
 }

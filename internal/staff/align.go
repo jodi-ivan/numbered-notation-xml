@@ -18,10 +18,20 @@ type RenderStaffWithAlign interface {
 }
 
 func NewRenderAlign() RenderStaffWithAlign {
-	return &renderStaffAlign{}
+	return &renderStaffAlign{
+		Barline:  barline.NewBarline(),
+		Numbered: numbered.New(),
+		Rhythm:   rhythm.New(),
+		Lyric:    lyric.NewLyric(),
+	}
 }
 
-type renderStaffAlign struct{}
+type renderStaffAlign struct {
+	Barline  barline.Barline
+	Numbered numbered.Numbered
+	Rhythm   rhythm.Rhythm
+	Lyric    lyric.Lyric
+}
 
 func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
 
@@ -37,10 +47,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	if lastNote.Barline != nil {
 		remaining -= int(barline.GetBarlineWidth(lastNote.Barline.BarStyle))
 	} else if lastNote.Articulation != nil && lastNote.Articulation.BreathMark != nil {
-		// TODO: the breakmark last notess
 		lastTwo := lastMeasure[len(lastMeasure)-2]
 
-		remaining -= (lastTwo.Width - int(lyric.CalculateLyricWidth(",")))
+		remaining -= (lastTwo.Width - int(rsa.Lyric.CalculateLyricWidth(",")))
 	} else {
 		lastNote.PositionX -= lastNote.Width
 		remaining -= lastNote.Width
@@ -93,7 +102,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
 				canv.Text(n.PositionX, y-10, ",")
 			} else if n.Barline != nil {
-				barline.RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
+				rsa.Barline.RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
 					X: float64(n.PositionX),
 					Y: float64(y),
 				})
@@ -141,18 +150,20 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 		canv.Gend()
 
-		numbered.RenderOctave(ctx, canv, measure)
+		rsa.Numbered.RenderOctave(ctx, canv, measure)
+		rsa.Rhythm.RenderBeam(ctx, canv, measure)
+
 		RenderMeasureText(ctx, canv, measure)
-		rhythm.RenderBeam(ctx, canv, measure)
 		RenderTuplet(ctx, canv, measure)
+
 		canv.Gend()
 		canv.Gend()
 
 	}
 
-	lyric.RenderHypen(ctx, canv, flatten)
+	rsa.Lyric.RenderHypen(ctx, canv, flatten)
+	rsa.Rhythm.RenderSlurTies(ctx, canv, slurTiesNote, float64(lastPos))
 	RenderMeasureTopping(ctx, canv, flatten)
-	rhythm.RenderSlurTies(ctx, canv, slurTiesNote, float64(lastPos))
 	canv.Gend()
 
 }

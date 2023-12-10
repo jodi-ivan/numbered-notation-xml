@@ -24,6 +24,8 @@ type Lyric interface {
 	CalculateLyricWidth(string) float64
 	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo
 	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
+	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
+	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
 }
 
 type lyricInteractor struct{}

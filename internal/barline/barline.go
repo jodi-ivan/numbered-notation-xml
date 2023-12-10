@@ -13,6 +13,7 @@ import (
 type Barline interface {
 	GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *entity.Coordinate) (*entity.NoteRenderer, *BarlineInfo)
 	GetRendererRightBarline(measure musicxml.Measure, x int) (int, *entity.NoteRenderer)
+	RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate)
 }
 
 type barlineInteractor struct{}
@@ -76,7 +77,7 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 	return x, barlineRenderer
 }
 
-func RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate) {
+func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate) {
 	forward := ""
 	backward := ""
 

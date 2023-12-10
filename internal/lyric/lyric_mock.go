@@ -38,6 +38,20 @@ func (m *MockLyric) EXPECT() *MockLyricMockRecorder {
 	return m.recorder
 }
 
+// CalculateHypen mocks base method.
+func (m *MockLyric) CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) []entity.Coordinate {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalculateHypen", ctx, prevLyric, currentLyric)
+	ret0, _ := ret[0].([]entity.Coordinate)
+	return ret0
+}
+
+// CalculateHypen indicates an expected call of CalculateHypen.
+func (mr *MockLyricMockRecorder) CalculateHypen(ctx, prevLyric, currentLyric interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateHypen", reflect.TypeOf((*MockLyric)(nil).CalculateHypen), ctx, prevLyric, currentLyric)
+}
+
 // CalculateLyricWidth mocks base method.
 func (m *MockLyric) CalculateLyricWidth(arg0 string) float64 {
 	m.ctrl.T.Helper()
@@ -50,6 +64,18 @@ func (m *MockLyric) CalculateLyricWidth(arg0 string) float64 {
 func (mr *MockLyricMockRecorder) CalculateLyricWidth(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateLyricWidth", reflect.TypeOf((*MockLyric)(nil).CalculateLyricWidth), arg0)
+}
+
+// RenderHypen mocks base method.
+func (m *MockLyric) RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderHypen", ctx, canv, measure)
+}
+
+// RenderHypen indicates an expected call of RenderHypen.
+func (mr *MockLyricMockRecorder) RenderHypen(ctx, canv, measure interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderHypen", reflect.TypeOf((*MockLyric)(nil).RenderHypen), ctx, canv, measure)
 }
 
 // RenderVerse mocks base method.

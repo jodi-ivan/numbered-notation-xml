@@ -11,7 +11,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate) {
+func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate) {
 
 	if prevLyric.Lyrics.Syllabic == musicxml.LyricSyllabicTypeEnd || prevLyric.Lyrics.Syllabic == musicxml.LyricSyllabicTypeSingle {
 		return nil
@@ -59,7 +59,7 @@ func CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition)
 }
 
 // measure is the notes for the whole staff
-func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	pos := map[int][2]*LyricPosition{}
 
 	// for tracking the pair of begin to end
@@ -76,7 +76,7 @@ func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.Note
 				Y: float64(n.PositionY) + 25,
 			}
 
-			hypenEnd := CalculateHypen(ctx, pos[0][0], &LyricPosition{
+			hypenEnd := li.CalculateHypen(ctx, pos[0][0], &LyricPosition{
 				Coordinate: endNotePos,
 			})
 			//add at the end of the lines
@@ -127,7 +127,7 @@ func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.Note
 						},
 					}
 				}
-				hypenLocation = append(CalculateHypen(ctx, start, pair[1]), hypenLocation...)
+				hypenLocation = append(li.CalculateHypen(ctx, start, pair[1]), hypenLocation...)
 				pair = [2]*LyricPosition{}
 
 			case musicxml.LyricSyllabicTypeMiddle:
@@ -150,7 +150,7 @@ func RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.Note
 						},
 						Lyrics: l,
 					}
-					hypenLocation = append(CalculateHypen(ctx, pair[0], pair[1]), hypenLocation...)
+					hypenLocation = append(li.CalculateHypen(ctx, pair[0], pair[1]), hypenLocation...)
 					pair = [2]*LyricPosition{
 						pair[1],
 						nil,

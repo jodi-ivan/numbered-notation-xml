@@ -10,7 +10,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
+func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 	canv.Group("class='slurties'")
 	// DONE: check ties across measure bar
 	for _, s := range set {
@@ -79,7 +79,7 @@ func RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 	canv.Gend()
 }
 
-func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
+func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
 	slurs := map[int]SlurBezier{}
 	slurSets := []SlurBezier{}
 
@@ -174,12 +174,12 @@ func RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.Not
 		}
 	}
 
-	RenderBezier(slurSets, canv)
-	RenderBezier(tiesSet, canv)
+	ri.RenderBezier(slurSets, canv)
+	ri.RenderBezier(tiesSet, canv)
 
 }
 
-func RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}

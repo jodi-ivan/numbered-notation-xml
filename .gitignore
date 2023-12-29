@@ -27,3 +27,6 @@ vendor/
 
 #sonarqube work
 .scannerwork/
+
+# testing binary
+cmd/lab

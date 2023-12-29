@@ -1,0 +1,81 @@
+<kj-metadata number="1" number-variant="1" kids-starred="no">
+    <title>
+        <value>Haleluya Pujilah</value>
+        <footnote> <!-- optional-->
+             Dapat dinyanikan dengan KJ 002 </footnote>
+    </title>
+    <credit>
+        <lyric>Subranto Kusuom Atmojo 1978</lyric>
+        <music>Subranto Kusuom Atmojo 1978</music>
+    </credit>
+    <cross-reference> <!-- tag optional -->
+        <!-- nr and be tag are optional  -->
+        <!-- number attr is mandatory-->
+        <nr number="1" />
+        <be number="1" />
+    </cross-reference>
+    <category parent_id="1">
+        <title>Nyanyian pembuka dan pujian</title>
+    </category>
+    <verses>
+        <verse>
+            <word text="Wahai">
+                <breakdown type="begin">
+                    <text>Wa</text>
+                </breakdown>
+                <breakdown type="end">
+                    <text>hai</text>
+                </breakdown>
+            </word>
+            <word text="dunia,">
+                <breakdown type="begin">
+                    <text>dun</text>
+                </breakdown>
+                <breakdown type="middle">
+                    <text>ni</text>
+                </breakdown>
+                <breakdown type="end">
+                    <text>a,</text>
+                </breakdown>
+            </word>
+            <word text="soraklah!">
+                <breakdown type="begin">
+                    <text>so</text>
+
+                </breakdown>
+                <breakdown type="middle">
+                    <text>rak</text>
+
+                </breakdown>
+                <breakdown type="end">
+                    <text>lah!</text>
+
+                </breakdown>
+            </word>
+            <word text="suara">
+                <breakdown type="begin" combine="true">
+                    <text>Sua</text>
+                    <breakdown>
+                        <text>S</text>
+                        <text underline="true">ua</text>
+                    </breakdown>
+                </breakdown>
+                <breakdown type="begin">
+                    <text>ra</text>
+                </breakdown>
+            </word>
+        </verse>
+        <!-- Additional verses here, can be one or more-->
+    </verses>
+    <!-- store music related here that does not suported by the musicxml-->
+    <internal>
+        <breaklines>
+            <breakline>
+                <measure>2</measure>
+                <note>4</note>
+                <word-lyric>le</word-lyric>
+            </breakline>
+        </breaklines>
+        <!-- TODO: Add the hidden notes data -->
+    </internal>
+</kj-metadata>

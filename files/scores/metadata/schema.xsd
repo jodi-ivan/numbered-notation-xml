@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="kj-metadata">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="title" type="titleType" minOccurs="0"/>
+                <xs:element name="credit" type="creditType" minOccurs="0"/>
+                <xs:element name="cross-reference" type="crossReferenceType" minOccurs="0"/>
+                <xs:element name="category" type="categoryType" minOccurs="0"/>
+                <xs:element name="verses" type="versesType" minOccurs="0"/>
+                <xs:element name="internal" type="internalType" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="number" type="xs:integer" use="required"/>
+            <xs:attribute name="number-variant" type="xs:integer" use="required"/>
+            <xs:attribute name="kids-starred" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="titleType">
+        <xs:sequence>
+            <xs:element name="value" type="xs:string"/>
+            <xs:element name="footnote" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="creditType">
+        <xs:sequence>
+            <xs:element name="lyric" type="xs:string"/>
+            <xs:element name="music" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="crossReferenceType">
+        <xs:sequence>
+            <xs:element name="nr" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:attribute name="number" type="xs:integer" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="be" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:attribute name="number" type="xs:integer" use="required"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="categoryType">
+        <xs:sequence>
+            <xs:element name="title" type="xs:string"/>
+        </xs:sequence>
+        <xs:attribute name="parent_id" type="xs:integer" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="versesType">
+        <xs:sequence>
+            <xs:element name="verse" type="verseType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="verseType">
+        <xs:sequence>
+            <xs:element name="word" type="wordType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="wordType">
+        <xs:sequence>
+            <xs:element name="breakdown" type="breakdownType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="text" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="breakdownType">
+        <xs:sequence>
+            <xs:element name="text" type="xs:string"/>
+            <xs:element name="breakdown" type="breakdownType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="type" type="xs:string"/>
+        <xs:attribute name="combine" type="xs:boolean" default="false"/>
+        <xs:attribute name="underline" type="xs:boolean" default="false"/>
+    </xs:complexType>
+
+    <xs:complexType name="internalType">
+        <xs:sequence>
+            <xs:element name="breaklines" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="breakline" minOccurs="0" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="measure" type="xs:integer"/>
+                                    <xs:element name="note" type="xs:integer"/>
+                                    <xs:element name="word-lyric" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <!-- TODO: Add schema for hidden notes data -->
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

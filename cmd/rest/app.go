@@ -34,7 +34,7 @@ func main() {
 		return
 	}
 
-	repo := repository.New(context.Background(), db)
+	repo := repository.New(context.Background(), db, cfg)
 
 	usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer())
 

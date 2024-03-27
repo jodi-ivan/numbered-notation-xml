@@ -10,6 +10,7 @@ type Config struct {
 	Webserver WebServerConfig
 	MusicXML  MusicXMLConfig
 	SQLite    SQLiteConfig
+	Metadata  MetadataConfig
 }
 
 type MusicXMLConfig struct {
@@ -25,8 +26,14 @@ type SQLiteConfig struct {
 	DBPath string
 }
 
-func InitConfig(env string) (Config, error) {
-	result := Config{}
+type MetadataConfig struct {
+	UseXMLFile bool
+	Path       string
+	FilePrefix string
+}
+
+func InitConfig(env string) (*Config, error) {
+	result := &Config{}
 
 	path := "/etc/numbered-mutation-xml/"
 	if env == "development" {

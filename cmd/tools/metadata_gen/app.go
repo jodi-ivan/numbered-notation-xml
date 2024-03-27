@@ -9,6 +9,7 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/storage"
 )
 
@@ -109,7 +110,11 @@ func main() {
 		db.Close()
 	}()
 
-	repo := repository.New(context.Background(), db)
+	repo := repository.New(context.Background(), db, &config.Config{
+		Metadata: config.MetadataConfig{
+			UseXMLFile: true,
+		},
+	})
 
 	hymnMeta, err := repo.GetHymnMetaData(context.Background(), 2)
 

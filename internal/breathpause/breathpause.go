@@ -6,20 +6,17 @@ import (
 )
 
 type BreathPause interface {
+	// XXX: get the proper name for this
 	SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer
 }
 
 type breathPauseInteractor struct{}
 
-func (bpi *breathPauseInteractor) SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer {
-	return SetAndGetBreathPauseRenderer(noteRenderer, note)
-}
-
 func New() BreathPause {
 	return &breathPauseInteractor{}
 }
 
-func SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer {
+func (bpi *breathPauseInteractor) SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer {
 	hasBreathMark := note.Notations != nil &&
 		note.Notations.Articulation != nil &&
 		note.Notations.Articulation.BreathMark != nil

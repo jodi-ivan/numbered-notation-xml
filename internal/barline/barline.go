@@ -22,7 +22,14 @@ func NewBarline() Barline {
 	return &barlineInteractor{}
 }
 
+// GetRendererLeftBarline render the left side of the barline
+// this is only utilize then the barline is not regular barline
+// since the regular left barline is already added by default
 func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *entity.Coordinate) (*entity.NoteRenderer, *BarlineInfo) {
+
+	if len(measure.Barline) == 0 {
+		return nil, nil
+	}
 	leftBarline := measure.Barline[0]
 	if (leftBarline.Location == musicxml.BarlineLocationLeft) && (leftBarline.BarStyle != musicxml.BarLineStyleRegular) {
 		pos := x
@@ -39,6 +46,7 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 		incr := 5
 
 		if leftBarline.Repeat != nil {
+			// HACK: do we need to check the direction == forward in this?
 			incr += constant.UPPERCASE_LENGTH
 		}
 
@@ -51,7 +59,7 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 	return nil, nil
 }
 
-func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x int) (int, *entity.NoteRenderer) {
+func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x int) (barlinePos int, renderer *entity.NoteRenderer) {
 	barline := musicxml.Barline{
 		BarStyle: musicxml.BarLineStyleRegular,
 	}
@@ -73,6 +81,7 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 		MeasureNumber: measure.Number,
 		PositionX:     x,
 		Barline:       &barline,
+		// HACK: why there is no width define here?
 	}
 	return x, barlineRenderer
 }
@@ -89,16 +98,13 @@ func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canv
 			forward = fmt.Sprintf(`<tspan x="%f" y="%f">:</tspan>`, coordinate.X+10, coordinate.Y)
 		}
 	}
-	fmt.Fprintf(canv.Writer(), `<text x="%f" y="%f" style="font-family:Noto Music">
-		%s
-		<tspan x="%f" y="%f" font-size="180%%"> %s </tspan>
-		%s
-		</text>`,
+	fmt.Fprintf(canv.Writer(), `<text x="%f" y="%f" style="font-family:Noto Music"> %s <tspan x="%f" y="%f" font-size="180%%"> %s </tspan> %s </text>`,
 		coordinate.X,
 		coordinate.Y+6,
 		backward,
 		coordinate.X,
 		coordinate.Y+6, unicode[barline.BarStyle], forward)
+
 }
 
 func GetBarlineWidth(barlineStyle musicxml.BarLineStyle) float64 {

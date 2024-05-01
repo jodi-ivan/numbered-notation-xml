@@ -58,7 +58,8 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 	}
 }
 
-// measure is the notes for the whole staff
+// RenderHypen writes the hypen
+// @measure :is the notes for the whole staff (flatten across measures)
 func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	pos := map[int][2]*LyricPosition{}
 

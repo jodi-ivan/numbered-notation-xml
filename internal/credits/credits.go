@@ -15,17 +15,17 @@ type Credits interface {
 	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData)
 }
 
-type creditsInteractor struct{}
-
-func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
-	RenderCredits(ctx, canv, y, metadata)
+type creditsInteractor struct {
+	Lyric lyric.Lyric
 }
 
 func NewCredits() Credits {
-	return &creditsInteractor{}
+	return &creditsInteractor{
+		Lyric: lyric.NewLyric(), // REFACTOR: reuse instance of the lyric
+	}
 }
 
-func RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
+func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 	if metadata.Lyric == metadata.Music {
 		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, fmt.Sprintf("Syair dan lagu : %s", metadata.Lyric))
@@ -54,7 +54,7 @@ func RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repo
 	}
 
 	if ref != "" {
-		l := lyric.CalculateLyricWidth(ref)
+		l := ci.Lyric.CalculateLyricWidth(ref)
 		canv.Text(constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH-int(l), y, ref)
 	}
 

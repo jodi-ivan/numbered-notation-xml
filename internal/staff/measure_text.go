@@ -8,7 +8,6 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -102,7 +101,7 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 
 }
 
-func RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 	canv.Group("class='staff-text'")
 	for _, note := range notes {
 		if len(note.MeasureText) > 0 {
@@ -113,7 +112,7 @@ func RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.
 			for i, t := range note.MeasureText {
 				xPos := note.PositionX
 				if t.TextAlignment == musicxml.TextAlignmentRight {
-					textLength := lyric.CalculateLyricWidth(t.Text)
+					textLength := rsa.Lyric.CalculateLyricWidth(t.Text)
 					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
 				}
 				canv.Text(xPos, note.PositionY-28-(i*-15), t.Text, `font-style="italic"`)

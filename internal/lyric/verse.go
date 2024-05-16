@@ -13,7 +13,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
+func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
 	allVerse := map[int][]string{}
@@ -42,15 +42,15 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 						x2 := float64(0)
 						for _, v := range p.Breakdown {
 							if v.Underline {
-								x2 = x1 + CalculateLyricWidth(v.Text)
+								x2 = x1 + li.CalculateLyricWidth(v.Text)
 								break
 							} else {
-								x1 += CalculateLyricWidth(v.Text)
+								x1 += li.CalculateLyricWidth(v.Text)
 
 							}
 						}
 
-						startPosition := CalculateLyricWidth(lineText) + CalculateLyricWidth(wordPart)
+						startPosition := li.CalculateLyricWidth(lineText) + li.CalculateLyricWidth(wordPart)
 						combine = append(combine, [2]entity.Coordinate{
 							entity.Coordinate{
 								X: startPosition + x1,
@@ -67,7 +67,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 				lineText = lineText + " " + word.Word
 
 			}
-			lineLength = math.Max(lineLength, CalculateLyricWidth(lineText))
+			lineLength = math.Max(lineLength, li.CalculateLyricWidth(lineText))
 			blob = append(blob, lineText)
 		}
 		allVerse[int(verse.VerseNum.Int32)] = blob
@@ -85,7 +85,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []reposi
 		currentVerse := allVerse[i+1]
 
 		// number verse
-		canv.Text(x-5-int(CalculateLyricWidth(fmt.Sprintf("%d. ", i+1))), y, fmt.Sprintf("%d. ", i+1))
+		canv.Text(x-5-int(li.CalculateLyricWidth(fmt.Sprintf("%d. ", i+1))), y, fmt.Sprintf("%d. ", i+1))
 		for _, liveVerse := range currentVerse {
 			canv.Text(x, y, liveVerse)
 			y += 25

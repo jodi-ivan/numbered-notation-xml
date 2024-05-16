@@ -66,6 +66,20 @@ func (mr *MockLyricMockRecorder) CalculateLyricWidth(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateLyricWidth", reflect.TypeOf((*MockLyric)(nil).CalculateLyricWidth), arg0)
 }
 
+// CalculateMarginLeft mocks base method.
+func (m *MockLyric) CalculateMarginLeft(txt string) float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalculateMarginLeft", txt)
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// CalculateMarginLeft indicates an expected call of CalculateMarginLeft.
+func (mr *MockLyricMockRecorder) CalculateMarginLeft(txt interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateMarginLeft", reflect.TypeOf((*MockLyric)(nil).CalculateMarginLeft), txt)
+}
+
 // RenderHypen mocks base method.
 func (m *MockLyric) RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	m.ctrl.T.Helper()

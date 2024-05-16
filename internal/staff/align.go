@@ -123,7 +123,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 						lyricVal := entity.LyricVal(l.Text).String()
 						xPos := n.PositionX
 						if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
-							xPos += int(lyric.CalculateMarginLeft(lyricVal))
+							xPos += int(rsa.Lyric.CalculateMarginLeft(lyricVal))
 						}
 						canv.Text(xPos, n.PositionY+25+(i*20), lyricVal)
 
@@ -131,8 +131,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 						for _, t := range l.Text {
 
 							if t.Underline == 1 {
-								currTextLength := lyric.CalculateLyricWidth(t.Value)
-								offset := lyric.CalculateLyricWidth(offsetLyric)
+								currTextLength := rsa.Lyric.CalculateLyricWidth(t.Value)
+								offset := rsa.Lyric.CalculateLyricWidth(offsetLyric)
 								canv.Qbez(
 									xPos+int(offset), n.PositionY+28,
 									xPos+int(offset)+int(currTextLength/2), n.PositionY+28+6,
@@ -153,7 +153,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		rsa.Numbered.RenderOctave(ctx, canv, measure)
 		rsa.Rhythm.RenderBeam(ctx, canv, measure)
 
-		RenderMeasureText(ctx, canv, measure)
+		rsa.RenderMeasureText(ctx, canv, measure)
 		RenderTuplet(ctx, canv, measure)
 
 		canv.Gend()

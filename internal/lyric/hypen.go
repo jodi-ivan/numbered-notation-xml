@@ -17,11 +17,11 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 		return nil
 	}
 
-	hypenWidth := CalculateLyricWidth("-")
+	hypenWidth := li.CalculateLyricWidth("-")
 
 	lyricText := entity.LyricVal(prevLyric.Lyrics.Text).String()
 
-	startPosition := prevLyric.Coordinate.X + CalculateLyricWidth(lyricText)
+	startPosition := prevLyric.Coordinate.X + li.CalculateLyricWidth(lyricText)
 	endPostion := currentLyric.Coordinate.X
 	distance := endPostion - startPosition
 	if distance < hypenWidth {

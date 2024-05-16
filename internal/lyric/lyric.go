@@ -26,89 +26,16 @@ type Lyric interface {
 	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
 	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
+	CalculateMarginLeft(txt string) float64
 }
 
 type lyricInteractor struct{}
-
-func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
-	return CalculateLyricWidth(txt)
-}
-
-func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
-	return RenderVerse(ctx, canv, y, verses)
-}
-
-func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo {
-	// lyric
-	var lyricWidth, noteWidth, marginBottom int
-
-	if len(note.Lyric) > 0 {
-		marginBottom = ((len(note.Lyric) - 1) * 25)
-		noteRenderer.Lyric = make([]entity.Lyric, len(note.Lyric))
-		for i, currLyric := range note.Lyric {
-			lyricText := ""
-			l := entity.Lyric{
-				Syllabic: currLyric.Syllabic,
-			}
-
-			texts := []entity.Text{}
-			for _, t := range currLyric.Text {
-				lyricText += t.Value
-				texts = append(texts, entity.Text{
-					Value:     t.Value,
-					Underline: t.Underline,
-				})
-			}
-
-			l.Text = texts
-
-			noteRenderer.Lyric[i] = l
-			currWidth := int(math.Round(li.CalculateLyricWidth(lyricText)))
-			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
-				currWidth += constant.LOWERCASE_LENGTH
-			}
-			currWidth += 4 // lyric padding
-
-			lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
-		}
-
-	}
-
-	noteWidth = constant.LOWERCASE_LENGTH
-
-	if noteWidth > lyricWidth {
-		noteRenderer.Width = noteWidth
-		noteRenderer.IsLengthTakenFromLyric = false
-	} else {
-		noteRenderer.Width = lyricWidth
-		noteRenderer.IsLengthTakenFromLyric = true
-		if float64(lyricWidth) > float64(noteWidth+constant.UPPERCASE_LENGTH) {
-			noteRenderer.Width = constant.UPPERCASE_LENGTH * 1.7
-		}
-	}
-
-	return VerseInfo{
-		MarginBottom: marginBottom,
-	}
-}
 
 func NewLyric() Lyric {
 	return &lyricInteractor{}
 }
 
-func CalculateMarginLeft(txt string) float64 {
-	if numberedLyric.Match([]byte(txt)) {
-		subStr := numberedLyric.FindStringSubmatch(txt)
-		if len(subStr) == 0 {
-			return 0
-		}
-
-		return CalculateLyricWidth(subStr[0]) * -1
-	}
-	return 0
-}
-
-func CalculateLyricWidth(txt string) float64 {
+func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 	// Only for Caladea font
 	width := map[string]float64{
 		"1": 9.28,
@@ -188,4 +115,70 @@ func CalculateLyricWidth(txt string) float64 {
 	}
 
 	return res
+}
+
+func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo {
+	// lyric
+	var lyricWidth, noteWidth, marginBottom int
+
+	if len(note.Lyric) > 0 {
+		marginBottom = ((len(note.Lyric) - 1) * 25)
+		noteRenderer.Lyric = make([]entity.Lyric, len(note.Lyric))
+		for i, currLyric := range note.Lyric {
+			lyricText := ""
+			l := entity.Lyric{
+				Syllabic: currLyric.Syllabic,
+			}
+
+			texts := []entity.Text{}
+			for _, t := range currLyric.Text {
+				lyricText += t.Value
+				texts = append(texts, entity.Text{
+					Value:     t.Value,
+					Underline: t.Underline,
+				})
+			}
+
+			l.Text = texts
+
+			noteRenderer.Lyric[i] = l
+			currWidth := int(math.Round(li.CalculateLyricWidth(lyricText)))
+			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
+				currWidth += constant.LOWERCASE_LENGTH
+			}
+			currWidth += 4 // lyric padding
+
+			lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
+		}
+
+	}
+
+	noteWidth = constant.LOWERCASE_LENGTH
+
+	if noteWidth > lyricWidth {
+		noteRenderer.Width = noteWidth
+		noteRenderer.IsLengthTakenFromLyric = false
+	} else {
+		noteRenderer.Width = lyricWidth
+		noteRenderer.IsLengthTakenFromLyric = true
+		if float64(lyricWidth) > float64(noteWidth+constant.UPPERCASE_LENGTH) {
+			noteRenderer.Width = constant.UPPERCASE_LENGTH * 1.7
+		}
+	}
+
+	return VerseInfo{
+		MarginBottom: marginBottom,
+	}
+}
+
+func (li *lyricInteractor) CalculateMarginLeft(txt string) float64 {
+	if numberedLyric.Match([]byte(txt)) {
+		subStr := numberedLyric.FindStringSubmatch(txt)
+		if len(subStr) == 0 {
+			return 0
+		}
+
+		return li.CalculateLyricWidth(subStr[0]) * -1
+	}
+	return 0
 }

@@ -82,6 +82,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 			})
 			//add at the end of the lines
 			if len(hypenEnd) != 1 {
+				// TODO: unittest for this case
 				hypenEnd = append(hypenEnd, endNotePos)
 			}
 

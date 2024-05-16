@@ -217,28 +217,519 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 				},
 			},
 		},
-		/*
-			Syllabic:
-			 - Begin
-			 - Middle
-			 - End
-
-			Example:
-
-			E ....... xam .... ple
-			^         ^        ^
-			begin     middle   end
-		*/
-		// case 3a: positive case. order Begin-middle-end
-		{},
-		// case 3: positive case 1: all in the same line
-		// -- syllabic order:
-		// case 3a: begin - middle - middle - end
-		// case 3b: begin - end - begin - middle - end
-		// case 3c: begin - middle - end - single - begin - end
-		// case 3d:	single - single - begin - middle - middle
-		// case 4: positive case 2: there is a new line
+		{
+			name: "Positive case. begin-middle-end",
+			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(ctrl)
+				writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Writer().Return(writerMock).Times(2)
+				writerMock.EXPECT().Write([]byte(`<text x="78.8850" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="33.6500" y="25">-</text>`))
+				canv.EXPECT().Gend()
+				return canv
+			},
+			args: args{
+				measure: []*entity.NoteRenderer{
+					&entity.NoteRenderer{
+						PositionX: 25,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "E",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 40,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "xam",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 100,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "ple",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Positive case. begin-middle-end-single",
+			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(ctrl)
+				writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Writer().Return(writerMock).Times(2)
+				writerMock.EXPECT().Write([]byte(`<text x="78.8850" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="33.6500" y="25">-</text>`))
+				canv.EXPECT().Gend()
+				return canv
+			},
+			args: args{
+				measure: []*entity.NoteRenderer{
+					&entity.NoteRenderer{
+						PositionX: 25,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "E",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 40,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "xam",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 100,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "ple",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 160,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "duh",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeSingle,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Positive case. begin-middle-middle-end",
+			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(ctrl)
+				writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Writer().Return(writerMock).Times(3)
+				writerMock.EXPECT().Write([]byte(`<text x="120.7500" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="90.0900" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="55.0350" y="25">-</text>`))
+				canv.EXPECT().Gend()
+				return canv
+			},
+			args: args{
+				measure: []*entity.NoteRenderer{
+					&entity.NoteRenderer{
+						PositionX: 25,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Na",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 77,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "si",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 103,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "go",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 134,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "reng",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Positive case. begin-end-begin-middle-end",
+			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(ctrl)
+				writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Writer().Return(writerMock).Times(3)
+				writerMock.EXPECT().Write([]byte(`<text x="161.1300" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="127.0650" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="49.0950" y="25">-</text>`))
+				canv.EXPECT().Gend()
+				return canv
+			},
+			args: args{
+				measure: []*entity.NoteRenderer{
+					&entity.NoteRenderer{
+						PositionX: 25,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Ma",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 62,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "kan",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 102,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Ber",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 140,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "sa",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 179,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "ma",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Positive case. begin-middle-end-single-begin-end",
+			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(ctrl)
+				writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Writer().Return(writerMock).Times(3)
+				writerMock.EXPECT().Write([]byte(`<text x="243.0950" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="79.1300" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="50.0650" y="25">-</text>`))
+				canv.EXPECT().Gend()
+				return canv
+			},
+			args: args{
+				measure: []*entity.NoteRenderer{
+					&entity.NoteRenderer{
+						PositionX: 25,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Ber",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 63,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "sa",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 92,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "ma",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 179,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "dan",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeSingle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 219,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Ma",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 256,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "kan",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Positive case. single-single-begin-middle-middle",
+			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(ctrl)
+				writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Writer().Return(writerMock).Times(2)
+				writerMock.EXPECT().Write([]byte(`<text x="187.2050" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="163.6300" y="25">-</text>`))
+				canv.EXPECT().Gend()
+				return canv
+			},
+			args: args{
+				measure: []*entity.NoteRenderer{
+					&entity.NoteRenderer{
+						PositionX: 25,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Boom",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeSingle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 78,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Boom",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeSingle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 140,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Sha",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeBegin,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 171,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "ka",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 198,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "la",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Positive case. middle-middle-end",
+			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(ctrl)
+				writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Writer().Return(writerMock)
+				writerMock.EXPECT().Write([]byte(`<text x="35.2300" y="25">-</text>`))
+				canv.EXPECT().Gend()
+				return canv
+			},
+			args: args{
+				measure: []*entity.NoteRenderer{
+					&entity.NoteRenderer{
+						PositionX: 25,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "ka",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeMiddle,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 56,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "sum",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeEnd,
+							},
+						},
+					},
+					&entity.NoteRenderer{
+						PositionX: 96,
+						Lyric: []entity.Lyric{
+							entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: "Boom",
+									},
+								},
+								Syllabic: musicxml.LyricSyllabicTypeSingle,
+							},
+						},
+					},
+				},
+			},
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			li := &lyricInteractor{}

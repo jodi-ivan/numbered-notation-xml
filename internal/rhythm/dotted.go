@@ -5,7 +5,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 )
 
-func AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int) (int, int) {
+func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int) (int, int) {
 
 	xNotes := 0
 	continueDot := false
@@ -54,6 +54,7 @@ func AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int) (int,
 		}
 		if n.IsNewLine {
 			x = constant.LAYOUT_INDENT_LENGTH
+			// y is not added up because it will handled by the staff (the function that call this function).
 		}
 	}
 

@@ -5,7 +5,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
-func SetRhythmNotation(noteRenderer *entity.NoteRenderer, note musicxml.Note, numberedNote int) {
+func (ri *rhythmInteractor) SetRhythmNotation(noteRenderer *entity.NoteRenderer, note musicxml.Note, numberedNote int) {
 	if note.Notations != nil {
 
 		for i, slur := range note.Notations.Slur {

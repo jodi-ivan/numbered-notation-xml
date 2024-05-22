@@ -27,3 +27,4 @@ vendor/
 
 #sonarqube work
 .scannerwork/
+.scan/

@@ -391,6 +391,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 					},
 				}, t), float64(670))
 				lyricMock.EXPECT().RenderHypen(gomock.Any(), gomock.Any(), gomock.Any())
+				lyricMock.EXPECT().CalculateMarginLeft(gomock.Any()).Return(float64(0))
 
 				return res
 

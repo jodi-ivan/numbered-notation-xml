@@ -100,6 +100,7 @@ func TestRenderLengthNote(t *testing.T) {
 				},
 				NoteLength{
 					IsDotted: true,
+					Type:     musicxml.NoteLengthQuarter,
 				},
 			},
 		},
@@ -121,6 +122,7 @@ func TestRenderLengthNote(t *testing.T) {
 					Type: musicxml.NoteLengthQuarter,
 				},
 				NoteLength{
+					Type:     musicxml.NoteLengthQuarter,
 					IsDotted: true,
 				},
 				NoteLength{
@@ -147,9 +149,11 @@ func TestRenderLengthNote(t *testing.T) {
 					Type: musicxml.NoteLengthQuarter,
 				},
 				NoteLength{
+					Type:     musicxml.NoteLengthQuarter,
 					IsDotted: true,
 				},
 				NoteLength{
+					Type:     musicxml.NoteLengthQuarter,
 					IsDotted: true,
 				},
 			},

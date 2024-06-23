@@ -117,6 +117,7 @@ func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 	return res
 }
 
+// SetLyricRenderer prepares the renderer for lyrics, also calculate space underneath the note and after the note
 func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo {
 	// lyric
 	var lyricWidth, noteWidth, marginBottom int

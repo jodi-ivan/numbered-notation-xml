@@ -4,4 +4,4 @@
   -Dsonar.projectKey=numbered-notation-xml \
   -Dsonar.sources=. \
   -Dsonar.host.url=http://localhost:9000 \
-  -Dsonar.token=sqp_5f6495f1d551a25142e10682374ee08d0ed6252d
+  -Dsonar.token=sqp_bcc0763c5f0eb77048397da13de7668a84e99d9d

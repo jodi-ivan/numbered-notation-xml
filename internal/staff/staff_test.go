@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	reflect "reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -564,4 +565,18 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewStaff(t *testing.T) {
+	t.Run("new staff", func(t *testing.T) {
+		got := NewStaff()
+		interactor := got.(*staffInteractor)
+
+		v := reflect.ValueOf(*interactor)
+		typeOfS := v.Type()
+
+		for i := 0; i < v.NumField(); i++ {
+			assert.NotNil(t, v.Field(i).Interface(), fmt.Sprintf("Field name: %s", typeOfS.Field(i).Name))
+		}
+	})
 }

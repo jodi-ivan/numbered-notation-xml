@@ -3,7 +3,9 @@ package timesig
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
+	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
@@ -60,6 +62,31 @@ func (t Time) GetNoteLength(ctx context.Context, note musicxml.Note) float64 {
 type TimeSignature struct {
 	IsMixed    bool
 	Signatures []Time
+	humanized  string
+}
+
+func (ts *TimeSignature) GetHumanized() string {
+	if ts.humanized != "" {
+		return ts.humanized
+	}
+
+	if !ts.IsMixed {
+		ts.humanized = fmt.Sprintf("%d ketuk", ts.Signatures[0].Beat)
+		return ts.humanized
+	}
+	beat := map[int]bool{}
+	combined := []string{}
+	for _, v := range ts.Signatures {
+		if !beat[v.Beat] {
+			beat[v.Beat] = true
+			combined = append(combined, fmt.Sprintf("%d", v.Beat))
+		}
+	}
+
+	ts.humanized = strings.Join(combined, " dan ") + " ketuk"
+	log.Println("is it mixed?", ts.humanized)
+
+	return ts.humanized
 }
 
 func (ts *TimeSignature) GetTimesignatureOnMeasure(ctx context.Context, measure int) Time {
@@ -102,8 +129,12 @@ func NewTimeSignatures(ctx context.Context, measures []musicxml.Measure) TimeSig
 
 	times := []Time{}
 
+	various := map[string]bool{}
+
 	for _, measure := range measures {
 		if measure.Attribute != nil && measure.Attribute.Time != nil {
+			key := fmt.Sprintf("%d/%d", measure.Attribute.Time.Beats, measure.Attribute.Time.BeatType)
+			various[key] = true
 			times = append(times, Time{
 				Measure:  measure.Number,
 				Beat:     measure.Attribute.Time.Beats,
@@ -113,7 +144,7 @@ func NewTimeSignatures(ctx context.Context, measures []musicxml.Measure) TimeSig
 	}
 
 	return TimeSignature{
-		IsMixed:    len(times) > 1,
+		IsMixed:    len(various) > 1,
 		Signatures: times,
 	}
 }

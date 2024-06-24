@@ -48,6 +48,11 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	// render title
 
 	workTitle := ""
+	for _, v := range music.Credit {
+		if v.Type == musicxml.CreditTypeTitle {
+			workTitle = strings.ToUpper(v.Words)
+		}
+	}
 	if metadata != nil {
 		workTitle = fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
 	}
@@ -60,12 +65,11 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	keySignature := keysig.NewKeySignature(music.Part.Measures[0].Attribute.Key)
 	timeSignature := timesig.NewTimeSignatures(ctx, music.Part.Measures)
 
-	humanizedKeySignature := keySignature.String()
+	humanizedKeySignature := timeSignature.GetHumanized()
 
 	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
 
-	beat := music.Part.Measures[0].Attribute.Time
-	canv.Text(constant.LAYOUT_INDENT_LENGTH+(len(humanizedKeySignature)*constant.LOWERCASE_LENGTH), relativeY, fmt.Sprintf("%d ketuk", beat.Beats))
+	canv.Text(constant.LAYOUT_INDENT_LENGTH+(3*constant.LOWERCASE_LENGTH)+int(ir.Lyric.CalculateLyricWidth(keySignature.String())), relativeY, humanizedKeySignature)
 	relativeY += 70
 
 	staffes := ir.Staff.SplitLines(ctx, music.Part)

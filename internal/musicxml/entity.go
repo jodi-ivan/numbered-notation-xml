@@ -44,12 +44,16 @@ func (e *Element) ParseAsDirection() (*Direction, error) {
 
 type MusicXML struct {
 	XMLName xml.Name `xml:"score-partwise"`
-	Credit  Credit   `xml:"credit"`
+	Credit  []Credit `xml:"credit"`
 	Part    Part     `xml:"part"`
 	Work    Work     `xml:"work"`
 }
 
 type CreditType string
+
+const (
+	CreditTypeTitle CreditType = "title"
+)
 
 type Credit struct {
 	Type  CreditType `xml:"credit-type"`

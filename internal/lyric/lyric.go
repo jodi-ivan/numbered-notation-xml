@@ -157,7 +157,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 	noteWidth = constant.LOWERCASE_LENGTH
 
 	if noteWidth > lyricWidth {
-		noteRenderer.Width = noteWidth
+		noteRenderer.Width = noteWidth * 2
 		noteRenderer.IsLengthTakenFromLyric = false
 	} else {
 		noteRenderer.Width = lyricWidth

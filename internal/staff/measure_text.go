@@ -102,8 +102,14 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 }
 
 func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
-	canv.Group("class='staff-text'")
+	hasStaffText := false
+
 	for _, note := range notes {
+		if !hasStaffText && len(note.MeasureText) > 0 {
+			canv.Group("class='staff-text'")
+		}
+		hasStaffText = hasStaffText || len(note.MeasureText) > 0
+
 		if len(note.MeasureText) > 0 {
 			sort.Slice(note.MeasureText, func(i, j int) bool {
 				return note.MeasureText[i].RelativeY < note.MeasureText[j].RelativeY
@@ -120,7 +126,9 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 		}
 
 	}
-	canv.Gend()
+	if hasStaffText {
+		canv.Gend()
+	}
 
 }
 

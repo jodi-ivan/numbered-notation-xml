@@ -11,6 +11,9 @@ import (
 )
 
 func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
+	if len(set) == 0 {
+		return
+	}
 	canv.Group("class='slurties'")
 	// DONE: check ties across measure bar
 	for _, s := range set {
@@ -238,6 +241,10 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, 
 			}
 		}
 
+	}
+
+	if len(beamSets) == 0 {
+		return
 	}
 
 	canv.Group("class='beam'")

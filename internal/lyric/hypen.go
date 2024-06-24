@@ -24,8 +24,7 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 	startPosition := prevLyric.Coordinate.X + li.CalculateLyricWidth(lyricText)
 	endPostion := currentLyric.Coordinate.X
 	distance := endPostion - startPosition
-	if distance < hypenWidth {
-		// TODO: close the gap between these two lyric
+	if distance < 4 { // because the current length of the - is 5.47
 		return nil
 	}
 

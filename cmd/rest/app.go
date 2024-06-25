@@ -41,6 +41,8 @@ func main() {
 	httpRender := adapter.New(usecaseMod)
 
 	ws.Register("GET", "/kidung-jemaat/render/:number", httpRender)
+	//TODO: make the path root as config
+	ws.RegisterStatic("/internal/lab/verse-generator/*filepath", "./files/var/www/html/verses-generator")
 
 	ws.Serve(cfg.Webserver.Port)
 

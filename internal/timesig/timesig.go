@@ -3,7 +3,6 @@ package timesig
 import (
 	"context"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 
@@ -84,7 +83,6 @@ func (ts *TimeSignature) GetHumanized() string {
 	}
 
 	ts.humanized = strings.Join(combined, " dan ") + " ketuk"
-	log.Println("is it mixed?", ts.humanized)
 
 	return ts.humanized
 }

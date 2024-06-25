@@ -53,6 +53,7 @@ type HTTPAdapter interface {
 
 func commonMiddleware(wg *sync.WaitGroup, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		path := r.URL.Path
 		defer func() {
 			err := recover()
 			if err != nil {
@@ -71,7 +72,7 @@ func commonMiddleware(wg *sync.WaitGroup, next httprouter.Handle) httprouter.Han
 
 		next(responseWriter, r, ps)
 
-		log.Printf("[Webserver][%d ms][%d bytes] %s %s -> Status code: %d\n", time.Since(t).Milliseconds(), responseWriter.size, strings.ToUpper(r.Method), r.URL.Path, responseWriter.status)
+		log.Printf("[Webserver][%d ms][%d bytes] %s %s -> Status code: %d\n", time.Since(t).Milliseconds(), responseWriter.size, strings.ToUpper(r.Method), path, responseWriter.status)
 	}
 }
 
@@ -99,6 +100,14 @@ func (ws *WebServer) Serve(port string) error {
 
 func (ws *WebServer) Register(method, path string, adapter HTTPAdapter) {
 	ws.httpRouter.Handle(method, path, commonMiddleware(ws.wg, adapter.ServeHTTP))
+}
+func (ws *WebServer) RegisterStatic(path, rootpath string) {
+	fileServer := http.FileServer(http.Dir(rootpath))
+
+	ws.httpRouter.GET(path, commonMiddleware(ws.wg, func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+		req.URL.Path = ps.ByName("filepath")
+		fileServer.ServeHTTP(w, req)
+	}))
 }
 
 func (ws *WebServer) Stop() {

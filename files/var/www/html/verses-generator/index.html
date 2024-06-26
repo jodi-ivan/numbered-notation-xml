@@ -1,11 +1,165 @@
 <!DOCTYPE html>
 
 <html>
-    <head>
-        <title>Verse generator</title>
-    </head>
-<body>
-    
-    
+
+<head>
+    <title>Verse generator</title>
+    <style>
+        * {
+            padding: 3px;
+        }
+    </style>
+</head>
+
+<body style="width: 100%;">
+    <div style="width: 1080px;">
+        <div style="display: inline-block; width: 45%;border: 1px solid red;">
+            <h2>Put the lyric here</h2>
+            fix the syllable by changing the array structure
+            make the syllable underscore by [(indexsyll)_(indexbreakdown)_(brekdown)]
+            example: muliakan <br />
+            <i>mu-lia-kan</i> <b>1_1_l_ia</b> <br />
+            {mu} - {{l}, {ia, underscore}}, {kan}
+            <textarea name="lyric" id="lyric" style="height: 450px; width: 85%;"></textarea>
+            <input type="button" value="Parse" id="parse" />
+        </div>
+        <div style="display: inline-block; width: 45%;">
+
+            <pre id="content"></pre>
+        </div>
+    </div>
 </body>
+<script>
+    document.getElementById("parse").onclick = async function () {
+        var input = document.getElementById("lyric").value;
+        var url = "http://localhost:8888/internal/verse-parser";
+
+        console.log(input);
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify(input)
+        })
+
+        result = await response.json();
+        console.log(result)
+        populate(result);
+    }
+
+    function createTable(words) {
+        var table = document.createElement("table");
+        table.style["width"] = "100%";
+        table.style["border"] = "1px solid red";
+
+        var tr = document.createElement("tr");
+        for (var i = 0; i < words.length; i++) {
+            var td = document.createElement("td");
+            var p = document.createElement("p");
+            p.style["display"] = "inline-block";
+
+            var underscore = document.createElement("input");
+            underscore.type = "text";
+            underscore.style["width"] = "7ch";
+            underscore.style["float"] = "right";
+            underscore.placeholder = "underscore.."
+
+            p.innerHTML = words[i].word;
+            var pre = document.createElement("textarea");
+            pre.value = JSON.stringify(words[i].Breakdown)
+            pre.style["display"] = "block";
+            td.appendChild(p);
+            td.appendChild(underscore);
+            td.appendChild(pre);
+            tr.appendChild(td);
+        }
+        table.appendChild(tr);
+        return table;
+    }
+
+
+    function populate(data) {
+        var container = document.getElementById("content");
+        for (var i = 0; i < data.length; i++) {
+            var line = data[i];
+            container.appendChild(createTable(line));
+        }
+    }
+
+    function getType(idx, max) {
+        if (max == 1) {
+            return "single";
+        }
+
+        if (idx == 0) {
+            return "begin";
+        } else if (idx == (max-1)) {
+            return "end"
+        } else {
+            return "middle";
+        }
+    } 
+
+    function prepare() {
+        var result = new Array();
+        var gui = document.getElementById("content").getElementsByTagName("table");
+        for (var l = 0; l < gui.length; l++) {
+            var lineresult = new Array();
+            var breakdown = gui[l].getElementsByTagName("textarea");
+            var td = gui[l].getElementsByTagName("td");
+
+            for (var i = 0; i < breakdown.length; i++) {
+                // sylableNum_breakdownUnderNum_breakdown
+                var under = td[i].getElementsByTagName("input")[0].value;
+
+
+                var breakdownresult = new Array();
+                var sylla = JSON.parse(breakdown[i].value);
+
+                for (var j = 0; j < sylla.length; j++) {
+                    if (under != "") {
+                        var sep = under.split("_");
+                        if (parseInt(sep[0]) == j) {
+
+                            var underbreakdownIdx = parseInt(sep[1])
+                            var underbreakdown = sep.slice(2, sep.length);
+                            var underbreakdownArr = new Array();
+
+                            for (var k = 0; k < underbreakdown.length; k++) {
+                                if (k == underbreakdownIdx) {
+                                    underbreakdownArr.push({
+                                        text: underbreakdown[k],
+                                        underline: true
+                                    })
+                                } else {
+                                    underbreakdownArr.push({
+                                        text: underbreakdown[k],
+                                    })
+                                }
+                            }
+                            breakdownresult.push({
+                                text: sylla[j],
+                                combine: true,
+                                type : getType(j, sylla.length),
+                                breakdown: underbreakdownArr
+                            })
+                        } else {
+                            breakdownresult.push({ text: sylla[j], type : getType(j, sylla.length) })
+                        }
+                    } else {
+                        breakdownresult.push({ text: sylla[j], type : getType(j, sylla.length) })
+                    }
+                }
+
+                lineresult.push({breakdown: breakdownresult, word: sylla.join("")})
+            }
+            result.push(lineresult);
+        }
+
+
+        console.log(JSON.stringify(result));
+    }
+</script>
+
 </html>

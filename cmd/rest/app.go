@@ -44,6 +44,8 @@ func main() {
 	//TODO: make the path root as config
 	ws.RegisterStatic("/internal/lab/verse-generator/*filepath", "./files/var/www/html/verses-generator")
 
+	ws.Register("POST", "/internal/verse-parser", &adapter.LyricParser{})
+
 	ws.Serve(cfg.Webserver.Port)
 
 	sigs := make(chan os.Signal, 1)

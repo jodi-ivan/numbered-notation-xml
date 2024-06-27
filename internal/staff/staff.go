@@ -210,6 +210,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					break
 				}
 				if i > indexNewLine {
+					if len(staffInfo.NextLineRenderer) == 0 {
+						note.PositionX = constant.LAYOUT_INDENT_LENGTH
+					}
 					staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
 				}
 			}

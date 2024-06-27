@@ -38,4 +38,6 @@ type HymnVerse struct {
 	VerseNum sql.NullInt32  `db:"verse_num"`
 	StyleRow sql.NullInt32  `db:"style_row"`
 	Content  sql.NullString `db:"content"`
+	Col      sql.NullInt16  `db:"column_pos"`
+	Row      sql.NullInt16  `db:"row_pos"`
 }

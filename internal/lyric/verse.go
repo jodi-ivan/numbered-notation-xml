@@ -13,12 +13,24 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
+type versePosition struct {
+	Col      int
+	Row      int
+	RowWidth int
+}
+
 func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
 	allVerse := map[int][]string{}
 	lineLength := float64(0)
+	maxRightPost := float64(0)
 	allCombine := map[int][][2]entity.Coordinate{}
+	versePos := map[int]versePosition{}
+	marginRight := 0
+	multiColumn := false
+	yPosRow := map[int]int{}
+	maxY := float64(0)
 
 	for _, verse := range verses {
 
@@ -28,6 +40,13 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		err := json.Unmarshal([]byte(verse.Content.String), &whole)
 		if err != nil {
 			log.Println("[RenderVerse] failed to unmarshal, err ", err)
+		}
+		yPosRow[int(verse.Row.Int16)] = y + (25 * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * 35)
+
+		versePos[int(verse.VerseNum.Int32)] = versePosition{
+			Col:      int(verse.Col.Int16),
+			RowWidth: int(verse.StyleRow.Int32),
+			Row:      int(verse.Row.Int16),
 		}
 
 		blob := []string{}
@@ -68,6 +87,12 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 
 			}
 			lineLength = math.Max(lineLength, li.CalculateLyricWidth(lineText))
+			if verse.Col.Int16 == 1 {
+				marginRight = int(lineLength)
+				multiColumn = multiColumn || true
+			} else if verse.Col.Int16 == 2 {
+				maxRightPost = math.Max(maxRightPost, lineLength)
+			}
 			blob = append(blob, lineText)
 		}
 		allVerse[int(verse.VerseNum.Int32)] = blob
@@ -75,6 +100,9 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 	}
 
 	x := int(math.Round((constant.LAYOUT_WIDTH / 2) - (lineLength / 2)))
+	if multiColumn {
+		x = int(math.Round(constant.LAYOUT_WIDTH/2)) - ((int(lineLength) + int(maxRightPost)) / 2)
+	}
 	totalVerse := len(allVerse)
 
 	for i := 1; i < totalVerse+1; i++ {
@@ -85,9 +113,15 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		currentVerse := allVerse[i+1]
 
 		// number verse
-		canv.Text(x-5-int(li.CalculateLyricWidth(fmt.Sprintf("%d. ", i+1))), y, fmt.Sprintf("%d. ", i+1))
+		margin := 0
+		if versePos[i+1].Col == 2 && versePos[i+1].RowWidth == 6 {
+			margin = marginRight + 50
+			yVerse = yPosRow[versePos[i+1].Row]
+			y = yVerse
+		}
+		canv.Text(x-5-int(li.CalculateLyricWidth(fmt.Sprintf("%d. ", i+1)))+margin, y, fmt.Sprintf("%d. ", i+1))
 		for _, liveVerse := range currentVerse {
-			canv.Text(x, y, liveVerse)
+			canv.Text(x+margin, y, liveVerse)
 			y += 25
 
 		}
@@ -95,9 +129,9 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 
 		for _, c := range allCombine[i+1] {
 			canv.Qbez(
-				int(c[0].X)+x, int(c[0].Y*25)+2+yVerse,
-				int(c[0].X)+x+(int(c[1].X-c[0].X)/2), yVerse+7+(int(c[0].Y)*25),
-				int(c[1].X)+x, int(c[1].Y*25)+2+yVerse,
+				int(c[0].X)+x+margin, int(c[0].Y*25)+2+yVerse,
+				int(c[0].X)+x+margin+(int(c[1].X-c[0].X)/2), yVerse+7+(int(c[0].Y)*25),
+				int(c[1].X)+x+margin, int(c[1].Y*25)+2+yVerse,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
 		}
@@ -105,11 +139,12 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		canv.Gend()
 
 		y += 35
+		maxY = math.Max(maxY, float64(y))
 
 	}
 
 	canv.Gend()
 	return VerseInfo{
-		MarginBottom: y,
+		MarginBottom: int(maxY),
 	}
 }

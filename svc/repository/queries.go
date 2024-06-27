@@ -18,6 +18,8 @@ const (
 		b.ID as verse_id,
 		b.verse_num,
 		b.style_row,
+		b.column_pos,
+		b.row_pos,
 		b.content
 	FROM jdy_hymn a LEFT JOIN jdy_hymn_verces b 
 		ON a.hymn_number = b.hymn_num AND (a.hymn_variant = b.hymn_variant OR (a.hymn_variant IS NULL AND b.hymn_variant IS NULL))

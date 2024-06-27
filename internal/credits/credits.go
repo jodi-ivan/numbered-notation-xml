@@ -25,6 +25,7 @@ func NewCredits() Credits {
 	}
 }
 
+// FIXME: fix long and clipped the text to end of the layout
 func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 	if metadata.Lyric == metadata.Music {

@@ -200,7 +200,7 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, 
 	for _, note := range cleanedNote {
 
 		for _, b := range note.Beam {
-			positionY := float64(note.PositionY - 20 + ((b.Number) * 3))
+			positionY := float64(note.PositionY - 22 + ((b.Number) * 3))
 
 			switch b.Type {
 			case musicxml.NoteBeamTypeBegin:
@@ -417,6 +417,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, beamNu
 
 // TODO: 7 and 8 notes
 // FIXME: the dotted shouldnot be spliitted
+// FIXME: skip this process entirely and follow 1 to 1 as in the musicxml file when it is 4 beat type
 func splitBeam(ctx context.Context, notes []*entity.NoteRenderer, segments map[int][]beamSplitMarker) []*entity.NoteRenderer {
 
 	measure, _ := ctx.Value(constant.CtxKeyMeasureNum).(int)

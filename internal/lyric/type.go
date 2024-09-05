@@ -31,3 +31,10 @@ type LyricWordVerse struct {
 type VerseInfo struct {
 	MarginBottom int
 }
+
+type VerseRowStyle int
+
+const (
+	VerseRowStyleSingleColumn VerseRowStyle = 12
+	VerseRowStyleDualColumn   VerseRowStyle = 6
+)

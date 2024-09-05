@@ -17,6 +17,7 @@ type versePosition struct {
 	Col      int
 	Row      int
 	RowWidth int
+	Style    VerseRowStyle
 }
 
 func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
@@ -32,6 +33,8 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 	yPosRow := map[int]int{}
 	maxY := float64(0)
 
+	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (lineLength / 2)))
+
 	for _, verse := range verses {
 
 		combine := [][2]entity.Coordinate{}
@@ -43,10 +46,17 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		}
 		yPosRow[int(verse.Row.Int16)] = y + (25 * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * 35)
 
+		style := VerseRowStyle(verse.StyleRow.Int32)
+
+		if int(style) == 0 {
+			style = VerseRowStyleSingleColumn
+		}
+
 		versePos[int(verse.VerseNum.Int32)] = versePosition{
 			Col:      int(verse.Col.Int16),
 			RowWidth: int(verse.StyleRow.Int32),
 			Row:      int(verse.Row.Int16),
+			Style:    style,
 		}
 
 		blob := []string{}
@@ -89,9 +99,9 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			lineLength = math.Max(lineLength, li.CalculateLyricWidth(lineText))
 			if verse.Col.Int16 == 1 {
 				marginRight = int(lineLength)
-				multiColumn = multiColumn || true
 			} else if verse.Col.Int16 == 2 {
 				maxRightPost = math.Max(maxRightPost, lineLength)
+				multiColumn = multiColumn || true
 			}
 			blob = append(blob, lineText)
 		}
@@ -99,7 +109,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		allCombine[int(verse.VerseNum.Int32)] = combine
 	}
 
-	x := int(math.Round((constant.LAYOUT_WIDTH / 2) - (lineLength / 2)))
+	x := defaultX
 	if multiColumn {
 		x = int(math.Round(constant.LAYOUT_WIDTH/2)) - ((int(lineLength) + int(maxRightPost)) / 2)
 	}
@@ -119,6 +129,11 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			yVerse = yPosRow[versePos[i+1].Row]
 			y = yVerse
 		}
+
+		if versePos[i+1].Style == VerseRowStyleSingleColumn {
+			x = defaultX
+		}
+
 		canv.Text(x-5-int(li.CalculateLyricWidth(fmt.Sprintf("%d. ", i+1)))+margin, y, fmt.Sprintf("%d. ", i+1))
 		for _, liveVerse := range currentVerse {
 			canv.Text(x+margin, y, liveVerse)

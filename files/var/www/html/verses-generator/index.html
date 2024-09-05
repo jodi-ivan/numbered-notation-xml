@@ -22,6 +22,7 @@
             {mu} - {{l}, {ia, underscore}}, {kan}
             <textarea name="lyric" id="lyric" style="height: 450px; width: 85%;"></textarea>
             <input type="button" value="Parse" id="parse" />
+            <input type="button" value="Result" id="result" />
         </div>
         <div style="display: inline-block; width: 45%;">
 
@@ -44,8 +45,11 @@
         })
 
         result = await response.json();
-        console.log(result)
         populate(result);
+    }
+
+    document.getElementById("result").onclick = function() {
+        prepare()
     }
 
     function createTable(words) {

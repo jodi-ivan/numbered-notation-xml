@@ -90,7 +90,11 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 
 	if metadata != nil {
 		verseInfo := ir.Lyric.RenderVerse(ctx, canv, relativeY, metadata.Verse)
-		relativeY = verseInfo.MarginBottom
+
+		// FIXED: Y is 0 value (at the top of pages) when there is no verses
+		if verseInfo.MarginBottom != 0 {
+			relativeY = verseInfo.MarginBottom
+		}
 
 		ir.Credits.RenderCredits(ctx, canv, relativeY, metadata.HymnData)
 

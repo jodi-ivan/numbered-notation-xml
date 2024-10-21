@@ -9,5 +9,6 @@ A musical numbered notation based on the Indonesian Yamuger (yayasan musik gerej
 References (sites that I used for references music theory)
 - https://www.hooktheory.com/cheat-sheet
 
+**SVG modified to have background color
+![NumbericNotation](files/var/www/assets/5.svg) 
 
-![NumbericNotation](files/var/www/assets/5.svg)

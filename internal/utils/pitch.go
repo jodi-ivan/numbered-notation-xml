@@ -62,41 +62,33 @@ func IsPitchEqual(one, two string) bool {
 		return true
 	}
 	pitches := map[string][]string{
-		"C":   []string{"B#", "Dbb"},
-		"Cb":  []string{"B", "Ax"},
-		"C#":  []string{"Db", "Bx"},
-		"Cx":  []string{"B", "Ax"},
+		"C": []string{"B#", "Dbb"}, "C#": []string{"Db", "Bx"},
+		"Cb": []string{"B", "Ax"}, "Cx": []string{"B", "Ax"},
 		"Cbb": []string{"B", "Ax"},
-		"D":   []string{"Cx", "Ebb"},
-		"Db":  []string{"C#"},
-		"D#":  []string{"Eb", "Fbb"},
-		"Dbb": []string{"C", "B#"},
-		"Dx":  []string{"E", "Fb"},
-		"E":   []string{"Dx", "Fb"},
-		"Eb":  []string{"D#", "Fbb"},
-		"E#":  []string{"F", "Gbb"},
-		"Ebb": []string{"D", "Cx"},
-		"Ex":  []string{"F#", "Gb"},
-		"F":   []string{"E#", "Gbb"},
-		"Fb":  []string{"E", "Dx"},
-		"F#":  []string{"Gb", "Ex"},
-		"Fbb": []string{"Eb", "D#"},
-		"Fx":  []string{"G", "Abb"},
-		"G":   []string{"Abb", "Fx"},
-		"Gb":  []string{"F#", "Ex"},
-		"G#":  []string{"Ab"},
-		"Gbb": []string{"F", "E#"},
-		"Gx":  []string{"A", "Bbb"},
-		"A":   []string{"Gx", "Bbb"},
-		"Ab":  []string{"G#"},
-		"A#":  []string{"Bb", "Cbb"},
-		"Abb": []string{"G", "Fx"},
-		"Ax":  []string{"B", "Cb"},
-		"B":   []string{"Cb", "Ax"},
-		"Bb":  []string{"A#", "Cbb"},
-		"B#":  []string{"C", "Dbb"},
-		"Bbb": []string{"A", "Gx"},
-		"Bx":  []string{"C#", "Db"},
+
+		"D": []string{"Cx", "Ebb"}, "Dbb": []string{"C", "B#"},
+		"Db": []string{"C#"}, "Dx": []string{"E", "Fb"},
+		"D#": []string{"Eb", "Fbb"},
+
+		"E": []string{"Dx", "Fb"}, "Ebb": []string{"D", "Cx"},
+		"Eb": []string{"D#", "Fbb"}, "Ex": []string{"F#", "Gb"},
+		"E#": []string{"F", "Gbb"},
+
+		"F": []string{"E#", "Gbb"}, "Fbb": []string{"Eb", "D#"},
+		"Fb": []string{"E", "Dx"}, "Fx": []string{"G", "Abb"},
+		"F#": []string{"Gb", "Ex"},
+
+		"G": []string{"Abb", "Fx"}, "Gbb": []string{"F", "E#"},
+		"Gb": []string{"F#", "Ex"}, "Gx": []string{"A", "Bbb"},
+		"G#": []string{"Ab"},
+
+		"A": []string{"Gx", "Bbb"}, "Abb": []string{"G", "Fx"},
+		"Ab": []string{"G#"}, "Ax": []string{"B", "Cb"},
+		"A#": []string{"Bb", "Cbb"},
+
+		"B": []string{"Cb", "Ax"}, "Bbb": []string{"A", "Gx"},
+		"Bb": []string{"A#", "Cbb"}, "Bx": []string{"C#", "Db"},
+		"B#": []string{"C", "Dbb"},
 	}
 	result := Contains(pitches[one], two) >= 0
 
@@ -105,9 +97,11 @@ func IsPitchEqual(one, two string) bool {
 
 // compare pitch
 // returns
-//    0 -> both pitch are equal
-//    1 -> 1st param > 2nd param
-//   -1 -> 1st param < 2nd param
+//
+//	 0 -> both pitch are equal
+//	 1 -> 1st param > 2nd param
+//	-1 -> 1st param < 2nd param
+//
 // Assume both pitch on the same octave between C4 -> B4
 func ComparePitch(one, two string) int {
 	if IsPitchEqual(one, two) {

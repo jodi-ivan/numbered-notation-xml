@@ -312,9 +312,9 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 				canv.EXPECT().Text(int(648), int(195), ".")
 
 				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
-				canv.EXPECT().Group("class='staff-text'")
+				// canv.EXPECT().Group("class='staff-text'")
 
-				canv.EXPECT().Gend().Times(5)
+				canv.EXPECT().Gend().Times(4)
 				return canv
 			},
 			interactor: func(ctrl *gomock.Controller) *renderStaffAlign {

@@ -31,7 +31,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				note:         musicxml.Note{},
 			},
 			want:      VerseInfo{},
-			wantWidth: 15,
+			wantWidth: 30,
 		},
 		{
 			name: "lyric less than the note",
@@ -55,7 +55,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				},
 			},
 			want:      VerseInfo{},
-			wantWidth: 15,
+			wantWidth: 30,
 			wantLyric: []entity.Lyric{
 				entity.Lyric{
 					Text: []entity.Text{

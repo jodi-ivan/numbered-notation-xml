@@ -92,6 +92,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 
+			// additionalRenderer is all the new notes that needs represented in numbered when the original musicxml doesnot
+			// for example a half note C have to be represented by following . next to number
 			additionalRenderer := si.Numbered.GetLengthNote(rctx, timeSignature, measure.Number, noteLength)
 			renderer := &entity.NoteRenderer{
 				PositionX:     x,

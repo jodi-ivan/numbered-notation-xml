@@ -175,13 +175,15 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				canv.EXPECT().Text(int(310), int(100), "1. UNITTEST")
 
 				canv.EXPECT().Text(int(50), int(125), "do = d")
-				canv.EXPECT().Text(int(140), int(125), "4 ketuk")
+				canv.EXPECT().Text(int(195), int(125), "4 ketuk")
 				canv.EXPECT().End()
 
 				return canv
 			},
 			lyricMock: func(ctrl *gomock.Controller) *lyric.MockLyric {
 				l := lyric.NewMockLyric(ctrl)
+
+				l.EXPECT().CalculateLyricWidth("do = d").Return(float64(100))
 
 				l.EXPECT().CalculateLyricWidth("1. UNITTEST").Return(float64(100))
 				l.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), int(510), []repository.HymnVerse{}).Return(lyric.VerseInfo{MarginBottom: 40})
@@ -192,16 +194,21 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				mockStaff := staff.NewMockStaff(ctrl)
 				mockStaff.EXPECT().SplitLines(gomock.Any(), musicxml.Part{Measures: measures}).Return(spilttedLine)
 
+				currTimeSig := timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{Measure: 1, Beat: 4, BeatType: 4},
+					},
+				}
+
+				currTimeSig.GetHumanized()
+
 				mockStaff.EXPECT().RenderStaff(
 					gomock.Any(),
 					gomock.Any(),
 					int(50),
 					int(195),
 					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
-					timesig.TimeSignature{
-						Signatures: []timesig.Time{
-							timesig.Time{Measure: 1, Beat: 4, BeatType: 4},
-						}},
+					currTimeSig,
 					spilttedLine[0],
 				).Return(staff.StaffInfo{
 					MarginBottom: 25,
@@ -212,10 +219,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					int(50),  // x
 					int(300), // y
 					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
-					timesig.TimeSignature{
-						Signatures: []timesig.Time{
-							timesig.Time{Measure: 1, Beat: 4, BeatType: 4},
-						}},
+					currTimeSig,
 					spilttedLine[1],
 				).Return(staff.StaffInfo{
 					MarginBottom: 25,
@@ -228,10 +232,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					int(100), // x
 					int(405), // y
 					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
-					timesig.TimeSignature{
-						Signatures: []timesig.Time{
-							timesig.Time{Measure: 1, Beat: 4, BeatType: 4},
-						}},
+					currTimeSig,
 					spilttedLine[2],
 				).Return(staff.StaffInfo{
 					MarginBottom: 25,

@@ -25,18 +25,124 @@ func NewCredits() Credits {
 	}
 }
 
+func CalculateLyric(text string, italic bool) float64 {
+	res := 0.0
+	width := nonItalic
+	if italic {
+		width = italicWidth
+	}
+	for _, l := range text {
+		if italic {
+			res += (width[string(l)] * 0.6)
+		} else {
+			res += width[string(l)]
+		}
+	}
+
+	return res
+}
+
+// autowrapText wrap the text based on the layout length
+// replace the <i> with tspan italic. hence needs to be wrapped by text
+// the pair <i> .. </i> maybe separated in the new line, needs to fill the pair tspan manually
+func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string, []int) {
+	full := strings.Fields(text)
+	result := []string{}
+	length := 0
+
+	lines := []string{}
+	lenLines := []int{}
+	available := constant.LAYOUT_WIDTH - (leftIndent + constant.LAYOUT_INDENT_LENGTH)
+
+	italic := false
+	for _, word := range full {
+		word = strings.TrimSpace(word)
+		length += spaceWidth
+		if strings.HasPrefix(word, "<i>") || italic {
+			cleaned := strings.TrimSuffix(word, "</i>")
+			cleaned = strings.TrimPrefix(cleaned, "<i>")
+			length += int(CalculateLyric(cleaned, true))
+			if !italic {
+				result = append(result, fmt.Sprintf("<tspan font-style=\"italic\">%s", cleaned))
+			} else {
+
+				if !strings.HasSuffix(word, "</i>") {
+					result = append(result, word)
+				}
+			}
+			if !strings.HasSuffix(word, "</i>") {
+				italic = true
+			} else {
+				italic = false
+				result = append(result, fmt.Sprintf("%s</tspan>", cleaned))
+			}
+		} else {
+			length += int(CalculateLyric(word, false))
+			result = append(result, word)
+		}
+
+		if length >= available {
+			lines = append(lines, strings.Join(result, " "))
+			result = []string{}
+			lenLines = append(lenLines, length)
+			length = 0
+		}
+	}
+
+	lines = append(lines, strings.Join(result, " "))
+	lenLines = append(lenLines, length)
+	return lines, lenLines
+}
+
+// UNTESTED: needs more cases
+func alignText(text string, textLength, leftIndent, targetLength int) string {
+	// clean the tag
+	text = strings.ReplaceAll(text, "tspan font-style", "tspan-font-style")
+	words := strings.Fields(text)
+	spaceLeft := targetLength - textLength
+	if spaceLeft > (len(words)-2)*2 {
+		if len(words) > 2 {
+			text = strings.Join(words, strings.Repeat("&#160;", (spaceLeft/(len(words)-2))))
+		}
+	}
+	return strings.ReplaceAll(text, "tspan-font-style", "tspan font-style")
+}
+
 // FIXME: fix long and clipped the text to end of the layout
 func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
+	leftIndent := indentLyric
+	lyricMusicMerged := metadata.Lyric == metadata.Music
+
+	if lyricMusicMerged {
+		leftIndent = indentMusicAndLyric
+	}
+
+	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)
+
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-	if metadata.Lyric == metadata.Music {
+	if lyricMusicMerged {
 		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, fmt.Sprintf("Syair dan lagu : %s", metadata.Lyric))
 	} else {
 
-		text := strings.ReplaceAll(metadata.Lyric, "<i>", `<tspan font-style="italic">`)
-		text = strings.ReplaceAll(text, "</i>", "</tspan>")
-		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">Syair : %s </text>`, constant.LAYOUT_INDENT_LENGTH, y, text)
+		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">Syair :</text>`, constant.LAYOUT_INDENT_LENGTH, y)
 
-		y += 15
+		for i, line := range wrapped {
+			text := line
+			hasBegin := strings.Contains(line, "<tspan font-style=")
+			hasEnd := strings.Contains(line, "</tspan>")
+			if hasBegin && !hasEnd {
+				text = fmt.Sprintf("%s</tspan>", text)
+			} else if !hasBegin && hasEnd {
+				text = fmt.Sprintf("<tspan font-style=\"italic\">%s", text)
+			}
+			y += (i * newLineHeight)
+			if len(wrapped) > 1 && i < len(wrapped) {
+				text = alignText(text, lenLines[i], leftIndent, constant.LAYOUT_WIDTH)
+			}
+			fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
+		}
+
+		y += newLineHeight
 		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, fmt.Sprintf("Lagu : %s", metadata.Music))
 
 	}
@@ -55,7 +161,7 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 	}
 
 	if ref != "" {
-		l := ci.Lyric.CalculateLyricWidth(ref)
+		l := CalculateLyric(ref, false)
 		canv.Text(constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH-int(l), y, ref)
 	}
 

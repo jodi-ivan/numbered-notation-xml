@@ -45,6 +45,9 @@ func CalculateLyric(text string, italic bool) float64 {
 // autowrapText wrap the text based on the layout length
 // replace the <i> with tspan italic. hence needs to be wrapped by text
 // the pair <i> .. </i> maybe separated in the new line, needs to fill the pair tspan manually
+// returns:
+//   - the breakdown lines, with parse <i> to <tspan>
+//   - the length for each line
 func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string, []int) {
 	full := strings.Fields(text)
 	result := []string{}
@@ -95,20 +98,21 @@ func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string
 }
 
 // UNTESTED: needs more cases
-func alignText(text string, textLength, leftIndent, targetLength int) string {
+// this will FORCE the text to be aligned
+// added spaces between words, with assumed that the length of the space is 2px
+func alignText(text string, textLength, targetLength int) string {
 	// clean the tag
 	text = strings.ReplaceAll(text, "tspan font-style", "tspan-font-style")
 	words := strings.Fields(text)
 	spaceLeft := targetLength - textLength
-	if spaceLeft > (len(words)-2)*2 {
-		if len(words) > 2 {
-			text = strings.Join(words, strings.Repeat("&#160;", (spaceLeft/(len(words)-2))))
-		}
+	if len(words) > 2 && (spaceLeft > (len(words)-2)*spaceWidth) {
+		text = strings.Join(words, strings.Repeat("&#160;", (spaceLeft/(len(words)-2))))
 	}
 	return strings.ReplaceAll(text, "tspan-font-style", "tspan font-style")
 }
 
-// FIXME: fix long and clipped the text to end of the layout
+// RenderCredits
+// TODO: only supports wrapping int the lyric, the music does not have wrapping feature
 func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
 	leftIndent := indentLyric
 	lyricMusicMerged := metadata.Lyric == metadata.Music
@@ -118,13 +122,12 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 	}
 
 	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)
-
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 	if lyricMusicMerged {
 		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, fmt.Sprintf("Syair dan lagu : %s", metadata.Lyric))
 	} else {
 
-		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">Syair :</text>`, constant.LAYOUT_INDENT_LENGTH, y)
+		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, "Syair: ")
 
 		for i, line := range wrapped {
 			text := line
@@ -136,8 +139,8 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 				text = fmt.Sprintf("<tspan font-style=\"italic\">%s", text)
 			}
 			y += (i * newLineHeight)
-			if len(wrapped) > 1 && i < len(wrapped) {
-				text = alignText(text, lenLines[i], leftIndent, constant.LAYOUT_WIDTH)
+			if len(wrapped) > 1 && i < len(wrapped)-1 {
+				text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH)
 			}
 			fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
 		}
@@ -149,15 +152,15 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 	ref := ""
 	if metadata.RefBE.Valid {
-		ref += fmt.Sprintf("BE  %d", metadata.RefBE.Int16)
+		ref += fmt.Sprintf("BE %d", metadata.RefBE.Int16)
 	}
 
 	if metadata.RefNR.Valid {
 		if ref != "" {
 			ref += ", "
 		}
+		ref += fmt.Sprintf("NR %d", metadata.RefNR.Int16)
 
-		ref += fmt.Sprintf("NR  %d", metadata.RefNR.Int16)
 	}
 
 	if ref != "" {

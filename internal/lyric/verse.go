@@ -33,8 +33,6 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 	yPosRow := map[int]int{}
 	maxY := float64(0)
 
-	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (lineLength / 2)))
-
 	for _, verse := range verses {
 
 		combine := [][2]entity.Coordinate{}
@@ -109,6 +107,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		allCombine[int(verse.VerseNum.Int32)] = combine
 	}
 
+	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (lineLength / 2)))
 	x := defaultX
 	if multiColumn {
 		x = int(math.Round(constant.LAYOUT_WIDTH/2)) - ((int(lineLength) + int(maxRightPost)) / 2)

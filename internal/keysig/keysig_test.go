@@ -152,3 +152,108 @@ func TestKeySignature_GetPitchWithAccidental(t *testing.T) {
 		})
 	}
 }
+
+func TestKeySignature_String(t *testing.T) {
+
+	t.Run("Getter", func(t *testing.T) {
+		ks := NewKeySignature(musicxml.KeySignature{
+			Fifth: 2,
+		})
+		expect := "do = d"
+		if got := ks.String(); got != expect {
+			t.Errorf("KeySignature.String() = %v, want %v", got, expect)
+		}
+	})
+}
+
+func TestKeySignature_GetBasedPitch(t *testing.T) {
+	tests := []struct {
+		name string
+		ks   KeySignature
+		want string
+	}{
+		{
+			name: "C major",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 0}),
+			want: "C",
+		},
+		{
+			name: "D major",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 2}),
+			want: "D",
+		},
+		{
+			name: "minor",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 0, Mode: "minor"}),
+			want: "A",
+		},
+		{
+			name: "minor",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 2, Mode: "minor"}),
+			want: "B",
+		},
+		{
+			name: "dorian",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 0, Mode: "dorian"}),
+			want: "D",
+		},
+		{
+			name: "dorian",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 2, Mode: "dorian"}),
+			want: "E",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.ks.GetBasedPitch(); got != tt.want {
+				t.Errorf("KeySignature.GetBasedPitch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestKeySignature_GetLetteredKeySignature(t *testing.T) {
+	tests := []struct {
+		name string
+		ks   KeySignature
+		want string
+	}{
+		{
+			name: "C major",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 0}),
+			want: "C",
+		},
+		{
+			name: "D major Circle of Fifth 2",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 2}),
+			want: "D",
+		},
+		{
+			name: "minor",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 0, Mode: "minor"}),
+			want: "A",
+		},
+		{
+			name: "minor Circle of Fifth 2",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 2, Mode: "minor"}),
+			want: "B",
+		},
+		{
+			name: "dorian",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 0, Mode: "dorian"}),
+			want: "D",
+		},
+		{
+			name: "dorian Circle of Fifth 2",
+			ks:   NewKeySignature(musicxml.KeySignature{Fifth: 2, Mode: "dorian"}),
+			want: "E",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.ks.GetLetteredKeySignature(); got != tt.want {
+				t.Errorf("KeySignature.GetLetteredKeySignature() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -317,3 +317,22 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 		})
 	}
 }
+
+func TestNewBarline(t *testing.T) {
+
+	t.Run("everything is went fine", func(t *testing.T) {
+		if got := NewBarline(); !assert.NotNil(t, got) {
+			t.Fail()
+		}
+	})
+
+}
+
+func TestGetBarlineWidth(t *testing.T) {
+
+	t.Run("GetBarLineWidth", func(t *testing.T) {
+		if got := GetBarlineWidth(musicxml.BarLineStyleHeavyHeavy); !assert.Equal(t, float64(8), got) {
+			t.Fail()
+		}
+	})
+}

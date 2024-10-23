@@ -116,3 +116,11 @@ func Test_breathPauseInteractor_SetAndGetBreathPauseRenderer(t *testing.T) {
 		})
 	}
 }
+
+func TestNew(t *testing.T) {
+	t.Run("New", func(t *testing.T) {
+		if got := New(); !assert.NotNil(t, got) {
+			t.Fail()
+		}
+	})
+}

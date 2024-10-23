@@ -7,7 +7,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func (ni *numberedInteractor) RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 	hasOctave := false
 	for _, note := range notes {
 		if !hasOctave && (note.Octave != 0) {

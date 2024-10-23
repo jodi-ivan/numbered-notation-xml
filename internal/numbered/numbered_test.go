@@ -9,7 +9,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRenderLengthNote(t *testing.T) {
+func TestNew(t *testing.T) {
+
+	t.Run("constructor", func(t *testing.T) {
+		if got := New(); !assert.NotNil(t, got) {
+			t.Fail()
+		}
+	})
+}
+
+func Test_numberedInteractor_GetLengthNote(t *testing.T) {
 	type args struct {
 		ts         timesig.TimeSignature
 		measure    int
@@ -161,8 +170,9 @@ func TestRenderLengthNote(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := RenderLengthNote(context.Background(), tt.args.ts, tt.args.measure, tt.args.noteLength); !assert.Equal(t, tt.want, got) {
-				t.Errorf("RenderLengthNote() = %v, want %v", got, tt.want)
+			ni := numberedInteractor{}
+			if got := ni.GetLengthNote(context.Background(), tt.args.ts, tt.args.measure, tt.args.noteLength); !assert.Equal(t, tt.want, got) {
+				t.Errorf("numberedInteractor.GetLengthNote() = %v, want %v", got, tt.want)
 			}
 		})
 	}

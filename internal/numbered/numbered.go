@@ -23,20 +23,6 @@ type Numbered interface {
 type numberedInteractor struct{}
 
 func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength {
-	return RenderLengthNote(ctx, ts, measure, noteLength)
-}
-
-func (ni *numberedInteractor) RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
-	RenderOctave(ctx, canv, notes)
-}
-
-func New() Numbered {
-	return &numberedInteractor{}
-}
-
-// RenderLengthNote give the data that needed for the numbered
-func RenderLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength {
-
 	currentTimeSig := ts.GetTimesignatureOnMeasure(ctx, measure)
 
 	if currentTimeSig.BeatType == 4 {
@@ -152,5 +138,8 @@ func RenderLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int
 	}
 
 	return nil
+}
 
+func New() Numbered {
+	return &numberedInteractor{}
 }

@@ -360,3 +360,44 @@ func TestMeasure_Build(t *testing.T) {
 		})
 	}
 }
+
+func TestNoteAccidental_GetAccidental(t *testing.T) {
+	tests := []struct {
+		name string
+		na   NoteAccidental
+		want string
+	}{
+		{
+			name: "natural",
+			na:   NoteAccidental("natural"),
+			want: "",
+		},
+		{
+			name: "sharp",
+			na:   NoteAccidental("sharp"),
+			want: "#",
+		},
+		{
+			name: "flat",
+			na:   NoteAccidental("flat"),
+			want: "b",
+		},
+		{
+			name: "double-sharp",
+			na:   NoteAccidental("double-sharp"),
+			want: "x",
+		},
+		{
+			name: "double-flat",
+			na:   NoteAccidental("double-flat"),
+			want: "bb",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.na.GetAccidental(); got != tt.want {
+				t.Errorf("NoteAccidental.GetAccidental() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

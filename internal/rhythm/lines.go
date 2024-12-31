@@ -58,7 +58,7 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		if int((slurResult.End.X-slurResult.Start.X)/constant.UPPERCASE_LENGTH) < 5 {
 			pullY += 7.5
 		} else {
-			pullY += 10
+			pullY += 10 //long distance ties, need more height
 		}
 
 		pull := CoordinateWithOctave{

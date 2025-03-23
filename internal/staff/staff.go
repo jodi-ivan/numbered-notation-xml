@@ -156,6 +156,11 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					NoteLength:    additional.Type,
 					Beam:          map[int]entity.Beam{},
 					MeasureNumber: measure.Number,
+					IsNewLine:     renderer.IsNewLine,
+				}
+
+				if renderer.IsNewLine {
+					renderer.IsNewLine = false
 				}
 
 				switch additional.Type {
@@ -171,7 +176,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
 				}
-				//FIXME: the new newline on current renderer has to be transferred to this new dotted renderer
+				//FIXED: the new newline on current renderer has to be transferred to this new dotted renderer
 				// currently usually handled by the breathmark, but still handled by the renderer without dotted
 				// case test on kj 226. kj 309
 				notes = append(notes, additionalNote)

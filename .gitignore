@@ -16,10 +16,10 @@ app
 vendor/
 
 #musescore related 
-*.mscz
+# *.mscz
 *.mscz.autosave
 .mscbackup/
-*.musicxml
+# *.musicxml
 
 #vscode related
 .vscode/

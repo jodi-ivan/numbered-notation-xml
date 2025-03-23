@@ -20,6 +20,7 @@ type versePosition struct {
 	Style    VerseRowStyle
 }
 
+// TODO: add the lyric notes like on kj-5, verse 2
 func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
@@ -110,7 +111,9 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (lineLength / 2)))
 	x := defaultX
 	if multiColumn {
-		x = int(math.Round(constant.LAYOUT_WIDTH/2)) - ((int(lineLength) + int(maxRightPost)) / 2)
+		// x = int(math.Round(constant.LAYOUT_WIDTH/2)) - ((int(lineLength) + int(maxRightPost)) / 2)
+		x = constant.LAYOUT_INDENT_LENGTH * 2
+
 	}
 	totalVerse := len(allVerse)
 
@@ -124,13 +127,14 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		// number verse
 		margin := 0
 		if versePos[i+1].Col == 2 && versePos[i+1].RowWidth == 6 {
-			margin = marginRight + 50
+			margin = constant.LAYOUT_WIDTH - (constant.LAYOUT_INDENT_LENGTH * 3) - int(maxRightPost)
 			yVerse = yPosRow[versePos[i+1].Row]
 			y = yVerse
+			_ = marginRight
 		}
 
 		if versePos[i+1].Style == VerseRowStyleSingleColumn {
-			x = defaultX
+			x = defaultX + int(constant.LAYOUT_INDENT_LENGTH/2)
 		}
 
 		canv.Text(x-5-int(li.CalculateLyricWidth(fmt.Sprintf("%d. ", i+1)))+margin, y, fmt.Sprintf("%d. ", i+1))

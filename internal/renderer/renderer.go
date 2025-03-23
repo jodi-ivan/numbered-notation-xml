@@ -55,6 +55,9 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	}
 	if metadata != nil {
 		workTitle = fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
+		if metadata.TitleFootnotes.Valid {
+			workTitle += " *"
+		}
 	}
 	titleWidth := ir.Lyric.CalculateLyricWidth(workTitle)
 	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)

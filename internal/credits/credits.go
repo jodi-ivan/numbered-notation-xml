@@ -168,6 +168,13 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 		canv.Text(constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH-int(l), y, ref)
 	}
 
+	if metadata.TitleFootnotes.Valid {
+		notes := "<tspan font-style=\"italic\">*  " + metadata.TitleFootnotes.String + "</tspan>"
+		y += 30
+		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH, y, notes)
+
+	}
+
 	canv.Gend()
 
 }

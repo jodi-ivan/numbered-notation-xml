@@ -116,7 +116,7 @@ func alignText(text string, textLength, targetLength int) string {
 func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
 	leftIndent := indentLyric
 	lyricMusicMerged := metadata.Lyric == metadata.Music
-
+	copyrightY := y
 	if lyricMusicMerged {
 		leftIndent = indentMusicAndLyric
 	}
@@ -144,9 +144,18 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 			}
 			fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
 		}
-
+		copyrightY = y
 		y += newLineHeight
-		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, fmt.Sprintf("Lagu : %s", metadata.Music))
+
+		musicCredit := strings.ReplaceAll(metadata.Music, "<i>", "<tspan font-style=\"italic\">")
+		musicCredit = strings.ReplaceAll(musicCredit, "</i>", "</tspan>")
+		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">Lagu: %s</text>`, constant.LAYOUT_INDENT_LENGTH, y, musicCredit)
+
+	}
+
+	if metadata.Copyright.Valid {
+		length := ci.Lyric.CalculateLyricWidth(metadata.Copyright.String) + constant.UPPERCASE_LENGTH
+		canv.Text(constant.LAYOUT_WIDTH-int(length), copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
 
 	}
 
@@ -165,7 +174,7 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 	if ref != "" {
 		l := CalculateLyric(ref, false)
-		canv.Text(constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH-int(l), y, ref)
+		canv.Text(constant.LAYOUT_WIDTH-constant.UPPERCASE_LENGTH-int(l), y, ref)
 	}
 
 	if metadata.TitleFootnotes.Valid {

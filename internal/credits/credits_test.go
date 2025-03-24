@@ -185,8 +185,12 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 			},
 			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				res := canvas.NewMockCanvas(ctrl)
+				writer := canvas.NewMockWriter(ctrl)
+				res.EXPECT().Writer().Return(writer)
+
 				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				res.EXPECT().Text(50, 150, "Syair dan lagu : this is from unittest")
+				res.EXPECT().Text(50, 150, "Syair dan lagu :")
+				writer.EXPECT().Write([]byte("<text x=\"118\" y=\"150\">this is from unittest</text>"))
 				res.EXPECT().Gend()
 				return res
 			},
@@ -211,14 +215,15 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				res := canvas.NewMockCanvas(ctrl)
 				writer := canvas.NewMockWriter(ctrl)
-				res.EXPECT().Writer().Return(writer)
+				res.EXPECT().Writer().Return(writer).Times(2)
 
 				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 				res.EXPECT().Gend()
 				res.EXPECT().Text(50, 150, "Syair: ")
 				writer.EXPECT().Write([]byte("<text x=\"80\" y=\"150\">this is lyric from unittest</text>"))
-				res.EXPECT().Text(50, 165, "Lagu : this is music from unittest")
-				res.EXPECT().Text(614, 165, "BE 1, NR 1")
+				writer.EXPECT().Write([]byte("<text x=\"50\" y=\"165\">Lagu: this is music from unittest</text>"))
+				res.EXPECT().Text(644, 165, "BE 1, NR 1")
+
 				return res
 			},
 		},
@@ -234,7 +239,7 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				res := canvas.NewMockCanvas(ctrl)
 				writer := canvas.NewMockWriter(ctrl)
-				res.EXPECT().Writer().Return(writer).Times(2)
+				res.EXPECT().Writer().Return(writer).Times(3)
 
 				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 				res.EXPECT().Gend()
@@ -244,7 +249,7 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 
 				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="150">%s</text>`, line1)))
 				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="165">%s</text>`, line2)))
-				res.EXPECT().Text(50, 180, "Lagu : this is music from unittest")
+				writer.EXPECT().Write([]byte("<text x=\"50\" y=\"180\">Lagu: this is music from unittest</text>"))
 
 				return res
 			},

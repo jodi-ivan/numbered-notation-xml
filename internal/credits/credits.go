@@ -123,39 +123,40 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
+
+	prefix := "Syair: "
 	if lyricMusicMerged {
-		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, fmt.Sprintf("Syair dan lagu : %s", metadata.Lyric))
-	} else {
+		prefix = "Syair dan lagu :"
+	}
+	canv.Text(constant.LAYOUT_INDENT_LENGTH, y, prefix)
 
-		canv.Text(constant.LAYOUT_INDENT_LENGTH, y, "Syair: ")
-
-		for i, line := range wrapped {
-			text := line
-			hasBegin := strings.Contains(line, "<tspan font-style=")
-			hasEnd := strings.Contains(line, "</tspan>")
-			if hasBegin && !hasEnd {
-				text = fmt.Sprintf("%s</tspan>", text)
-			} else if !hasBegin && hasEnd {
-				text = fmt.Sprintf("<tspan font-style=\"italic\">%s", text)
-			}
-			y += (i * newLineHeight)
-			if len(wrapped) > 1 && i < len(wrapped)-1 {
-				text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH)
-			}
-			fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
+	for i, line := range wrapped {
+		text := line
+		hasBegin := strings.Contains(line, "<tspan font-style=")
+		hasEnd := strings.Contains(line, "</tspan>")
+		if hasBegin && !hasEnd {
+			text = fmt.Sprintf("%s</tspan>", text)
+		} else if !hasBegin && hasEnd {
+			text = fmt.Sprintf("<tspan font-style=\"italic\">%s", text)
 		}
-		copyrightY = y
-		y += newLineHeight
+		y += (i * newLineHeight)
+		if len(wrapped) > 1 && i < len(wrapped)-1 {
+			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH)
+		}
+		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
+	}
+	copyrightY = y
+	y += newLineHeight
 
+	if !lyricMusicMerged {
 		musicCredit := strings.ReplaceAll(metadata.Music, "<i>", "<tspan font-style=\"italic\">")
 		musicCredit = strings.ReplaceAll(musicCredit, "</i>", "</tspan>")
 		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">Lagu: %s</text>`, constant.LAYOUT_INDENT_LENGTH, y, musicCredit)
-
 	}
 
 	if metadata.Copyright.Valid {
-		length := ci.Lyric.CalculateLyricWidth(metadata.Copyright.String) + constant.UPPERCASE_LENGTH
-		canv.Text(constant.LAYOUT_WIDTH-int(length), copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
+		length := ci.Lyric.CalculateLyricWidth(metadata.Copyright.String) * 0.70 // since the font size is 65%
+		canv.Text(constant.LAYOUT_WIDTH-int(length)-constant.LAYOUT_INDENT_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
 
 	}
 

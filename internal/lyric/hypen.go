@@ -65,6 +65,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 	// for tracking the pair of begin to end
 	hs := NewHypenStack()
 	lastYPos := float64(0)
+	lastXPos := float64(0)
 	hypenLocation := []entity.Coordinate{}
 	for _, n := range measure {
 
@@ -143,7 +144,8 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 						Lyrics: l,
 					}
 					pos[i] = pair
-
+					lastYPos = float64(n.PositionY) + 25 + float64(i*20)
+					lastXPos = float64(n.PositionX) + float64(n.Width)
 					continue
 				}
 				if pair[1] == nil {
@@ -163,6 +165,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 			}
 			pos[i] = pair
 			lastYPos = float64(n.PositionY) + 25 + float64(i*20)
+			lastXPos = float64(n.PositionX) + float64(n.Width)
 		}
 
 	}
@@ -170,8 +173,12 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 	if len(pos) > 0 { // add unpaired syllable before move on to next staff
 		for _, p := range pos {
 			if p[0] != nil && p[1] == nil { // append to end of file
+				lastXHypen := float64(constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH)
+				if lastXHypen > lastXPos {
+					lastXHypen = lastXPos
+				}
 				hypenLocation = append(hypenLocation, entity.Coordinate{
-					X: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH,
+					X: lastXHypen,
 					Y: lastYPos,
 				})
 			}

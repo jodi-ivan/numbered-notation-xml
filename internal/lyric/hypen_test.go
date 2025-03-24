@@ -597,9 +597,10 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 				canv := canvas.NewMockCanvas(ctrl)
 				writerMock := canvas.NewMockWriter(ctrl)
 				canv.EXPECT().Group("hyphens")
-				canv.EXPECT().Writer().Return(writerMock).Times(2)
+				canv.EXPECT().Writer().Return(writerMock).Times(3)
 				writerMock.EXPECT().Write([]byte(`<text x="187.2050" y="25">-</text>`))
 				writerMock.EXPECT().Write([]byte(`<text x="163.6300" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="198.0000" y="25">-</text>`))
 				canv.EXPECT().Gend()
 				return canv
 			},
@@ -680,7 +681,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 				writerMock := canvas.NewMockWriter(ctrl)
 				canv.EXPECT().Group("hyphens")
 				canv.EXPECT().Writer().Return(writerMock)
-				writerMock.EXPECT().Write([]byte(`<text x="35.2300" y="25">-</text>`))
+				writerMock.EXPECT().Write([]byte(`<text x="43.2050" y="25">-</text>`))
 				canv.EXPECT().Gend()
 				return canv
 			},

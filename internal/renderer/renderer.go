@@ -39,7 +39,7 @@ func NewRenderer() Renderer {
 }
 
 func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnMetadata) {
-	canv.Start(constant.LAYOUT_WIDTH, 1500)
+	canv.Start(constant.LAYOUT_WIDTH, 2000)
 	canv.Def()
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music|Figtree")))
 	canv.DefEnd()

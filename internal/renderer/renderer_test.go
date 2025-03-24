@@ -168,7 +168,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				style := fmt.Sprintf(fontfmt, googleFont)
 				writerMock.EXPECT().Write([]byte(style))
 
-				canv.EXPECT().Start(int(720), int(1500))
+				canv.EXPECT().Start(int(720), int(2000))
 				canv.EXPECT().Def()
 				canv.EXPECT().Writer().Return(writerMock)
 				canv.EXPECT().DefEnd()

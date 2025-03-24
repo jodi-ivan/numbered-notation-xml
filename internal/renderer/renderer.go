@@ -58,6 +58,9 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		if metadata.TitleFootnotes.Valid {
 			workTitle += " *"
 		}
+		if metadata.IsForKids.Int16 == 1 {
+			fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d"><tspan font-style="bold" font-size="125%%">☆</tspan></text>`, constant.LAYOUT_INDENT_LENGTH, relativeY)
+		}
 	}
 	titleWidth := ir.Lyric.CalculateLyricWidth(workTitle)
 	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
@@ -73,7 +76,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
 
 	canv.Text(constant.LAYOUT_INDENT_LENGTH+(3*constant.LOWERCASE_LENGTH)+int(ir.Lyric.CalculateLyricWidth(keySignature.String())), relativeY, humanizedKeySignature)
-	relativeY += 70
+	relativeY += 50
 
 	staffes := ir.Staff.SplitLines(ctx, music.Part)
 	x := constant.LAYOUT_INDENT_LENGTH
@@ -101,6 +104,16 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 
 		ir.Credits.RenderCredits(ctx, canv, relativeY, metadata.HymnData)
 
+		if metadata.IsForKids.Int16 == 1 {
+			canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
+			fmt.Fprintf(canv.Writer(), `
+			<text x="%d" y="%d">
+				<tspan font-style="italic">Semua nyayian dengan tanda</tspan>
+				<tspan font-style="bold" font-size="125%%">☆</tspan>
+				<tspan font-style="italic">: khusus untuk anak-anak</tspan>
+			</text>`, constant.LAYOUT_INDENT_LENGTH, relativeY+30)
+			canv.Gend()
+		}
 	}
 	canv.End()
 

@@ -186,7 +186,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				l.EXPECT().CalculateLyricWidth("do = d").Return(float64(100))
 
 				l.EXPECT().CalculateLyricWidth("1. UNITTEST").Return(float64(100))
-				l.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), int(510), []repository.HymnVerse{}).Return(lyric.VerseInfo{MarginBottom: 40})
+				l.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), int(490), []repository.HymnVerse{}).Return(lyric.VerseInfo{MarginBottom: 40})
 
 				return l
 			},
@@ -206,7 +206,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					gomock.Any(),
 					gomock.Any(),
 					int(50),
-					int(195),
+					int(175),
 					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
 					currTimeSig,
 					spilttedLine[0],
@@ -217,7 +217,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					gomock.Any(),
 					gomock.Any(),
 					int(50),  // x
-					int(300), // y
+					int(280), // y
 					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
 					currTimeSig,
 					spilttedLine[1],
@@ -230,7 +230,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					gomock.Any(),
 					gomock.Any(),
 					int(100), // x
-					int(405), // y
+					int(385), // y
 					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
 					currTimeSig,
 					spilttedLine[2],

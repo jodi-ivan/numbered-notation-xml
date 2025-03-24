@@ -64,30 +64,31 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 
 	// for tracking the pair of begin to end
 	hs := NewHypenStack()
-
+	lastYPos := float64(0)
 	hypenLocation := []entity.Coordinate{}
-	for notePos, n := range measure {
+	for _, n := range measure {
 
 		// DONE: new line inside the measure
 		// TODO: multi line lyrics
-		if pos[0][0] != nil && (notePos == (len(measure) - 1)) && !hs.IsEmpty() {
-			endNotePos := entity.Coordinate{
-				X: float64(n.PositionX),
-				Y: float64(n.PositionY) + 25,
-			}
+		// if pos[0][0] != nil && (notePos == (len(measure) - 1)) && !hs.IsEmpty() {
+		// 	endNotePos := entity.Coordinate{
+		// 		X: float64(n.PositionX),
+		// 		Y: float64(n.PositionY) + 25,
+		// 	}
 
-			hypenEnd := li.CalculateHypen(ctx, pos[0][0], &LyricPosition{
-				Coordinate: endNotePos,
-			})
-			//add at the end of the lines
-			if len(hypenEnd) != 1 {
-				// TODO: unittest for this case
-				hypenEnd = append(hypenEnd, endNotePos)
-			}
+		// 	hypenEnd := li.CalculateHypen(ctx, pos[0][0], &LyricPosition{
+		// 		Coordinate: endNotePos,
+		// 	})
 
-			hypenLocation = append(hypenEnd, hypenLocation...)
-			continue
-		}
+		// 	//add at the end of the lines
+		// 	if len(hypenEnd) != 1 {
+		// 		// TODO: unittest for this case
+		// 		hypenEnd = append(hypenEnd, endNotePos)
+		// 	}
+
+		// 	hypenLocation = append(hypenEnd, hypenLocation...)
+		// 	continue
+		// }
 
 		if len(n.Lyric) == 0 {
 			continue
@@ -141,6 +142,8 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 						},
 						Lyrics: l,
 					}
+					pos[i] = pair
+
 					continue
 				}
 				if pair[1] == nil {
@@ -159,8 +162,20 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 				}
 			}
 			pos[i] = pair
+			lastYPos = float64(n.PositionY) + 25 + float64(i*20)
 		}
 
+	}
+
+	if len(pos) > 0 { // add unpaired syllable before move on to next staff
+		for _, p := range pos {
+			if p[0] != nil && p[1] == nil { // append to end of file
+				hypenLocation = append(hypenLocation, entity.Coordinate{
+					X: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH,
+					Y: lastYPos,
+				})
+			}
+		}
 	}
 	canv.Group("hyphens")
 	for _, hl := range hypenLocation {

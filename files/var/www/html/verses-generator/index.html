@@ -22,10 +22,44 @@
             {mu} - {{l}, {ia, underscore}}, {kan}
             <textarea name="lyric" id="lyric" style="height: 450px; width: 85%;"></textarea>
             <input type="button" value="Parse" id="parse" />
-            <input type="button" value="Result" id="result" />
+         
+            <div style="display: block;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td>Hymn Num</td>
+                        <td colspan="3"><input type="text" name="hymn_no"></td>
+                    </tr>
+                    <tr>
+                        <td>Verse No</td>
+                        <td colspan="3"><input type="text" name="verse_no"></td>
+                    </tr>
+                    <tr>
+                        <td>Row style</td>
+                        <td>Row Pos</td>
+                        <td>Col Pos</td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" size="5" name="style"></td>
+                        <td><input type="text" size="5" name="row"></td>
+                        <td><input type="text" size="5" name="col"></td>
+                    </tr>
+                    <tr>
+                        <td>Content:</td>
+                        <td>   <input type="button" value="Populate" id="result" /></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <textarea  style="width: 100%;" name="content" id="content_preview"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><button>Submit</button></td>
+                    </tr>
+                </table>
+            </div>
         </div>
         <div style="display: inline-block; width: 45%;">
-
             <pre id="content"></pre>
         </div>
     </div>
@@ -48,7 +82,7 @@
         populate(result);
     }
 
-    document.getElementById("result").onclick = function() {
+    document.getElementById("result").onclick = function () {
         prepare()
     }
 
@@ -98,12 +132,12 @@
 
         if (idx == 0) {
             return "begin";
-        } else if (idx == (max-1)) {
+        } else if (idx == (max - 1)) {
             return "end"
         } else {
             return "middle";
         }
-    } 
+    }
 
     function prepare() {
         var result = new Array();
@@ -145,23 +179,23 @@
                             breakdownresult.push({
                                 text: sylla[j],
                                 combine: true,
-                                type : getType(j, sylla.length),
+                                type: getType(j, sylla.length),
                                 breakdown: underbreakdownArr
                             })
                         } else {
-                            breakdownresult.push({ text: sylla[j], type : getType(j, sylla.length) })
+                            breakdownresult.push({ text: sylla[j], type: getType(j, sylla.length) })
                         }
                     } else {
-                        breakdownresult.push({ text: sylla[j], type : getType(j, sylla.length) })
+                        breakdownresult.push({ text: sylla[j], type: getType(j, sylla.length) })
                     }
                 }
 
-                lineresult.push({breakdown: breakdownresult, word: sylla.join("")})
+                lineresult.push({ breakdown: breakdownresult, word: sylla.join("") })
             }
             result.push(lineresult);
         }
 
-
+        document.getElementById("content_preview").innerHTML = JSON.stringify(result);
         console.log(JSON.stringify(result));
     }
 </script>

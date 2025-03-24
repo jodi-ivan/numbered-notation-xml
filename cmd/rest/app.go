@@ -49,12 +49,18 @@ func main() {
 		VerseRepo: repo,
 	})
 
-	ws.Serve(cfg.Webserver.Port)
+	err = ws.Serve(cfg.Webserver.Port)
+	if err != nil {
+		log.Printf("Failed to start the server. Err: %s", err.Error())
+		os.Exit(1)
+		return
+	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	log.Println(<-sigs)
 
 	ws.Stop()
+	os.Exit(0)
 
 }

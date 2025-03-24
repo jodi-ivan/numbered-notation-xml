@@ -26,3 +26,27 @@ const (
 	WHERE a.hymn_number = ?
 	`
 )
+
+const (
+	qryInsertVerse = `
+		INSERT INTO jdy_hymn_verces 
+		(
+			hymn_num,
+			verse_num,
+			content,
+			style_row,
+			column_pos,
+			row_pos
+		)
+		VALUES
+		(
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)
+		RETURNING id
+	`
+)

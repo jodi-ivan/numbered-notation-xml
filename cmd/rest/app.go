@@ -45,6 +45,9 @@ func main() {
 	ws.RegisterStatic("/internal/lab/verse-generator/*filepath", "./files/var/www/html/verses-generator")
 
 	ws.Register("POST", "/internal/verse-parser", &adapter.LyricParser{})
+	ws.Register("PUT", "/internal/verse/hymn/:hymn/verse/:verse", &adapter.VerseManagement{
+		VerseRepo: repo,
+	})
 
 	ws.Serve(cfg.Webserver.Port)
 

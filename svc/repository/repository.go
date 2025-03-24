@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"io"
 	"os"
@@ -13,6 +14,7 @@ import (
 type Repository interface {
 	GetHymnMetaData(ctx context.Context, hymnNum int) (*HymnMetadata, error)
 	GetMusicXML(ctx context.Context, filepath string) (musicxml.MusicXML, error)
+	InsertVerse(ctx context.Context, hymn, verse, style, col, row int, content string) (int, error)
 }
 
 type repository struct {
@@ -23,6 +25,34 @@ func New(ctx context.Context, db *sqlx.DB) Repository {
 	return &repository{
 		db: db,
 	}
+}
+
+func fillNull(val int) sql.NullInt32 {
+	result := sql.NullInt32{}
+
+	if val != 0 {
+		result.Valid = true
+		result.Int32 = int32(val)
+	}
+	return result
+}
+
+func (r *repository) InsertVerse(ctx context.Context, hymn, verse, style, col, row int, content string) (int, error) {
+
+	styleQL := fillNull(style)
+	colQL := fillNull(col)
+	rowQL := fillNull(row)
+
+	var newID int
+
+	query := sqlx.Rebind(sqlx.QUESTION, qryInsertVerse)
+
+	err := r.db.QueryRow(query, hymn, verse, content, styleQL, colQL, rowQL).Scan(&newID)
+	if err != nil {
+		return 0, err
+	}
+
+	return newID, nil
 }
 
 func (r *repository) GetHymnMetaData(ctx context.Context, hymnNum int) (*HymnMetadata, error) {

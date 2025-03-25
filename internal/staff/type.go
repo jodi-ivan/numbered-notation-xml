@@ -8,3 +8,5 @@ type StaffInfo struct {
 	MarginLeft       int
 	NextLineRenderer []*entity.NoteRenderer
 }
+
+const MEASURE_TEXT_REFREIN = "Refrein"

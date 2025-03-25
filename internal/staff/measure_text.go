@@ -116,12 +116,16 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 			})
 
 			for i, t := range note.MeasureText {
+				style := []string{`font-style="italic"`}
+				if t.Text != MEASURE_TEXT_REFREIN {
+					style = append(style, `font-size="60%"`)
+				}
 				xPos := note.PositionX
 				if t.TextAlignment == musicxml.TextAlignmentRight {
 					textLength := rsa.Lyric.CalculateLyricWidth(t.Text)
 					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
 				}
-				canv.Text(xPos, note.PositionY-28-(i*-15), t.Text, `font-style="italic"`)
+				canv.Text(xPos, note.PositionY-20-(i*-15), t.Text, style...)
 			}
 		}
 

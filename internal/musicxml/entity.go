@@ -220,6 +220,15 @@ const (
 	NoteSlurTypeHop NoteSlurType = "hop"
 )
 
+type NoteSlurLineType string
+
+const (
+	NoteSlurLineTypeDashed NoteSlurLineType = "dashed"
+	NoteSlurLineTypeDotted NoteSlurLineType = "dotted"
+	NoteSlurLineTypeSolid  NoteSlurLineType = "solid"
+	NoteSlurLineTypeWavy   NoteSlurLineType = "wavy"
+)
+
 type NoteBeamType string
 
 const (
@@ -255,8 +264,9 @@ type Rest struct {
 }
 
 type Tie struct {
-	Name xml.Name     `xml:"tied"`
-	Type NoteSlurType `xml:"type,attr"`
+	Name     xml.Name         `xml:"tied"`
+	Type     NoteSlurType     `xml:"type,attr"`
+	LineType NoteSlurLineType `xml:"line-type,attr"`
 }
 
 type Direction struct {
@@ -338,8 +348,9 @@ type NotationArticulation struct {
 	} `xml:"breath-mark"`
 }
 type NotationSlur struct {
-	Type   NoteSlurType `xml:"type,attr"`
-	Number int          `xml:"number,attr"`
+	Type     NoteSlurType     `xml:"type,attr"`
+	Number   int              `xml:"number,attr"`
+	LineType NoteSlurLineType `xml:"line-type,attr"`
 }
 
 type Lyric struct {

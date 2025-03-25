@@ -16,8 +16,9 @@ func (ri *rhythmInteractor) SetRhythmNotation(noteRenderer *entity.NoteRenderer,
 			_, existing := noteRenderer.Slur[slur.Number]
 			if !existing {
 				noteRenderer.Slur[slur.Number] = entity.Slur{
-					Number: slur.Number,
-					Type:   slur.Type,
+					Number:   slur.Number,
+					Type:     slur.Type,
+					LineType: slur.LineType,
 				}
 			} else {
 				noteRenderer.Slur[slur.Number] = entity.Slur{

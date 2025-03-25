@@ -26,8 +26,9 @@ type Lyric struct {
 
 type Slur struct {
 	// Number attributes for slur
-	Number int
-	Type   musicxml.NoteSlurType
+	Number   int
+	Type     musicxml.NoteSlurType
+	LineType musicxml.NoteSlurLineType
 }
 
 type Beam struct {

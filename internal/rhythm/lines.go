@@ -33,6 +33,7 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 				},
 				Octave: s.End.Octave,
 			},
+			LineType: s.LineType,
 		}
 
 		if slurResult.Start.Octave < 0 {
@@ -68,6 +69,10 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 			},
 		}
 		slurResult.Pull = pull
+		lineType := "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5"
+		if slurResult.LineType == musicxml.NoteSlurLineTypeDashed {
+			lineType += ";stroke-dasharray:3 3;"
+		}
 
 		canv.Qbez(
 			int(math.Round(slurResult.Start.X)),
@@ -76,7 +81,7 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 			int(math.Round(pull.Y)),
 			int(math.Round(slurResult.End.X)),
 			int(math.Round(slurResult.End.Y)),
-			"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5",
+			lineType,
 		)
 	}
 	canv.Gend()
@@ -127,6 +132,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 						},
 						Octave: note.Octave,
 					},
+					LineType: s.LineType,
 				}
 			}
 
@@ -142,6 +148,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 						},
 						Octave: note.Octave,
 					},
+					LineType: note.Tie.LineType,
 				}
 			} else if note.Tie.Type == musicxml.NoteSlurTypeStop {
 				temp := ties[note.Note]

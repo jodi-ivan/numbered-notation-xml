@@ -17,9 +17,10 @@ type CoordinateWithOctave struct {
 
 // for (svg.SVG).Qbez
 type SlurBezier struct {
-	Start CoordinateWithOctave
-	End   CoordinateWithOctave
-	Pull  CoordinateWithOctave
+	Start    CoordinateWithOctave
+	End      CoordinateWithOctave
+	Pull     CoordinateWithOctave
+	LineType musicxml.NoteSlurLineType
 }
 
 type BeamLine struct {

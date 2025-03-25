@@ -25,6 +25,7 @@ func NewCredits() Credits {
 	}
 }
 
+// FIXME: fall back to default size (average it / median it) for non english character
 func CalculateLyric(text string, italic bool) float64 {
 	res := 0.0
 	width := nonItalic
@@ -155,8 +156,15 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 	}
 
 	if metadata.Copyright.Valid {
-		length := ci.Lyric.CalculateLyricWidth(metadata.Copyright.String) * 0.70 // since the font size is 65%
-		canv.Text(constant.LAYOUT_WIDTH-int(length)-constant.LAYOUT_INDENT_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
+		length := CalculateLyric(metadata.Copyright.String, false)
+		lastMusicLen := CalculateLyric(wrapped[len(wrapped)-1], false)
+		if (constant.LAYOUT_WIDTH - (leftIndent + int(lastMusicLen) + int(length))) < constant.LAYOUT_INDENT_LENGTH {
+			copyrightY += newLineHeight
+			y += newLineHeight
+
+		}
+
+		canv.Text(constant.LAYOUT_WIDTH-int(length)-constant.LAYOUT_INDENT_LENGTH+constant.UPPERCASE_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
 
 	}
 

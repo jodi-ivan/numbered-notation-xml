@@ -159,10 +159,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					IsNewLine:     renderer.IsNewLine,
 				}
 
-				if renderer.IsNewLine {
-					renderer.IsNewLine = false
-				}
-
 				switch additional.Type {
 				case musicxml.NoteLength16th:
 					additionalNote.Beam[2] = entity.Beam{
@@ -176,14 +172,19 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 					}
 				}
-				//FIXED: the new newline on current renderer has to be transferred to this new dotted renderer
-				// currently usually handled by the breathmark, but still handled by the renderer without dotted
-				// case test on kj 226. kj 309
+
 				notes = append(notes, additionalNote)
 
 			}
 			breathPauseRenderer := si.BreathPause.SetAndGetBreathPauseRenderer(renderer, note)
 			if breathPauseRenderer != nil {
+				if breathPauseRenderer.IsNewLine {
+					// if there is a new line and the breath is the last line, mark last 2's of new line as false
+					// as the new line is taken by the breath mark
+					lastNote := notes[len(notes)-1]
+					lastNote.IsNewLine = false
+					notes[len(notes)-1] = lastNote
+				}
 				notes = append(notes, breathPauseRenderer)
 			}
 

@@ -36,11 +36,15 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 			LineType: s.LineType,
 		}
 
+		offset := float64(3)
+		if slurResult.LineType != "" {
+			offset = 5
+		}
 		if slurResult.Start.Octave < 0 {
 			slurResult.Start = CoordinateWithOctave{
 				Coordinate: entity.Coordinate{
-					X: slurResult.Start.X + 3,
-					Y: slurResult.Start.Y + 3,
+					X: slurResult.Start.X + offset,
+					Y: slurResult.Start.Y + offset,
 				},
 			}
 		}
@@ -49,8 +53,8 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 
 			slurResult.End = CoordinateWithOctave{
 				Coordinate: entity.Coordinate{
-					X: slurResult.End.X - 3,
-					Y: slurResult.End.Y + 3,
+					X: slurResult.End.X - offset,
+					Y: slurResult.End.Y + offset,
 				},
 			}
 		}

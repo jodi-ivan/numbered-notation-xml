@@ -200,28 +200,27 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		x += constant.LOWERCASE_LENGTH
 
 		filteredNotes := []*entity.NoteRenderer{}
-		indexNewLine := -1
-		for i, note := range notes {
+		for _, note := range notes {
 			filteredNotes = append(filteredNotes, note)
 			if note.IsNewLine {
-				indexNewLine = i
 				break
 			}
 		}
 
 		alignMeasures = append(alignMeasures, filteredNotes...)
 		if staffInfo.Multiline {
-			for i, note := range notes {
-				if i > 0 && note.IndexPosition == 0 {
-					// TODO: check what the heck is this?
-					break
-				}
-				if i > indexNewLine {
-					if len(staffInfo.NextLineRenderer) == 0 {
-						note.PositionX = constant.LAYOUT_INDENT_LENGTH
+			proceed := false
+			for _, note := range notes {
+				if !proceed {
+					if note.IsNewLine {
+						proceed = true
 					}
-					staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
+					continue
 				}
+				if len(staffInfo.NextLineRenderer) == 0 {
+					note.PositionX = constant.LAYOUT_INDENT_LENGTH
+				}
+				staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
 			}
 			staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, rightBarlineRenderer)
 

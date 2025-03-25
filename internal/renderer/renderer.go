@@ -89,6 +89,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		relativeY = relativeY + 80 + info.MarginBottom
 		if info.Multiline {
 			x = info.MarginLeft
+			info.Multiline = false
 		} else {
 			x = constant.LAYOUT_INDENT_LENGTH
 		}

@@ -125,7 +125,7 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 					textLength := rsa.Lyric.CalculateLyricWidth(t.Text)
 					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
 				}
-				canv.Text(xPos, note.PositionY-20-(i*-15), t.Text, style...)
+				canv.Text(xPos, note.PositionY-23-(i*-15), t.Text, style...)
 			}
 		}
 

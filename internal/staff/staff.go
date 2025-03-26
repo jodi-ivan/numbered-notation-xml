@@ -186,6 +186,12 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					notes[len(notes)-1] = lastNote
 				}
 				notes = append(notes, breathPauseRenderer)
+			} else {
+				lastNote := notes[len(notes)-1]
+				if lastNote.IsNewLine {
+					last2Note := notes[len(notes)-2]
+					last2Note.IsNewLine = false
+				}
 			}
 
 		}

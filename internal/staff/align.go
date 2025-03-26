@@ -51,8 +51,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 		remaining -= (lastTwo.Width - int(rsa.Lyric.CalculateLyricWidth(",")))
 	} else {
-		lastNote.PositionX -= lastNote.Width
-		remaining -= lastNote.Width
+		// lastNote.PositionX -= lastNote.Width
+		// remaining -= lastNote.Width
 	}
 
 	// get last remaining whitespace

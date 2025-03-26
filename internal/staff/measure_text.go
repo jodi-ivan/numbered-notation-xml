@@ -117,7 +117,7 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 
 			for i, t := range note.MeasureText {
 				style := []string{`font-style="italic"`}
-				if t.Text != MEASURE_TEXT_REFREIN {
+				if t.Text != MEASURE_TEXT_REFREIN && t.Text != MEASURE_TEXT_FINE {
 					style = append(style, `font-size="60%"`)
 				}
 				xPos := note.PositionX

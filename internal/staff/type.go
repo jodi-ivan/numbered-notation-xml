@@ -9,4 +9,7 @@ type StaffInfo struct {
 	NextLineRenderer []*entity.NoteRenderer
 }
 
-const MEASURE_TEXT_REFREIN = "Refrein"
+const (
+	MEASURE_TEXT_REFREIN = "Refrein"
+	MEASURE_TEXT_FINE    = "Fine"
+)

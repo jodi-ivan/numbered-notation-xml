@@ -12,3 +12,6 @@ References (sites that I used for references music theory)
 **SVG modified to have background color
 ![NumbericNotation](files/var/www/assets/5.svg) 
 
+
+Credits:
+https://alkitab.sabda.org/resource.php?res=kidung_jemaat

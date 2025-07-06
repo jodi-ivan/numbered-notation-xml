@@ -8,7 +8,7 @@
     <creator type="composer">Composer / arranger</creator>
     <encoding>
       <software>MuseScore 4.4.4</software>
-      <encoding-date>2025-03-24</encoding-date>
+      <encoding-date>2025-07-07</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -18,23 +18,23 @@
     </identification>
   <defaults>
     <scaling>
-      <millimeters>6.99911</millimeters>
+      <millimeters>6.99912</millimeters>
       <tenths>40</tenths>
       </scaling>
     <page-layout>
       <page-height>1596.77</page-height>
       <page-width>1233.87</page-width>
       <page-margins type="even">
-        <left-margin>85.7252</left-margin>
-        <right-margin>85.7252</right-margin>
-        <top-margin>85.7252</top-margin>
-        <bottom-margin>85.7252</bottom-margin>
+        <left-margin>85.725</left-margin>
+        <right-margin>85.725</right-margin>
+        <top-margin>85.725</top-margin>
+        <bottom-margin>85.725</bottom-margin>
         </page-margins>
       <page-margins type="odd">
-        <left-margin>85.7252</left-margin>
-        <right-margin>85.7252</right-margin>
-        <top-margin>85.7252</top-margin>
-        <bottom-margin>85.7252</bottom-margin>
+        <left-margin>85.725</left-margin>
+        <right-margin>85.725</right-margin>
+        <top-margin>85.725</top-margin>
+        <bottom-margin>85.725</bottom-margin>
         </page-margins>
       </page-layout>
     <appearance>
@@ -67,15 +67,15 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="616.935484" default-y="1511.049022" justify="center" valign="top" font-size="22">YA TUHAN, KAMI PUJI NAMAMU BESAR</credit-words>
+    <credit-words default-x="616.9347" default-y="1511.047129" justify="center" valign="top" font-size="22">YA TUHAN, KAMI PUJI NAMAMU BESAR</credit-words>
     </credit>
   <credit page="1">
     <credit-type>subtitle</credit-type>
-    <credit-words default-x="616.935484" default-y="1453.898908" justify="center" valign="top" font-size="14">Subtitle</credit-words>
+    <credit-words default-x="616.9347" default-y="1453.897088" justify="center" valign="top" font-size="14">Subtitle</credit-words>
     </credit>
   <credit page="1">
     <credit-type>composer</credit-type>
-    <credit-words default-x="1148.145796" default-y="1411.049022" justify="right" valign="bottom">Composer / arranger</credit-words>
+    <credit-words default-x="1148.144364" default-y="1411.047256" justify="right" valign="bottom">Composer / arranger</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -100,7 +100,7 @@
         <system-layout>
           <system-margins>
             <left-margin>50</left-margin>
-            <right-margin>0</right-margin>
+            <right-margin>-0</right-margin>
             </system-margins>
           <top-system-distance>170</top-system-distance>
           </system-layout>
@@ -121,14 +121,14 @@
         </attributes>
       <direction placement="above">
         <direction-type>
-          <metronome parentheses="no" default-x="-37.68" relative-y="20">
+          <metronome parentheses="no" default-x="-33.44" relative-y="20">
             <beat-unit>quarter</beat-unit>
             <per-minute>80</per-minute>
             </metronome>
           </direction-type>
         <sound tempo="80"/>
         </direction>
-      <note default-x="97.47" default-y="-30">
+      <note default-x="93.19" default-y="-30">
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -146,7 +146,7 @@
           <text>Ya</text>
           </lyric>
         </note>
-      <note default-x="178.93" default-y="-40">
+      <note default-x="175.05" default-y="-40">
         <pitch>
           <step>E</step>
           <octave>4</octave>
@@ -165,7 +165,7 @@
           <text>Ba</text>
           </lyric>
         </note>
-      <note default-x="233.24" default-y="-45">
+      <note default-x="229.61" default-y="-45">
         <pitch>
           <step>D</step>
           <octave>4</octave>
@@ -184,7 +184,7 @@
           <text>pa,</text>
           </lyric>
         </note>
-      <note default-x="287.55" default-y="-30">
+      <note default-x="284.18" default-y="-30">
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -203,7 +203,7 @@
           <text>makh</text>
           </lyric>
         </note>
-      <note default-x="341.86" default-y="-25">
+      <note default-x="338.75" default-y="-25">
         <pitch>
           <step>A</step>
           <octave>4</octave>
@@ -222,7 +222,7 @@
           <text>luk</text>
           </lyric>
         </note>
-      <note default-x="396.17" default-y="-20">
+      <note default-x="393.32" default-y="-20">
         <pitch>
           <step>B</step>
           <octave>4</octave>
@@ -240,7 +240,7 @@
           <text>Mu</text>
           </lyric>
         </note>
-      <note default-x="477.63" default-y="-20">
+      <note default-x="475.17" default-y="-20">
         <pitch>
           <step>B</step>
           <octave>4</octave>
@@ -258,7 +258,7 @@
           <text>me</text>
           </lyric>
         </note>
-      <note default-x="559.09" default-y="-10">
+      <note default-x="557.02" default-y="-10">
         <pitch>
           <step>D</step>
           <octave>5</octave>
@@ -277,7 +277,7 @@
           <text>nya</text>
           </lyric>
         </note>
-      <note default-x="613.4" default-y="-15">
+      <note default-x="611.59" default-y="-15">
         <pitch>
           <step>C</step>
           <octave>5</octave>
@@ -296,7 +296,7 @@
           <text>nyi</text>
           </lyric>
         </note>
-      <note default-x="667.71" default-y="-20">
+      <note default-x="666.16" default-y="-20">
         <pitch>
           <step>B</step>
           <octave>4</octave>
@@ -314,7 +314,7 @@
           <text>ber</text>
           </lyric>
         </note>
-      <note default-x="749.17" default-y="-25">
+      <note default-x="748.01" default-y="-25">
         <pitch>
           <step>A</step>
           <octave>4</octave>
@@ -332,7 +332,7 @@
           <text>ge</text>
           </lyric>
         </note>
-      <note default-x="830.64" default-y="-30">
+      <note default-x="829.86" default-y="-30">
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -350,7 +350,7 @@
           <text>mar.</text>
           </lyric>
         </note>
-      <note default-x="912.1" default-y="-20">
+      <note default-x="911.71" default-y="-20">
         <rest/>
         <duration>4</duration>
         <voice>1</voice>
@@ -368,7 +368,7 @@
             <left-margin>0</left-margin>
             <right-margin>0</right-margin>
             </system-margins>
-          <system-distance>182.63</system-distance>
+          <system-distance>182.58</system-distance>
           </system-layout>
         </print>
       <note default-x="75.35" default-y="-20">
@@ -473,7 +473,7 @@
           <text>ut</text>
           </lyric>
         </note>
-      <note default-x="567.99" default-y="-25">
+      <note default-x="567.98" default-y="-25">
         <pitch>
           <step>A</step>
           <octave>4</octave>
@@ -569,6 +569,9 @@
         <voice>1</voice>
         <type>quarter</type>
         </note>
+      <barline location="right">
+        <bar-style>none</bar-style>
+        </barline>
       </measure>
     <measure number="3" width="1062.42">
       <print new-system="yes">
@@ -577,7 +580,7 @@
             <left-margin>0</left-margin>
             <right-margin>0</right-margin>
             </system-margins>
-          <system-distance>182.63</system-distance>
+          <system-distance>182.58</system-distance>
           </system-layout>
         </print>
       <note default-x="75.35" default-y="-45">
@@ -684,7 +687,7 @@
           <text>me</text>
           </lyric>
         </note>
-      <note default-x="567.99" default-y="-30">
+      <note default-x="567.98" default-y="-30">
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -778,6 +781,9 @@
         <voice>1</voice>
         <type>quarter</type>
         </note>
+      <barline location="right">
+        <bar-style>none</bar-style>
+        </barline>
       </measure>
     <measure number="4" width="1062.42">
       <print new-system="yes">
@@ -786,7 +792,7 @@
             <left-margin>0</left-margin>
             <right-margin>0</right-margin>
             </system-margins>
-          <system-distance>182.63</system-distance>
+          <system-distance>182.58</system-distance>
           </system-layout>
         </print>
       <note default-x="75.35" default-y="-10">
@@ -891,7 +897,7 @@
           <text>te</text>
           </lyric>
         </note>
-      <note default-x="567.99" default-y="-20">
+      <note default-x="567.98" default-y="-20">
         <pitch>
           <step>B</step>
           <octave>4</octave>
@@ -986,6 +992,9 @@
         <voice>1</voice>
         <type>quarter</type>
         </note>
+      <barline location="right">
+        <bar-style>none</bar-style>
+        </barline>
       </measure>
     <measure number="5" width="1062.42">
       <print new-system="yes">
@@ -994,7 +1003,7 @@
             <left-margin>0</left-margin>
             <right-margin>0</right-margin>
             </system-margins>
-          <system-distance>182.63</system-distance>
+          <system-distance>182.58</system-distance>
           </system-layout>
         </print>
       <note default-x="75.35" default-y="-25">
@@ -1177,9 +1186,9 @@
           <text underline="1">ua</text>
           </lyric>
         </note>
-      <note default-x="920.58" default-y="-30">
+      <note default-x="920.58" default-y="-25">
         <pitch>
-          <step>G</step>
+          <step>A</step>
           <octave>4</octave>
           </pitch>
         <duration>8</duration>

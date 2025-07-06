@@ -44,7 +44,6 @@ func NewStaff() Staff {
 }
 
 func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
-	restBeginning := false
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 
@@ -72,22 +71,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			}
 		}
 		for notePos, note := range measure.Notes {
-
-			// FIXME: use the hidden attributes on the musicxml files instead of forcing hide every beginnning rest
-			// don't print anything when rest on the beginning on the music
-			if note.Rest != nil && measure.Number == 1 {
-
-				if notePos == 0 {
-					restBeginning = true
-					continue
-				}
-
-				if restBeginning {
-					continue
-				}
-			}
-
-			restBeginning = false
 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)

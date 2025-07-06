@@ -431,9 +431,6 @@ func cleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, beamNu
 // FIXME: skip this process entirely and follow 1 to 1 as in the musicxml file when it is 4 beat type
 func splitBeam(ctx context.Context, notes []*entity.NoteRenderer, segments map[int][]beamSplitMarker) []*entity.NoteRenderer {
 
-	measure, _ := ctx.Value(constant.CtxKeyMeasureNum).(int)
-
-	_ = measure
 	if len(segments[1]) == 0 && len(segments[2]) == 0 {
 		return notes
 	}
@@ -448,9 +445,11 @@ func splitBeam(ctx context.Context, notes []*entity.NoteRenderer, segments map[i
 			case 5: // split 3 x 2
 				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
 				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-			case 6: // spilt 3 x 3
-				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			case 6: // spilt 2 x 2 x 2 (what if 6/8 timesig?)
+				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+				notes[segment.StartIndex+4].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
 			}
 		}
 

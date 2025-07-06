@@ -27,7 +27,6 @@ type Lyric interface {
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
 	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
 	CalculateMarginLeft(txt string) float64
-	CalculateWholeLyricGroupLength(lyrics []entity.Lyric) float64
 }
 
 type lyricInteractor struct{}
@@ -140,20 +139,4 @@ func (li *lyricInteractor) CalculateMarginLeft(txt string) float64 {
 		return li.CalculateLyricWidth(subStr[0]) * -1
 	}
 	return 0
-}
-
-func (li *lyricInteractor) CalculateWholeLyricGroupLength(lyrics []entity.Lyric) float64 {
-	max := float64(0)
-	for _, l := range lyrics {
-		wholeWord := ""
-		for _, t := range l.Text {
-			wholeWord += t.Value
-		}
-		lyricWidth := li.CalculateLyricWidth(wholeWord)
-		if lyricWidth > max {
-			max = lyricWidth
-		}
-	}
-
-	return max
 }

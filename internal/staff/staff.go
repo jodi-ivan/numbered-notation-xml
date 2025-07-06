@@ -142,6 +142,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			notes = append(notes, renderer)
 
+			hasBreathMark := note.Notations != nil &&
+				note.Notations.Articulation != nil &&
+				note.Notations.Articulation.BreathMark != nil
+
 			// additional renderer is a several new renderer because of
 			// the conversion to numbered
 			// for example, a half note, means an additional note for the dot
@@ -156,7 +160,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					NoteLength:    additional.Type,
 					Beam:          map[int]entity.Beam{},
 					MeasureNumber: measure.Number,
-					IsNewLine:     renderer.IsNewLine,
+					IsNewLine:     renderer.IsNewLine && (i == len(additionalRenderer)-1) && !hasBreathMark,
+				}
+				if additionalNote.IsNewLine {
+					renderer.IsNewLine = !additionalNote.IsNewLine
 				}
 
 				switch additional.Type {
@@ -176,22 +183,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				notes = append(notes, additionalNote)
 
 			}
+
 			breathPauseRenderer := si.BreathPause.SetAndGetBreathPauseRenderer(renderer, note)
 			if breathPauseRenderer != nil {
-				if breathPauseRenderer.IsNewLine {
-					// if there is a new line and the breath is the last line, mark last 2's of new line as false
-					// as the new line is taken by the breath mark
-					lastNote := notes[len(notes)-1]
-					lastNote.IsNewLine = false
-					notes[len(notes)-1] = lastNote
-				}
 				notes = append(notes, breathPauseRenderer)
-			} else {
-				lastNote := notes[len(notes)-1]
-				if lastNote.IsNewLine {
-					last2Note := notes[len(notes)-2]
-					last2Note.IsNewLine = false
-				}
 			}
 
 		}

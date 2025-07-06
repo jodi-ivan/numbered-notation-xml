@@ -46,13 +46,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	lastNote.PositionX = lastPos
 	if lastNote.Barline != nil {
 		remaining -= int(barline.GetBarlineWidth(lastNote.Barline.BarStyle))
-	} else if lastNote.Articulation != nil && lastNote.Articulation.BreathMark != nil {
-		lastTwo := lastMeasure[len(lastMeasure)-2]
-
-		remaining -= (lastTwo.Width - int(rsa.Lyric.CalculateLyricWidth(",")))
-	} else {
-		lastNote.PositionX -= lastNote.Width
-		remaining -= lastNote.Width
 	}
 
 	// get last remaining whitespace
@@ -96,7 +89,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		canv.Group("measure-align")
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		for _, n := range measure {
-
+			canv.Group("titled-group")
 			if n.IsDotted {
 				canv.Text(n.PositionX, y, ".")
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
@@ -112,12 +105,16 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 					canv.Line(n.PositionX+10, y-16, n.PositionX, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
 				}
 			}
+			fmt.Fprintf(canv.Writer(), `<title>Width: %d</title>`, n.Width)
+			canv.Gend()
 
 		}
 
 		canv.Group("class='lyric'", "style='font-family:Caladea'")
 		for _, n := range measure {
 			if len(n.Lyric) > 0 {
+				canv.Group("titled-group")
+
 				for i, l := range n.Lyric {
 					if len(l.Text) > 0 {
 						lyricVal := entity.LyricVal(l.Text).String()
@@ -145,6 +142,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 						}
 					}
 				}
+				fmt.Fprintf(canv.Writer(), `<title>Width: %d</title>`, n.Width)
+				canv.Gend()
 			}
 		}
 

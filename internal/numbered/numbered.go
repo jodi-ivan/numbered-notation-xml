@@ -25,7 +25,7 @@ type numberedInteractor struct{}
 func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength {
 	currentTimeSig := ts.GetTimesignatureOnMeasure(ctx, measure)
 
-	if currentTimeSig.BeatType == 4 {
+	if currentTimeSig.BeatType == 4 || currentTimeSig.BeatType == 2 {
 		result := []NoteLength{
 			NoteLength{
 				Type: musicxml.NoteLengthQuarter,

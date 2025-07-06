@@ -30,11 +30,8 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 		} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
 			if prev != nil && prev.IsDotted {
 				n.PositionX -= constant.LOWERCASE_LENGTH
-			}
+			} // FIXME: a non dotted before the breath mark has excessive length
 		} else {
-			if continueDot {
-				x += constant.LOWERCASE_LENGTH
-			}
 			xNotes = x
 			continueDot = false
 			dotCount = 0
@@ -44,7 +41,7 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 		n.PositionY = y
 		x += n.Width
 		if prev != nil && prev.IsLengthTakenFromLyric && n.IsDotted {
-			x = x - n.Width
+			x = (x - prev.Width) + constant.UPPERCASE_LENGTH
 		}
 
 		n.IndexPosition = i

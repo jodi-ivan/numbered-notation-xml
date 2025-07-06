@@ -1,6 +1,7 @@
 package breathpause
 
 import (
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
@@ -30,7 +31,7 @@ func (bpi *breathPauseInteractor) SetAndGetBreathPauseRenderer(noteRenderer *ent
 			BreathMark: &entity.ArticulationTypesBreathMark,
 		},
 		MeasureNumber: noteRenderer.MeasureNumber,
-		Width:         6,
+		Width:         constant.LOWERCASE_LENGTH,
 
 		// move the new line indicator to this
 		IsNewLine: noteRenderer.IsNewLine,

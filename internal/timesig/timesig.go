@@ -43,13 +43,15 @@ func (t *Time) calculateNoteLength(ctx context.Context, note musicxml.Note) floa
 		musicxml.NoteLength16th:    0.25,
 	}
 
-	ratio := 1 // beat-type 4
+	ratio := float64(1) // beat-type 4
 
 	if t.BeatType == 8 {
 		ratio = 2 // beat type 8
+	} else if t.BeatType == 2 {
+		ratio = 0.5
 	}
 
-	base := baseLength[note.Type] * float64(ratio)
+	base := baseLength[note.Type] * ratio
 
 	return base + (base * (1 - math.Pow(0.5, float64(len(note.Dot)))))
 }

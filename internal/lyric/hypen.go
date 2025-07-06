@@ -24,7 +24,17 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 	startPosition := prevLyric.Coordinate.X + li.CalculateLyricWidth(lyricText)
 	endPostion := currentLyric.Coordinate.X
 	distance := endPostion - startPosition
-	if distance < 4 { // because the current length of the - is 5.47
+	if distance < 4 {
+
+		// force add hyphen at the end if the lyric near the end margin
+		if endPostion == float64(constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH) {
+			return []entity.Coordinate{
+				entity.Coordinate{
+					X: startPosition,
+					Y: currentLyric.Coordinate.Y,
+				},
+			}
+		}
 		return nil
 	}
 
@@ -64,7 +74,8 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 
 	// for tracking the pair of begin to end
 	hs := NewHypenStack()
-	lastYPos := float64(0)
+	baseYPos := float64(0)
+	var lastLyric []entity.Lyric
 	hypenLocation := []entity.Coordinate{}
 	for _, n := range measure {
 
@@ -72,6 +83,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 			continue
 		}
 
+		lastLyric = n.Lyric
 		for i, l := range n.Lyric {
 			hs.Process(ctx, l.Syllabic)
 			if len(pos[i]) == 0 {
@@ -121,7 +133,6 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 						Lyrics: l,
 					}
 					pos[i] = pair
-					lastYPos = float64(n.PositionY) + 25 + float64(i*20)
 					continue
 				}
 				if pair[1] == nil {
@@ -140,28 +151,22 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 				}
 			}
 			pos[i] = pair
-			lastYPos = float64(n.PositionY) + 25 + float64(i*20)
+			baseYPos = float64(n.PositionY) + 25
 		}
 
 	}
 
 	if len(pos) > 0 { // add unpaired syllable before move on to next staff
-		for _, p := range pos {
+		for i, p := range pos {
 			if p[0] != nil && p[1] == nil { // append to end of file
 				lastXHypen := float64(constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH)
 
-				lastNote := measure[len(measure)-1]
-				if lastNote.Articulation != nil && lastNote.Articulation.BreathMark != nil {
-					lastNote = measure[len(measure)-2]
-				}
-
-				lyricWidth := li.CalculateWholeLyricGroupLength(lastNote.Lyric)
 				pEnd := LyricPosition{
 					Coordinate: entity.Coordinate{
-						X: lastXHypen + lyricWidth,
-						Y: lastYPos,
+						X: lastXHypen,
+						Y: baseYPos + float64(i*20),
 					},
-					Lyrics: entity.Lyric{},
+					Lyrics: lastLyric[i],
 				}
 				hypenLocation = append(li.CalculateHypen(ctx, p[0], &pEnd), hypenLocation...)
 

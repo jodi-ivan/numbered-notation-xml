@@ -19,7 +19,6 @@ vendor/
 # *.mscz
 *.mscz.autosave
 .mscbackup/
-# *.musicxml
 
 #vscode related
 .vscode/
@@ -28,3 +27,13 @@ vendor/
 #sonarqube work
 .scannerwork/
 .scan/
+
+#scores
+*.musicxml
+*.mscz
+
+# snapsot testing
+*.svg
+
+# db database
+*.db

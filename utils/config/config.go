@@ -30,7 +30,7 @@ func InitConfig(env string) (Config, error) {
 
 	path := "/etc/numbered-mutation-xml/"
 	if env == "development" {
-		path = "files/etc/numbered-mutation-xml/"
+		path = "/home/jodiivan/go/src/github.com/jodi-ivan/numbered-notation-xml/files/etc/numbered-mutation-xml/"
 	}
 
 	filenames := []string{

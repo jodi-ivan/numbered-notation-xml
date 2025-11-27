@@ -38,3 +38,5 @@ vendor/
 
 # db database
 *.db
+
+*.zip

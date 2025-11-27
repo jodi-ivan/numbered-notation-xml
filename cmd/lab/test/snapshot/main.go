@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -15,18 +16,9 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/storage"
+
+	"github.com/JoshVarga/svgparser"
 )
-
-// TODO: the snapshot testing
-/*
-	- generate golden file
-	- generate the svg
-	- sampling
-	- assert
-*/
-
-var defaultxml = "~/go/src/github.com/jodi-ivan/numbered-notation-xml/files/scores/musicxml/"
-var defaultdb = "~/go/src/github.com/jodi-ivan/numbered-notation-xml/files/database/kidung-jemaat.db"
 
 func main() {
 	env := os.Environ()
@@ -38,9 +30,9 @@ func main() {
 	// Parse the command-line arguments into the defined flags
 	flag.Parse()
 
-	log.Println("method:", *method)
-	xmlFlag := defaultxml
-	dbPath := defaultdb
+	// TODO: [snapshot test] validate here
+	xmlFlag := ""
+	dbPath := ""
 
 	for _, e := range env {
 		keyval := strings.Split(e, "=")
@@ -84,7 +76,7 @@ func main() {
 			return
 		}
 
-		fmt.Printf("Read the musicxml files on %s.\n", defaultxml)
+		fmt.Printf("Read the musicxml files on %s.\n", xmlFlag)
 		fmt.Printf("Generate golden files. Generated on %s. \n\n", *goldenPath)
 
 		err = GenerateGolden(context.Background(), stringRender, *goldenPath)
@@ -93,10 +85,147 @@ func main() {
 			os.Exit(2)
 			return
 		}
+	case "assert":
+
+		if *goldenPath == "" {
+			fmt.Printf("Goldenpath -path cannot be empty")
+			os.Exit(2)
+			return
+		}
+
+		fmt.Printf("Gathering golden files on %s. \n\n", *goldenPath)
+		numFiles := 22
+		for i := 1; i <= numFiles; i++ {
+			fmt.Printf("Asserting kj-%03d....\n", i)
+			err = Assert(context.Background(), stringRender, *goldenPath, i)
+			if err != nil {
+				fmt.Printf("Failed to Assert the golden snapsot: %s\n", err.Error())
+				os.Exit(2)
+				return
+			}
+			fmt.Printf("Asserting kj-%03d SUCCESS\n", i)
+
+		}
 
 	}
 
 	os.Exit(0)
+
+}
+
+func getGenElement(stringRenderer *adapter.RenderString, number int) (*svgparser.Element, error) {
+	buff := bytes.NewBuffer(nil)
+	content, err := stringRenderer.RenderHymn(context.Background(), buff, number)
+	if err != nil {
+		return nil, err
+	}
+
+	reader := strings.NewReader(content)
+
+	return svgparser.Parse(reader, false)
+}
+
+func getGoldenElement(path string, number int) (*svgparser.Element, error) {
+	fileName := fmt.Sprintf("%s/goldenfiles/kj-%03d.svg", path, number)
+	xmlFile, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer xmlFile.Close()
+
+	return svgparser.Parse(xmlFile, false)
+}
+
+func breakdownStaffCredit(elmnt *svgparser.Element) (staff []*svgparser.Element, verses *svgparser.Element, credit *svgparser.Element) {
+	for i := 4; i < len(elmnt.Children); i++ {
+		child := elmnt.Children[i]
+		if sty, ok := child.Attributes["style"]; ok && sty == "staff" {
+			staff = append(staff, child)
+			continue
+		}
+
+		if class, ok := child.Attributes["class"]; ok {
+			switch class {
+			case "verses":
+				verses = child
+			case "credit":
+				credit = child
+			}
+		}
+
+	}
+	return
+}
+
+func Assert(ctx context.Context, stringRenderer *adapter.RenderString, path string, number int) error {
+
+	generatedElement, err := getGenElement(stringRenderer, number)
+	if err != nil {
+		return err
+	}
+
+	goldenElement, err := getGoldenElement(path, number)
+	if err != nil {
+		return err
+	}
+
+	cdata := generatedElement.Children[0].Children[0].Content
+	expectedFont := []string{
+		"Caladea",
+		"Old Standard TT",
+		"Noto Music",
+		"Figtree",
+	}
+
+	// FONT VALIDATION
+	for _, ef := range expectedFont {
+		if !strings.Contains(strings.ToLower(cdata), strings.ToLower(ef)) {
+			return fmt.Errorf("font family %s is not found", ef)
+		}
+	}
+
+	// TITLE
+	if !goldenElement.Children[1].Compare(generatedElement.Children[1]) {
+		return errors.New("the title element does not match")
+	}
+
+	// KEY SIGNATURE
+	if !goldenElement.Children[2].Compare(generatedElement.Children[2]) {
+		return errors.New("the key signature element does not match")
+	}
+
+	// TIME SIGNATURE
+	if !goldenElement.Children[3].Compare(generatedElement.Children[3]) {
+		return errors.New("the time signature element does not match")
+	}
+
+	gs, gv, gc := breakdownStaffCredit(generatedElement)
+	gns, gnv, gnc := breakdownStaffCredit(goldenElement)
+
+	// STAFF
+	if len(gs) != len(gns) {
+		return fmt.Errorf("the staff element count does not match")
+	}
+
+	for i, g := range gs {
+		if !g.Compare(gns[i]) {
+			return fmt.Errorf("the staff element at index %d does not match", i)
+		}
+	}
+
+	// VERTICES
+	if !gv.Compare(gnv) {
+		return fmt.Errorf("the vertices element does not match")
+
+	}
+
+	// CREDIT
+	if !gc.Compare(gnc) {
+		return fmt.Errorf("the credit element does not match")
+
+	}
+
+	return nil
 
 }
 
@@ -106,18 +235,18 @@ func GenerateGolden(ctx context.Context, stringRenderer *adapter.RenderString, p
 		buff := bytes.NewBuffer(nil)
 		content, err := stringRenderer.RenderHymn(context.Background(), buff, i)
 		if err != nil {
-			log.Fatalf("Problem creating file: %v", err)
+			log.Printf("Problem creating file: %v\n", err)
 			return err
 		}
 
-		fileName := fmt.Sprintf("%s/kj-%03d.svg", path, i)
+		fileName := fmt.Sprintf("%s/goldenfiles/kj-%03d.svg", path, i)
 		fmt.Println("Creating golden for", fileName)
 		file, err := os.Create(fileName)
 		if err != nil {
-			log.Fatalf("Problem creating file: %v", err)
+			log.Printf("Problem creating file: %v\n", err)
 			return err
 		}
-		fmt.Fprintf(file, "%s", content)
+		fmt.Fprint(file, content)
 		file.Close()
 	}
 	return nil

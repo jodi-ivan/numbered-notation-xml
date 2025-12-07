@@ -131,9 +131,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 								currTextLength := rsa.Lyric.CalculateLyricWidth(t.Value)
 								offset := rsa.Lyric.CalculateLyricWidth(offsetLyric)
 								canv.Qbez(
-									xPos+int(offset), n.PositionY+28,
-									xPos+int(offset)+int(currTextLength/2), n.PositionY+28+6,
-									xPos+int(offset)+int(currTextLength), n.PositionY+28,
+									xPos+int(offset), n.PositionY+28+(i*20),
+									xPos+int(offset)+int(currTextLength/2), n.PositionY+28+(i*20)+6,
+									xPos+int(offset)+int(currTextLength), n.PositionY+28+(i*20),
 									"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 								)
 							} else {

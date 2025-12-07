@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/jodi-ivan/numbered-notation-xml/adapter"
+	"github.com/jodi-ivan/numbered-notation-xml/decorator"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
@@ -38,7 +39,9 @@ func main() {
 
 	usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer())
 
-	httpRender := adapter.New(usecaseMod)
+	httpRender := adapter.New(
+		decorator.WithVariantRedirect(repo)(usecaseMod),
+	)
 
 	ws.Register("GET", "/kidung-jemaat/render/:number", httpRender)
 	//TODO: make the path root as config

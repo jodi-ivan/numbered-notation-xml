@@ -55,6 +55,9 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	}
 	if metadata != nil {
 		workTitle = fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
+		if metadata.Variant.Valid {
+			workTitle = fmt.Sprintf("%d%s. %s", metadata.Number, strings.ToLower(metadata.Variant.String), strings.ToUpper(metadata.Title))
+		}
 		if metadata.TitleFootnotes.Valid {
 			workTitle += " *"
 		}

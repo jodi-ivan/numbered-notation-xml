@@ -9,8 +9,9 @@ import (
 type DelegatorErrorFlowControl string
 
 const (
-	DelegatorErrorFlowControlIgnore DelegatorErrorFlowControl = "ignore"
-	DelegatorErrorFlowControlStop   DelegatorErrorFlowControl = "stop"
+	DelegatorErrorFlowControlIgnore   DelegatorErrorFlowControl = "ignore"
+	DelegatorErrorFlowControlStop     DelegatorErrorFlowControl = "stop"
+	DelegatorErrorFlowControlRedirect DelegatorErrorFlowControl = "redirect"
 )
 
 type Delegator interface {

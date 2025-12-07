@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 
 type CanvasDelegatorHTTP struct {
 	w http.ResponseWriter
+	r *http.Request
 }
 
 func (cdh *CanvasDelegatorHTTP) OnBeforeStartWrite() {
@@ -22,9 +24,16 @@ func (cdh *CanvasDelegatorHTTP) OnBeforeStartWrite() {
 }
 
 func (cdh *CanvasDelegatorHTTP) OnError(err error) canvas.DelegatorErrorFlowControl {
-	if err == repository.ErrHymnNotFound {
+	if errors.Is(err, repository.ErrHymnNotFound) {
 		// metadata is not found
 		return canvas.DelegatorErrorFlowControlIgnore
+
+	} else if errors.Is(err, repository.ErrHymnHasMoreThanOneVariant) {
+		// Perform the redirect
+		http.Redirect(cdh.w, cdh.r, cdh.r.URL.Path+"a", http.StatusSeeOther)
+
+		return canvas.DelegatorErrorFlowControlStop
+
 	}
 	cdh.w.WriteHeader(http.StatusInternalServerError)
 	cdh.w.Write([]byte(err.Error()))
@@ -43,16 +52,26 @@ type RenderHTTP struct {
 }
 
 func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	canv := canvas.NewCanvasWithDelegator(svg.New(w), &CanvasDelegatorHTTP{w: w})
+	delegator := &CanvasDelegatorHTTP{w: w, r: r}
+	canv := canvas.NewCanvasWithDelegator(svg.New(w), delegator)
+	raw := ps.ByName("number")
 
-	num, err := strconv.Atoi(ps.ByName("number"))
+	var variant []string
+	num, err := strconv.Atoi(raw)
 	if err != nil {
-		log.Printf("invalid number: %v", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Invalid URL"))
-		return
+		num, err = strconv.Atoi(raw[0 : len(raw)-1])
+		if err != nil {
+			log.Printf("invalid number: %v", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Invalid URL"))
+			return
+		}
+		variant = []string{string(raw[len(raw)-1])}
 	}
 
-	rh.usecase.RenderHymn(r.Context(), canv, num)
+	err = rh.usecase.RenderHymn(r.Context(), canv, num, variant...)
+	if err != nil {
+		delegator.OnError(err)
+	}
 
 }

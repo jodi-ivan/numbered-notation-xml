@@ -6,6 +6,7 @@ import (
 )
 
 var ErrHymnNotFound = errors.New("hymn not found")
+var ErrHymnHasMoreThanOneVariant = errors.New("hymn has more than one variant")
 
 type HymnDB struct {
 	HymnData
@@ -17,10 +18,14 @@ type HymnMetadata struct {
 	Verse []HymnVerse
 }
 
+type HymnIndicator struct {
+	HymnID  int            `db:"hymn_id"`
+	Number  int            `db:"hymn_number"`
+	Variant sql.NullString `db:"hymn_variant"`
+}
+
 type HymnData struct {
-	HymnID         int            `db:"hymn_id"`
-	Number         int            `db:"hymn_number"`
-	Variant        sql.NullInt16  `db:"hymn_variant"`
+	HymnIndicator
 	Title          string         `db:"title"`
 	Footnotes      sql.NullString `db:"footnotes"`
 	TitleFootnotes sql.NullString `db:"footnotes_title"`

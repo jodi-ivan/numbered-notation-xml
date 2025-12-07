@@ -147,8 +147,10 @@ func Test_rendererInteractor_Render(t *testing.T) {
 			args: args{
 				metadata: &repository.HymnMetadata{
 					HymnData: repository.HymnData{
-						Number: 1,
-						Title:  "Unittest",
+						HymnIndicator: repository.HymnIndicator{
+							Number: 1,
+						},
+						Title: "Unittest",
 					},
 					Verse: []repository.HymnVerse{},
 				},
@@ -244,8 +246,10 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				cMock := credits.NewMockCredits(ctrl)
 
 				cMock.EXPECT().RenderCredits(gomock.Any(), gomock.Any(), int(40), repository.HymnData{
-					Number: 1,
-					Title:  "Unittest",
+					HymnIndicator: repository.HymnIndicator{
+						Number: 1,
+					},
+					Title: "Unittest",
 				})
 
 				return cMock

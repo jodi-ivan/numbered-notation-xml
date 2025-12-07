@@ -20,6 +20,7 @@ vendor/
 # *.mscz
 *.mscz.autosave
 .mscbackup/
+mscz/
 
 #vscode related
 .vscode/

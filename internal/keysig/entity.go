@@ -3,17 +3,18 @@ package keysig
 type KeySignatureMode int
 
 const (
-	KeySignatureModeMajor  KeySignatureMode = 0
-	KeySignatureModeMinor  KeySignatureMode = 1
-	KeySignatureModeDorian KeySignatureMode = 2
+	KeySignatureModeMajor    KeySignatureMode = 0
+	KeySignatureModeMinor    KeySignatureMode = 1
+	KeySignatureModeDorian   KeySignatureMode = 2
+	KeySignatureModePhrygian KeySignatureMode = 3
 )
 
 func (ksm KeySignatureMode) String() string {
-	return []string{"major", "minor", "dorian"}[int(ksm)]
+	return []string{"major", "minor", "dorian", "phrygian"}[int(ksm)]
 }
 
 func (ksm KeySignatureMode) GetNumberedRoot() string {
-	return []string{"do", "la", "re"}[int(ksm)]
+	return []string{"do", "la", "re", "mi"}[int(ksm)]
 }
 
 var accidentalsSet = map[int][]string{
@@ -83,6 +84,20 @@ var modeRoot = map[string]map[int]string{
 		-4: "Bb",
 		-5: "Eb",
 	},
+	"phrygian": map[int]string{
+		-5: "F",
+		-4: "C",
+		-3: "G",
+		-2: "D",
+		-1: "A",
+		0:  "E",
+		1:  "B",
+		2:  "F#",
+		3:  "C#",
+		4:  "G#",
+		5:  "D#",
+		6:  "A#",
+	},
 }
 
 var modeSteps = map[string][]float64{
@@ -111,6 +126,15 @@ var modeSteps = map[string][]float64{
 		1,   // fa -> sol
 		1,   // sol -> la
 		0.5, // la -> si
+		1,   // si -> do
+	},
+	"phrygian": []float64{
+		0.5, // do -> re (The defining half step)
+		1,   // re -> mi
+		1,   // mi -> fa
+		1,   // fa -> sol
+		0.5, // sol -> la
+		1,   // la -> si (ti)
 		1,   // si -> do
 	},
 }

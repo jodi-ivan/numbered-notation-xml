@@ -10,9 +10,11 @@ import (
 func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure {
 	result := [][]musicxml.Measure{}
 	currentLine := []musicxml.Measure{}
-	for _, measure := range part.Measures {
+	isLastMeasure := false
+	for i, measure := range part.Measures {
 
 		if measure.Print != nil && measure.Print.NewSystem == musicxml.PrintNewSystemTypeYes {
+			isLastMeasure = i == (len(part.Measures) - 1)
 			finishLine := make([]musicxml.Measure, len(currentLine))
 			copy(finishLine, currentLine)
 
@@ -22,6 +24,11 @@ func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [
 		}
 		currentLine = append(currentLine, measure)
 
+	}
+
+	if isLastMeasure {
+		result = append(result, currentLine)
+		return append(result, []musicxml.Measure{})
 	}
 
 	return append(result, currentLine)

@@ -101,7 +101,7 @@ func (m *Measure) Build() error {
 	for i, elmnt := range m.Appendix {
 		cleanedContent := strings.TrimSpace(elmnt.Content)
 		if strings.HasPrefix(cleanedContent, "\u003cpitch\u003e") ||
-			strings.Contains(cleanedContent, "\u003crest/\u003e") {
+			strings.Contains(cleanedContent, "\u003crest /\u003e") {
 			n, err := elmnt.ParseAsNote()
 			if err != nil {
 				log.Println("error parsing note, err:", err.Error(), "\n\n", elmnt.Content)

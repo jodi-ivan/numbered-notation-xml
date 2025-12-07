@@ -41,7 +41,11 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 		n.PositionY = y
 		x += n.Width
 		if prev != nil && prev.IsLengthTakenFromLyric && n.IsDotted {
-			x = (x - prev.Width) + constant.UPPERCASE_LENGTH
+			if float64(prev.Width) > float64(constant.UPPERCASE_LENGTH*dotCount) {
+				diff := (prev.Width - (constant.UPPERCASE_LENGTH * dotCount))
+				x = (x - diff) + constant.UPPERCASE_LENGTH
+			}
+
 		}
 
 		n.IndexPosition = i

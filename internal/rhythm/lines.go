@@ -493,8 +493,12 @@ func splitBeam(ctx context.Context, notes []*entity.NoteRenderer, segments map[i
 				notes[subSegment.StartIndex+2].UpdateBeam(2, musicxml.NoteBeamTypeBegin)
 			}
 		} else if diff == 8 {
-			// 4 beat split to 2x4 : if there is no sub segment
-			// 8 beat split to 5x3
+			// currently taylored to kj-026
+			notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+			notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			notes[segment.StartIndex+4].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+			notes[segment.StartIndex+5].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+
 		} else if diff > 4 {
 
 			if subSegment.EndIndex <= segment.EndIndex {

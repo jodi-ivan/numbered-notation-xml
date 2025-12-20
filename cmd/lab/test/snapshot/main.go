@@ -229,17 +229,27 @@ func Assert(ctx context.Context, stringRenderer *adapter.RenderString, path stri
 
 }
 
+var variant = map[int][]string{
+	24: []string{"a", "b"},
+	30: []string{"a", "b"},
+	31: []string{"a"},
+}
+
 func GenerateGolden(ctx context.Context, stringRenderer *adapter.RenderString, path string) error {
-	numFiles := 22
-	for i := 1; i <= numFiles; i++ {
+	numFiles := 31
+
+	renderAndSave := func(i int, variants ...string) error {
 		buff := bytes.NewBuffer(nil)
-		content, err := stringRenderer.RenderHymn(context.Background(), buff, i)
+		content, err := stringRenderer.RenderHymn(context.Background(), buff, i, variants...)
 		if err != nil {
 			log.Printf("Problem creating file: %v\n", err)
 			return err
 		}
 
 		fileName := fmt.Sprintf("%s/goldenfiles/kj-%03d.svg", path, i)
+		if len(variants) > 0 {
+			fileName = fmt.Sprintf("%s/goldenfiles/kj-%03d%s.svg", path, i, variants[0])
+		}
 		fmt.Println("Creating golden for", fileName)
 		file, err := os.Create(fileName)
 		if err != nil {
@@ -248,6 +258,26 @@ func GenerateGolden(ctx context.Context, stringRenderer *adapter.RenderString, p
 		}
 		fmt.Fprint(file, content)
 		file.Close()
+
+		return nil
+	}
+
+	for i := 1; i <= numFiles; i++ {
+		vs, ok := variant[i]
+		if ok {
+			for _, v := range vs {
+				err := renderAndSave(i, v)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			err := renderAndSave(i)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 	return nil
 }

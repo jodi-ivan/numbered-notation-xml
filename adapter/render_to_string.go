@@ -27,9 +27,9 @@ func NewRenderString(u usecase.Usecase) *RenderString {
 	}
 }
 
-func (rs *RenderString) RenderHymn(ctx context.Context, buf *bytes.Buffer, number int) (string, error) {
+func (rs *RenderString) RenderHymn(ctx context.Context, buf *bytes.Buffer, number int, variant ...string) (string, error) {
 	canv := canvas.NewCanvasWithDelegator(svg.New(buf), &RenderStringCanvasDelegator{})
-	err := rs.usecase.RenderHymn(ctx, canv, number)
+	err := rs.usecase.RenderHymn(ctx, canv, number, variant...)
 	if err != nil {
 		return "", err
 	}

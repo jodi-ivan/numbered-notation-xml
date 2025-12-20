@@ -60,6 +60,9 @@ func (dt *dotPosition) Render(endPosition int) {
 
 func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
 
+	if len(noteRenderer) == 0 {
+		return
+	}
 	flatten := []*entity.NoteRenderer{}
 	// get the note
 	lastMeasure := noteRenderer[len(noteRenderer)-1]

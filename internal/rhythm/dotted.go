@@ -5,6 +5,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 )
 
+// TODO: remove the dot positioning operation here, since it handled in the align justify.
 func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int) (int, int) {
 
 	xNotes := 0
@@ -30,7 +31,7 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 		} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
 			if prev != nil && prev.IsDotted {
 				n.PositionX -= constant.LOWERCASE_LENGTH
-			} // FIXME: a non dotted before the breath mark has excessive length
+			}
 		} else {
 			xNotes = x
 			continueDot = false

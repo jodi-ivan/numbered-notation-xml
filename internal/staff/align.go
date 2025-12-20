@@ -33,6 +33,31 @@ type renderStaffAlign struct {
 	Lyric    lyric.Lyric
 }
 
+type dotPosition struct {
+	beforeXpos int
+	afterXPos  int
+	address    []*int
+}
+
+func (dt *dotPosition) Reset(startPosition int) {
+	dt.beforeXpos = startPosition
+	dt.address = []*int{}
+}
+
+func (dt *dotPosition) Render(endPosition int) {
+	if len(dt.address) > 0 {
+		dt.afterXPos = endPosition
+		space := (dt.afterXPos - dt.beforeXpos) / (len(dt.address) + 1)
+		for i, d := range dt.address {
+			*d = (dt.beforeXpos + (space * (i + 1)))
+		}
+
+		// reset here
+		dt.beforeXpos = endPosition
+		dt.address = []*int{}
+	}
+}
+
 func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
 
 	flatten := []*entity.NoteRenderer{}
@@ -57,6 +82,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	count := 1
 	slurTiesNote := []*entity.NoteRenderer{}
+	dotPositioner := dotPosition{}
 	canv.Group("staff")
 	for mi, measure := range noteRenderer {
 
@@ -69,18 +95,33 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 				slurTiesNote = append(slurTiesNote, note)
 			}
 
-			// do not add left spacing on first not first measure
+			// do not add left spacing on first note  on the first measure
 			if i == 0 && mi == 0 {
+				dotPositioner.Reset(note.PositionX)
 				continue
 			}
 
 			// don't add to the end either
 			if mi == len(noteRenderer)-1 && i == len(measure)-1 {
+				dotPositioner.Render(note.PositionX)
 				continue
 			}
 
 			note.PositionX += int(added * float64(count))
 			count++
+
+			if note.IsDotted {
+				if dotPositioner.address == nil {
+					dotPositioner.address = []*int{}
+				}
+				dotPositioner.address = append(dotPositioner.address, &note.PositionX)
+			} else {
+				if len(dotPositioner.address) > 0 {
+					dotPositioner.Render(note.PositionX)
+				} else {
+					dotPositioner.Reset(note.PositionX)
+				}
+			}
 
 			//TODO: reposition if distance betweeb 2 lyrics are zless than 2spaces and 1 dashes space.
 			// move the prev to -x distance

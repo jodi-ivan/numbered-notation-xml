@@ -232,11 +232,12 @@ func Assert(ctx context.Context, stringRenderer *adapter.RenderString, path stri
 var variant = map[int][]string{
 	24: []string{"a", "b"},
 	30: []string{"a", "b"},
-	31: []string{"a"},
+	31: []string{"a", "b"},
+	37: []string{"a", "b"},
 }
 
 func GenerateGolden(ctx context.Context, stringRenderer *adapter.RenderString, path string) error {
-	numFiles := 31
+	numFiles := 41
 
 	renderAndSave := func(i int, variants ...string) error {
 		buff := bytes.NewBuffer(nil)

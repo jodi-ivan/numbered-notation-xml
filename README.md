@@ -11,7 +11,7 @@ The goal is to create a searchable, accessible, and accurate digital version of 
 ## ✨ Current Progress
 
 ### ✔ **Content Digitization**
-* 31a / 478 hymns fully digitized
+* 41 / 478 hymns fully digitized
 * Each hymn translated from MusicXML to custom numbered-notation format
 * Metadata and layout rules preserved
 

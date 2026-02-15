@@ -44,7 +44,7 @@ The engine outputs SVG-based notation modeled after the original KJ print style.
 - Place them somewhere in the drive
 - Adjust config in the `files/etc/numbered-mutation-xml/config.ini`
 - run the app from `cmd/rest/app.go`
-- open browser and open `http//localhost:[port]/kidung-jemaat/render/001` (zero leading numbering, currently from 001 to 022)
+- open browser and open `http//localhost:[port]/kidung-jemaat/render/1` (currently from 1 to 41)
 > 💡 Alternatively you can download the `goldenfiles.zip` to see the final render looks like. 
 ---
 

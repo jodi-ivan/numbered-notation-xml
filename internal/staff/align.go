@@ -8,6 +8,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
@@ -90,9 +91,13 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	dotPositioner := dotPosition{}
 	canv.Group("staff")
 	for mi, measure := range noteRenderer {
+		var prev, next *entity.NoteRenderer
 
 		for i, note := range measure {
 
+			if i < len(measure)-1 {
+				next = measure[i+1]
+			}
 			note.PositionY = y
 			flatten = append(flatten, note)
 
@@ -103,12 +108,14 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			// do not add left spacing on first note  on the first measure
 			if i == 0 && mi == 0 {
 				dotPositioner.Reset(note.PositionX)
+				prev = note
 				continue
 			}
 
 			// don't add to the end either
 			if mi == len(noteRenderer)-1 && i == len(measure)-1 {
 				dotPositioner.Render(note.PositionX)
+				prev = note
 				continue
 			}
 
@@ -127,6 +134,31 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 					dotPositioner.Reset(note.PositionX)
 				}
 			}
+
+			if prev != nil && next != nil {
+				// dont break the line if there is a breathmark
+				if note.Articulation != nil && note.Articulation.BreathMark != nil {
+					note.Beam = map[int]entity.Beam{}
+					for beamNo := 1; beamNo < 4; beamNo++ {
+						_, hasBeam := prev.Beam[beamNo] // previous note
+						if !hasBeam {
+							break
+						}
+
+						_, hasBeam = next.Beam[beamNo] // next note
+						if !hasBeam {
+							break
+						}
+
+						note.Beam[beamNo] = entity.Beam{
+							Number: beamNo,
+							Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
+						}
+					}
+				}
+			}
+
+			prev = note
 
 			//TODO: reposition if distance betweeb 2 lyrics are zless than 2spaces and 1 dashes space.
 			// move the prev to -x distance

@@ -82,7 +82,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 	if len(note.Lyric) > 0 {
 		marginBottom = ((len(note.Lyric) - 1) * 25)
 		noteRenderer.Lyric = make([]entity.Lyric, len(note.Lyric))
-		for i, currLyric := range note.Lyric {
+		for _, currLyric := range note.Lyric {
 			lyricText := ""
 			l := entity.Lyric{
 				Syllabic: currLyric.Syllabic,
@@ -99,7 +99,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 
 			l.Text = texts
 
-			noteRenderer.Lyric[i] = l
+			noteRenderer.Lyric[currLyric.Number-1] = l
 			currWidth := int(math.Round(li.CalculateLyricWidth(lyricText)))
 			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
 				currWidth += constant.LOWERCASE_LENGTH

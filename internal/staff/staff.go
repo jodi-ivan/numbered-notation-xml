@@ -231,7 +231,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		align = append(align, alignMeasures)
 	}
 
-	si.RenderAlign.RenderWithAlign(ctx, canv, y, align)
+	si.RenderAlign.RenderWithAlign(ctx, canv, y, timeSignature, align)
 
 	return
 }

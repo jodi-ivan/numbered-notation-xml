@@ -8,6 +8,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -194,7 +195,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 
 }
 
-func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
 
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}
@@ -207,7 +208,7 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, 
 	cleanedNote, beamSegments[2] = cleanBeamByNumber(ctx, cleanedNote, 2)
 	// TODO: more than 16th beam support check
 
-	cleanedNote = splitBeam(ctx, cleanedNote, beamSegments)
+	cleanedNote = splitBeam(ctx, ts, cleanedNote, beamSegments)
 
 	for _, note := range cleanedNote {
 
@@ -441,7 +442,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, beamNu
 // TODO: 7 and 8 notes
 // FIXME: the dotted shouldnot be spliitted
 // FIXME: skip this process entirely and follow 1 to 1 as in the musicxml file when it is 4 beat type
-func splitBeam(ctx context.Context, notes []*entity.NoteRenderer, segments map[int][]beamSplitMarker) []*entity.NoteRenderer {
+func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer, segments map[int][]beamSplitMarker) []*entity.NoteRenderer {
 
 	if len(segments[1]) == 0 && len(segments[2]) == 0 {
 		return notes
@@ -457,11 +458,19 @@ func splitBeam(ctx context.Context, notes []*entity.NoteRenderer, segments map[i
 			case 5: // split 3 x 2
 				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
 				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-			case 6: // spilt 2 x 2 x 2 (what if 6/8 timesig?)
-				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-				notes[segment.StartIndex+4].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			case 6:
+				currTs := ts.GetTimesignatureOnMeasure(ctx, segment.StartIndex)
+				if currTs.BeatType == 4 {
+					// split 2x2x2
+					notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+					notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+					notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+					notes[segment.StartIndex+4].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+				} else if currTs.BeatType == 8 {
+					// split 3x3
+					notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+					notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+				}
 			}
 		}
 

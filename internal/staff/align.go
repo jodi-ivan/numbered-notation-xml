@@ -10,11 +10,12 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 type RenderStaffWithAlign interface {
-	RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer)
+	RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, ts timesig.TimeSignature, noteRenderer [][]*entity.NoteRenderer)
 }
 
 func NewRenderAlign() RenderStaffWithAlign {
@@ -58,7 +59,8 @@ func (dt *dotPosition) Render(endPosition int) {
 	}
 }
 
-func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, noteRenderer [][]*entity.NoteRenderer) {
+// TODO: right align text on the last node.
+func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, ts timesig.TimeSignature, noteRenderer [][]*entity.NoteRenderer) {
 
 	if len(noteRenderer) == 0 {
 		return
@@ -194,7 +196,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		canv.Gend()
 
 		rsa.Numbered.RenderOctave(ctx, canv, measure)
-		rsa.Rhythm.RenderBeam(ctx, canv, measure)
+		rsa.Rhythm.RenderBeam(ctx, canv, ts, measure)
 
 		rsa.RenderMeasureText(ctx, canv, measure)
 		RenderTuplet(ctx, canv, measure)

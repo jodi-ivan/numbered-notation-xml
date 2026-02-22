@@ -135,10 +135,14 @@ func NewTimeSignatures(ctx context.Context, measures []musicxml.Measure) TimeSig
 		if measure.Attribute != nil && measure.Attribute.Time != nil {
 			key := fmt.Sprintf("%d/%d", measure.Attribute.Time.Beats, measure.Attribute.Time.BeatType)
 			various[key] = true
+			beatType := measure.Attribute.Time.BeatType
+			if beatType == 1 {
+				beatType = 4
+			}
 			times = append(times, Time{
 				Measure:  measure.Number,
 				Beat:     measure.Attribute.Time.Beats,
-				BeatType: measure.Attribute.Time.BeatType,
+				BeatType: beatType,
 			})
 		}
 	}

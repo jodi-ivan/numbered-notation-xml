@@ -11,7 +11,7 @@ The goal is to create a searchable, accessible, and accurate digital version of 
 ## ✨ Current Progress
 
 ### ✔ **Content Digitization**
-* 41 / 478 hymns fully digitized
+* 59 / 478 hymns fully digitized
 * Each hymn translated from MusicXML to custom numbered-notation format
 * Metadata and layout rules preserved
 
@@ -44,7 +44,7 @@ The engine outputs SVG-based notation modeled after the original KJ print style.
 - Place them somewhere in the drive
 - Adjust config in the `files/etc/numbered-mutation-xml/config.ini`
 - run the app from `cmd/rest/app.go`
-- open browser and open `http//localhost:[port]/kidung-jemaat/render/1` (currently from 1 to 41)
+- open browser and open `http//localhost:[port]/kidung-jemaat/render/1` (currently from 1 to 59)
 > 💡 Alternatively you can download the `goldenfiles.zip` to see the final render looks like. 
 ---
 

@@ -83,21 +83,22 @@ type MeasureText struct {
 }
 
 type Measure struct {
-	Appendix     []Element  `xml:",any"`
-	Number       int        `xml:"number,attr"`
-	Attribute    *Attribute `xml:"attributes" json:",omitempty"`
-	Notes        []Note     `xml:"-" json:",omitempty"`
-	Barline      []Barline  `xml:"barline" json:",omitempty"`
-	Print        *Print     `xml:"print" json:",omitempty"`
-	NewLineIndex int        `xml:"-"`
+	Appendix     []Element    `xml:",any"`
+	Number       int          `xml:"number,attr"`
+	Attribute    *Attribute   `xml:"attributes" json:",omitempty"`
+	Notes        []Note       `xml:"-" json:",omitempty"`
+	Barline      []Barline    `xml:"barline" json:",omitempty"`
+	Print        *Print       `xml:"print" json:",omitempty"`
+	NewLineIndex map[int]bool `xml:"-"`
 
 	// FIXME: one centralized place for the measured text
 	RightMeasureText *MeasureText
 }
 
 func (m *Measure) Build() error {
-	m.NewLineIndex = -1
+	m.NewLineIndex = map[int]bool{}
 	var measureText *MeasureText
+	foundDirectionType := 0
 	for i, elmnt := range m.Appendix {
 		cleanedContent := strings.TrimSpace(elmnt.Content)
 		if strings.HasPrefix(cleanedContent, "\u003cpitch\u003e") ||
@@ -128,7 +129,8 @@ func (m *Measure) Build() error {
 				return err
 			}
 			if d.DirectionType.Word.Value == "__layout=br" {
-				m.NewLineIndex = i
+				m.NewLineIndex[i-foundDirectionType] = true
+				foundDirectionType++
 			} else if d.DirectionType.Word.Value == "D.C. al Fine" {
 				continue
 			} else {

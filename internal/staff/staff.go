@@ -51,7 +51,29 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
-		align = append(align, prevNotes)
+		if len(measures) > 0 {
+			align = append(align, prevNotes)
+		} else {
+			pos := -1
+			// last line with no staff measure remaining
+			for i, note := range prevNotes {
+				if note.IsNewLine {
+					pos = i
+					break
+				}
+			}
+
+			if pos != -1 && pos != 0 {
+				align = append(align, prevNotes[:pos])
+				staffInfo.NextLineRenderer = prevNotes[pos:]
+				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+				staffInfo.Multiline = true
+			} else {
+				align = append(align, prevNotes)
+				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+			}
+
+		}
 	}
 	for _, measure := range measures {
 		measure.Build()
@@ -87,7 +109,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				Strikethrough: strikethrough,
 				IsRest:        (note.Rest != nil),
 				Beam:          map[int]entity.Beam{},
-				IsNewLine:     measure.NewLineIndex == notePos,
+				IsNewLine:     measure.NewLineIndex[notePos],
 				MeasureNumber: measure.Number,
 
 				TimeModifications: note.TimeModification,

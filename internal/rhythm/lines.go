@@ -458,7 +458,7 @@ func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.No
 				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
 				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
 			case 6:
-				currTs := ts.GetTimesignatureOnMeasure(ctx, segment.StartIndex)
+				currTs := ts.GetTimesignatureOnMeasure(ctx, notes[segment.StartIndex].MeasureNumber)
 				if currTs.BeatType == 4 {
 					// split 2x2x2
 					notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
@@ -469,6 +469,19 @@ func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.No
 					// split 3x3
 					notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
 					notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+				}
+			default:
+				currTs := ts.GetTimesignatureOnMeasure(ctx, notes[segment.StartIndex].MeasureNumber)
+
+				if diff > 6 && currTs.Beat == 1 && currTs.BeatType == 4 {
+					if diff%2 == 0 {
+						// split by 2
+						for n := 1; n <= diff; n = n + 2 {
+							notes[segment.StartIndex+n].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+							notes[segment.StartIndex+n+1].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+						}
+					}
+
 				}
 			}
 		}

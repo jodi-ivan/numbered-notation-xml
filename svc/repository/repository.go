@@ -77,14 +77,29 @@ func (r *repository) GetHymnMetaData(ctx context.Context, hymnNum int, variant .
 	}
 
 	result := &HymnMetadata{
-		HymnData: rows[0].HymnData,
-		Verse:    []HymnVerse{},
+		HymnData:       rows[0].HymnData,
+		Verse:          map[int]HymnVerse{},
+		VerseFootNotes: map[int]map[int]VerseFootNotes{},
 	}
 
 	for _, verse := range rows {
 		if verse.VerseID.Valid {
-			result.Verse = append(result.Verse, verse.HymnVerse)
+			verseNum := int(verse.HymnVerse.VerseNum.Int32)
+			if _, ok := result.Verse[verseNum]; !ok {
+				result.Verse[verseNum] = verse.HymnVerse
+			}
 		}
+
+		if verse.VerseFootNotesID.Valid {
+			verseNum := int(verse.HymnVerse.VerseNum.Int32)
+			linePos := int(verse.VerseFootNotes.LinePos.Int32)
+			if _, ok := result.VerseFootNotes[verseNum]; !ok {
+				result.VerseFootNotes[verseNum] = map[int]VerseFootNotes{}
+			}
+
+			result.VerseFootNotes[verseNum][linePos] = verse.VerseFootNotes
+		}
+
 	}
 
 	return result, nil

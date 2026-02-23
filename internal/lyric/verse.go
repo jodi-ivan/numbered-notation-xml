@@ -21,7 +21,7 @@ type versePosition struct {
 }
 
 // TODO: add the lyric notes like on kj-5, verse 2
-func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo {
+func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
 	allVerse := map[int][]string{}
@@ -34,8 +34,8 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 	yPosRow := map[int]int{}
 	maxY := float64(0)
 
-	for _, verse := range verses {
-
+	for i := 2; i <= len(verses)+1; i++ {
+		verse := verses[i]
 		combine := [][2]entity.Coordinate{}
 		whole := [][]LyricWordVerse{}
 
@@ -138,8 +138,23 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		canv.Text(x-5-int(li.CalculateLyricWidth(fmt.Sprintf("%d. ", i+1)))+margin, y, fmt.Sprintf("%d. ", i+1))
-		for _, liveVerse := range currentVerse {
+		for line, liveVerse := range currentVerse {
 			canv.Text(x+margin, y, liveVerse)
+
+			if footnotes, hasFootnotes := verseFootnote[i+1]; hasFootnotes {
+				currentLine, lineHasFootnotes := footnotes[line+1]
+				if lineHasFootnotes {
+					canv.Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
+					xPos := x + margin + int(li.CalculateLyricWidth(liveVerse))
+					if currentLine.MarkerStyle.Int32 == 1 { // REFACTOR:style 1 is right align
+						approxLineLength := constant.LAYOUT_WIDTH - (2 * defaultX)
+						xPos = x + margin + approxLineLength
+					}
+					canv.Text(xPos, y, currentLine.FootnoteMarker.String)
+					canv.Gend()
+				}
+			}
+
 			y += 25
 
 		}

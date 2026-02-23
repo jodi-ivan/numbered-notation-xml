@@ -22,7 +22,7 @@ func init() {
 
 type Lyric interface {
 	CalculateLyricWidth(string) float64
-	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses []repository.HymnVerse) VerseInfo
+	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo
 	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
 	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
@@ -55,7 +55,7 @@ func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 		"O": 9.59, "o": 7.69, ";": 4.23,
 		"P": 8.53, "p": 8.32, " ": 4,
 		"Q": 9.59, "q": 8.02, "-": 5.27,
-		"R": 9.81, "r": 6.34,
+		"R": 9.81, "r": 6.34, "—": 16,
 		"S": 7.25, "s": 6.28,
 		"T": 8.92, "t": 5.21,
 		"U": 11, "u": 8.74,

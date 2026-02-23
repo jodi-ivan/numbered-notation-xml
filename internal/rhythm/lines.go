@@ -440,7 +440,6 @@ func cleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, beamNu
 }
 
 // TODO: 7 and 8 notes
-// FIXME: the dotted shouldnot be spliitted
 // FIXME: skip this process entirely and follow 1 to 1 as in the musicxml file when it is 4 beat type
 func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer, segments map[int][]beamSplitMarker) []*entity.NoteRenderer {
 

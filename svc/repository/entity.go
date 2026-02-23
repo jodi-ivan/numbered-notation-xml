@@ -11,11 +11,14 @@ var ErrHymnHasMoreThanOneVariant = errors.New("hymn has more than one variant")
 type HymnDB struct {
 	HymnData
 	HymnVerse
+	VerseFootNotes
 }
 
 type HymnMetadata struct {
 	HymnData
-	Verse []HymnVerse
+	Verse map[int]HymnVerse
+
+	VerseFootNotes map[int]map[int]VerseFootNotes
 }
 
 type HymnIndicator struct {
@@ -45,4 +48,12 @@ type HymnVerse struct {
 	Content  sql.NullString `db:"content"`
 	Col      sql.NullInt16  `db:"column_pos"`
 	Row      sql.NullInt16  `db:"row_pos"`
+}
+
+type VerseFootNotes struct {
+	VerseFootNotesID sql.NullInt32  `db:"footnote_id"`
+	LinePos          sql.NullInt32  `db:"line_pos"`
+	FootnoteMarker   sql.NullString `db:"footnote_marker"`
+	MarkerStyle      sql.NullInt32  `db:"marker_style"`
+	Footnote         sql.NullString `db:"footnote"`
 }

@@ -3,6 +3,7 @@ package credits
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -12,7 +13,7 @@ import (
 )
 
 type Credits interface {
-	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData)
+	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes)
 }
 
 type creditsInteractor struct {
@@ -49,6 +50,8 @@ func CalculateLyric(text string, italic bool) float64 {
 // returns:
 //   - the breakdown lines, with parse <i> to <tspan>
 //   - the length for each line
+//
+// FIXME: error non character after </i> without spaces. ie. `</i>,` will return parsing error
 func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string, []int) {
 	full := strings.Fields(text)
 	result := []string{}
@@ -114,12 +117,37 @@ func alignText(text string, textLength, targetLength int) string {
 
 // RenderCredits
 // TODO: only supports wrapping int the lyric, the music does not have wrapping feature
-func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
+func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) {
 	leftIndent := indentLyric
 	lyricMusicMerged := metadata.Lyric == metadata.Music
 	copyrightY := y
 	if lyricMusicMerged {
 		leftIndent = indentMusicAndLyric
+	}
+
+	if len(verseFootnotes) > 0 {
+		y -= 20
+		flatten := []repository.VerseFootNotes{}
+
+		for _, fn := range verseFootnotes {
+			for _, t := range fn {
+				flatten = append(flatten, t)
+			}
+		}
+
+		// Sort the footnotes by its markers
+		sort.Slice(flatten, func(i, j int) bool {
+			return flatten[i].FootnoteMarker.String < flatten[j].FootnoteMarker.String
+		})
+
+		canv.Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
+		for i, fn := range flatten {
+			canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String+fn.Footnote.String)
+
+		}
+		canv.Gend()
+
+		y += 25 + (len(flatten) * 15)
 	}
 
 	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)

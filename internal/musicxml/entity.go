@@ -336,10 +336,22 @@ type Tuplet struct {
 	Braket Bool       `xml:"braket,attr"`
 }
 
+type FemataType string
+
+const (
+	FermataTypeUpright  FemataType = "upright"
+	FermataTypeInverted FemataType = "inverted"
+)
+
+type Femata struct {
+	Type FemataType `xml:"type,attr"`
+}
+
 type NoteNotation struct {
 	Slur         []NotationSlur        `xml:"slur" json:",omitempty"`
 	Tied         *Tie                  `xml:"tied" json:",omitempty"`
 	Articulation *NotationArticulation `xml:"articulations" json:",omitempty"`
+	Fermata      *Femata               `xml:"fermata"`
 
 	// TODO: stacking tuplets / tuplet inside the tuplet
 	Tuplet *Tuplet `xml:"tuplet"`

@@ -182,6 +182,18 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 				if n.Strikethrough {
 					canv.Line(n.PositionX+10, y-16, n.PositionX, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
 				}
+
+				if n.Fermata != nil {
+					fermataUnicode := `&#x1D110;`
+					posX := float64(n.PositionX) - (rsa.Lyric.CalculateLyricWidth(fmt.Sprintf("%d", n.Note)) / 2)
+
+					fmt.Fprintf(
+						canv.Writer(),
+						`<text x="%.3f" y="%.3f" style="font-family:Noto Music;font-size:200%%"> %s </text>`,
+						posX, float64(y)-17.5, fermataUnicode,
+					)
+				}
+
 			}
 			fmt.Fprintf(canv.Writer(), `<title>Width: %d</title>`, n.Width)
 			canv.Gend()

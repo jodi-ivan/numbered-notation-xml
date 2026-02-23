@@ -115,6 +115,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				TimeModifications: note.TimeModification,
 			}
 
+			if note.Notations != nil && note.Notations.Fermata != nil {
+				renderer.Fermata = note.Notations.Fermata
+			}
+
 			staffInfo.Multiline = staffInfo.Multiline || renderer.IsNewLine
 
 			// text above the measure

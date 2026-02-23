@@ -62,6 +62,7 @@ type NoteRenderer struct {
 	Tie          *Slur
 	Articulation *Articulation
 	Barline      *musicxml.Barline
+	Fermata      *musicxml.Femata
 	// internal use
 	IsLengthTakenFromLyric bool
 	IndexPosition          int

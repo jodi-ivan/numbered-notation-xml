@@ -11,6 +11,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -344,7 +345,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 				})
 
 				numberedMock.EXPECT().RenderOctave(gomock.Any(), gomock.Any(), gomock.Any())
-				rhythmMock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), gomock.Any())
+				rhythmMock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				rhythmMock.EXPECT().RenderSlurTies(gomock.Any(), gomock.Any(), IsEqual([]*entity.NoteRenderer{
 					&entity.NoteRenderer{
 						PositionX:  384,
@@ -400,7 +401,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			(tt.interactor(ctrl)).RenderWithAlign(context.Background(), tt.canv(ctrl), tt.args.y, tt.args.noteRenderer)
+			(tt.interactor(ctrl)).RenderWithAlign(context.Background(), tt.canv(ctrl), tt.args.y, timesig.TimeSignature{}, tt.args.noteRenderer)
 		})
 	}
 }

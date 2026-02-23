@@ -27,7 +27,7 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 
 	type args struct {
 		y      int
-		verses []repository.HymnVerse
+		verses map[int]repository.HymnVerse
 	}
 	tests := []struct {
 		name       string
@@ -39,8 +39,8 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 			name: "KJ-002. 1column",
 			args: args{
 				y: 100,
-				verses: []repository.HymnVerse{
-					repository.HymnVerse{
+				verses: map[int]repository.HymnVerse{
+					2: repository.HymnVerse{
 						Number:   sql.NullInt32{Int32: 2, Valid: true},
 						VerseNum: sql.NullInt32{Int32: 2, Valid: true},
 						Row:      sql.NullInt16{Int16: 1, Valid: true},
@@ -75,8 +75,8 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 			name: "KJ-005. 2column",
 			args: args{
 				y: 100,
-				verses: []repository.HymnVerse{
-					repository.HymnVerse{
+				verses: map[int]repository.HymnVerse{
+					2: repository.HymnVerse{
 						Number:   sql.NullInt32{Int32: 5, Valid: true},
 						VerseNum: sql.NullInt32{Int32: 2, Valid: true},
 						Row:      sql.NullInt16{Int16: 1, Valid: true},
@@ -84,7 +84,7 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 						Col:      sql.NullInt16{Int16: 1, Valid: true},
 						Content:  sql.NullString{String: verse2a, Valid: true},
 					},
-					repository.HymnVerse{
+					3: repository.HymnVerse{
 						Number:   sql.NullInt32{Int32: 5, Valid: true},
 						VerseNum: sql.NullInt32{Int32: 3, Valid: true},
 						Row:      sql.NullInt16{Int16: 1, Valid: true},
@@ -130,8 +130,8 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 			name: "KJ-026. mixed 2 and 1 column",
 			args: args{
 				y: 100,
-				verses: []repository.HymnVerse{
-					repository.HymnVerse{
+				verses: map[int]repository.HymnVerse{
+					2: repository.HymnVerse{
 						Number:   sql.NullInt32{Int32: 5, Valid: true},
 						VerseNum: sql.NullInt32{Int32: 2, Valid: true},
 						Row:      sql.NullInt16{Int16: 1, Valid: true},
@@ -139,7 +139,7 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 						Col:      sql.NullInt16{Int16: 1, Valid: true},
 						Content:  sql.NullString{String: verse3a, Valid: true},
 					},
-					repository.HymnVerse{
+					3: repository.HymnVerse{
 						Number:   sql.NullInt32{Int32: 5, Valid: true},
 						VerseNum: sql.NullInt32{Int32: 3, Valid: true},
 						Row:      sql.NullInt16{Int16: 1, Valid: true},
@@ -147,7 +147,7 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 						Col:      sql.NullInt16{Int16: 2, Valid: true},
 						Content:  sql.NullString{String: verse3b, Valid: true},
 					},
-					repository.HymnVerse{
+					4: repository.HymnVerse{
 						Number:   sql.NullInt32{Int32: 5, Valid: true},
 						VerseNum: sql.NullInt32{Int32: 4, Valid: true},
 						Row:      sql.NullInt16{Int16: 2, Valid: true},
@@ -196,7 +196,7 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			li := lyricInteractor{}
-			if got := li.RenderVerse(context.Background(), tt.initCanvas(ctrl), tt.args.y, tt.args.verses); !reflect.DeepEqual(got, tt.want) {
+			if got := li.RenderVerse(context.Background(), tt.initCanvas(ctrl), tt.args.y, tt.args.verses, nil); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("lyricInteractor.RenderVerse() = %v, want %v", got, tt.want)
 			}
 		})

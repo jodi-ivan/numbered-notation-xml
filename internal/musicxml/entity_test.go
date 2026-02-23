@@ -84,7 +84,7 @@ func TestMeasure_Build(t *testing.T) {
 				RightMeasureText: &MeasureText{
 					Text: "Refrein",
 				},
-				NewLineIndex: -1,
+				NewLineIndex: map[int]bool{},
 			},
 		},
 		{
@@ -178,7 +178,7 @@ func TestMeasure_Build(t *testing.T) {
 						},
 					},
 				},
-				NewLineIndex: -1,
+				NewLineIndex: map[int]bool{},
 			},
 		},
 		{
@@ -267,7 +267,7 @@ func TestMeasure_Build(t *testing.T) {
 						},
 					},
 				},
-				NewLineIndex: 1,
+				NewLineIndex: map[int]bool{},
 			},
 		},
 		{
@@ -343,7 +343,7 @@ func TestMeasure_Build(t *testing.T) {
 						},
 					},
 				},
-				NewLineIndex: -1,
+				NewLineIndex: map[int]bool{},
 			},
 		},
 	}

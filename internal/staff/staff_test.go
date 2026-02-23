@@ -230,7 +230,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 						note[0],
 						note[1],
 					},
-					NewLineIndex: -1,
+					NewLineIndex: map[int]bool{},
 				}
 				var emptyCoordinate *entity.Coordinate
 				barlineMock.EXPECT().GetRendererLeftBarline(IsEqual(measures, t), int(50), emptyCoordinate).Return(&entity.NoteRenderer{
@@ -264,7 +264,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 
 				barlineMock.EXPECT().GetRendererRightBarline(IsEqual(measures, t), int(25)).Return(25, &entity.NoteRenderer{Barline: &musicxml.Barline{Location: musicxml.BarlineLocationRight, BarStyle: musicxml.BarLineStyleRegular}})
 
-				renderAlign.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), int(80), IsEqual([][]*entity.NoteRenderer{
+				renderAlign.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), int(80), timeSignature, IsEqual([][]*entity.NoteRenderer{
 					[]*entity.NoteRenderer{
 						&entity.NoteRenderer{
 							Barline: &musicxml.Barline{
@@ -503,7 +503,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 						musicxml.Element{Content: `<pitch><step>A</step><octave>4</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><notations><articulations><breath-mark/></articulations></notations><lyric number="1"><syllabic>end</syllabic><text>duh.</text></lyric>`},
 					},
 					Notes:        notes,
-					NewLineIndex: 1,
+					NewLineIndex: map[int]bool{1: true},
 					Barline:      []musicxml.Barline{},
 				}
 
@@ -544,7 +544,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				barlineMock.EXPECT().GetRendererRightBarline(IsEqual(measure, t), int(50)).Return(int(50), &entity.NoteRenderer{Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}})
 
 				// the last param still gomock.Any() cause there is dotted line that needs to be handled for the new line
-				renderAlign.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), int(80), gomock.Any())
+				renderAlign.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), int(80), gomock.Any(), gomock.Any())
 
 				return si
 			},

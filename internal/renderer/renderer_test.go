@@ -152,7 +152,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 						},
 						Title: "Unittest",
 					},
-					Verse: []repository.HymnVerse{},
+					Verse: map[int]repository.HymnVerse{},
 				},
 				music: musicxml.MusicXML{
 					Part: musicxml.Part{
@@ -188,7 +188,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				l.EXPECT().CalculateLyricWidth("do = d").Return(float64(100))
 
 				l.EXPECT().CalculateLyricWidth("1. UNITTEST").Return(float64(100))
-				l.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), int(490), []repository.HymnVerse{}).Return(lyric.VerseInfo{MarginBottom: 40})
+				l.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), int(490), map[int]repository.HymnVerse{}, nil).Return(lyric.VerseInfo{MarginBottom: 40})
 
 				return l
 			},
@@ -250,7 +250,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 						Number: 1,
 					},
 					Title: "Unittest",
-				})
+				}, nil)
 
 				return cMock
 			},

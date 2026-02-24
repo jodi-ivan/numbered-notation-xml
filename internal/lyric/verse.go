@@ -144,12 +144,14 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			if footnotes, hasFootnotes := verseFootnote[i+1]; hasFootnotes {
 				currentLine, lineHasFootnotes := footnotes[line+1]
 				if lineHasFootnotes {
-					canv.Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
 					xPos := x + margin + int(li.CalculateLyricWidth(liveVerse))
+					styleFontSize := ""
 					if currentLine.MarkerStyle.Int32 == 1 { // REFACTOR:style 1 is right align
+						styleFontSize = "font-size:60%;"
 						approxLineLength := constant.LAYOUT_WIDTH - (2 * defaultX)
 						xPos = x + margin + approxLineLength
 					}
+					canv.Group("class='footnotes'", fmt.Sprintf(`style="font-family:'Figtree';font-weight:600;font-style:italic;%s"`, styleFontSize))
 					canv.Text(xPos, y, currentLine.FootnoteMarker.String)
 					canv.Gend()
 				}

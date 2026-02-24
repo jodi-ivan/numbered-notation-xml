@@ -476,9 +476,12 @@ func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.No
 				if diff > 6 && currTs.Beat == 1 && currTs.BeatType == 4 {
 					if diff%2 == 0 {
 						// split by 2
-						for n := 1; n <= diff; n = n + 2 {
-							notes[segment.StartIndex+n].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-							notes[segment.StartIndex+n+1].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+
+						for i := segment.StartIndex + 1; i < len(notes); i += 2 {
+							notes[i].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+							if i+1 < len(notes) {
+								notes[i+1].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+							}
 						}
 					}
 

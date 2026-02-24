@@ -76,6 +76,9 @@ type NoteRenderer struct {
 
 func (nr *NoteRenderer) UpdateBeam(beamNum int, beamType musicxml.NoteBeamType) {
 	newBeam := nr.Beam
+	if len(newBeam) == 0 {
+		return
+	}
 
 	newBeam[beamNum] = Beam{
 		Number: beamNum,

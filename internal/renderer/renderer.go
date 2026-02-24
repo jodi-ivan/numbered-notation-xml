@@ -101,7 +101,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	for len(info.NextLineRenderer) > 0 {
 		x = constant.LAYOUT_INDENT_LENGTH
 		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, nil, info.NextLineRenderer...)
-		relativeY += 80
+		relativeY += info.MarginBottom + 80
 	}
 
 	if metadata != nil {

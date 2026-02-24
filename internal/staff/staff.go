@@ -57,17 +57,20 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			pos := -1
 			// last line with no staff measure remaining
 			for i, note := range prevNotes {
+				note.PositionY = y
 				if note.IsNewLine {
 					pos = i
 					break
 				}
 			}
 
-			if pos != -1 && pos != 0 {
-				align = append(align, prevNotes[:pos])
-				staffInfo.NextLineRenderer = prevNotes[pos:]
+			if pos != -1 {
+				align = append(align, prevNotes[:pos+1])
+				staffInfo.NextLineRenderer = prevNotes[pos+1:]
 				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
 				staffInfo.Multiline = true
+				// TODO: assign a proper margin botton (multiline lyric)
+				// staffInfo.MarginBottom = 80
 			} else {
 				align = append(align, prevNotes)
 				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH

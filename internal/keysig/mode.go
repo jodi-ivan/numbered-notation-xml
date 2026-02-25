@@ -12,10 +12,11 @@ type Mode struct {
 
 func NewMode(mode string) Mode {
 	modeMapper := map[string]KeySignatureMode{
-		"major":    KeySignatureModeMajor,
-		"minor":    KeySignatureModeMinor,
-		"dorian":   KeySignatureModeDorian,
-		"phrygian": KeySignatureModePhrygian,
+		"major":      KeySignatureModeMajor,
+		"minor":      KeySignatureModeMinor,
+		"dorian":     KeySignatureModeDorian,
+		"phrygian":   KeySignatureModePhrygian,
+		"mixolydian": KeySignatureModeMixolydian,
 	}
 	currentMode := modeMapper[mode]
 

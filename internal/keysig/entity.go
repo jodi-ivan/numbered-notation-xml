@@ -3,23 +3,24 @@ package keysig
 type KeySignatureMode int
 
 const (
-	KeySignatureModeMajor    KeySignatureMode = 0
-	KeySignatureModeMinor    KeySignatureMode = 1
-	KeySignatureModeDorian   KeySignatureMode = 2
-	KeySignatureModePhrygian KeySignatureMode = 3
+	KeySignatureModeMajor      KeySignatureMode = 0
+	KeySignatureModeMinor      KeySignatureMode = 1
+	KeySignatureModeDorian     KeySignatureMode = 2
+	KeySignatureModePhrygian   KeySignatureMode = 3
+	KeySignatureModeMixolydian KeySignatureMode = 4
 )
 
 func (ksm KeySignatureMode) String() string {
-	return []string{"major", "minor", "dorian", "phrygian"}[int(ksm)]
+	return []string{"major", "minor", "dorian", "phrygian", "mixolydian"}[int(ksm)]
 }
 
 func (ksm KeySignatureMode) GetNumberedRoot() string {
-	return []string{"do", "la", "re", "mi"}[int(ksm)]
+	return []string{"do", "la", "re", "mi", "sol"}[int(ksm)]
 }
 
 var accidentalsSet = map[int][]string{
 	7:  []string{"C", "D", "E", "F", "G", "A", "B"},
-	6:  []string{"F", "G", "A", "C", "D", "E"},
+	6:  []string{"F", "C", "G", "D", "A", "E"},
 	5:  []string{"C", "D", "F", "G", "A"},
 	4:  []string{"F", "G", "C", "D"},
 	3:  []string{"C", "F", "G"},
@@ -71,32 +72,55 @@ var modeRoot = map[string]map[int]string{
 		-7: "Ab",
 	},
 	"dorian": map[int]string{
-		// FIXME: find the 6th and the 7th of the circle of  fifth
-		5:  "C#",
-		4:  "F#",
-		3:  "B",
-		2:  "E",
-		1:  "A",
+		7:  "A#",
+		6:  "D#",
+		5:  "G#",
+		4:  "C#",
+		3:  "F#",
+		2:  "B",
+		1:  "E",
 		0:  "D",
 		-1: "G",
 		-2: "C",
 		-3: "F",
 		-4: "Bb",
 		-5: "Eb",
+		-6: "Ab",
+		-7: "Db",
 	},
 	"phrygian": map[int]string{
-		-5: "F",
-		-4: "C",
-		-3: "G",
-		-2: "D",
-		-1: "A",
-		0:  "E",
-		1:  "B",
-		2:  "F#",
-		3:  "C#",
-		4:  "G#",
-		5:  "D#",
+		7:  "E#", // Or F
 		6:  "A#",
+		5:  "D#",
+		4:  "G#",
+		3:  "C#",
+		2:  "F#",
+		1:  "B",
+		0:  "E",
+		-1: "A",
+		-2: "D",
+		-3: "G",
+		-4: "C",
+		-5: "F",
+		-6: "Bb",
+		-7: "Eb",
+	},
+	"mixolydian": map[int]string{
+		7:  "D#",
+		6:  "G#",
+		5:  "C#",
+		4:  "F#",
+		3:  "B",
+		2:  "E",
+		1:  "A",
+		0:  "G", // The "C Major" equivalent
+		-1: "C",
+		-2: "F",
+		-3: "Bb",
+		-4: "Eb",
+		-5: "Ab",
+		-6: "Db",
+		-7: "Gb",
 	},
 }
 
@@ -135,6 +159,15 @@ var modeSteps = map[string][]float64{
 		1,   // fa -> sol
 		0.5, // sol -> la
 		1,   // la -> si (ti)
+		1,   // si -> do
+	},
+	"mixolydian": []float64{
+		1,   // do -> re
+		1,   // re -> mi
+		0.5, // mi -> fa
+		1,   // fa -> sol
+		1,   // sol -> la
+		0.5, // la -> si (The flat 7th)
 		1,   // si -> do
 	},
 }

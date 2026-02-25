@@ -159,6 +159,34 @@ func TestConvertPitchToNumbered(t *testing.T) {
 			wantStrike:   false,
 		},
 		{
+			name: "D major input C",
+			args: args{
+				ks: keysig.KeySignature{
+					Fifth:     2,
+					Key:       "d",
+					Mode:      keysig.NewMode("major"),
+					Humanized: "do = d",
+				},
+				pitch: "C",
+			},
+			wantNumbered: 7,
+			wantStrike:   true,
+		},
+		{
+			name: "D major input F",
+			args: args{
+				ks: keysig.KeySignature{
+					Fifth:     2,
+					Key:       "d",
+					Mode:      keysig.NewMode("major"),
+					Humanized: "do = d",
+				},
+				pitch: "F",
+			},
+			wantNumbered: 3,
+			wantStrike:   true,
+		},
+		{
 			name: "A minor input A",
 			args: args{
 				ks: keysig.KeySignature{
@@ -285,7 +313,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 				},
 				pitch: "C",
 			},
-			wantNumbered: 1,
+			wantNumbered: 2,
 			wantStrike:   true,
 		},
 		{
@@ -315,6 +343,20 @@ func TestConvertPitchToNumbered(t *testing.T) {
 			},
 			wantNumbered: 4,
 			wantStrike:   false,
+		},
+		{
+			name: "E major input A#",
+			args: args{
+				ks: keysig.KeySignature{
+					Fifth:     4,
+					Key:       "E",
+					Mode:      keysig.NewMode("major"),
+					Humanized: "do = e",
+				},
+				pitch: "A#",
+			},
+			wantNumbered: 4,
+			wantStrike:   true,
 		},
 	}
 	for _, tt := range tests {

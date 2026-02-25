@@ -6,34 +6,36 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 )
 
-func ConvertPitchToNumbered(ks keysig.KeySignature, pitch string) (numbered int, strike bool) {
+func ConvertPitchToNumbered(ks keysig.KeySignature, pitch string) (int, bool) {
 
-	var current string
+	// Build the diatonic scale of the key
+	scale := ks.BuildScale() // []string length 7
 
-	steps := ks.Mode.GetScaleSteps()
-	current = ks.GetLetteredKeySignature()
+	// Extract letter only (ignore accidental)
+	pitchLetter := string(pitch[0]) // "C" from "C#"
 
-	counter := 0
+	// Find degree by letter comparison
+	for i, scalePitch := range scale {
 
-	for !(utils.IsPitchEqual(current, pitch)) {
-		current = utils.GetNextHalfStep(current)
-		counter++
+		scaleLetter := string(scalePitch[0])
+
+		if scaleLetter == pitchLetter {
+
+			// Found correct diatonic degree
+			degree := i + 1
+
+			// Now check accidental match
+			if utils.IsPitchEqual(scalePitch, pitch) {
+				return degree, false
+			}
+
+			// Same letter but different accidental → altered
+			return degree, true
+		}
 	}
 
-	stepped := 0.0
-	increase := 0
-
-	for stepped < float64(counter)/2 {
-
-		stepped += steps[increase]
-		increase++
-	}
-
-	if stepped > (float64(counter) / 2) {
-		return increase, true
-	}
-	return increase + 1, false
-
+	// Should never happen unless invalid pitch
+	return 0, false
 }
 
 func GetNumberedNotation(ks keysig.KeySignature, note musicxml.Note) (numberedNote int, octave int, strikethrough bool) {

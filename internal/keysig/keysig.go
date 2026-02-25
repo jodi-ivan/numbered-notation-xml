@@ -17,9 +17,8 @@ type KeySignature struct {
 
 // TODO: add support for key signature changes
 // key signature changes on kj-144a, kj-391
-// TODO: add support for the phrygian mode and mixolydian
+// TODO: add support for the phrygian
 // phrygian: kj-144a
-// mixolydian: kj-215
 func NewKeySignature(key musicxml.KeySignature) KeySignature {
 	keyMode := key.Mode
 	if keyMode == "" {
@@ -69,4 +68,54 @@ func (ks KeySignature) GetPitchWithAccidental(note musicxml.Note) string {
 
 func (ks KeySignature) GetLetteredKeySignature() string {
 	return ks.Mode.GetRoot(ks.Fifth)
+}
+
+func (ks KeySignature) BuildScale() []string {
+
+	letters := []string{"C", "D", "E", "F", "G", "A", "B"}
+
+	tonic := modeRoot[ks.Mode.Mode.String()][ks.Fifth]
+	tonicLetter := string(tonic[0])
+
+	var scaleLetters []string
+	startIndex := 0
+	for i, l := range letters {
+		if l == tonicLetter {
+			startIndex = i
+			break
+		}
+	}
+
+	for i := 0; i < 7; i++ {
+		scaleLetters = append(scaleLetters, letters[(startIndex+i)%7])
+	}
+
+	accidentals := accidentalsSet[ks.Fifth]
+	isSharpKey := ks.Fifth > 0
+	isFlatKey := ks.Fifth < 0
+
+	var scale []string
+
+	for _, letter := range scaleLetters {
+
+		altered := false
+
+		for _, accLetter := range accidentals {
+			if letter == accLetter {
+				if isSharpKey {
+					scale = append(scale, letter+"#")
+				} else if isFlatKey {
+					scale = append(scale, letter+"b")
+				}
+				altered = true
+				break
+			}
+		}
+
+		if !altered {
+			scale = append(scale, letter)
+		}
+	}
+
+	return scale
 }

@@ -19,7 +19,7 @@ func (ksm KeySignatureMode) GetNumberedRoot() string {
 }
 
 var accidentalsSet = map[int][]string{
-	7:  []string{"C", "D", "E", "F", "G", "A", "B"},
+	7:  []string{"F", "C", "G", "D", "A", "E", "B"},
 	6:  []string{"F", "C", "G", "D", "A", "E"},
 	5:  []string{"C", "D", "F", "G", "A"},
 	4:  []string{"F", "G", "C", "D"},
@@ -33,7 +33,7 @@ var accidentalsSet = map[int][]string{
 	-4: []string{"A", "B", "D", "E"},
 	-5: []string{"D", "E", "G", "A", "B"},
 	-6: []string{"G", "A", "B", "C", "D", "E"},
-	-7: []string{"G", "A", "B", "C", "D", "E"},
+	-7: []string{"B", "E", "A", "D", "G", "C", "F"},
 }
 
 var modeRoot = map[string]map[int]string{

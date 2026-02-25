@@ -80,17 +80,6 @@ func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.Time
 			}
 		}
 
-		if noteLength == 0.75 { // 3
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLengthEighth,
-				},
-				NoteLength{
-					IsDotted: true,
-				},
-			}
-		}
-
 		if noteLength == 0.5 {
 			return []NoteLength{
 				NoteLength{
@@ -107,18 +96,14 @@ func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.Time
 			}
 		}
 
-		if noteLength == 0.125 {
+		if noteLength == 1.5 {
 			return []NoteLength{
 				NoteLength{
-					Type: musicxml.NoteLength64th,
+					Type: musicxml.NoteLengthEighth,
 				},
-			}
-		}
-
-		if noteLength == 0.0625 {
-			return []NoteLength{
 				NoteLength{
-					Type: musicxml.NoteLength128th,
+					IsDotted: true,
+					Type:     musicxml.NoteLength16th,
 				},
 			}
 		}
@@ -131,7 +116,7 @@ func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.Time
 		}
 
 		if math.Trunc(noteLength) != noteLength { // decimal dotted beat
-			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthEighth})
+			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLength16th})
 		}
 
 		return result

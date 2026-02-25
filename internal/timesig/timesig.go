@@ -80,7 +80,11 @@ func (ts *TimeSignature) GetHumanized() string {
 	for _, v := range ts.Signatures {
 		if !beat[v.Beat] {
 			beat[v.Beat] = true
-			combined = append(combined, fmt.Sprintf("%d", v.Beat))
+			humanized := fmt.Sprintf("%d", v.Beat)
+			if v.BeatType == 8 {
+				humanized = "6 (2 x 3)"
+			}
+			combined = append(combined, humanized)
 		}
 	}
 

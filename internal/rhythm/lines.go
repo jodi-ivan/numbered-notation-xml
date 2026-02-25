@@ -18,9 +18,10 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 	}
 	canv.Group("class='slurties'")
 	// DONE: check ties across measure bar
-	for _, s := range set {
+	for i, s := range set {
 
 		slurResult := SlurBezier{
+			SlurTieType: s.SlurTieType,
 			Start: CoordinateWithOctave{
 				Coordinate: entity.Coordinate{
 					X: s.Start.X + 5,
@@ -36,6 +37,7 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 				Octave: s.End.Octave,
 			},
 			LineType: s.LineType,
+			Pull:     s.Pull,
 		}
 
 		offset := float64(3)
@@ -68,12 +70,22 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 			pullY += 10 //long distance ties, need more height
 		}
 
+		totalStack := slurResult.Pull.Y - float64(OFFSET_SLURTIES_INITAL_TO_LYRIC-OFFSET_SLURTIES_TO_LYRIC)
+		if totalStack >= 0 {
+			pullY += slurResult.Pull.Y
+			totalStack = 1 + totalStack/float64(OFFSET_SLURTIES_TO_LYRIC)
+		} else {
+			totalStack = 0
+		}
+
+		offsetCurve := math.Round(totalStack / float64(len(set)))
 		pull := CoordinateWithOctave{
 			Coordinate: entity.Coordinate{
 				X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
 				Y: pullY,
 			},
 		}
+
 		slurResult.Pull = pull
 		lineType := "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5"
 		if slurResult.LineType == musicxml.NoteSlurLineTypeDashed {
@@ -81,12 +93,12 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		}
 
 		canv.Qbez(
-			int(math.Round(slurResult.Start.X)),
-			int(math.Round(slurResult.Start.Y)),
+			int(math.Round(slurResult.Start.X))-(i*int(offsetCurve)),
+			int(math.Round(slurResult.Start.Y))+(i*int(offsetCurve)*2),
 			int(math.Round(pull.X)),
 			int(math.Round(pull.Y)),
-			int(math.Round(slurResult.End.X)),
-			int(math.Round(slurResult.End.Y)),
+			int(math.Round(slurResult.End.X))+(i*int(offsetCurve)),
+			int(math.Round(slurResult.End.Y))+(i*int(offsetCurve)*2),
 			lineType,
 		)
 	}
@@ -99,7 +111,15 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 
 	ties := map[int]SlurBezier{}
 	tiesSet := []SlurBezier{}
-
+	offsetSlurPull := float64(0)
+	for _, n := range notes {
+		if n.Tie != nil && n.Slur != nil {
+			offsetSlurPull = float64(OFFSET_SLURTIES_INITAL_TO_LYRIC)
+		}
+		if len(n.Slur) > 1 {
+			offsetSlurPull += float64((len(n.Slur) - 1) * OFFSET_SLURTIES_TO_LYRIC)
+		}
+	}
 	for _, note := range notes {
 		for _, s := range note.Slur {
 			if s.Type == musicxml.NoteSlurTypeStop || s.Type == musicxml.NoteSlurTypeHop {
@@ -121,6 +141,11 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 						Octave: 0,
 					}
 				}
+				temp.Pull = CoordinateWithOctave{
+					Coordinate: entity.Coordinate{
+						Y: offsetSlurPull,
+					},
+				}
 				slurs[s.Number] = temp
 
 				slurSets = append(slurSets, slurs[s.Number])
@@ -131,6 +156,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 
 			if s.Type == musicxml.NoteSlurTypeStart || s.Type == musicxml.NoteSlurTypeHop {
 				slurs[s.Number] = SlurBezier{
+					SlurTieType: SlurTieTypeSlur,
 					Start: CoordinateWithOctave{
 						Coordinate: entity.Coordinate{
 							X: float64(note.PositionX + 2),
@@ -147,6 +173,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 		if note.Tie != nil {
 			if note.Tie.Type == musicxml.NoteSlurTypeStart {
 				ties[note.Note] = SlurBezier{
+					SlurTieType: SlurTieTypeTie,
 					Start: CoordinateWithOctave{
 						Coordinate: entity.Coordinate{
 							X: float64(note.PositionX),

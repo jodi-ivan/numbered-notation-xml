@@ -96,7 +96,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 				pair[0] = &LyricPosition{
 					Coordinate: entity.Coordinate{
 						X: float64(n.PositionX),
-						Y: float64(n.PositionY) + 25 + float64(i*20),
+						Y: float64(n.PositionY+l.Offset) + 25 + float64(i*20),
 					},
 					Lyrics: l,
 				}
@@ -105,7 +105,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 				pair[1] = &LyricPosition{
 					Coordinate: entity.Coordinate{
 						X: float64(n.PositionX),
-						Y: float64(n.PositionY) + 25 + float64(i*20),
+						Y: float64(n.PositionY+l.Offset) + 25 + float64(i*20),
 					},
 					Lyrics: l,
 				}
@@ -115,7 +115,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 					start = &LyricPosition{
 						Coordinate: entity.Coordinate{
 							X: float64(measure[0].PositionX),
-							Y: float64(n.PositionY) + 25 + float64(i*20),
+							Y: float64(n.PositionY+l.Offset) + 25 + float64(i*20),
 						},
 					}
 				}
@@ -123,12 +123,11 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 				pair = [2]*LyricPosition{}
 
 			case musicxml.LyricSyllabicTypeMiddle:
-				//TODO: no start hypen
 				if pair[0] == nil {
 					pair[0] = &LyricPosition{
 						Coordinate: entity.Coordinate{
 							X: float64(n.PositionX),
-							Y: float64(n.PositionY) + 25 + float64(i*20),
+							Y: float64(n.PositionY+l.Offset) + 25 + float64(i*20),
 						},
 						Lyrics: l,
 					}
@@ -139,7 +138,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 					pair[1] = &LyricPosition{
 						Coordinate: entity.Coordinate{
 							X: float64(n.PositionX),
-							Y: float64(n.PositionY) + 25 + float64(i*20),
+							Y: float64(n.PositionY+l.Offset) + 25 + float64(i*20),
 						},
 						Lyrics: l,
 					}
@@ -151,7 +150,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 				}
 			}
 			pos[i] = pair
-			baseYPos = float64(n.PositionY) + 25
+			baseYPos = float64(n.PositionY+l.Offset) + 25
 		}
 
 	}

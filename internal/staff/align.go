@@ -90,16 +90,30 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	slurTiesNote := []*entity.NoteRenderer{}
 	dotPositioner := dotPosition{}
 	canv.Group("staff")
-	for mi, measure := range noteRenderer {
+
+	offsetLyricPos := 0
+
+	for _, m := range noteRenderer {
+		for _, n := range m {
+			if n.Tie != nil && n.Slur != nil {
+				offsetLyricPos = 3 // some leeway for tie+slur combo
+			}
+			if len(n.Slur) > 1 {
+				offsetLyricPos += (len(n.Slur) - 1) * rhythm.OFFSET_SLURTIES_TO_LYRIC
+			}
+		}
+	}
+	_ = offsetLyricPos
+	for mi, measure := range noteRenderer { // staff
 		var prev, next *entity.NoteRenderer
 
-		for i, note := range measure {
+		for i, note := range measure { // measure
 
 			if i < len(measure)-1 {
 				next = measure[i+1]
 			}
-			note.PositionY = y
 			flatten = append(flatten, note)
+			note.PositionY = y
 
 			if note.Tie != nil || note.Slur != nil {
 				slurTiesNote = append(slurTiesNote, note)
@@ -209,10 +223,11 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 					if len(l.Text) > 0 {
 						lyricVal := entity.LyricVal(l.Text).String()
 						xPos := n.PositionX
+						yPos := n.PositionY + int(offsetLyricPos)
 						if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
 							xPos += int(rsa.Lyric.CalculateMarginLeft(lyricVal))
 						}
-						canv.Text(xPos, n.PositionY+25+(i*20), lyricVal)
+						canv.Text(xPos, yPos+25+(i*20), lyricVal)
 
 						offsetLyric := ""
 						for _, t := range l.Text {
@@ -221,15 +236,18 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 								currTextLength := rsa.Lyric.CalculateLyricWidth(t.Value)
 								offset := rsa.Lyric.CalculateLyricWidth(offsetLyric)
 								canv.Qbez(
-									xPos+int(offset), n.PositionY+28+(i*20),
-									xPos+int(offset)+int(currTextLength/2), n.PositionY+28+(i*20)+6,
-									xPos+int(offset)+int(currTextLength), n.PositionY+28+(i*20),
+									xPos+int(offset), yPos+28+(i*20),
+									xPos+int(offset)+int(currTextLength/2), yPos+28+(i*20)+6,
+									xPos+int(offset)+int(currTextLength), yPos+28+(i*20),
 									"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 								)
 							} else {
 								offsetLyric += t.Value
 							}
 						}
+
+						l.Offset = offsetLyricPos
+						n.Lyric[i] = l
 					}
 				}
 				fmt.Fprintf(canv.Writer(), `<title>Width: %d</title>`, n.Width)

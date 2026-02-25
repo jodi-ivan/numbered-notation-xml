@@ -5,6 +5,18 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
+const (
+	OFFSET_SLURTIES_INITAL_TO_LYRIC int = 5
+	OFFSET_SLURTIES_TO_LYRIC        int = 3
+)
+
+type SlurTieType string
+
+const (
+	SlurTieTypeSlur SlurTieType = "slur"
+	SlurTieTypeTie  SlurTieType = "tie"
+)
+
 type beamMarker struct {
 	NoteBeamType   musicxml.NoteBeamType
 	NoteBeginIndex int
@@ -21,6 +33,8 @@ type SlurBezier struct {
 	End      CoordinateWithOctave
 	Pull     CoordinateWithOctave
 	LineType musicxml.NoteSlurLineType
+
+	SlurTieType SlurTieType
 }
 
 type BeamLine struct {

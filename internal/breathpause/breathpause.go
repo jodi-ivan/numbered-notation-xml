@@ -86,3 +86,7 @@ func AdjustBreathmarkBeamCont(ctx context.Context, note, prev, next *entity.Note
 	}
 
 }
+
+func IsBreathMark(note *entity.NoteRenderer) bool {
+	return note.Articulation != nil && note.Articulation.BreathMark != nil
+}

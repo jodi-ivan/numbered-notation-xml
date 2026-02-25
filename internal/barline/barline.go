@@ -73,16 +73,17 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 			barline = measure.Barline[1]
 		}
 	}
-	if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-		x += 5
-	}
-
 	barlineRenderer := &entity.NoteRenderer{
 		MeasureNumber: measure.Number,
 		PositionX:     x,
 		Barline:       &barline,
 		// HACK: why there is no width define here?
 	}
+	if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
+		x += constant.LOWERCASE_LENGTH
+		x -= 5 // the semicolon offset
+	}
+
 	return x, barlineRenderer
 }
 

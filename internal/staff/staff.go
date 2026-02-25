@@ -204,8 +204,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		x, y = si.Rhythm.AdjustMultiDottedRenderer(notes, x, y)
-
-		barlineX, rightBarlineRenderer := si.Barline.GetRendererRightBarline(measure, x)
+		var rightBarlineRenderer *entity.NoteRenderer
+		x, rightBarlineRenderer = si.Barline.GetRendererRightBarline(measure, x)
 
 		if staffInfo.Multiline {
 			staffInfo.MarginLeft = int(x) + constant.LOWERCASE_LENGTH
@@ -241,7 +241,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		} else {
 
 			lastRightBarlinePosition = &entity.Coordinate{
-				X: float64(barlineX),
+				X: float64(rightBarlineRenderer.PositionX),
 				Y: float64(y),
 			}
 			if measure.RightMeasureText != nil {

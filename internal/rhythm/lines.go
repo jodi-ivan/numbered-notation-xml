@@ -2,6 +2,7 @@ package rhythm
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"sort"
 
@@ -19,7 +20,7 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 	}
 	canv.Group("class='slurties'")
 	// DONE: check ties across measure bar
-	for i, s := range set {
+	for _, s := range set {
 
 		slurResult := SlurBezier{
 			SlurTieType: s.SlurTieType,
@@ -41,10 +42,8 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 			Pull:     s.Pull,
 		}
 
-		offset := float64(3)
-		if slurResult.LineType != "" {
-			offset = 5
-		}
+		offset := float64(2.25)
+
 		if slurResult.Start.Octave < 0 {
 			slurResult.Start = CoordinateWithOctave{
 				Coordinate: entity.Coordinate{
@@ -65,45 +64,77 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		}
 
 		pullY := slurResult.Start.Y
-		if int((slurResult.End.X-slurResult.Start.X)/constant.UPPERCASE_LENGTH) < 5 {
-			pullY += 7.5
+
+		block := ((slurResult.End.X - slurResult.Start.X) / constant.UPPERCASE_LENGTH) // * 2
+		if block < 2 {
+			pullY += 5
+		} else if block < 5 {
+			pullY += 12
 		} else {
-			pullY += 10 //long distance ties, need more height
+			pullY += 15 //long distance ties, need more height
 		}
 
-		totalStack := slurResult.Pull.Y - float64(OFFSET_SLURTIES_INITAL_TO_LYRIC-OFFSET_SLURTIES_TO_LYRIC)
-		if totalStack >= 0 {
-			pullY += slurResult.Pull.Y
-			totalStack = 1 + totalStack/float64(OFFSET_SLURTIES_TO_LYRIC)
-		} else {
-			totalStack = 0
-		}
-
-		offsetCurve := math.Round(totalStack / float64(len(set)))
 		pull := CoordinateWithOctave{
 			Coordinate: entity.Coordinate{
 				X: slurResult.Start.X + ((slurResult.End.X - slurResult.Start.X) / 2),
-				Y: pullY,
+				Y: pullY + 0.3,
 			},
 		}
 
 		slurResult.Pull = pull
-		lineType := "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.5"
+		lineType := "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1"
 		if slurResult.LineType == musicxml.NoteSlurLineTypeDashed {
-			lineType += ";stroke-dasharray:3 3;"
-		}
+			// Calculate approximate curve length
+			curveLen := quadBezierLength(slurResult.Start.Coordinate, pull.Coordinate, slurResult.End.Coordinate, 30)
 
+			dash := 3.5
+			patternCount := math.Floor(curveLen / (dash * 2))
+			gap := (curveLen / patternCount) - dash
+
+			lineType += fmt.Sprintf(";stroke-dasharray:%.1f %.1f;", dash, gap)
+			lineType += "stroke-dashoffset:" + fmt.Sprintf("%f", dash/2) + ";"
+		}
+		canv.Group("qbez-debug")
 		canv.Qbez(
-			int(math.Round(slurResult.Start.X))-(i*int(offsetCurve)),
-			int(math.Round(slurResult.Start.Y))+(i*int(offsetCurve)*2),
+			int(math.Round(slurResult.Start.X)),
+			int(math.Round(slurResult.Start.Y)),
 			int(math.Round(pull.X)),
-			int(math.Round(pull.Y)),
-			int(math.Round(slurResult.End.X))+(i*int(offsetCurve)),
-			int(math.Round(slurResult.End.Y))+(i*int(offsetCurve)*2),
+			int(math.Ceil(pull.Y)),
+			int(math.Round(slurResult.End.X)),
+			int(math.Round(slurResult.End.Y)),
 			lineType,
 		)
+		fmt.Fprintf(canv.Writer(), `<title>Block: %.2f. PullY: %.1f</title>`, block, math.Ceil(pull.Y))
+
+		canv.Gend()
+
 	}
 	canv.Gend()
+}
+
+func quadBezierLength(p0, p1, p2 entity.Coordinate, steps int) float64 {
+	var length float64
+	prev := p0
+
+	for i := 1; i <= steps; i++ {
+		t := float64(i) / float64(steps)
+
+		x := math.Pow(1-t, 2)*p0.X +
+			2*(1-t)*t*p1.X +
+			math.Pow(t, 2)*p2.X
+
+		y := math.Pow(1-t, 2)*p0.Y +
+			2*(1-t)*t*p1.Y +
+			math.Pow(t, 2)*p2.Y
+
+		dx := x - prev.X
+		dy := y - prev.Y
+
+		length += math.Hypot(dx, dy)
+		prev = entity.Coordinate{X: x, Y: y}
+	}
+
+	return length
 }
 
 func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {

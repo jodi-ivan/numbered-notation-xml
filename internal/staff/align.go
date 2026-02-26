@@ -88,7 +88,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			}
 
 			// offset Y lyric, sometimes note need more space
-			offsetLyricPos = lyric.CalculateLyricOffset(note)
+			// offsetLyricPos = lyric.CalculateLyricOffset(note)
 
 			//clean up breathmark pause
 			if note.Articulation != nil && note.Articulation.BreathMark != nil {

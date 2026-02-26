@@ -13,7 +13,7 @@ func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [
 	isLastMeasure := false
 	for i, measure := range part.Measures {
 
-		if measure.Print != nil && measure.Print.NewSystem == musicxml.PrintNewSystemTypeYes {
+		if measure.Print != nil && (measure.Print.NewSystem == musicxml.PrintNewSystemTypeYes || measure.Print.NewPage == musicxml.PrintNewSystemTypeYes) {
 			isLastMeasure = i == (len(part.Measures) - 1)
 			finishLine := make([]musicxml.Measure, len(currentLine))
 			copy(finishLine, currentLine)

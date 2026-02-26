@@ -162,6 +162,7 @@ const (
 
 type Print struct {
 	NewSystem PrintNewSystemType `xml:"new-system,attr"`
+	NewPage   PrintNewSystemType `xml:"new-page,attr"`
 }
 type KeySignature struct {
 	Fifth int    `xml:"fifths"`

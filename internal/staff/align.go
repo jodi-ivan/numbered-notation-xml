@@ -3,6 +3,7 @@ package staff
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -74,7 +75,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	count := 1
 	slurTiesNote := []*entity.NoteRenderer{}
 	dotPositioner := dotPosition{}
-	offsetLyricPos := 0
+	rightAlignOffset := 0
 
 	// proprocessing
 	totalNotes := 0
@@ -86,9 +87,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			if i < len(measure)-1 {
 				next = measure[i+1]
 			}
-
-			// offset Y lyric, sometimes note need more space
-			// offsetLyricPos = lyric.CalculateLyricOffset(note)
 
 			//clean up breathmark pause
 			if note.Articulation != nil && note.Articulation.BreathMark != nil {
@@ -107,7 +105,13 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	lastNote.PositionX = lastPos
 	if lastNote.Barline != nil {
 		remaining -= int(barline.GetBarlineWidth(lastNote.Barline.BarStyle))
+	} else if len(lastNote.Lyric) > 0 {
+		lyricWidth := int(math.Round(rsa.Lyric.CalculateOverallWidth(lastNote.Lyric)))
+		rightAlignOffset = lyricWidth / 2
+		lastNote.PositionX -= lyricWidth
+		remaining -= lyricWidth
 	}
+
 	added := float64(remaining) / (float64(totalNotes) - 2)
 
 	canv.Group("staff")
@@ -152,7 +156,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 		canv.Group("measure-align")
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
-		for _, n := range measure {
+		for notePos, n := range measure {
 			canv.Group("titled-group")
 			if n.IsDotted {
 				canv.Text(n.PositionX, y, ".")
@@ -164,14 +168,20 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 					Y: float64(y),
 				})
 			} else {
-				canv.Text(n.PositionX, y, fmt.Sprintf("%d", n.Note))
+				xPos := n.PositionX
+				noteStr := fmt.Sprintf("%d", n.Note)
+				noteWidth := rsa.Lyric.CalculateLyricWidth(noteStr)
+				if notePos == len(measure)-1 {
+					xPos = xPos + rightAlignOffset - int(math.Round(noteWidth))
+				}
+				canv.Text(xPos, y, noteStr)
 				if n.Strikethrough {
-					canv.Line(n.PositionX+10, y-16, n.PositionX, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
+					canv.Line(xPos+10, y-16, xPos, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
 				}
 
 				if n.Fermata != nil {
 					fermataUnicode := `&#x1D110;`
-					posX := float64(n.PositionX) - (rsa.Lyric.CalculateLyricWidth(fmt.Sprintf("%d", n.Note)) / 2)
+					posX := float64(xPos) - (noteWidth / 2)
 
 					fmt.Fprintf(
 						canv.Writer(),
@@ -195,7 +205,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 					if len(l.Text) > 0 {
 						lyricVal := entity.LyricVal(l.Text).String()
 						xPos := n.PositionX
-						yPos := n.PositionY + int(offsetLyricPos)
+						yPos := n.PositionY
 						if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
 							xPos += int(rsa.Lyric.CalculateMarginLeft(lyricVal))
 						}
@@ -218,7 +228,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 							}
 						}
 
-						l.Offset = offsetLyricPos
 						n.Lyric[i] = l
 					}
 				}

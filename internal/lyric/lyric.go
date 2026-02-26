@@ -28,12 +28,22 @@ type Lyric interface {
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
 	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
 	CalculateMarginLeft(txt string) float64
+	CalculateOverallWidth(ls []entity.Lyric) float64
 }
 
 type lyricInteractor struct{}
 
 func NewLyric() Lyric {
 	return &lyricInteractor{}
+}
+
+func (li *lyricInteractor) CalculateOverallWidth(ls []entity.Lyric) float64 {
+	result := 0.0
+
+	for _, v := range ls {
+		result = math.Max(result, li.CalculateLyricWidth(entity.LyricVal(v.Text).String()))
+	}
+	return result
 }
 
 func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
@@ -58,7 +68,7 @@ func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 		"Q": 9.59, "q": 8.02, "-": 5.27,
 		"R": 9.81, "r": 6.34, "—": 16,
 		"S": 7.25, "s": 6.28, "*": 10,
-		"T": 8.92, "t": 5.21,
+		"T": 8.92, "t": 5.21, "\"": 8,
 		"U": 11, "u": 8.74,
 		"V": 9.57, "v": 8.08,
 		"W": 14.23, "w": 12.08,

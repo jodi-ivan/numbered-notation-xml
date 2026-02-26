@@ -102,6 +102,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			if skipNote[notePos] {
 				continue
 			}
+
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 
@@ -110,11 +111,15 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 					nextNotes := measure.Notes[notePos+1]
 
-					noteLength = rhythm.MergeNote(ctx, note, nextNotes, currTimesig)
-					note = rhythm.TransferStopSlurAndBreathmark(nextNotes, note)
+					mergedNoteLegth := rhythm.MergeNote(ctx, note, nextNotes, currTimesig)
+					if mergedNoteLegth < 3 {
+						noteLength = mergedNoteLegth
 
-					// dont process next notes
-					skipNote[notePos+1] = true
+						note = rhythm.TransferStopSlurAndBreathmark(nextNotes, note)
+
+						// dont process next notes
+						skipNote[notePos+1] = true
+					}
 				}
 			}
 

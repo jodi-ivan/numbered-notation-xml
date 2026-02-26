@@ -95,14 +95,58 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				x += barlineInfo.XIncrement
 			}
 		}
+
+		skipNote := map[int]bool{}
 		for notePos, note := range measure.Notes {
 
+			if skipNote[notePos] {
+				continue
+			}
+			tiedGroupped := false
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
+
+			if note.Notations != nil && note.Notations.Tied != nil {
+				if notePos+1 < len(measure.Notes) {
+					next := measure.Notes[notePos+1]
+					if (next.Notations != nil && next.Notations.Tied != nil) && next.Pitch.Step == note.Pitch.Step {
+						nextNoteLength := timeSignature.GetNoteLength(rctx, measure.Number, next)
+						if noteLength+nextNoteLength < 3 {
+							skipNote[notePos+1] = true
+							tiedGroupped = true
+							noteLength += nextNoteLength
+
+							// transfer slur. stop only.
+							for _, v := range next.Notations.Slur {
+								if v.Type == musicxml.NoteSlurTypeStop {
+									note.Notations.Slur = next.Notations.Slur
+									break
+								}
+							}
+							// transer breathmark
+							if next.Notations != nil && next.Notations.Articulation != nil {
+								if note.Notations != nil {
+									note.Notations.Articulation = next.Notations.Articulation
+								} else {
+									note.Notations = &musicxml.NoteNotation{
+										Articulation: next.Notations.Articulation,
+									}
+								}
+							}
+							// TODO: do we need to tranfer the rest? newline?
+						}
+					}
+				}
+			}
 
 			// additionalRenderer is all the new notes that needs represented in numbered when the original musicxml doesnot
 			// for example a half note C have to be represented by following . next to number
 			additionalRenderer := si.Numbered.GetLengthNote(rctx, timeSignature, measure.Number, noteLength)
+			if tiedGroupped {
+				// split notes by the beam
+				next := measure.Notes[notePos+1]
+				additionalRenderer = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
+			}
 			renderer := &entity.NoteRenderer{
 				PositionX:     x,
 				PositionY:     int(y),

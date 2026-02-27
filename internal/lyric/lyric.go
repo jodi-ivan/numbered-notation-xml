@@ -27,6 +27,7 @@ type Lyric interface {
 	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
 	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
+	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate)
 	CalculateMarginLeft(txt string) float64
 	CalculateOverallWidth(ls []entity.Lyric) float64
 }
@@ -115,7 +116,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
 				currWidth += constant.LOWERCASE_LENGTH
 			}
-			currWidth += 4 // lyric padding
+			currWidth += 10 // lyric padding
 
 			lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
 		}

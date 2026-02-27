@@ -94,6 +94,18 @@ func (mr *MockLyricMockRecorder) CalculateOverallWidth(ls interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateOverallWidth", reflect.TypeOf((*MockLyric)(nil).CalculateOverallWidth), ls)
 }
 
+// RenderElision mocks base method.
+func (m *MockLyric) RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderElision", ctx, canv, text, lyricPart, pos)
+}
+
+// RenderElision indicates an expected call of RenderElision.
+func (mr *MockLyricMockRecorder) RenderElision(ctx, canv, text, lyricPart, pos interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderElision", reflect.TypeOf((*MockLyric)(nil).RenderElision), ctx, canv, text, lyricPart, pos)
+}
+
 // RenderHypen mocks base method.
 func (m *MockLyric) RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	m.ctrl.T.Helper()

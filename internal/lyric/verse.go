@@ -71,6 +71,10 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 						for _, v := range p.Breakdown {
 							if v.Underline {
 								x2 = x1 + li.CalculateLyricWidth(v.Text)
+								if len(v.Text) > 0 {
+									x2 -= (li.CalculateLyricWidth(string(v.Text[len(v.Text)-1])) / 2)
+								}
+
 								break
 							} else {
 								x1 += li.CalculateLyricWidth(v.Text)

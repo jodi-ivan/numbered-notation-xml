@@ -53,15 +53,27 @@ func (mr *MockNumberedMockRecorder) GetLengthNote(ctx, ts, measure, noteLength i
 }
 
 // RenderOctave mocks base method.
-func (m *MockNumbered) RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func (m *MockNumbered) RenderOctave(ctx context.Context, canv canvas.Canvas, octave int, pos entity.Coordinate) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderOctave", ctx, canv, notes)
+	m.ctrl.Call(m, "RenderOctave", ctx, canv, octave, pos)
 }
 
 // RenderOctave indicates an expected call of RenderOctave.
-func (mr *MockNumberedMockRecorder) RenderOctave(ctx, canv, notes interface{}) *gomock.Call {
+func (mr *MockNumberedMockRecorder) RenderOctave(ctx, canv, octave, pos interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderOctave", reflect.TypeOf((*MockNumbered)(nil).RenderOctave), ctx, canv, notes)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderOctave", reflect.TypeOf((*MockNumbered)(nil).RenderOctave), ctx, canv, octave, pos)
+}
+
+// RenderStrikethrough mocks base method.
+func (m *MockNumbered) RenderStrikethrough(ctx context.Context, canv canvas.Canvas, strikethrough bool, pos entity.Coordinate) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderStrikethrough", ctx, canv, strikethrough, pos)
+}
+
+// RenderStrikethrough indicates an expected call of RenderStrikethrough.
+func (mr *MockNumberedMockRecorder) RenderStrikethrough(ctx, canv, strikethrough, pos interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderStrikethrough", reflect.TypeOf((*MockNumbered)(nil).RenderStrikethrough), ctx, canv, strikethrough, pos)
 }
 
 // SplitNote mocks base method.

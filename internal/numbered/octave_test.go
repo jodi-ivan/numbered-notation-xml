@@ -14,7 +14,7 @@ func Test_numberedInteractor_RenderOctave(t *testing.T) {
 	defer ctrl.Finish()
 
 	type args struct {
-		notes []*entity.NoteRenderer
+		note *entity.NoteRenderer
 	}
 	tests := []struct {
 		name string
@@ -25,32 +25,39 @@ func Test_numberedInteractor_RenderOctave(t *testing.T) {
 		{
 			name: "no octave",
 			args: args{
-				notes: []*entity.NoteRenderer{},
+				note: &entity.NoteRenderer{
+					Octave: 0,
+				},
 			},
 			initCanvas: func(c *gomock.Controller) *canvas.MockCanvas { return nil },
 		},
 		{
-			name: "has octave",
+			name: "has octave up",
 			args: args{
-				notes: []*entity.NoteRenderer{
-					&entity.NoteRenderer{
-						PositionX: 50,
-						PositionY: 150,
-						Octave:    1,
-					},
-					&entity.NoteRenderer{
-						PositionX: 60,
-						PositionY: 150,
-						Octave:    -1,
-					},
+				note: &entity.NoteRenderer{
+					PositionX: 50,
+					PositionY: 150,
+					Octave:    1,
 				},
 			},
 			initCanvas: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='octaves'")
 				canv.EXPECT().Circle(55, 135, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
-				canv.EXPECT().Circle(65, 155, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
-				canv.EXPECT().Gend()
+				return canv
+			},
+		},
+		{
+			name: "has octave down",
+			args: args{
+				note: &entity.NoteRenderer{
+					PositionX: 50,
+					PositionY: 150,
+					Octave:    -1,
+				},
+			},
+			initCanvas: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+				canv.EXPECT().Circle(55, 155, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
 				return canv
 			},
 		},
@@ -58,7 +65,8 @@ func Test_numberedInteractor_RenderOctave(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ni := numberedInteractor{}
-			ni.RenderOctave(context.Background(), tt.initCanvas(ctrl), tt.args.notes)
+			pos := entity.Coordinate{X: float64(tt.args.note.PositionX), Y: float64(tt.args.note.PositionY)}
+			ni.RenderOctave(context.Background(), tt.initCanvas(ctrl), tt.args.note.Octave, pos)
 		})
 	}
 }

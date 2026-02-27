@@ -344,7 +344,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 					Y: 195,
 				})
 
-				numberedMock.EXPECT().RenderOctave(gomock.Any(), gomock.Any(), gomock.Any())
+				numberedMock.EXPECT().RenderOctave(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				rhythmMock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				rhythmMock.EXPECT().RenderSlurTies(gomock.Any(), gomock.Any(), IsEqual([]*entity.NoteRenderer{
 					&entity.NoteRenderer{

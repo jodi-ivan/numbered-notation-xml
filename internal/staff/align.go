@@ -36,31 +36,6 @@ type renderStaffAlign struct {
 	Lyric    lyric.Lyric
 }
 
-type dotPosition struct {
-	beforeXpos int
-	afterXPos  int
-	address    []*int
-}
-
-func (dt *dotPosition) Reset(startPosition int) {
-	dt.beforeXpos = startPosition
-	dt.address = []*int{}
-}
-
-func (dt *dotPosition) Render(endPosition int) {
-	if len(dt.address) > 0 {
-		dt.afterXPos = endPosition
-		space := (dt.afterXPos - dt.beforeXpos) / (len(dt.address) + 1)
-		for i, d := range dt.address {
-			*d = (dt.beforeXpos + (space * (i + 1)))
-		}
-
-		// reset here
-		dt.beforeXpos = endPosition
-		dt.address = []*int{}
-	}
-}
-
 // TODO: right align text on the last node.
 func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, ts timesig.TimeSignature, noteRenderer [][]*entity.NoteRenderer) {
 
@@ -74,7 +49,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	count := 1
 	slurTiesNote := []*entity.NoteRenderer{}
-	dotPositioner := dotPosition{}
+	dotPositioner := numbered.DotPosition{}
 	rightAlignOffset := 0
 
 	// proprocessing
@@ -141,12 +116,12 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			count++
 
 			if note.IsDotted {
-				if dotPositioner.address == nil {
-					dotPositioner.address = []*int{}
+				if dotPositioner.Address == nil {
+					dotPositioner.Address = []*int{}
 				}
-				dotPositioner.address = append(dotPositioner.address, &note.PositionX)
+				dotPositioner.Address = append(dotPositioner.Address, &note.PositionX)
 			} else {
-				if len(dotPositioner.address) > 0 {
+				if len(dotPositioner.Address) > 0 {
 					dotPositioner.Render(note.PositionX)
 				} else {
 					dotPositioner.Reset(note.PositionX)
@@ -155,13 +130,36 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		}
 
 		canv.Group("measure-align")
+		if len(measure) > 0 {
+			fmt.Fprintf(canv.Writer(), `<title>Measure %d</title>`, measure[0].MeasureNumber)
+		}
+
+		canv.Group("class='lyric'", "style='font-family:Caladea'")
+		for _, n := range measure {
+			for i, l := range n.Lyric {
+				if len(l.Text) == 0 {
+					continue
+				}
+				lyricVal := entity.LyricVal(l.Text).String()
+				xPos := n.PositionX
+				if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
+					xPos += int(rsa.Lyric.CalculateMarginLeft(lyricVal))
+				}
+				canv.Text(xPos, n.PositionY+25+(i*20), lyricVal)
+				rsa.Lyric.RenderElision(ctx, canv, l.Text, i, entity.Coordinate{X: float64(xPos), Y: float64(n.PositionY)})
+				n.Lyric[i] = l
+
+			}
+		}
+
+		canv.Gend()
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		for notePos, n := range measure {
 			canv.Group("titled-group")
 			if n.IsDotted {
 				canv.Text(n.PositionX, y, ".")
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-				canv.Text(n.PositionX, y-10, ",")
+				canv.Text(n.PositionX-5, y-10, ",")
 			} else if n.Barline != nil {
 				rsa.Barline.RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
 					X: float64(n.PositionX),
@@ -175,72 +173,19 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 					xPos = xPos + rightAlignOffset - int(math.Round(noteWidth))
 				}
 				canv.Text(xPos, y, noteStr)
-				if n.Strikethrough {
-					canv.Line(xPos+10, y-16, xPos, y+5, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.45")
-				}
 
-				if n.Fermata != nil {
-					fermataUnicode := `&#x1D110;`
-					posX := float64(xPos) - (noteWidth / 2)
-
-					fmt.Fprintf(
-						canv.Writer(),
-						`<text x="%.3f" y="%.3f" style="font-family:Noto Music;font-size:200%%"> %s </text>`,
-						posX, float64(y)-17.5, fermataUnicode,
-					)
-				}
+				coordinate := entity.Coordinate{X: float64(xPos), Y: float64(n.PositionY)}
+				rsa.Numbered.RenderStrikethrough(ctx, canv, n.Strikethrough, coordinate)
+				breathpause.RenderFermata(ctx, canv, n.Fermata, coordinate)
+				rsa.Numbered.RenderOctave(ctx, canv, n.Octave, coordinate)
+				n.PositionX = xPos
 
 			}
-			fmt.Fprintf(canv.Writer(), `<title>Width: %d</title>`, n.Width)
 			canv.Gend()
 
 		}
 
-		canv.Group("class='lyric'", "style='font-family:Caladea'")
-		for _, n := range measure {
-			if len(n.Lyric) > 0 {
-				canv.Group("titled-group")
-
-				for i, l := range n.Lyric {
-					if len(l.Text) > 0 {
-						lyricVal := entity.LyricVal(l.Text).String()
-						xPos := n.PositionX
-						yPos := n.PositionY
-						if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
-							xPos += int(rsa.Lyric.CalculateMarginLeft(lyricVal))
-						}
-						canv.Text(xPos, yPos+25+(i*20), lyricVal)
-
-						offsetLyric := ""
-						for _, t := range l.Text {
-
-							if t.Underline == 1 {
-								currTextLength := rsa.Lyric.CalculateLyricWidth(t.Value)
-								offset := rsa.Lyric.CalculateLyricWidth(offsetLyric)
-								canv.Qbez(
-									xPos+int(offset), yPos+28+(i*20),
-									xPos+int(offset)+int(currTextLength/2), yPos+28+(i*20)+6,
-									xPos+int(offset)+int(currTextLength), yPos+28+(i*20),
-									"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
-								)
-							} else {
-								offsetLyric += t.Value
-							}
-						}
-
-						n.Lyric[i] = l
-					}
-				}
-				fmt.Fprintf(canv.Writer(), `<title>Width: %d</title>`, n.Width)
-				canv.Gend()
-			}
-		}
-
-		canv.Gend()
-
-		rsa.Numbered.RenderOctave(ctx, canv, measure)
 		rsa.Rhythm.RenderBeam(ctx, canv, ts, measure)
-
 		rsa.RenderMeasureText(ctx, canv, measure)
 		RenderTuplet(ctx, canv, measure)
 

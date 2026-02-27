@@ -7,23 +7,12 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func (ni *numberedInteractor) RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
-	hasOctave := false
-	for _, note := range notes {
-		if !hasOctave && (note.Octave != 0) {
-			canv.Group("class='octaves'")
-		}
-		hasOctave = hasOctave || (note.Octave != 0)
-		if note.Octave < 0 {
-			canv.Circle(note.PositionX+5, note.PositionY+5, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
-			continue
-		}
+func (ni *numberedInteractor) RenderOctave(ctx context.Context, canv canvas.Canvas, octave int, pos entity.Coordinate) {
+	switch octave {
+	case 1:
+		canv.Circle(int(pos.X)+5, int(pos.Y)-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
+	case -1:
+		canv.Circle(int(pos.X)+5, int(pos.Y)+5, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
+	}
 
-		if note.Octave > 0 {
-			canv.Circle(note.PositionX+5, note.PositionY-15, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
-		}
-	}
-	if hasOctave {
-		canv.Gend()
-	}
 }

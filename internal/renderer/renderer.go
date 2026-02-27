@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -91,7 +92,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
 		relativeY = relativeY + 80 + info.MarginBottom
 		if info.Multiline {
-			x = info.MarginLeft
+			x = info.MarginLeft + barline.BARLINE_AFTER_SPACE
 			info.Multiline = false
 		} else {
 			x = constant.LAYOUT_INDENT_LENGTH

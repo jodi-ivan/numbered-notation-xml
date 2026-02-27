@@ -18,8 +18,9 @@ type NoteLength struct {
 
 type Numbered interface {
 	GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength
-	RenderOctave(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer)
+	RenderOctave(ctx context.Context, canv canvas.Canvas, octave int, pos entity.Coordinate)
 	SplitNote(ctx context.Context, noteLength float64, ts timesig.Time, flag, next musicxml.NoteLength) []NoteLength
+	RenderStrikethrough(ctx context.Context, canv canvas.Canvas, strikethrough bool, pos entity.Coordinate)
 }
 
 type numberedInteractor struct{}

@@ -4,6 +4,8 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
+const BARLINE_AFTER_SPACE int = 4
+
 var (
 	// only support noto-music font
 	barlineWidth = map[musicxml.BarLineStyle]float64{

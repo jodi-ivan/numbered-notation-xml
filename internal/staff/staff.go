@@ -54,28 +54,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if len(measures) > 0 {
 			align = append(align, prevNotes)
 		} else {
-			pos := -1
-			// last line with no staff measure remaining
-			for i, note := range prevNotes {
-				note.PositionY = y
-				if note.IsNewLine {
-					pos = i
-					break
-				}
-			}
-
-			if pos != -1 {
-				align = append(align, prevNotes[:pos+1])
-				staffInfo.NextLineRenderer = prevNotes[pos+1:]
-				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
-				staffInfo.Multiline = true
-				// TODO: assign a proper margin botton (multiline lyric)
-				// staffInfo.MarginBottom = 80
-			} else {
-				align = append(align, prevNotes)
-				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
-			}
-
+			align, staffInfo = ProcessPreviousLines(prevNotes, y)
 		}
 	}
 	for _, measure := range measures {
@@ -88,7 +67,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 		// barline
 		if len(measure.Barline) > 0 {
-
 			leftBarlineRenderer, barlineInfo := si.Barline.GetRendererLeftBarline(measure, x, lastRightBarlinePosition)
 			if leftBarlineRenderer != nil {
 				alignMeasures = append(alignMeasures, leftBarlineRenderer)
@@ -251,27 +229,13 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 		alignMeasures = append(alignMeasures, filteredNotes...)
 		if staffInfo.Multiline {
-			proceed := false
-			for _, note := range notes {
-				if !proceed {
-					if note.IsNewLine {
-						proceed = true
-					}
-					continue
-				}
-				if len(staffInfo.NextLineRenderer) == 0 {
-					note.PositionX = constant.LAYOUT_INDENT_LENGTH
-				}
-				staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
-			}
-			staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, rightBarlineRenderer)
-
+			staffInfo = PrepareNextLines(staffInfo, notes, rightBarlineRenderer)
 		} else {
-
 			lastRightBarlinePosition = &entity.Coordinate{
 				X: float64(rightBarlineRenderer.PositionX),
 				Y: float64(y),
 			}
+			x += barline.BARLINE_AFTER_SPACE
 			if measure.RightMeasureText != nil {
 				rightBarlineRenderer.MeasureText = []musicxml.MeasureText{
 					musicxml.MeasureText{

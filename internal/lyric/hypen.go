@@ -55,6 +55,13 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 		result := []entity.Coordinate{}
 		totalContainer := math.Floor((distance - (2 * hypenWidth)) / float64(container))
 		totalHypen := (totalContainer * 3)
+		if lyricText == "" {
+			result = append(result, entity.Coordinate{
+				X: constant.LAYOUT_INDENT_LENGTH,
+				Y: currentLyric.Coordinate.Y,
+			})
+			totalHypen += 1
+		}
 		startPosition += (distance / totalHypen)
 		for i := float64(0); i < totalHypen-1; i++ {
 			result = append(result, entity.Coordinate{
@@ -77,6 +84,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 	baseYPos := float64(0)
 	var lastLyric []entity.Lyric
 	hypenLocation := []entity.Coordinate{}
+	hasLyricBefore := false
 	for _, n := range measure {
 
 		if len(n.Lyric) == 0 {
@@ -131,8 +139,24 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 						},
 						Lyrics: l,
 					}
-					pos[i] = pair
-					continue
+
+					// some bug happening that for somereason it has middle sylable
+					// without other middle or start ever present
+					// need to check the lyric existence manually
+					if hasLyricBefore {
+						pos[i] = pair
+						continue
+					} else {
+						empty := &LyricPosition{
+							Coordinate: entity.Coordinate{
+								X: float64(constant.LAYOUT_INDENT_LENGTH),
+								Y: float64(n.PositionY) + 25 + float64(i*20),
+							},
+						}
+
+						hypenLocation = append(li.CalculateHypen(ctx, empty, pair[0]), hypenLocation...)
+
+					}
 				}
 				if pair[1] == nil {
 					pair[1] = &LyricPosition{
@@ -152,6 +176,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 			pos[i] = pair
 			baseYPos = float64(n.PositionY) + 25
 		}
+		hasLyricBefore = hasLyricBefore || len(n.Lyric) > 0
 
 	}
 

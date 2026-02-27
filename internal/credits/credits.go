@@ -26,19 +26,14 @@ func NewCredits() Credits {
 	}
 }
 
-// FIXME: fall back to default size (average it / median it) for non english character
 func CalculateLyric(text string, italic bool) float64 {
 	res := 0.0
-	width := nonItalic
-	if italic {
-		width = italicWidth
-	}
 	for _, l := range text {
-		if italic {
-			res += (width[string(l)] * 0.6)
-		} else {
-			res += width[string(l)]
+		w, ok := charWidth[string(l)]
+		if !ok {
+			w = 6
 		}
+		res += w
 	}
 
 	return res
@@ -64,7 +59,7 @@ func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string
 	italic := false
 	for _, word := range full {
 		word = strings.TrimSpace(word)
-		length += spaceWidth
+		length += spaceWidth + 4
 		if strings.HasPrefix(word, "<i>") || italic {
 			cleaned := strings.TrimSuffix(word, "</i>")
 			cleaned = strings.TrimPrefix(cleaned, "<i>")
@@ -89,6 +84,10 @@ func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string
 		}
 
 		if length >= available {
+			if italic {
+				result = append(result, "</tspan>")
+			}
+
 			lines = append(lines, strings.Join(result, " "))
 			result = []string{}
 			lenLines = append(lenLines, length)
@@ -96,8 +95,10 @@ func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string
 		}
 	}
 
-	lines = append(lines, strings.Join(result, " "))
-	lenLines = append(lenLines, length)
+	if len(result) > 0 {
+		lines = append(lines, strings.Join(result, " "))
+		lenLines = append(lenLines, length)
+	}
 	return lines, lenLines
 }
 
@@ -149,7 +150,6 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 		y += 25 + (len(flatten) * 15)
 	}
-
 	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 
@@ -168,14 +168,13 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 		} else if !hasBegin && hasEnd {
 			text = fmt.Sprintf("<tspan font-style=\"italic\">%s", text)
 		}
-		y += (i * newLineHeight)
 		if len(wrapped) > 1 && i < len(wrapped)-1 {
-			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH)
+			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH)
 		}
 		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
+		y += newLineHeight
 	}
 	copyrightY = y
-	y += newLineHeight
 
 	if !lyricMusicMerged {
 		musicCredit := strings.ReplaceAll(metadata.Music, "<i>", "<tspan font-style=\"italic\">")

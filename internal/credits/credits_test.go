@@ -46,7 +46,7 @@ func TestCalculateLyric(t *testing.T) {
 				italic: true,
 				text:   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKMNOPQRSTUVWXYZ1234567890-.!;:-/",
 			},
-			want: 361.79999999999984,
+			want: 398.01000000000005,
 		},
 		{
 			name: "without italic",
@@ -54,7 +54,7 @@ func TestCalculateLyric(t *testing.T) {
 				italic: false,
 				text:   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKMNOPQRSTUVWXYZ1234567890-.!;:-/",
 			},
-			want: 535,
+			want: 398.01000000000005,
 		},
 	}
 	for _, tt := range tests {
@@ -84,7 +84,7 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 				leftIndent: constant.LAYOUT_INDENT_LENGTH,
 			},
 			lines:    []string{"this is a simple text"},
-			lenLines: []int{125},
+			lenLines: []int{99},
 		},
 		{
 			name: "with italic terminated in the middle sentence, no new line",
@@ -93,7 +93,7 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 				leftIndent: constant.LAYOUT_INDENT_LENGTH,
 			},
 			lines:    []string{"this is a simple text <tspan font-style=\"italic\">with italic</tspan> added"},
-			lenLines: []int{213},
+			lenLines: []int{182},
 		},
 		{
 			name: "with italic terminated in the end sentence, no new line",
@@ -102,7 +102,7 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 				leftIndent: constant.LAYOUT_INDENT_LENGTH,
 			},
 			lines:    []string{"this is a simple text <tspan font-style=\"italic\">with italic</tspan>"},
-			lenLines: []int{172},
+			lenLines: []int{150},
 		},
 		{
 			name: "with italic terminated is broken down to two lines",
@@ -111,10 +111,10 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 				leftIndent: constant.LAYOUT_INDENT_LENGTH,
 			},
 			lines: []string{
-				"this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also",
-				"added a long italic text for breaking down the text to the new line.</tspan>",
+				"this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also added a long italic text for breaking </tspan>",
+				"down the text to the new line.</tspan>",
 			},
-			lenLines: []int{625, 281},
+			lenLines: []int{661, 156},
 		},
 	}
 	for _, tt := range tests {
@@ -166,8 +166,9 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	type args struct {
-		y        int
-		metadata repository.HymnData
+		y              int
+		metadata       repository.HymnData
+		verseFootNotes map[int]map[int]repository.VerseFootNotes
 	}
 	tests := []struct {
 		name     string
@@ -191,6 +192,36 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 				res.EXPECT().Text(50, 150, "Syair dan lagu :")
 				writer.EXPECT().Write([]byte("<text x=\"118\" y=\"150\">this is from unittest</text>"))
+				res.EXPECT().Gend()
+				return res
+			},
+		},
+		{
+			name: "music and lyric same, no BE, no NR, with copy right and title notes",
+			args: args{
+				y: 150,
+				metadata: repository.HymnData{
+					Lyric: "this is from unittest",
+					Music: "this is from unittest",
+					Copyright: sql.NullString{
+						Valid:  true,
+						String: "unittest",
+					},
+					TitleFootnotes: sql.NullString{
+						Valid:  true,
+						String: "bisa juga dinyanyikan dengan lagu unittest",
+					},
+				},
+			},
+			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				res := canvas.NewMockCanvas(ctrl)
+				writer := canvas.NewMockWriter(ctrl)
+				res.EXPECT().Writer().Return(writer).Times(2)
+				res.EXPECT().Text(654, 165, "© unittest")
+				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
+				res.EXPECT().Text(50, 150, "Syair dan lagu :")
+				writer.EXPECT().Write([]byte("<text x=\"118\" y=\"150\">this is from unittest</text>"))
+				writer.EXPECT().Write([]byte(`<text x="50" y="195"><tspan font-style="italic">*  bisa juga dinyanyikan dengan lagu unittest</tspan></text>`))
 				res.EXPECT().Gend()
 				return res
 			},
@@ -222,11 +253,12 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 				res.EXPECT().Text(50, 150, "Syair: ")
 				writer.EXPECT().Write([]byte("<text x=\"80\" y=\"150\">this is lyric from unittest</text>"))
 				writer.EXPECT().Write([]byte("<text x=\"50\" y=\"165\">Lagu: this is music from unittest</text>"))
-				res.EXPECT().Text(644, 165, "BE 1, NR 1")
+				res.EXPECT().Text(647, 165, "BE 1, NR 1")
 
 				return res
 			},
 		},
+
 		{
 			name: "music and lyric different,  italic break down to multiple lines",
 			args: args{
@@ -244,12 +276,68 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
 				res.EXPECT().Gend()
 				res.EXPECT().Text(50, 150, "Syair: ")
-				line1 := `this&#160;&#160;&#160;is&#160;&#160;&#160;a&#160;&#160;&#160;very&#160;&#160;&#160;long&#160;&#160;&#160;text,&#160;&#160;&#160;this&#160;&#160;&#160;intentionally&#160;&#160;&#160;added&#160;&#160;&#160;with&#160;&#160;&#160;a&#160;&#160;&#160;lot&#160;&#160;&#160;of&#160;&#160;&#160;text&#160;&#160;&#160;just&#160;&#160;&#160;for&#160;&#160;&#160;satisfy&#160;&#160;&#160;requirement.&#160;&#160;&#160;<tspan font-style="italic">Also&#160;&#160;&#160;added</tspan>`
-				line2 := `<tspan font-style="italic">a long italic text for breaking down the text to the new line.</tspan>`
+				line1 := `this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style="italic">Also added a long italic text for breaking </tspan>`
+				line2 := `<tspan font-style="italic">down the text to the new line.</tspan>`
 
 				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="150">%s</text>`, line1)))
 				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="165">%s</text>`, line2)))
-				writer.EXPECT().Write([]byte("<text x=\"50\" y=\"180\">Lagu: this is music from unittest</text>"))
+				writer.EXPECT().Write([]byte(`<text x="50" y="180">Lagu: this is music from unittest</text>`))
+
+				return res
+			},
+		},
+		{
+			name: "music and lyric different,  italic break down to multiple lines with copy right and verse footnotes",
+			args: args{
+				y: 150,
+				metadata: repository.HymnData{
+					Lyric: "this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <i>Also added a long italic text for breaking down the text to the new line.</i>",
+					Music: "this is music from unittest",
+					Copyright: sql.NullString{
+						Valid:  true,
+						String: "unittest",
+					},
+				},
+				verseFootNotes: map[int]map[int]repository.VerseFootNotes{
+					1: map[int]repository.VerseFootNotes{
+						1: repository.VerseFootNotes{
+							LinePos: sql.NullInt32{
+								Valid: true,
+								Int32: 1,
+							},
+							MarkerStyle: sql.NullInt32{
+								Valid: true,
+								Int32: 0,
+							},
+							FootnoteMarker: sql.NullString{
+								Valid:  true,
+								String: "*",
+							},
+							Footnote: sql.NullString{
+								Valid:  true,
+								String: " adalah unittest",
+							},
+						},
+					},
+				},
+			},
+			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				res := canvas.NewMockCanvas(ctrl)
+				writer := canvas.NewMockWriter(ctrl)
+				res.EXPECT().Writer().Return(writer).Times(3)
+
+				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
+				res.EXPECT().Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
+				res.EXPECT().Gend().Times(2)
+				res.EXPECT().Text(50, 170, "Syair: ")
+				line1 := `this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style="italic">Also added a long italic text for breaking </tspan>`
+				line2 := `<tspan font-style="italic">down the text to the new line.</tspan>`
+
+				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="170">%s</text>`, line1)))
+				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="185">%s</text>`, line2)))
+				writer.EXPECT().Write([]byte(`<text x="50" y="200">Lagu: this is music from unittest</text>`))
+				res.EXPECT().Text(654, 200, "© unittest")
+				res.EXPECT().Text(70, 130, "* adalah unittest")
 
 				return res
 			},
@@ -258,7 +346,7 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ci := creditsInteractor{}
-			ci.RenderCredits(context.Background(), tt.initCanv(ctrl), tt.args.y, tt.args.metadata, nil)
+			ci.RenderCredits(context.Background(), tt.initCanv(ctrl), tt.args.y, tt.args.metadata, tt.args.verseFootNotes)
 		})
 	}
 }

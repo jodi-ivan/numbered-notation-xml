@@ -1,6 +1,7 @@
 package breathpause
 
 import (
+	"context"
 	"encoding/xml"
 	"testing"
 
@@ -47,7 +48,7 @@ func Test_breathPauseInteractor_SetAndGetBreathPauseRenderer(t *testing.T) {
 					BreathMark: &entity.ArticulationTypesBreathMark,
 				},
 				MeasureNumber: 1,
-				Width:         6,
+				Width:         15,
 			},
 		},
 		{
@@ -71,7 +72,7 @@ func Test_breathPauseInteractor_SetAndGetBreathPauseRenderer(t *testing.T) {
 					BreathMark: &entity.ArticulationTypesBreathMark,
 				},
 				MeasureNumber: 1,
-				Width:         6,
+				Width:         15,
 			},
 		},
 		{
@@ -97,7 +98,7 @@ func Test_breathPauseInteractor_SetAndGetBreathPauseRenderer(t *testing.T) {
 					BreathMark: &entity.ArticulationTypesBreathMark,
 				},
 				MeasureNumber: 1,
-				Width:         6,
+				Width:         15,
 				IsNewLine:     true,
 			},
 		},
@@ -123,4 +124,152 @@ func TestNew(t *testing.T) {
 			t.Fail()
 		}
 	})
+}
+
+func TestAdjustBreathmarkBeamCont(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		note *entity.NoteRenderer
+		prev *entity.NoteRenderer
+		next *entity.NoteRenderer
+
+		wantNote *entity.NoteRenderer
+	}{
+		{
+			name:     "alone and not new line",
+			note:     &entity.NoteRenderer{},
+			wantNote: &entity.NoteRenderer{},
+		},
+		{
+			name: "alone and new line and not beam",
+			note: &entity.NoteRenderer{
+				IsNewLine: true,
+			},
+			prev: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{},
+			},
+			wantNote: &entity.NoteRenderer{
+				IsNewLine: true,
+				Beam:      map[int]entity.Beam{},
+			},
+		},
+		{
+			name: "alone and new line and has beam",
+			note: &entity.NoteRenderer{
+				IsNewLine: true,
+			},
+			prev: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{
+					1: entity.Beam{
+						Number: 1,
+						Type:   musicxml.NoteBeamTypeEnd,
+					},
+				},
+			},
+			wantNote: &entity.NoteRenderer{
+				IsNewLine: true,
+				Beam: map[int]entity.Beam{
+					1: entity.Beam{
+						Number: 1,
+						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
+					},
+				},
+			},
+		},
+		{
+			name: "has next but prev does not have beam",
+			note: &entity.NoteRenderer{},
+			prev: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{},
+			},
+			wantNote: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{},
+			},
+			next: &entity.NoteRenderer{},
+		},
+		{
+			name: "has next but prev does have beam but next does not",
+			note: &entity.NoteRenderer{},
+			prev: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{
+					1: entity.Beam{
+						Number: 1,
+						Type:   musicxml.NoteBeamTypeEnd,
+					},
+				},
+			},
+			wantNote: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{},
+			},
+			next: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{},
+			},
+		},
+		{
+			name: "has next, prev and next do have beam",
+			note: &entity.NoteRenderer{},
+			prev: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{
+					1: entity.Beam{
+						Number: 1,
+						Type:   musicxml.NoteBeamTypeContinue,
+					},
+				},
+			},
+			wantNote: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{
+					1: entity.Beam{
+						Number: 1,
+						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
+					},
+				},
+			},
+			next: &entity.NoteRenderer{
+				Beam: map[int]entity.Beam{
+					1: entity.Beam{
+						Number: 1,
+						Type:   musicxml.NoteBeamTypeEnd,
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			AdjustBreathmarkBeamCont(context.Background(), tt.note, tt.prev, tt.next)
+			assert.Equal(t, tt.wantNote.Beam, tt.note.Beam)
+		})
+	}
+}
+
+func TestIsBreathMark(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		note *entity.NoteRenderer
+		want bool
+	}{
+		{
+			name: "nope",
+			note: &entity.NoteRenderer{},
+			want: false,
+		},
+		{
+			name: "yes",
+			note: &entity.NoteRenderer{
+				Articulation: &entity.Articulation{
+					BreathMark: &entity.ArticulationTypesBreathMark,
+				},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsBreathMark(tt.note)
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

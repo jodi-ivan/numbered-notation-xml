@@ -48,7 +48,7 @@ func (bpi *breathPauseInteractor) SetAndGetBreathPauseRenderer(noteRenderer *ent
 }
 
 func AdjustBreathmarkBeamCont(ctx context.Context, note, prev, next *entity.NoteRenderer) {
-	if note.IsNewLine {
+	if note.IsNewLine && prev != nil {
 		note.Beam = map[int]entity.Beam{}
 		for beamNo := 1; beamNo < 4; beamNo++ {
 			_, hasBeam := prev.Beam[beamNo] // previous note

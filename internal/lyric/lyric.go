@@ -8,7 +8,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -151,17 +150,4 @@ func (li *lyricInteractor) CalculateMarginLeft(txt string) float64 {
 		return li.CalculateLyricWidth(subStr[0]) * -1
 	}
 	return 0
-}
-
-func CalculateLyricOffset(note *entity.NoteRenderer) int {
-	result := 0
-	// offset lyric calulation
-	if note.Tie != nil && note.Slur != nil {
-		result = 3 // some leeway for tie+slur combo
-	}
-	if len(note.Slur) > 1 {
-		result += (len(note.Slur) - 1) * rhythm.OFFSET_SLURTIES_TO_LYRIC
-	}
-
-	return result
 }

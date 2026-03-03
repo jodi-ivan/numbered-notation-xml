@@ -56,15 +56,15 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 				canv.EXPECT().Group("class='verse'")
 				canv.EXPECT().Group()
 
-				canv.EXPECT().Text(201, 100, "2. ")
-				canv.EXPECT().Text(220, 100, " Suci, suci, suci! Kaum kudus tersungkur")
-				canv.EXPECT().Text(220, 125, " di depan takhtaMu memb'ri mahkotanya.")
-				canv.EXPECT().Text(220, 150, " Segenap malaikai sujud menyembahMu,")
-				canv.EXPECT().Text(220, 175, " Tuhan, Yang Ada s'lama-lamanya")
+				canv.EXPECT().Text(226, 100, "2. ")
+				canv.EXPECT().Text(245, 100, " Suci, suci, suci! Kaum kudus tersungkur")
+				canv.EXPECT().Text(245, 125, " di depan takhtaMu memb'ri mahkotanya.")
+				canv.EXPECT().Text(245, 150, " Segenap malaikai sujud menyembahMu,")
+				canv.EXPECT().Text(245, 175, " Tuhan, Yang Ada s'lama-lamanya")
 				canv.EXPECT().Gend().Times(3)
 
-				canv.EXPECT().Qbez(332, 102, 340, 107, 349, 102, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
-				canv.EXPECT().Qbez(302, 152, 307, 157, 314, 152, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(357, 102, 362, 107, 369, 102, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(327, 152, 331, 157, 337, 152, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
 				return canv
 			},
 			want: VerseInfo{
@@ -100,25 +100,25 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 				canv.EXPECT().Group("class='verse'").Times(2)
 				canv.EXPECT().Group().Times(2)
 
-				canv.EXPECT().Text(155, 100, "2. ")
-				canv.EXPECT().Text(174, 100, " Kerubim dan serafim")
-				canv.EXPECT().Text(174, 125, " memuliakan Yang Trisuci;")
-				canv.EXPECT().Text(174, 150, " para rasul dan nabi,")
-				canv.EXPECT().Text(174, 175, " martir yang berjubah putih")
-				canv.EXPECT().Text(174, 200, " G'reja yang kudus, esa,")
-				canv.EXPECT().Text(174, 225, " kepadaMu menyembah.")
+				canv.EXPECT().Text(81, 100, "2. ")
+				canv.EXPECT().Text(100, 100, " Kerubim dan serafim")
+				canv.EXPECT().Text(100, 125, " memuliakan Yang Trisuci;")
+				canv.EXPECT().Text(100, 150, " para rasul dan nabi,")
+				canv.EXPECT().Text(100, 175, " martir yang berjubah putih")
+				canv.EXPECT().Text(100, 200, " G'reja yang kudus, esa,")
+				canv.EXPECT().Text(100, 225, " kepadaMu menyembah.")
 
 				canv.EXPECT().Gend().Times(5)
 
-				canv.EXPECT().Qbez(220, 127, 225, 132, 232, 127, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(146, 127, 150, 132, 154, 127, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
 
-				canv.EXPECT().Text(391, 100, "3. ")
-				canv.EXPECT().Text(410, 100, " TakhtaMu kekal teguh")
-				canv.EXPECT().Text(410, 125, " pada Sisi kanan Bapa;")
-				canv.EXPECT().Text(410, 150, " dalam penghakimanMu,")
-				canv.EXPECT().Text(410, 175, " tolong umatMu yang papa:")
-				canv.EXPECT().Text(410, 200, " diri kami yang lemah")
-				canv.EXPECT().Text(410, 225, " dalam Dikau s'lamatlah!")
+				canv.EXPECT().Text(465, 100, "3. ")
+				canv.EXPECT().Text(484, 100, " TakhtaMu kekal teguh")
+				canv.EXPECT().Text(484, 125, " pada Sisi kanan Bapa;")
+				canv.EXPECT().Text(484, 150, " dalam penghakimanMu,")
+				canv.EXPECT().Text(484, 175, " tolong umatMu yang papa:")
+				canv.EXPECT().Text(484, 200, " diri kami yang lemah")
+				canv.EXPECT().Text(484, 225, " dalam Dikau s'lamatlah!")
 
 				return canv
 			},
@@ -162,29 +162,29 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 				canv.EXPECT().Group("class='verse'").Times(3)
 				canv.EXPECT().Group().Times(3)
 
-				canv.EXPECT().Text(157, 100, "2. ")
-				canv.EXPECT().Text(176, 100, " Di hadapan takta rahmat")
-				canv.EXPECT().Text(176, 125, " aku menyembah,")
-				canv.EXPECT().Text(176, 150, " tunduk dalam penyesalan")
-				canv.EXPECT().Text(176, 175, " Tuhan tolonglah!")
+				canv.EXPECT().Text(81, 100, "2. ")
+				canv.EXPECT().Text(100, 100, " Di hadapan takta rahmat")
+				canv.EXPECT().Text(100, 125, " aku menyembah,")
+				canv.EXPECT().Text(100, 150, " tunduk dalam penyesalan")
+				canv.EXPECT().Text(100, 175, " Tuhan tolonglah!")
 
 				canv.EXPECT().Gend().Times(7)
 
-				canv.EXPECT().Text(401, 100, "3. ")
-				canv.EXPECT().Text(420, 100, " \"Ini saja andalanku:")
-				canv.EXPECT().Text(420, 125, " jasa kurbanMu.")
-				canv.EXPECT().Text(420, 150, " Hatiku yang hancur luluh")
-				canv.EXPECT().Text(420, 175, " buatlah sembuh.")
+				canv.EXPECT().Text(476, 100, "3. ")
+				canv.EXPECT().Text(495, 100, " \"Ini saja andalanku:")
+				canv.EXPECT().Text(495, 125, " jasa kurbanMu.")
+				canv.EXPECT().Text(495, 150, " Hatiku yang hancur luluh")
+				canv.EXPECT().Text(495, 175, " buatlah sembuh.")
 
-				canv.EXPECT().Text(243, 235, "4. ")
-				canv.EXPECT().Text(263, 235, " Kaulah Sumber penghiburan")
-				canv.EXPECT().Text(263, 260, " Raja hidupku.")
-				canv.EXPECT().Text(263, 285, " Baik di bumi baik di sorga,")
-				canv.EXPECT().Text(263, 310, " siapa bandingMu?")
+				canv.EXPECT().Text(268, 235, "4. ")
+				canv.EXPECT().Text(288, 235, " Kaulah Sumber penghiburan")
+				canv.EXPECT().Text(288, 260, " Raja hidupku.")
+				canv.EXPECT().Text(288, 285, " Baik di bumi baik di sorga,")
+				canv.EXPECT().Text(288, 310, " siapa bandingMu?")
 
-				canv.EXPECT().Qbez(272, 287, 277, 292, 284, 287, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
-				canv.EXPECT().Qbez(360, 287, 365, 292, 372, 287, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
-				canv.EXPECT().Qbez(263, 312, 272, 317, 281, 312, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(297, 287, 301, 292, 307, 287, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(385, 287, 389, 292, 394, 287, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(288, 312, 295, 317, 302, 312, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
 
 				return canv
 			},

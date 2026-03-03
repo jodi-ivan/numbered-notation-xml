@@ -257,3 +257,68 @@ func TestKeySignature_GetLetteredKeySignature(t *testing.T) {
 		})
 	}
 }
+
+func TestKeySignature_BuildScale(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for receiver constructor.
+		key  musicxml.KeySignature
+		want []string
+	}{
+		// --- MAJOR (Ionian) ---
+		{name: "Bb major (-2)", key: musicxml.KeySignature{Fifth: -2, Mode: "major"}, want: []string{"Bb", "C", "D", "Eb", "F", "G", "A"}},
+		{name: "F major (-1)", key: musicxml.KeySignature{Fifth: -1, Mode: "major"}, want: []string{"F", "G", "A", "Bb", "C", "D", "E"}},
+		{name: "C major (0)", key: musicxml.KeySignature{Fifth: 0, Mode: "major"}, want: []string{"C", "D", "E", "F", "G", "A", "B"}},
+		{name: "G major (1)", key: musicxml.KeySignature{Fifth: 1, Mode: "major"}, want: []string{"G", "A", "B", "C", "D", "E", "F#"}},
+		{name: "D major (2)", key: musicxml.KeySignature{Fifth: 2, Mode: "major"}, want: []string{"D", "E", "F#", "G", "A", "B", "C#"}},
+
+		// --- DORIAN ---
+		{name: "C dorian (-2)", key: musicxml.KeySignature{Fifth: -2, Mode: "dorian"}, want: []string{"C", "D", "Eb", "F", "G", "A", "Bb"}},
+		{name: "G dorian (-1)", key: musicxml.KeySignature{Fifth: -1, Mode: "dorian"}, want: []string{"G", "A", "Bb", "C", "D", "E", "F"}},
+		{name: "D dorian (0)", key: musicxml.KeySignature{Fifth: 0, Mode: "dorian"}, want: []string{"D", "E", "F", "G", "A", "B", "C"}},
+		{name: "A dorian (1)", key: musicxml.KeySignature{Fifth: 1, Mode: "dorian"}, want: []string{"A", "B", "C", "D", "E", "F#", "G"}},
+		{name: "E dorian (2)", key: musicxml.KeySignature{Fifth: 2, Mode: "dorian"}, want: []string{"E", "F#", "G", "A", "B", "C#", "D"}},
+
+		// --- MIXOLYDIAN ---
+		{name: "F mixolydian (-2)", key: musicxml.KeySignature{Fifth: -2, Mode: "mixolydian"}, want: []string{"F", "G", "A", "Bb", "C", "D", "Eb"}},
+		{name: "C mixolydian (-1)", key: musicxml.KeySignature{Fifth: -1, Mode: "mixolydian"}, want: []string{"C", "D", "E", "F", "G", "A", "Bb"}},
+		{name: "G mixolydian (0)", key: musicxml.KeySignature{Fifth: 0, Mode: "mixolydian"}, want: []string{"G", "A", "B", "C", "D", "E", "F"}},
+		{name: "D mixolydian (1)", key: musicxml.KeySignature{Fifth: 1, Mode: "mixolydian"}, want: []string{"D", "E", "F#", "G", "A", "B", "C"}},
+		{name: "A mixolydian (2)", key: musicxml.KeySignature{Fifth: 2, Mode: "mixolydian"}, want: []string{"A", "B", "C#", "D", "E", "F#", "G"}},
+
+		// --- MINOR (Aeolian) ---
+		{name: "G minor (-2)", key: musicxml.KeySignature{Fifth: -2, Mode: "minor"}, want: []string{"G", "A", "Bb", "C", "D", "Eb", "F"}},
+		{name: "D minor (-1)", key: musicxml.KeySignature{Fifth: -1, Mode: "minor"}, want: []string{"D", "E", "F", "G", "A", "Bb", "C"}},
+		{name: "A minor (0)", key: musicxml.KeySignature{Fifth: 0, Mode: "minor"}, want: []string{"A", "B", "C", "D", "E", "F", "G"}},
+		{name: "E minor (1)", key: musicxml.KeySignature{Fifth: 1, Mode: "minor"}, want: []string{"E", "F#", "G", "A", "B", "C", "D"}},
+		{name: "B minor (2)", key: musicxml.KeySignature{Fifth: 2, Mode: "minor"}, want: []string{"B", "C#", "D", "E", "F#", "G", "A"}},
+
+		// // --- PHRYGIAN ---
+		// {name: "D phrygian (-2)", key: musicxml.KeySignature{Fifth: -2, Mode: "phrygian"}, want: []string{"D", "Eb", "F", "G", "A", "Bb", "C"}},
+		// {name: "A phrygian (-1)", key: musicxml.KeySignature{Fifth: -1, Mode: "phrygian"}, want: []string{"A", "Bb", "C", "D", "E", "F", "G"}},
+		// {name: "E phrygian (0)", key: musicxml.KeySignature{Fifth: 0, Mode: "phrygian"}, want: []string{"E", "F", "G", "A", "B", "C", "D"}},
+		// {name: "B phrygian (1)", key: musicxml.KeySignature{Fifth: 1, Mode: "phrygian"}, want: []string{"B", "C", "D", "E", "F#", "G", "A"}},
+		// {name: "F# phrygian (2)", key: musicxml.KeySignature{Fifth: 2, Mode: "phrygian"}, want: []string{"F#", "G", "A", "B", "C#", "D", "E"}},
+
+		// --- LYDIAN ---
+		// {name: "Eb lydian (-2)", key: musicxml.KeySignature{Fifth: -2, Mode: "lydian"}, want: []string{"Eb", "F", "G", "A", "Bb", "C", "D"}},
+		// {name: "Bb lydian (-1)", key: musicxml.KeySignature{Fifth: -1, Mode: "lydian"}, want: []string{"Bb", "C", "D", "E", "F", "G", "A"}},
+		// {name: "F lydian (0)", key: musicxml.KeySignature{Fifth: 0, Mode: "lydian"}, want: []string{"F", "G", "A", "B", "C", "D", "E"}},
+		// {name: "C lydian (1)", key: musicxml.KeySignature{Fifth: 1, Mode: "lydian"}, want: []string{"C", "D", "E", "F#", "G", "A", "B"}},
+		// {name: "G lydian (2)", key: musicxml.KeySignature{Fifth: 2, Mode: "lydian"}, want: []string{"G", "A", "B", "C#", "D", "E", "F#"}},
+
+		// // --- LOCRIAN ---
+		// {name: "A locrian (-2)", key: musicxml.KeySignature{Fifth: -2, Mode: "locrian"}, want: []string{"A", "Bb", "C", "D", "Eb", "F", "G"}},
+		// {name: "E locrian (-1)", key: musicxml.KeySignature{Fifth: -1, Mode: "locrian"}, want: []string{"E", "F", "G", "A", "Bb", "C", "D"}},
+		// {name: "B locrian (0)", key: musicxml.KeySignature{Fifth: 0, Mode: "locrian"}, want: []string{"B", "C", "D", "E", "F", "G", "A"}},
+		// {name: "F# locrian (1)", key: musicxml.KeySignature{Fifth: 1, Mode: "locrian"}, want: []string{"F#", "G", "A", "B", "C", "D", "E"}},
+		// {name: "C# locrian (2)", key: musicxml.KeySignature{Fifth: 2, Mode: "locrian"}, want: []string{"C#", "D", "E", "F#", "G", "A", "B"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ks := NewKeySignature(tt.key)
+			got := ks.BuildScale()
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

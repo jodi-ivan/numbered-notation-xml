@@ -105,104 +105,55 @@ func (ni *numberedInteractor) SplitNote(ctx context.Context, noteLength float64,
 func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.TimeSignature, measure int, noteLength float64) []NoteLength {
 	currentTimeSig := ts.GetTimesignatureOnMeasure(ctx, measure)
 
-	if currentTimeSig.BeatType == 4 || currentTimeSig.BeatType == 2 {
-		result := []NoteLength{
-			NoteLength{
-				Type: musicxml.NoteLengthQuarter,
-			},
-		}
-
-		if noteLength == 0.75 {
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLengthEighth,
-				},
-				NoteLength{IsDotted: true, Type: musicxml.NoteLength16th},
-			}
-		}
-
-		if noteLength == 0.5 {
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLengthEighth,
-				},
-			}
-		}
-
-		if noteLength == 0.25 {
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLength16th,
-				},
-			}
-		}
-
-		for i := 1; i <= int(math.Trunc(noteLength))-1; i++ {
-			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthQuarter})
-		}
-
-		if math.Trunc(noteLength) != noteLength { // decimal dotted beat
-			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthEighth})
-		}
-
-		return result
-
+	// 1. Setup Base and Subdivision Types
+	var baseType, halfType, quarterType musicxml.NoteLength
+	switch currentTimeSig.BeatType {
+	case 8:
+		baseType, halfType, quarterType = musicxml.NoteLengthEighth, musicxml.NoteLength16th, musicxml.NoteLength32nd
+	case 4, 2:
+		baseType, halfType, quarterType = musicxml.NoteLengthQuarter, musicxml.NoteLengthEighth, musicxml.NoteLength16th
+	default:
+		return nil
 	}
 
-	if currentTimeSig.BeatType == 8 {
-		result := []NoteLength{}
-
-		if noteLength == 1 {
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLengthEighth,
-				},
-			}
+	// 2. Handle Standalone Special Cases (Less than 1 beat)
+	if noteLength < 1.0 {
+		switch noteLength {
+		case 0.75:
+			return []NoteLength{{Type: halfType}, {IsDotted: true, Type: quarterType}}
+		case 0.5:
+			return []NoteLength{{Type: halfType}}
+		case 0.25:
+			return []NoteLength{{Type: quarterType}}
+		default:
+			return []NoteLength{{Type: baseType}} // Fallback
 		}
-
-		if noteLength == 0.5 {
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLength16th,
-				},
-			}
-		}
-
-		if noteLength == 0.25 {
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLength32nd,
-				},
-			}
-		}
-
-		if noteLength == 1.5 {
-			return []NoteLength{
-				NoteLength{
-					Type: musicxml.NoteLengthEighth,
-				},
-				NoteLength{
-					IsDotted: true,
-					Type:     musicxml.NoteLength16th,
-				},
-			}
-		}
-
-		result = append(result, NoteLength{
-			Type: musicxml.NoteLengthEighth,
-		})
-		for i := 1; i <= int(math.Trunc(noteLength))-1; i++ {
-			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLengthEighth})
-		}
-
-		if math.Trunc(noteLength) != noteLength { // decimal dotted beat
-			result = append(result, NoteLength{IsDotted: true, Type: musicxml.NoteLength16th})
-		}
-
-		return result
 	}
 
-	return nil
+	// 3. Handle Full Beats (First note is head, others are dots)
+	result := []NoteLength{{Type: baseType}}
+	fullBeats := int(math.Trunc(noteLength))
+	for i := 1; i < fullBeats; i++ {
+		result = append(result, NoteLength{IsDotted: true, Type: baseType})
+	}
+
+	// 4. Handle Decimal Extensions (The "Tail")
+	if tail := noteLength - float64(fullBeats); tail > 0 {
+		var extensionType musicxml.NoteLength
+
+		// Based on your original logic:
+		// In BT 8, a decimal always appended a 16th.
+		// In BT 4, a decimal always appended an 8th.
+		if currentTimeSig.BeatType == 8 {
+			extensionType = musicxml.NoteLength16th
+		} else {
+			extensionType = musicxml.NoteLengthEighth
+		}
+
+		result = append(result, NoteLength{IsDotted: true, Type: extensionType})
+	}
+
+	return result
 }
 
 func New() Numbered {

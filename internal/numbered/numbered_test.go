@@ -30,6 +30,25 @@ func Test_numberedInteractor_GetLengthNote(t *testing.T) {
 		want []NoteLength
 	}{
 		{
+			name: "quarter .25 beat",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 4,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 0.25,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLength16th,
+				},
+			},
+		},
+		{
 			name: "quarter .5 beat",
 			args: args{
 				ts: timesig.TimeSignature{
@@ -45,6 +64,29 @@ func Test_numberedInteractor_GetLengthNote(t *testing.T) {
 			want: []NoteLength{
 				NoteLength{
 					Type: musicxml.NoteLengthEighth,
+				},
+			},
+		},
+		{
+			name: "quarter .75 beat",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 4,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 0.75,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLengthEighth,
+				},
+				NoteLength{
+					IsDotted: true,
+					Type:     musicxml.NoteLength16th,
 				},
 			},
 		},
@@ -164,6 +206,136 @@ func Test_numberedInteractor_GetLengthNote(t *testing.T) {
 				NoteLength{
 					Type:     musicxml.NoteLengthQuarter,
 					IsDotted: true,
+				},
+			},
+		},
+		{
+			name: "eight 1 beats",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 8,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 1,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLengthEighth,
+				},
+			},
+		},
+		{
+			name: "eight 0.5 beats",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 8,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 0.5,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLength16th,
+				},
+			},
+		},
+		{
+			name: "eight 0.25 beats",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 8,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 0.25,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLength32nd,
+				},
+			},
+		},
+		{
+			name: "eight 1.5 beats",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 8,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 1.5,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLengthEighth,
+				},
+				NoteLength{
+					IsDotted: true,
+					Type:     musicxml.NoteLength16th,
+				},
+			},
+		},
+		{
+			name: "eight 2 beats",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 8,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 2,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLengthEighth,
+				},
+				NoteLength{
+					IsDotted: true,
+					Type:     musicxml.NoteLengthEighth,
+				},
+			},
+		},
+		{
+			name: "eight 2.25 beats",
+			args: args{
+				ts: timesig.TimeSignature{
+					Signatures: []timesig.Time{
+						timesig.Time{
+							BeatType: 8,
+						},
+					},
+				},
+				measure:    1,
+				noteLength: 2.25,
+			},
+			want: []NoteLength{
+				NoteLength{
+					Type: musicxml.NoteLengthEighth,
+				},
+				NoteLength{
+					IsDotted: true,
+					Type:     musicxml.NoteLengthEighth,
+				},
+				NoteLength{
+					IsDotted: true,
+					Type:     musicxml.NoteLength16th,
 				},
 			},
 		},

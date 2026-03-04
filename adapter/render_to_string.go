@@ -11,7 +11,9 @@ import (
 
 type RenderStringCanvasDelegator struct{}
 
-func (rscd *RenderStringCanvasDelegator) OnBeforeStartWrite() {}
+func (rscd *RenderStringCanvasDelegator) OnBeforeStartWrite() {
+	// no pre operation needed for string operation
+}
 func (rscd *RenderStringCanvasDelegator) OnError(err error) canvas.DelegatorErrorFlowControl {
 	return canvas.DelegatorErrorFlowControlStop
 }

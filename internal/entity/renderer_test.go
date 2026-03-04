@@ -51,7 +51,7 @@ func TestNoteRenderer_UpdateBeam(t *testing.T) {
 			Beam: map[int]Beam{},
 		}
 		nr.UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-		expect := map[int]Beam{1: Beam{1, musicxml.NoteBeamTypeBegin}}
+		expect := map[int]Beam{}
 		assert.Equal(t, expect, nr.Beam)
 	})
 

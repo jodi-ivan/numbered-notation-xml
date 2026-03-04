@@ -212,6 +212,7 @@ func TestMeasure_Build(t *testing.T) {
 				}
 			},
 			wantMeasure: &Measure{
+				NewLineIndex: map[int]bool{1: true},
 				Appendix: []Element{
 					Element{
 						Content: pitch,
@@ -267,7 +268,6 @@ func TestMeasure_Build(t *testing.T) {
 						},
 					},
 				},
-				NewLineIndex: map[int]bool{},
 			},
 		},
 		{

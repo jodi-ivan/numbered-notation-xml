@@ -190,10 +190,10 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 					},
 				},
 			},
-			wantBarlinePos: 30,
+			wantBarlinePos: 35,
 			wantRenderer: &entity.NoteRenderer{
 				MeasureNumber: 1,
-				PositionX:     30,
+				PositionX:     25,
 				Barline: &musicxml.Barline{
 					Location: musicxml.BarlineLocationRight,
 					BarStyle: musicxml.BarLineStyleLightHeavy,

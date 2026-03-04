@@ -40,6 +40,24 @@ func TestRenderHTTP_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid parameter#2",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{
+						Key:   "number",
+						Value: "a",
+					},
+				}),
+				r: &http.Request{},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				res.EXPECT().WriteHeader(http.StatusBadRequest)
+				res.EXPECT().Write([]byte("Invalid URL"))
+				return res
+			},
+		},
+		{
 			name: "everything went fine",
 			args: args{
 				ps: httprouter.Params([]httprouter.Param{
@@ -57,6 +75,27 @@ func TestRenderHTTP_ServeHTTP(t *testing.T) {
 			initMock: func(ctrl *gomock.Controller) *usecase.MockUsecase {
 				res := usecase.NewMockUsecase(ctrl)
 				res.EXPECT().RenderHymn(gomock.Any(), gomock.Any(), int(1))
+				return res
+			},
+		},
+		{
+			name: "everything went fine#2",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{
+						Key:   "number",
+						Value: "1a",
+					},
+				}),
+				r: &http.Request{},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				return res
+			},
+			initMock: func(ctrl *gomock.Controller) *usecase.MockUsecase {
+				res := usecase.NewMockUsecase(ctrl)
+				res.EXPECT().RenderHymn(gomock.Any(), gomock.Any(), int(1), "a")
 				return res
 			},
 		},

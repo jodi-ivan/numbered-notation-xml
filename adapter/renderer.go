@@ -59,6 +59,12 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 	var variant []string
 	num, err := strconv.Atoi(raw)
 	if err != nil {
+		if len(raw) == 0 {
+			log.Printf("invalid number: %v", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Invalid URL"))
+			return
+		}
 		num, err = strconv.Atoi(raw[0 : len(raw)-1])
 		if err != nil {
 			log.Printf("invalid number: %v", err.Error())

@@ -73,6 +73,9 @@ func (ts *TimeSignature) GetHumanized() string {
 
 	if !ts.IsMixed {
 		ts.humanized = fmt.Sprintf("%d ketuk", ts.Signatures[0].Beat)
+		if ts.Signatures[0].BeatType == 8 {
+			ts.humanized = "6 (2 x 3) ketuk"
+		}
 		return ts.humanized
 	}
 	beat := map[int]bool{}

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTime_calculateNoteLength(t *testing.T) {
@@ -406,6 +407,337 @@ func TestTimeSignature_GetNoteLength(t *testing.T) {
 			if got := ts.GetNoteLength(context.Background(), tt.args.measure, tt.args.note); got != tt.want {
 				t.Errorf("TimeSignature.GetNoteLength() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestNewTimeSignatures(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		measures []musicxml.Measure
+		want     TimeSignature
+	}{
+		{
+			name: "single time signature",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+			},
+			want: TimeSignature{
+				IsMixed: false,
+				Signatures: []Time{
+					Time{
+						Measure:  1,
+						Beat:     4,
+						BeatType: 4,
+					},
+				},
+			},
+		},
+		{
+			name: "multi signature",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    1,
+							BeatType: 1,
+						},
+					},
+				},
+				musicxml.Measure{
+					Number: 2,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+			},
+			want: TimeSignature{
+				IsMixed: true,
+				Signatures: []Time{
+					Time{
+						Measure:  1,
+						Beat:     1,
+						BeatType: 4,
+					},
+					Time{
+						Measure:  2,
+						Beat:     4,
+						BeatType: 4,
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewTimeSignatures(context.Background(), tt.measures)
+			// TODO: update the condition below to compare got with tt.want.
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestTimeSignature_GetTimesignatureOnMeasure(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for receiver constructor.
+		measures []musicxml.Measure
+		// Named input parameters for target function.
+		measure int
+		want    Time
+	}{
+		{
+			name: "single",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+			},
+			measure: 5,
+			want: Time{
+				Measure:  1,
+				Beat:     4,
+				BeatType: 4,
+			},
+		},
+		{
+			name: "multi#1",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+				musicxml.Measure{
+					Number: 2,
+				},
+				musicxml.Measure{
+					Number: 3,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    6,
+							BeatType: 8,
+						},
+					},
+				},
+			},
+			measure: 1,
+			want: Time{
+				Measure:  1,
+				Beat:     4,
+				BeatType: 4,
+			},
+		},
+		{
+			name: "multi#2",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+				musicxml.Measure{
+					Number: 2,
+				},
+				musicxml.Measure{
+					Number: 3,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    6,
+							BeatType: 8,
+						},
+					},
+				},
+			},
+			measure: 3,
+			want: Time{
+				Measure:  3,
+				Beat:     6,
+				BeatType: 8,
+			},
+		},
+		{
+			name: "multi#3",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+				musicxml.Measure{
+					Number: 2,
+				},
+				musicxml.Measure{
+					Number: 3,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    6,
+							BeatType: 8,
+						},
+					},
+				},
+			},
+			measure: 5,
+			want: Time{
+				Measure:  3,
+				Beat:     6,
+				BeatType: 8,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := NewTimeSignatures(context.Background(), tt.measures)
+			got := ts.GetTimesignatureOnMeasure(context.Background(), tt.measure)
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestTimeSignature_GetHumanized(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for receiver constructor.
+		measures []musicxml.Measure
+		want     string
+	}{
+		{
+			name: "single",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+			},
+			want: "4 ketuk",
+		},
+		{
+			name: "single 8 beat",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    6,
+							BeatType: 8,
+						},
+					},
+				},
+			},
+			want: "6 (2 x 3) ketuk",
+		},
+		{
+			name: "multi",
+			measures: []musicxml.Measure{
+				musicxml.Measure{
+					Number: 1,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    4,
+							BeatType: 4,
+						},
+					},
+				},
+				musicxml.Measure{
+					Number: 2,
+				},
+				musicxml.Measure{
+					Number: 3,
+					Attribute: &musicxml.Attribute{
+						Time: &struct {
+							Beats    int `xml:"beats"`
+							BeatType int `xml:"beat-type"`
+						}{
+							Beats:    6,
+							BeatType: 8,
+						},
+					},
+				},
+			},
+			want: "4 dan 6 (2 x 3) ketuk",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := NewTimeSignatures(context.Background(), tt.measures)
+			got := ts.GetHumanized()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

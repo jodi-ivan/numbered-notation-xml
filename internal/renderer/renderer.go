@@ -116,14 +116,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		ir.Credits.RenderCredits(ctx, canv, relativeY, metadata.HymnData, metadata.VerseFootNotes)
 
 		if metadata.IsForKids.Int16 == 1 {
-			canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-			fmt.Fprintf(canv.Writer(), `
-			<text x="%d" y="%d">
-				<tspan font-style="italic">Semua nyayian dengan tanda</tspan>
-				<tspan font-style="bold" font-size="125%%">☆</tspan>
-				<tspan font-style="italic">: khusus untuk anak-anak</tspan>
-			</text>`, constant.LAYOUT_INDENT_LENGTH, relativeY+30)
-			canv.Gend()
+			ir.Credits.RenderForKidsFootnotes(ctx, canv, relativeY+30)
 		}
 	}
 	canv.End()

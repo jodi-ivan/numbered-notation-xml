@@ -19,7 +19,6 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		return
 	}
 	canv.Group("class='slurties'")
-	// DONE: check ties across measure bar
 	for _, s := range set {
 
 		slurResult := SlurBezier{
@@ -94,7 +93,6 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 			lineType += fmt.Sprintf(";stroke-dasharray:%.1f %.1f;", dash, gap)
 			lineType += "stroke-dashoffset:" + fmt.Sprintf("%f", dash/2) + ";"
 		}
-		canv.Group("qbez-debug")
 		canv.Qbez(
 			int(math.Round(slurResult.Start.X)),
 			int(math.Round(slurResult.Start.Y)),
@@ -104,9 +102,6 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 			int(math.Round(slurResult.End.Y)),
 			lineType,
 		)
-		fmt.Fprintf(canv.Writer(), `<title>Block: %.2f. PullY: %.1f</title>`, block, math.Ceil(pull.Y))
-
-		canv.Gend()
 
 	}
 	canv.Gend()
@@ -143,15 +138,6 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 
 	ties := map[int]SlurBezier{}
 	tiesSet := []SlurBezier{}
-	offsetSlurPull := float64(0)
-	for _, n := range notes {
-		if n.Tie != nil && n.Slur != nil {
-			offsetSlurPull = float64(OFFSET_SLURTIES_INITAL_TO_LYRIC)
-		}
-		if len(n.Slur) > 1 {
-			offsetSlurPull += float64((len(n.Slur) - 1) * OFFSET_SLURTIES_TO_LYRIC)
-		}
-	}
 	for _, note := range notes {
 		for _, s := range note.Slur {
 			if s.Type == musicxml.NoteSlurTypeStop || s.Type == musicxml.NoteSlurTypeHop {
@@ -172,11 +158,6 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 						},
 						Octave: 0,
 					}
-				}
-				temp.Pull = CoordinateWithOctave{
-					Coordinate: entity.Coordinate{
-						Y: offsetSlurPull,
-					},
 				}
 				slurs[s.Number] = temp
 
@@ -309,7 +290,6 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, 
 				beamSets = append(beamSets, beams[b.Number])
 
 				delete(beams, b.Number)
-
 			}
 		}
 

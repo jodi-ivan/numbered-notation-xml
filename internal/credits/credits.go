@@ -14,6 +14,7 @@ import (
 
 type Credits interface {
 	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes)
+	RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int)
 }
 
 type creditsInteractor struct {
@@ -116,8 +117,6 @@ func alignText(text string, textLength, targetLength int) string {
 	return strings.ReplaceAll(text, "tspan-font-style", "tspan font-style")
 }
 
-// RenderCredits
-// TODO: only supports wrapping int the lyric, the music does not have wrapping feature
 func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) {
 	leftIndent := indentLyric
 	lyricMusicMerged := metadata.Lyric == metadata.Music
@@ -222,4 +221,14 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 	canv.Gend()
 
+}
+
+func (ci *creditsInteractor) RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int) {
+	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
+	fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">
+				<tspan font-style="italic">Semua nyayian dengan tanda</tspan>
+				<tspan font-style="bold" font-size="125%%">☆</tspan>
+				<tspan font-style="italic">: khusus untuk anak-anak</tspan>
+			</text>`, constant.LAYOUT_INDENT_LENGTH, y)
+	canv.Gend()
 }

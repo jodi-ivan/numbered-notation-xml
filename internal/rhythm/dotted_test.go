@@ -101,7 +101,7 @@ func Test_rhythmInteractor_AdjustMultiDottedRenderer(t *testing.T) {
 				x: 25,
 				y: 125,
 			},
-			wantX: 90,
+			wantX: 100,
 			wantY: 125,
 			wantRevisedRenderer: []*entity.NoteRenderer{
 				&entity.NoteRenderer{
@@ -142,7 +142,7 @@ func Test_rhythmInteractor_AdjustMultiDottedRenderer(t *testing.T) {
 				x: 25,
 				y: 125,
 			},
-			wantX: 85,
+			wantX: 70,
 			wantY: 125,
 			wantRevisedRenderer: []*entity.NoteRenderer{
 				&entity.NoteRenderer{
@@ -161,7 +161,7 @@ func Test_rhythmInteractor_AdjustMultiDottedRenderer(t *testing.T) {
 				&entity.NoteRenderer{
 					IsDotted:      false,
 					Width:         constant.LOWERCASE_LENGTH,
-					PositionX:     70,
+					PositionX:     55,
 					PositionY:     125,
 					IndexPosition: 2,
 				},
@@ -264,7 +264,7 @@ func Test_rhythmInteractor_AdjustMultiDottedRenderer(t *testing.T) {
 				&entity.NoteRenderer{
 					IsDotted:      false,
 					Width:         constant.LOWERCASE_LENGTH,
-					PositionX:     70,
+					PositionX:     55,
 					PositionY:     125,
 					IndexPosition: 2,
 					IsNewLine:     true,

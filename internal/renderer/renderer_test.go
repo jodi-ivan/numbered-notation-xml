@@ -231,7 +231,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				mockStaff.EXPECT().RenderStaff(
 					gomock.Any(),
 					gomock.Any(),
-					int(100), // x
+					int(104), // x
 					int(385), // y
 					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
 					currTimeSig,

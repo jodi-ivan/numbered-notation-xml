@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/stretchr/testify/assert"
 )
@@ -113,6 +115,61 @@ func TestSplitLines(t *testing.T) {
 			if got := si.SplitLines(context.Background(), tt.args.part); !assert.Equal(t, tt.want, got) {
 				t.Errorf("SplitLines() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestProcessPreviousLines(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		prevNotes      []*entity.NoteRenderer
+		yPos           int
+		wantTotalNotes int
+		wantStaffInfo  StaffInfo
+	}{
+		{
+			name: "no new line",
+			prevNotes: []*entity.NoteRenderer{
+				&entity.NoteRenderer{},
+				&entity.NoteRenderer{},
+				&entity.NoteRenderer{},
+			},
+			wantTotalNotes: 3,
+			wantStaffInfo: StaffInfo{
+				MarginLeft: constant.LAYOUT_INDENT_LENGTH,
+			},
+		},
+		{
+			name: "has line",
+			prevNotes: []*entity.NoteRenderer{
+				&entity.NoteRenderer{},
+				&entity.NoteRenderer{
+					IsNewLine: true,
+				},
+				&entity.NoteRenderer{},
+			},
+			wantTotalNotes: 3,
+			wantStaffInfo: StaffInfo{
+				MarginLeft: constant.LAYOUT_INDENT_LENGTH,
+				Multiline:  true,
+				NextLineRenderer: []*entity.NoteRenderer{
+					&entity.NoteRenderer{},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got2 := ProcessPreviousLines(tt.prevNotes, tt.yPos)
+			// TODO: update the condition below to compare got with tt.want.
+			if len(got) == tt.wantTotalNotes {
+				t.Errorf("ProcessPreviousLines() total notes = %v, want %v", got, tt.wantTotalNotes)
+			}
+			assert.Equal(t, got2.MarginBottom, tt.wantStaffInfo.MarginBottom, "Margin bottom")
+			assert.Equal(t, got2.MarginLeft, tt.wantStaffInfo.MarginLeft, "Margin left")
+			assert.Equal(t, len(got2.NextLineRenderer), len(tt.wantStaffInfo.NextLineRenderer), "staff info next line")
+
 		})
 	}
 }

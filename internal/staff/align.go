@@ -130,9 +130,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		}
 
 		canv.Group("measure-align")
-		if len(measure) > 0 {
-			fmt.Fprintf(canv.Writer(), `<title>Measure %d</title>`, measure[0].MeasureNumber)
-		}
+		// if len(measure) > 0 {
+		// 	fmt.Fprintf(canv.Writer(), `<title>Measure %d</title>`, measure[0].MeasureNumber)
+		// }
 
 		canv.Group("class='lyric'", "style='font-family:Caladea'")
 		for _, n := range measure {
@@ -155,7 +155,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		canv.Gend()
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		for notePos, n := range measure {
-			canv.Group("titled-group")
 			if n.IsDotted {
 				canv.Text(n.PositionX, y, ".")
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
@@ -181,7 +180,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 				n.PositionX = xPos
 
 			}
-			canv.Gend()
 
 		}
 

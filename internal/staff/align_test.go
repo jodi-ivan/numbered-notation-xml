@@ -288,29 +288,25 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 				canv.EXPECT().Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 
 				canv.EXPECT().Text(int(50), int(195), "2")
-				canv.EXPECT().Text(int(50), int(220), "Jo")
-
 				canv.EXPECT().Text(int(97), int(195), "3")
-				canv.EXPECT().Text(int(97), int(220), "dy")
-
 				canv.EXPECT().Text(int(162), int(195), "4")
-				canv.EXPECT().Text(int(162), int(220), "Lum")
-
 				canv.EXPECT().Text(int(227), int(195), "5")
-				canv.EXPECT().Text(int(227), int(220), "ban")
-
 				canv.EXPECT().Text(int(232), int(195), "3")
-				canv.EXPECT().Text(int(232), int(220), "to")
-
 				canv.EXPECT().Text(int(334), int(195), "1")
-				canv.EXPECT().Text(int(334), int(220), "ru")
-
 				canv.EXPECT().Text(int(384), int(195), "2")
-				canv.EXPECT().Text(int(384), int(220), "an")
 				canv.EXPECT().Text(int(495), int(195), "2")
-				canv.EXPECT().Text(int(546), int(195), ".")
-				canv.EXPECT().Text(int(597), int(195), ".")
-				canv.EXPECT().Text(int(648), int(195), ".")
+
+				canv.EXPECT().Text(int(538), int(195), ".")
+				canv.EXPECT().Text(int(581), int(195), ".")
+				canv.EXPECT().Text(int(624), int(195), ".")
+
+				canv.EXPECT().Text(int(50), int(220), "Jo")
+				canv.EXPECT().Text(int(97), int(220), "dy")
+				canv.EXPECT().Text(int(162), int(220), "Lum")
+				canv.EXPECT().Text(int(227), int(220), "ban")
+				canv.EXPECT().Text(int(232), int(220), "to")
+				canv.EXPECT().Text(int(334), int(220), "ru")
+				canv.EXPECT().Text(int(384), int(220), "an")
 
 				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
 				// canv.EXPECT().Group("class='staff-text'")
@@ -344,7 +340,9 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 					Y: 195,
 				})
 
-				numberedMock.EXPECT().RenderOctave(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				numberedMock.EXPECT().RenderOctave(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+				numberedMock.EXPECT().RenderStrikethrough(gomock.Any(), gomock.Any(), false, gomock.Any()).AnyTimes()
+
 				rhythmMock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				rhythmMock.EXPECT().RenderSlurTies(gomock.Any(), gomock.Any(), IsEqual([]*entity.NoteRenderer{
 					&entity.NoteRenderer{
@@ -393,6 +391,8 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 				}, t), float64(670))
 				lyricMock.EXPECT().RenderHypen(gomock.Any(), gomock.Any(), gomock.Any())
 				lyricMock.EXPECT().CalculateMarginLeft(gomock.Any()).Return(float64(0))
+				lyricMock.EXPECT().CalculateLyricWidth(gomock.Any()).Return(float64(8)).AnyTimes()
+				lyricMock.EXPECT().RenderElision(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 				return res
 

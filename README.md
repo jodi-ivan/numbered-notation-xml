@@ -29,11 +29,6 @@ Currently the project exposes only the **core engine**, responsible for:
 The engine outputs SVG-based notation modeled after the original KJ print style.
 
 ---
-## 🖼 Screenshot
-**SVG modified to have background color
-![NumbericNotation](files/var/www/assets/5.svg) 
-
----
 
 ## 🏁 Getting started
 - Clone the repository
@@ -46,6 +41,17 @@ The engine outputs SVG-based notation modeled after the original KJ print style.
 - run the app from `cmd/rest/app.go`
 - open browser and open `http//localhost:[port]/kidung-jemaat/render/1` (currently from 1 to 110)
 > 💡 Alternatively you can download the `goldenfiles.zip` to see the final render looks like. 
+
+---
+## 🖼 Screenshot
+
+** taken from the goldenfiles
+**SVG modified to have background color
+| | |
+|--| -- | 
+| <img src="files/var/www/assets/kj-005.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-046.svg" alt="Alt Text"> | 
+| <img src="files/var/www/assets/kj-088.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-101.svg" alt="Alt Text"> |
+
 ---
 
 ## 🔧 Features in Progress

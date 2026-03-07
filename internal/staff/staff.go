@@ -87,13 +87,13 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			if rhythm.HasTies(note) {
 				if notePos+1 < len(measure.Notes) && rhythm.HasTies(measure.Notes[notePos+1]) {
 
-					nextNotes := measure.Notes[notePos+1]
+					endTieNote := measure.Notes[notePos+1]
 
-					mergedNoteLegth := rhythm.MergeNote(ctx, note, nextNotes, currTimesig)
+					mergedNoteLegth := rhythm.MergeNote(ctx, note, endTieNote, currTimesig)
 					if mergedNoteLegth < 3 {
 						noteLength = mergedNoteLegth
 
-						note = rhythm.TransferStopSlurAndBreathmark(nextNotes, note)
+						note = rhythm.TransferStopSlurAndBreathmark(endTieNote, note)
 
 						// dont process next notes
 						skipNote[notePos+1] = true
@@ -107,6 +107,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			if skipNote[notePos+1] {
 				// split notes by the beam. currently only happen when there is ties
 				next := measure.Notes[notePos+1]
+				if notePos+2 < len(measure.Notes) {
+					next = measure.Notes[notePos+2]
+				}
 				additionalRenderer = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
 			}
 			renderer := &entity.NoteRenderer{
@@ -185,6 +188,25 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				}
 				if additionalNote.IsNewLine {
 					renderer.IsNewLine = !additionalNote.IsNewLine
+				}
+
+				shouldReplace := notePos+2 < len(measure.Notes) && note.Type == additional.Type
+				if skipNote[notePos+1] && len(additionalRenderer) > 2 && i == len(additionalRenderer)-1 && shouldReplace {
+					additionalNote.IsDotted = false
+					additionalNote.Note = renderer.Note
+					additionalNote.Octave = renderer.Octave
+					additionalNote.Strikethrough = renderer.Strikethrough
+
+					renderer.Tie = &entity.Slur{
+						Number: 1,
+						Type:   musicxml.NoteSlurTypeStart,
+					}
+
+					additionalNote.Tie = &entity.Slur{
+						Number: 1,
+						Type:   musicxml.NoteSlurTypeStop,
+					}
+
 				}
 
 				switch additional.Type {

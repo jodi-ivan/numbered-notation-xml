@@ -52,11 +52,11 @@ func (ni *numberedInteractor) SplitNote(ctx context.Context, noteLength float64,
 	remaining := noteLength - (fullNotes * unit)
 
 	// currently tailored for kj-047 & kj-093
-	shouldMerge := unit*2 == base[next]
+	shouldMerge := (noteLength > unit*2) && unit*2 == base[flags[float64(ts.BeatType)/4]]
 
-	if fullNotes >= 2 && remaining == 0 && shouldMerge {
+	if fullNotes >= 2 && shouldMerge {
 		// Add the full notes to the slice
-		// kj-45 has 3 half beat on the quater type time sig
+		// kj-47 has 3 half beat on the quater type time sig
 		// since this is for readabilty,
 		// the the previous note before the ties start is half
 		// and after the last ties is quater.
@@ -67,12 +67,23 @@ func (ni *numberedInteractor) SplitNote(ctx context.Context, noteLength float64,
 				IsDotted: true,
 			},
 		}
-		return append(results, slices.Repeat([]NoteLength{
+		noteLength -= base[flag]
+		fullNotes -= base[flag]
+		results = append(results, slices.Repeat([]NoteLength{
 			NoteLength{
 				Type:     flags[unit*2],
 				IsDotted: true,
 			},
 		}, int(fullNotes/2))...)
+
+		noteLength -= (float64(len(results)) - 1) * unit * 2
+
+		if noteLength == unit {
+			results = append(results, NoteLength{Type: flag, IsDotted: true})
+		}
+
+		return results
+
 	}
 
 	// kj-007, kj-075 and kj-093

@@ -147,10 +147,11 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 
 			if footnotes, hasFootnotes := verseFootnote[i+1]; hasFootnotes {
 				currentLine, lineHasFootnotes := footnotes[line+1]
-				if lineHasFootnotes {
+				verseStyle := VerseNoteStyle(currentLine.MarkerStyle.Int32)
+				if lineHasFootnotes && verseStyle != VerseNoteStyleHeadless {
 					xPos := x + margin + int(li.CalculateLyricWidth(liveVerse))
 					styleFontSize := ""
-					if currentLine.MarkerStyle.Int32 == 1 { // REFACTOR:style 1 is right align
+					if verseStyle == VerseNoteStyleAlignRight {
 						styleFontSize = "font-size:60%;"
 						approxLineLength := constant.LAYOUT_WIDTH - (2 * defaultX)
 						xPos = x + margin + approxLineLength

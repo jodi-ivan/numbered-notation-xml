@@ -59,3 +59,15 @@ func (mr *MockCreditsMockRecorder) RenderForKidsFootnotes(ctx, canv, y interface
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderForKidsFootnotes", reflect.TypeOf((*MockCredits)(nil).RenderForKidsFootnotes), ctx, canv, y)
 }
+
+// RenderMuiscFootnotes mocks base method.
+func (m *MockCredits) RenderMuiscFootnotes(ctx context.Context, canv canvas.Canvas, metadata *repository.HymnMetadata, x, y int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderMuiscFootnotes", ctx, canv, metadata, x, y)
+}
+
+// RenderMuiscFootnotes indicates an expected call of RenderMuiscFootnotes.
+func (mr *MockCreditsMockRecorder) RenderMuiscFootnotes(ctx, canv, metadata, x, y interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderMuiscFootnotes", reflect.TypeOf((*MockCredits)(nil).RenderMuiscFootnotes), ctx, canv, metadata, x, y)
+}

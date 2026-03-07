@@ -15,6 +15,7 @@ import (
 type Credits interface {
 	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes)
 	RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int)
+	RenderMuiscFootnotes(ctx context.Context, canv canvas.Canvas, metadata *repository.HymnMetadata, x, y int)
 }
 
 type creditsInteractor struct {
@@ -142,8 +143,16 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 		canv.Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
 		for i, fn := range flatten {
-			canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String+fn.Footnote.String)
-
+			lines := strings.Split(fn.Footnote.String, "<br/>")
+			if len(lines) >= 2 {
+				xNotes := int(CalculateLyric(fn.FootnoteMarker.String, true))
+				canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String)
+				for li, line := range lines {
+					canv.Text(constant.LAYOUT_INDENT_LENGTH+20+xNotes, (15*(i+li))+y, line)
+				}
+			} else {
+				canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String+fn.Footnote.String)
+			}
 		}
 		canv.Gend()
 

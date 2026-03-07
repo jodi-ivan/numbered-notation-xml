@@ -106,6 +106,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	}
 
 	if metadata != nil {
+		ir.Credits.RenderMuiscFootnotes(ctx, canv, metadata, x, relativeY)
 		verseInfo := ir.Lyric.RenderVerse(ctx, canv, relativeY, metadata.Verse, metadata.VerseFootNotes)
 
 		// FIXED: Y is 0 value (at the top of pages) when there is no verses

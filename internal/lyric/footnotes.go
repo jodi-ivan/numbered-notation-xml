@@ -1,0 +1,9 @@
+package lyric
+
+type VerseNoteStyle int
+
+const (
+	VerseNoteStyleDirectAppendText VerseNoteStyle = 0
+	VerseNoteStyleAlignRight       VerseNoteStyle = 1
+	VerseNoteStyleHeadless         VerseNoteStyle = 2
+)

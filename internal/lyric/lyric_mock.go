@@ -145,3 +145,17 @@ func (mr *MockLyricMockRecorder) SetLyricRenderer(noteRenderer, note interface{}
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLyricRenderer", reflect.TypeOf((*MockLyric)(nil).SetLyricRenderer), noteRenderer, note)
 }
+
+// SplitLyricPrefix mocks base method.
+func (m *MockLyric) SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SplitLyricPrefix", note, part, leftBarline)
+	ret0, _ := ret[0].([]LyricPosition)
+	return ret0
+}
+
+// SplitLyricPrefix indicates an expected call of SplitLyricPrefix.
+func (mr *MockLyricMockRecorder) SplitLyricPrefix(note, part, leftBarline interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SplitLyricPrefix", reflect.TypeOf((*MockLyric)(nil).SplitLyricPrefix), note, part, leftBarline)
+}

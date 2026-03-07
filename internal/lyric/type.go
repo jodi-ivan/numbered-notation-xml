@@ -37,4 +37,9 @@ type VerseRowStyle int
 const (
 	VerseRowStyleSingleColumn VerseRowStyle = 12
 	VerseRowStyleDualColumn   VerseRowStyle = 6
+
+	MAX_VERSE_IN_MUSIC          = 4
+	MAX_LINE_PER_VERSE_IN_MUSIC = 2
+
+	LINE_BETWEEN_LYRIC = 20
 )

@@ -9,7 +9,7 @@ import (
 
 func (li *lyricInteractor) RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate) {
 	offsetLyric := ""
-	yPos := int(pos.Y) + 28 + (lyricPart * 20)
+	yPos := int(pos.Y) + 2
 	for _, t := range text {
 
 		if t.Underline == 1 {

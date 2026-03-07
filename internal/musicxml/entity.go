@@ -93,6 +93,7 @@ type Measure struct {
 
 	// FIXME: one centralized place for the measured text
 	RightMeasureText *MeasureText
+	PrefixHeader     string
 }
 
 func (m *Measure) Build() error {
@@ -134,11 +135,14 @@ func (m *Measure) Build() error {
 			} else if d.DirectionType.Word.Value == "D.C. al Fine" {
 				continue
 			} else {
-
 				measureText = &MeasureText{
 					Text:      d.DirectionType.Word.Value,
 					RelativeY: d.DirectionType.Word.RelativeY,
 				}
+			}
+
+			if d.DirectionType.Rehearshal != nil {
+				m.PrefixHeader = d.DirectionType.Rehearshal.Value
 			}
 		}
 	}
@@ -283,6 +287,9 @@ type DirectionType struct {
 		Value     string  `xml:",chardata"`
 		RelativeY float64 `xml:"relative-y,attr"`
 	} `xml:"words"`
+	Rehearshal *struct {
+		Value string `xml:",chardata"`
+	} `xml:"rehearsal"`
 }
 
 type Bool string

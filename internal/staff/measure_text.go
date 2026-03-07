@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -116,16 +117,16 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 			})
 
 			for i, t := range note.MeasureText {
-				style := []string{`font-style="italic"`}
+				style := []string{`font-style:italic`}
 				if t.Text != MEASURE_TEXT_REFREIN && t.Text != MEASURE_TEXT_FINE {
-					style = append(style, `font-size="60%"`)
+					style = append(style, `font-size:60%`)
 				}
 				xPos := note.PositionX
 				if t.TextAlignment == musicxml.TextAlignmentRight {
 					textLength := rsa.Lyric.CalculateLyricWidth(t.Text)
 					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
 				}
-				canv.Text(xPos, note.PositionY-23-(i*-15), t.Text, style...)
+				canv.Text(xPos, note.PositionY-23-(i*-15), t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
 			}
 		}
 

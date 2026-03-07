@@ -5,11 +5,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
-const (
-	OFFSET_SLURTIES_INITAL_TO_LYRIC int = 5
-	OFFSET_SLURTIES_TO_LYRIC        int = 3
-)
-
 type SlurTieType string
 
 const (

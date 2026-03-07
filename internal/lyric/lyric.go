@@ -4,7 +4,9 @@ import (
 	"context"
 	"math"
 	"regexp"
+	"strings"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -29,6 +31,7 @@ type Lyric interface {
 	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate)
 	CalculateMarginLeft(txt string) float64
 	CalculateOverallWidth(ls []entity.Lyric) float64
+	SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition
 }
 
 type lyricInteractor struct{}
@@ -69,7 +72,7 @@ func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 		"R": 9.81, "r": 6.34, "—": 16,
 		"S": 7.25, "s": 6.28, "*": 10,
 		"T": 8.92, "t": 5.21, "\"": 8,
-		"U": 11, "u": 8.74,
+		"U": 11, "u": 8.74, "+": 8.86,
 		"V": 9.57, "v": 8.08,
 		"W": 14.23, "w": 12.08,
 		"X": 9.95, "x": 7.78,
@@ -92,6 +95,10 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 
 	if len(note.Lyric) > 0 {
 		marginBottom = ((len(note.Lyric) - 1) * 25)
+		if len(note.Lyric) > MAX_VERSE_IN_MUSIC {
+			marginBottom += int(len(note.Lyric)/MAX_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC
+		}
+
 		noteRenderer.Lyric = make([]entity.Lyric, len(note.Lyric))
 		for _, currLyric := range note.Lyric {
 			lyricText := ""
@@ -115,7 +122,6 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
 				currWidth += constant.LOWERCASE_LENGTH
 			}
-			currWidth += 10 // lyric padding
 
 			lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
 		}
@@ -130,10 +136,11 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 	} else {
 		noteRenderer.Width = lyricWidth
 		noteRenderer.IsLengthTakenFromLyric = true
-		if float64(lyricWidth) < float64(noteWidth+constant.UPPERCASE_LENGTH) {
-			noteRenderer.Width = constant.UPPERCASE_LENGTH * 1.7
-		}
+		// if float64(lyricWidth) < float64(noteWidth+constant.UPPERCASE_LENGTH) {
+		// 	noteRenderer.Width = constant.UPPERCASE_LENGTH * 1.7
+		// }
 	}
+	noteRenderer.Width += constant.LOWERCASE_LENGTH / 2 // lyric padding
 
 	return VerseInfo{
 		MarginBottom: marginBottom,
@@ -147,7 +154,65 @@ func (li *lyricInteractor) CalculateMarginLeft(txt string) float64 {
 			return 0
 		}
 
-		return li.CalculateLyricWidth(subStr[0]) * -1
+		return li.CalculateLyricWidth(strings.Join(subStr, "")) * -1
 	}
 	return 0
+}
+
+func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
+	lyricVal := entity.LyricVal(note.Lyric[part].Text).String()
+	if note.PositionX == constant.LAYOUT_INDENT_LENGTH || (leftBarline != nil && leftBarline.Barline != nil) {
+		xPos := note.PositionX
+
+		hasLeftBarline := leftBarline != nil && leftBarline.Barline != nil
+		if len(note.Lyric) > 2 {
+
+			if hasLeftBarline {
+				xPos -= leftBarline.Width - barline.BARLINE_AFTER_SPACE + 5
+			}
+
+			parts := strings.Split(lyricVal, ".")
+			if len(parts) == 2 {
+
+				header := LyricPosition{
+					Coordinate: entity.Coordinate{
+						X: float64(xPos) - li.CalculateLyricWidth(parts[0]+"."),
+						Y: float64(note.PositionY + 25 + (part * LINE_BETWEEN_LYRIC)),
+					},
+					Lyrics: entity.Lyric{
+						Syllabic: musicxml.LyricSyllabicTypeSingle,
+						Text: []entity.Text{
+							entity.Text{
+								Value: parts[0] + ".",
+							},
+						},
+					},
+				}
+
+				mainLyric := LyricPosition{
+					Coordinate: entity.Coordinate{
+						X: float64(xPos),
+						Y: float64(note.PositionY + 25 + (part * LINE_BETWEEN_LYRIC)),
+					},
+					Lyrics: note.Lyric[part],
+				}
+				mainLyric.Lyrics.Text[0] = entity.Text{Value: strings.ReplaceAll(mainLyric.Lyrics.Text[0].Value, parts[0]+".", "")}
+
+				return []LyricPosition{header, mainLyric}
+			}
+		}
+
+		xPos += int(li.CalculateMarginLeft(lyricVal))
+		return []LyricPosition{
+			LyricPosition{
+				Coordinate: entity.Coordinate{
+					X: float64(xPos),
+					Y: float64(note.PositionY + 25 + (part * LINE_BETWEEN_LYRIC)),
+				},
+				Lyrics: note.Lyric[part],
+			},
+		}
+	}
+
+	return nil
 }

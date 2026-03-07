@@ -19,8 +19,8 @@ type CanvasDelegatorHTTP struct {
 }
 
 func (cdh *CanvasDelegatorHTTP) OnBeforeStartWrite() {
-	cdh.w.WriteHeader(http.StatusOK)
 	cdh.w.Header().Set("Content-Type", "image/svg+xml")
+	cdh.w.WriteHeader(http.StatusOK)
 }
 
 func (cdh *CanvasDelegatorHTTP) OnError(err error) canvas.DelegatorErrorFlowControl {

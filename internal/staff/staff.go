@@ -122,6 +122,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				MeasureNumber: measure.Number,
 
 				TimeModifications: note.TimeModification,
+
+				// FIXME: duplicate if the barline exist
+				LeadingHeader: measure.PrefixHeader,
 			}
 
 			if note.Notations != nil && note.Notations.Fermata != nil {

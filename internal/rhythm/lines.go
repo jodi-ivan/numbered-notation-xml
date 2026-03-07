@@ -494,6 +494,11 @@ func splitSingleBeam(ctx context.Context, ts timesig.TimeSignature, notes []*ent
 		diff := (segment.EndIndex - segment.StartIndex) + 1
 		currTs := ts.GetTimesignatureOnMeasure(ctx, notes[segment.StartIndex].MeasureNumber)
 		switch diff {
+		case 3:
+			if currTs.BeatType == 4 && totalBreathmark == 0 {
+				notes[segment.StartIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			}
 		case 4: // split 2x2
 			if !(currTs.BeatType == 8 && totalBreathmark > 0) { //TODO: need more case for handling this.
 				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
@@ -513,9 +518,10 @@ func splitSingleBeam(ctx context.Context, ts timesig.TimeSignature, notes []*ent
 				// split 3x3
 				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
 				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+
 			}
 		default:
-			if diff > 6 && currTs.Beat == 1 && currTs.BeatType == 4 {
+			if diff > 6 && currTs.BeatType == 4 {
 				startIndex := segment.StartIndex
 				if diff%2 == 1 {
 					notes[startIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
@@ -524,7 +530,7 @@ func splitSingleBeam(ctx context.Context, ts timesig.TimeSignature, notes []*ent
 				}
 
 				// split by 2x2
-				for i := startIndex; i < len(notes); i += 2 {
+				for i := startIndex + 1; i < len(notes); i += 2 {
 					if breathpause.IsBreathMark(notes[i]) {
 						i = i - 1
 						continue
@@ -556,14 +562,16 @@ func splitSingleBeam(ctx context.Context, ts timesig.TimeSignature, notes []*ent
 			}
 
 			if diff > 6 && currTs.BeatType == 8 {
-				for i := segment.StartIndex; i < len(notes); i += 2 {
-					if breathpause.IsBreathMark(notes[i]) {
-						i = i - 1
-						continue
-					}
-					if i+3 < len(notes) {
-						notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+				for i := segment.StartIndex; i < segment.EndIndex; i += 3 {
+					if i+3 < segment.EndIndex {
+						notes[i+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+						if breathpause.IsBreathMark(notes[i+3]) && i+4 < segment.EndIndex {
+							notes[i+3].Beam = map[int]entity.Beam{}
+							notes[i+4].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+						} else {
+							notes[i+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+
+						}
 					}
 				}
 

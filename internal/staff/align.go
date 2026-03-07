@@ -87,7 +87,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		remaining -= lyricWidth
 	}
 
-	added := float64(remaining) / (float64(totalNotes) - 2)
+	added := float64(remaining) / (float64(totalNotes))
+	prefixes := map[string]lyric.LyricPosition{}
 
 	canv.Group("staff")
 	for mi, measure := range noteRenderer { // staff
@@ -114,7 +115,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 			note.PositionX += int(added * float64(count))
 			count++
-
 			if note.IsDotted {
 				if dotPositioner.Address == nil {
 					dotPositioner.Address = []*int{}
@@ -135,21 +135,72 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		// }
 
 		canv.Group("class='lyric'", "style='font-family:Caladea'")
+		var prev *entity.NoteRenderer
+		minPrefix := float64(constant.LAYOUT_INDENT_LENGTH)
+
 		for _, n := range measure {
+			yPos := float64(n.PositionY)
 			for i, l := range n.Lyric {
 				if len(l.Text) == 0 {
 					continue
 				}
-				lyricVal := entity.LyricVal(l.Text).String()
-				xPos := n.PositionX
-				if n.PositionX == constant.LAYOUT_INDENT_LENGTH {
-					xPos += int(rsa.Lyric.CalculateMarginLeft(lyricVal))
-				}
-				canv.Text(xPos, n.PositionY+25+(i*20), lyricVal)
-				rsa.Lyric.RenderElision(ctx, canv, l.Text, i, entity.Coordinate{X: float64(xPos), Y: float64(n.PositionY)})
-				n.Lyric[i] = l
 
+				xPos := n.PositionX
+				yPos = float64(n.PositionY + 25 + (i * lyric.LINE_BETWEEN_LYRIC))
+				prefix := rsa.Lyric.SplitLyricPrefix(n, i, prev)
+				text := l.Text
+				if len(prefix) == 1 {
+					text = prefix[0].Lyrics.Text
+					xPos = int(prefix[0].Coordinate.X)
+					yPos = prefix[0].Coordinate.Y
+				} else if len(prefix) == 2 {
+					if n.LeadingHeader != "" {
+						prefixWidth := rsa.Lyric.CalculateLyricWidth(n.LeadingHeader)
+						minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X-prefixWidth)
+						prefixes[n.LeadingHeader] = lyric.LyricPosition{
+							Coordinate: entity.Coordinate{
+								X: float64(n.PositionX),
+								Y: float64(n.PositionY),
+							},
+							Lyrics: entity.Lyric{
+								Text: []entity.Text{
+									entity.Text{
+										Value: n.LeadingHeader,
+									},
+								},
+							},
+						}
+					}
+					minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X)
+					text = prefix[1].Lyrics.Text
+					xPos = int(prefix[1].Coordinate.X)
+					yPos = prefix[1].Coordinate.Y
+
+					if len(n.Lyric) > lyric.MAX_VERSE_IN_MUSIC {
+						prefix[0].Coordinate.Y = yPos + (math.Trunc(float64(i)/lyric.MAX_LINE_PER_VERSE_IN_MUSIC) * lyric.LINE_BETWEEN_LYRIC)
+					}
+					prefixes[entity.LyricVal(prefix[0].Lyrics.Text).String()] = prefix[0]
+				}
+
+				lyricVal := entity.LyricVal(text).String()
+				if len(n.Lyric) > lyric.MAX_VERSE_IN_MUSIC {
+					yPos = yPos + (math.Trunc(float64(i)/lyric.MAX_LINE_PER_VERSE_IN_MUSIC) * lyric.LINE_BETWEEN_LYRIC)
+				}
+				canv.Text(xPos, int(yPos), lyricVal)
+				rsa.Lyric.RenderElision(ctx, canv, text, i, entity.Coordinate{X: float64(xPos), Y: yPos})
+				n.Lyric[i] = l
 			}
+
+			if len(prefixes) > 0 {
+				canv.Group("class='leading-header'")
+				for _, p := range prefixes {
+					prefixVal := entity.LyricVal(p.Lyrics.Text).String()
+					canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal)
+				}
+				prefixes = nil
+				canv.Gend()
+			}
+			prev = n
 		}
 
 		canv.Gend()

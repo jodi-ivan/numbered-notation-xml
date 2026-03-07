@@ -70,6 +70,7 @@ type NoteRenderer struct {
 	MeasureNumber          int
 
 	MeasureText       []musicxml.MeasureText
+	LeadingHeader     string
 	Tuplet            *musicxml.Tuplet
 	TimeModifications *musicxml.TimeModification
 }

@@ -38,9 +38,10 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 		}
 		result := &entity.NoteRenderer{
 			PositionX:     pos,
-			Width:         int(barlineWidth[leftBarline.BarStyle]),
+			Width:         int(barlineWidth[leftBarline.BarStyle]) + BARLINE_AFTER_SPACE,
 			Barline:       &leftBarline,
 			MeasureNumber: measure.Number,
+			LeadingHeader: measure.PrefixHeader,
 		}
 
 		incr := 5
@@ -51,7 +52,7 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 		}
 
 		return result, &BarlineInfo{
-			XIncrement: incr,
+			XIncrement: incr + BARLINE_AFTER_SPACE,
 		}
 
 	}
@@ -77,6 +78,7 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 		MeasureNumber: measure.Number,
 		PositionX:     x,
 		Barline:       &barline,
+		Width:         BARLINE_AFTER_SPACE,
 		// HACK: why there is no width define here?
 	}
 	if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {

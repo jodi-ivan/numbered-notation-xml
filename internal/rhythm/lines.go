@@ -661,6 +661,10 @@ func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.No
 						notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
 						notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
 
+					} else if startingPoint <= 2 {
+						// split 2x3
+						notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+						notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
 					} else {
 
 						// first separate 1st segement of sub segment

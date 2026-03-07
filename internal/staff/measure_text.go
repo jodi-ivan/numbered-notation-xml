@@ -116,6 +116,11 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 				return note.MeasureText[i].RelativeY < note.MeasureText[j].RelativeY
 			})
 
+			offset := 0
+			if note.Fermata != nil {
+				offset = 10
+			}
+
 			for i, t := range note.MeasureText {
 				style := []string{`font-style:italic`}
 				if t.Text != MEASURE_TEXT_REFREIN && t.Text != MEASURE_TEXT_FINE {
@@ -126,7 +131,7 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 					textLength := rsa.Lyric.CalculateLyricWidth(t.Text)
 					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
 				}
-				canv.Text(xPos, note.PositionY-23-(i*-15), t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
+				canv.Text(xPos, note.PositionY-offset-25-(i*-15), t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
 			}
 		}
 

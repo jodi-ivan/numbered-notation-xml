@@ -31,6 +31,8 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 		} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
 			if prev != nil && prev.IsDotted {
 				n.PositionX -= constant.LOWERCASE_LENGTH
+			} else {
+				x += constant.UPPERCASE_LENGTH / 2
 			}
 		} else {
 			xNotes = x

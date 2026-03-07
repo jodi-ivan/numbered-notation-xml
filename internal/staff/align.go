@@ -77,7 +77,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	remaining := (constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH) - lastNote.PositionX
 
 	lastPos := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH
-	lastNote.PositionX = lastPos
+	lastNote.PositionX = lastPos + 4
 	if lastNote.Barline != nil {
 		remaining -= int(barline.GetBarlineWidth(lastNote.Barline.BarStyle))
 	} else if len(lastNote.Lyric) > 0 {

@@ -1,6 +1,7 @@
 package rhythm
 
 import (
+	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 )
@@ -28,18 +29,13 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 			}
 			continueDot = true
 
-		} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-			if prev != nil && prev.IsDotted {
-				n.PositionX -= constant.LOWERCASE_LENGTH
-			} else {
-				x += constant.UPPERCASE_LENGTH / 2
-			}
+		} else if breathpause.IsBreathMark(n) || n.IsRest {
+			x -= constant.LOWERCASE_LENGTH
 		} else {
 			xNotes = x
 			continueDot = false
 			dotCount = 0
 		}
-
 		n.PositionX = x
 		n.PositionY = y
 		x += n.Width
@@ -51,7 +47,6 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 
 		}
 
-		n.IndexPosition = i
 		prev = n
 		if n.IsDotted && i == len(notes)-1 && dotCount > 1 {
 			x += constant.LOWERCASE_LENGTH

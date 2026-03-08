@@ -7,6 +7,8 @@ type StaffInfo struct {
 	MarginBottom     int
 	MarginLeft       int
 	NextLineRenderer []*entity.NoteRenderer
+
+	ForceNewLine bool
 }
 
 const (

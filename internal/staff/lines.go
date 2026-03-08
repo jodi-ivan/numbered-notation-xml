@@ -40,23 +40,39 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, yPos int) ([][]*enti
 	result := [][]*entity.NoteRenderer{}
 	staffInfo := StaffInfo{}
 	pos := -1
+	maxTotalLyric := 1
 
 	// last line with no staff measure remaining
 	for i, note := range prevNotes {
 		note.PositionY = yPos
+		if maxTotalLyric < len(note.Lyric) {
+			maxTotalLyric = len(note.Lyric)
+		}
 		if note.IsNewLine {
 			pos = i
 			break
 		}
 	}
 
+	staffInfo.MarginBottom = (maxTotalLyric - 1) * 25
 	if pos != -1 {
 		result = append(result, prevNotes[:pos+1])
-		staffInfo.NextLineRenderer = prevNotes[pos+1:]
-		staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+		offset := 1
+
+		if pos+1 < len(prevNotes) && prevNotes[pos+1].Barline != nil {
+			// kj-139, a whole new line for the next renderer and the current line transffered to the next-next line
+			barlineNote := prevNotes[pos+1]
+			barlineNote.PositionX = prevNotes[pos].PositionX + prevNotes[pos].Width
+			result[0] = append(result[0], barlineNote)
+
+			offset = 2
+			staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+			prevNotes[pos].IsNewLine = false
+			staffInfo.ForceNewLine = true
+		}
+		staffInfo.NextLineRenderer = prevNotes[pos+offset:]
+
 		staffInfo.Multiline = true
-		// TODO: assign a proper margin botton (multiline lyric)
-		// staffInfo.MarginBottom = 80
 	} else {
 		result = append(result, prevNotes)
 		staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
@@ -67,6 +83,8 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, yPos int) ([][]*enti
 
 func PrepareNextLines(staffInfo StaffInfo, notes []*entity.NoteRenderer, rightBarline *entity.NoteRenderer) StaffInfo {
 	proceed := false
+	maxTotalLyric := 1
+
 	for _, note := range notes {
 		if !proceed {
 			if note.IsNewLine {
@@ -74,10 +92,18 @@ func PrepareNextLines(staffInfo StaffInfo, notes []*entity.NoteRenderer, rightBa
 			}
 			continue
 		}
+
+		if maxTotalLyric < len(note.Lyric) {
+			maxTotalLyric = len(note.Lyric)
+		}
+
 		if len(staffInfo.NextLineRenderer) == 0 {
 			note.PositionX = constant.LAYOUT_INDENT_LENGTH
 		}
 		staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
+	}
+	if staffInfo.MarginBottom < (maxTotalLyric-1)*25 {
+		staffInfo.MarginBottom = (maxTotalLyric - 1) * 25
 	}
 	staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, rightBarline)
 	return staffInfo

@@ -51,11 +51,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
-		if len(measures) > 0 {
-			align = append(align, prevNotes)
-		} else {
-			align, staffInfo = ProcessPreviousLines(prevNotes, y)
-		}
+		align, staffInfo = ProcessPreviousLines(prevNotes, y)
 	}
 	for _, measure := range measures {
 		measure.Build()
@@ -240,6 +236,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 		if staffInfo.Multiline {
 			staffInfo.MarginLeft = int(x) + constant.LOWERCASE_LENGTH
+
 		}
 
 		x += constant.LOWERCASE_LENGTH
@@ -252,10 +249,26 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			}
 		}
 
-		alignMeasures = append(alignMeasures, filteredNotes...)
+		// alignMeasures = append(alignMeasures, filteredNotes...)
 		if staffInfo.Multiline {
-			staffInfo = PrepareNextLines(staffInfo, notes, rightBarlineRenderer)
+			// // -------
+			if len(staffInfo.NextLineRenderer) == 0 && len(align) > 0 && staffInfo.ForceNewLine {
+				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+				si.Rhythm.AdjustMultiDottedRenderer(notes, constant.LAYOUT_INDENT_LENGTH, y)
+				notes = append(notes, rightBarlineRenderer)
+				staffInfo.NextLineRenderer = notes
+			} else {
+				nextstaffInfo := PrepareNextLines(staffInfo, notes, rightBarlineRenderer)
+				staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, nextstaffInfo.NextLineRenderer...)
+				alignMeasures = append(alignMeasures, filteredNotes...)
+				staffInfo.MarginLeft = nextstaffInfo.MarginLeft
+				if staffInfo.MarginBottom < nextstaffInfo.MarginBottom {
+					staffInfo.MarginBottom = nextstaffInfo.MarginBottom
+				}
+			}
 		} else {
+			alignMeasures = append(alignMeasures, filteredNotes...)
+
 			lastRightBarlinePosition = &entity.Coordinate{
 				X: float64(rightBarlineRenderer.PositionX),
 				Y: float64(y),
@@ -273,8 +286,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			}
 			alignMeasures = append(alignMeasures, rightBarlineRenderer)
 		}
-
-		align = append(align, alignMeasures)
+		if len(alignMeasures) > 0 {
+			align = append(align, alignMeasures)
+		}
 
 	}
 

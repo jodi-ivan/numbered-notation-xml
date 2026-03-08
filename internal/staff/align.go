@@ -209,7 +209,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			if n.IsDotted {
 				canv.Text(n.PositionX, y, ".")
 			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-				canv.Text(n.PositionX-5, y-10, ",")
+				canv.Text(n.PositionX, y-10, ",")
 			} else if n.Barline != nil {
 				rsa.Barline.RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
 					X: float64(n.PositionX),

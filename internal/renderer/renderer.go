@@ -87,16 +87,20 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	info := staff.StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
-
+	oldMarginButtom := 0
 	for _, st := range staffes {
 		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
 		relativeY = relativeY + 80 + info.MarginBottom
+		if info.ForceNewLine {
+			relativeY += oldMarginButtom
+		}
 		if info.Multiline {
 			x = info.MarginLeft + barline.BARLINE_AFTER_SPACE
 			info.Multiline = false
 		} else {
 			x = constant.LAYOUT_INDENT_LENGTH
 		}
+		oldMarginButtom = info.MarginBottom
 	}
 
 	for len(info.NextLineRenderer) > 0 {

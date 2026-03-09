@@ -161,7 +161,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			// lyric
 			verseInfo := si.Lyric.SetLyricRenderer(renderer, note)
-			staffInfo.MarginBottom = verseInfo.MarginBottom
+			if staffInfo.MarginBottom < verseInfo.MarginBottom {
+				staffInfo.MarginBottom = verseInfo.MarginBottom
+			}
 
 			notes = append(notes, renderer)
 

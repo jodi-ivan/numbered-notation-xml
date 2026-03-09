@@ -116,7 +116,15 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 			}
 
 			l.Text = texts
+			if currLyric.Number > len(note.Lyric) {
 
+				for i := len(note.Lyric); i < currLyric.Number; i++ {
+					noteRenderer.Lyric = append(noteRenderer.Lyric, entity.Lyric{
+						Syllabic: musicxml.LyricSyllabicTypeMiddle,
+						Text:     []entity.Text{{}},
+					})
+				}
+			}
 			noteRenderer.Lyric[currLyric.Number-1] = l
 			currWidth := int(math.Round(li.CalculateLyricWidth(lyricText)))
 			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {

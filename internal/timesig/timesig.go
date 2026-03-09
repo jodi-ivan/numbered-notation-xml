@@ -74,7 +74,7 @@ func (ts *TimeSignature) GetHumanized() string {
 	if !ts.IsMixed {
 		ts.humanized = fmt.Sprintf("%d ketuk", ts.Signatures[0].Beat)
 		if ts.Signatures[0].BeatType == 8 {
-			ts.humanized = fmt.Sprintf("%d (%d x 3) ketuk", ts.Signatures[0].Beat, ts.Signatures[0].Beat/3)
+			ts.humanized = fmt.Sprintf("%d ketuk (%d x 3)", ts.Signatures[0].Beat, int(math.Max(1, float64(ts.Signatures[0].Beat/3))))
 		}
 		return ts.humanized
 	}

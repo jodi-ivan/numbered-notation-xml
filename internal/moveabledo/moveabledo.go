@@ -58,7 +58,7 @@ func GetOctave(ks keysig.Key, note musicxml.Note) int {
 
 	offset := 0
 
-	if (ks.Fifth == -2 && ks.Mode.Mode == keysig.KeySignatureModeMajor) || ks.Fifth == 3 { // Bb Major or A major or F#min
+	if ks.Fifth == -2 && ks.Mode.Mode == keysig.KeySignatureModeMajor { // Bb Major or A major or F#min
 		offset = +1
 	}
 

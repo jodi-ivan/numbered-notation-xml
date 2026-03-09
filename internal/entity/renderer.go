@@ -81,6 +81,10 @@ func (nr *NoteRenderer) UpdateBeam(beamNum int, beamType musicxml.NoteBeamType) 
 		return
 	}
 
+	if _, ok := newBeam[beamNum]; !ok {
+		return
+	}
+
 	newBeam[beamNum] = Beam{
 		Number: beamNum,
 		Type:   beamType,

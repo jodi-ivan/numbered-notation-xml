@@ -45,7 +45,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 	type args struct {
 		x             int
 		y             int
-		keySignature  keysig.KeySignature
+		keySignature  keysig.Key
 		timeSignature timesig.TimeSignature
 		measures      []musicxml.Measure
 		prevNotes     []*entity.NoteRenderer
@@ -63,7 +63,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			args: args{
 				x: 50,
 				y: 80,
-				keySignature: keysig.NewKeySignature(musicxml.KeySignature{
+				keySignature: keysig.NewKey(&musicxml.KeySignature{
 					Fifth: 2, // D Major
 				}),
 				timeSignature: timesig.TimeSignature{IsMixed: false, Signatures: []timesig.Time{timesig.Time{Measure: 1, Beat: 2, BeatType: 4}}},
@@ -145,7 +145,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			args: args{
 				x: 50,
 				y: 80,
-				keySignature: keysig.NewKeySignature(musicxml.KeySignature{
+				keySignature: keysig.NewKey(&musicxml.KeySignature{
 					Fifth: 2, // D Major
 				}),
 				timeSignature: timesig.TimeSignature{IsMixed: false, Signatures: []timesig.Time{timesig.Time{Measure: 1, Beat: 2, BeatType: 4}}},
@@ -176,7 +176,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				breathpauseMock := breathpause.NewMockBreathPause(ctrl)
 				renderAlign := NewMockRenderStaffWithAlign(ctrl)
 
-				key := keysig.NewKeySignature(musicxml.KeySignature{
+				key := keysig.NewKey(&musicxml.KeySignature{
 					Fifth: 2, // D Major
 				})
 
@@ -259,7 +259,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotStaffInfo := tt.si(ctrl).RenderStaff(context.Background(), tt.canv(ctrl), tt.args.x, tt.args.y, tt.args.keySignature, tt.args.timeSignature, tt.args.measures, tt.args.prevNotes...); !assert.Equal(t, tt.wantStaffInfo, gotStaffInfo) {
+			if gotStaffInfo := tt.si(ctrl).RenderStaff(context.Background(), tt.canv(ctrl), tt.args.x, tt.args.y, false, keysig.KeySignature{Signatures: []keysig.Key{tt.args.keySignature}}, tt.args.timeSignature, tt.args.measures, tt.args.prevNotes...); !assert.Equal(t, tt.wantStaffInfo, gotStaffInfo) {
 				t.Errorf("staffInteractor.RenderStaff() = %v, want %v", gotStaffInfo, tt.wantStaffInfo)
 			}
 		})

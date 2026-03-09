@@ -56,3 +56,7 @@ func (m *Mode) GetHumanized(fifth int) string {
 func (m *Mode) GetScaleSteps() []float64 {
 	return modeSteps[m.Mode.String()]
 }
+
+func (m *Mode) String() string {
+	return m.Mode.String()
+}

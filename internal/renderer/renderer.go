@@ -72,14 +72,15 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 
 	relativeY += 25
 
-	keySignature := keysig.NewKeySignature(music.Part.Measures[0].Attribute.Key)
+	keySignature := keysig.NewKeySignature(ctx, music.Part.Measures)
+	currKeySig := keySignature.GetKeyOnMeasure(ctx, 1)
 	timeSignature := timesig.NewTimeSignatures(ctx, music.Part.Measures)
 
 	humanizedKeySignature := timeSignature.GetHumanized()
 
-	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, keySignature.String())
+	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, currKeySig.String())
 
-	canv.Text(constant.LAYOUT_INDENT_LENGTH+(3*constant.LOWERCASE_LENGTH)+int(ir.Lyric.CalculateLyricWidth(keySignature.String())), relativeY, humanizedKeySignature)
+	canv.Text(constant.LAYOUT_INDENT_LENGTH+(3*constant.LOWERCASE_LENGTH)+int(ir.Lyric.CalculateLyricWidth(currKeySig.String())), relativeY, humanizedKeySignature)
 	relativeY += 50
 
 	staffes := ir.Staff.SplitLines(ctx, music.Part)
@@ -88,8 +89,8 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
 	oldMarginButtom := 0
-	for _, st := range staffes {
-		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, st, info.NextLineRenderer...)
+	for i, st := range staffes {
+		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, i == len(staffes)-1, keySignature, timeSignature, st, info.NextLineRenderer...)
 		relativeY = relativeY + 80 + info.MarginBottom
 		if info.ForceNewLine {
 			relativeY += oldMarginButtom
@@ -105,7 +106,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 
 	for len(info.NextLineRenderer) > 0 {
 		x = constant.LAYOUT_INDENT_LENGTH
-		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, keySignature, timeSignature, nil, info.NextLineRenderer...)
+		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, true, keySignature, timeSignature, nil, info.NextLineRenderer...)
 		relativeY += info.MarginBottom + 80
 	}
 

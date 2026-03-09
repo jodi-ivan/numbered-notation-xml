@@ -174,7 +174,7 @@ type KeySignature struct {
 }
 
 type Attribute struct {
-	Key  KeySignature `xml:"key"`
+	Key  *KeySignature `xml:"key"`
 	Time *struct {
 		Beats    int `xml:"beats"`
 		BeatType int `xml:"beat-type"`
@@ -394,6 +394,7 @@ const (
 	BarLineStyleLightLight BarLineStyle = "light-light"
 	BarLineStyleHeavyHeavy BarLineStyle = "heavy-heavy"
 	BarLineStyleHeavyLight BarLineStyle = "heavy-light"
+	BarLineStyleHeavyNone  BarLineStyle = "none"
 )
 
 type BarLineRepeatDirection string

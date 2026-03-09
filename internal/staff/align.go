@@ -43,9 +43,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		return
 	}
 	flatten := []*entity.NoteRenderer{}
-	// get the note
-	lastMeasure := noteRenderer[len(noteRenderer)-1]
-	lastNote := lastMeasure[len(lastMeasure)-1]
 
 	count := 1
 	slurTiesNote := []*entity.NoteRenderer{}
@@ -74,6 +71,10 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	}
 
 	// get last remaining whitespace
+	// get the note
+	lastMeasure := noteRenderer[len(noteRenderer)-1]
+	lastNote := lastMeasure[len(lastMeasure)-1]
+
 	remaining := (constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH) - lastNote.PositionX
 
 	lastPos := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH
@@ -115,6 +116,10 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 			note.PositionX += int(added * float64(count))
 			count++
+
+			if breathpause.IsBreathMark(note) {
+				note.PositionX -= 5
+			}
 			if note.IsDotted {
 				if dotPositioner.Address == nil {
 					dotPositioner.Address = []*int{}

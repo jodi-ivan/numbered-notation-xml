@@ -337,6 +337,7 @@ func cleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, beamNu
 	var prev *entity.NoteRenderer
 
 	for indexNote, note := range notes {
+		note.IndexPosition = indexNote
 
 		if len(note.Beam) == 0 { // stopping the beam
 			if indexNote == 0 {
@@ -504,9 +505,14 @@ func splitSingleBeam(ctx context.Context, ts timesig.TimeSignature, notes []*ent
 				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
 				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
 			}
-		case 5: // split 3 x 2
-			notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-			notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+		case 5:
+			if currTs.BeatType == 4 {
+				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			} else if currTs.BeatType == 8 {
+				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+				notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			}
 		case 6:
 			if currTs.BeatType == 4 {
 				// split 2x2x2

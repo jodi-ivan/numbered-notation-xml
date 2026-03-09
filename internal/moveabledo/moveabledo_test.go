@@ -9,7 +9,7 @@ import (
 
 func TestConvertPitchToNumbered(t *testing.T) {
 	type args struct {
-		ks    keysig.KeySignature
+		ks    keysig.Key
 		pitch string
 	}
 	tests := []struct {
@@ -21,7 +21,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input C",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "c",
 					Mode:      keysig.NewMode("major"),
@@ -35,7 +35,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input C#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "c",
 					Mode:      keysig.NewMode("major"),
@@ -49,7 +49,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input E",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "c",
 					Mode:      keysig.NewMode("major"),
@@ -63,7 +63,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input F",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "c",
 					Mode:      keysig.NewMode("major"),
@@ -77,7 +77,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input F#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "c",
 					Mode:      keysig.NewMode("major"),
@@ -91,7 +91,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "C major input B",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "c",
 					Mode:      keysig.NewMode("major"),
@@ -105,7 +105,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input D",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "d",
 					Mode:      keysig.NewMode("major"),
@@ -119,7 +119,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input B",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "d",
 					Mode:      keysig.NewMode("major"),
@@ -133,7 +133,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input F#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "d",
 					Mode:      keysig.NewMode("major"),
@@ -147,7 +147,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input C#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "d",
 					Mode:      keysig.NewMode("major"),
@@ -161,7 +161,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input C",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "d",
 					Mode:      keysig.NewMode("major"),
@@ -175,7 +175,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "D major input F",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "d",
 					Mode:      keysig.NewMode("major"),
@@ -189,7 +189,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input A",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "a",
 					Mode:      keysig.NewMode("minor"),
@@ -203,7 +203,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input B",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "a",
 					Mode:      keysig.NewMode("minor"),
@@ -217,7 +217,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input C",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "a",
 					Mode:      keysig.NewMode("minor"),
@@ -231,7 +231,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input C#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "a",
 					Mode:      keysig.NewMode("minor"),
@@ -245,7 +245,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "A minor input G",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     0,
 					Key:       "a",
 					Mode:      keysig.NewMode("minor"),
@@ -277,7 +277,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input B",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "b",
 					Mode:      keysig.NewMode("minor"),
@@ -291,7 +291,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input C#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "b",
 					Mode:      keysig.NewMode("minor"),
@@ -305,7 +305,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input C",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "b",
 					Mode:      keysig.NewMode("minor"),
@@ -319,7 +319,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "B minor input F#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "b",
 					Mode:      keysig.NewMode("minor"),
@@ -333,7 +333,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "F major input Bb",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     -1,
 					Key:       "f",
 					Mode:      keysig.NewMode("major"),
@@ -347,7 +347,7 @@ func TestConvertPitchToNumbered(t *testing.T) {
 		{
 			name: "E major input A#",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     4,
 					Key:       "E",
 					Mode:      keysig.NewMode("major"),
@@ -539,7 +539,7 @@ func TestGetOctave(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ks := keysig.KeySignature{
+			ks := keysig.Key{
 				Key:       tt.fields.Key,
 				Humanized: tt.fields.Humanized,
 				Fifth:     tt.fields.Fifth,
@@ -553,7 +553,7 @@ func TestGetOctave(t *testing.T) {
 
 func TestGetNumberedNotation(t *testing.T) {
 	type args struct {
-		ks   keysig.KeySignature
+		ks   keysig.Key
 		note musicxml.Note
 	}
 	tests := []struct {
@@ -566,7 +566,7 @@ func TestGetNumberedNotation(t *testing.T) {
 		{
 			name: "everything went fine",
 			args: args{
-				ks: keysig.KeySignature{
+				ks: keysig.Key{
 					Fifth:     2,
 					Key:       "d",
 					Mode:      keysig.NewMode("major"),

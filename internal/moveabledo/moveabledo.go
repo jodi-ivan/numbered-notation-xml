@@ -6,7 +6,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 )
 
-func ConvertPitchToNumbered(ks keysig.KeySignature, pitch string) (int, bool) {
+func ConvertPitchToNumbered(ks keysig.Key, pitch string) (int, bool) {
 
 	// Build the diatonic scale of the key
 	scale := ks.BuildScale() // []string length 7
@@ -38,7 +38,7 @@ func ConvertPitchToNumbered(ks keysig.KeySignature, pitch string) (int, bool) {
 	return 0, false
 }
 
-func GetNumberedNotation(ks keysig.KeySignature, note musicxml.Note) (numberedNote int, octave int, strikethrough bool) {
+func GetNumberedNotation(ks keysig.Key, note musicxml.Note) (numberedNote int, octave int, strikethrough bool) {
 	if note.Rest != nil {
 		return 0, 0, false
 	}
@@ -50,7 +50,7 @@ func GetNumberedNotation(ks keysig.KeySignature, note musicxml.Note) (numberedNo
 	return numberedNote, octave, strikethrough
 }
 
-func GetOctave(ks keysig.KeySignature, note musicxml.Note) int {
+func GetOctave(ks keysig.Key, note musicxml.Note) int {
 	pitch := ks.GetPitchWithAccidental(note)
 	if ks.Mode.Mode == keysig.KeySignatureModeMajor && ks.Fifth == 0 { // C major
 		return note.Pitch.Octave - 4

@@ -57,7 +57,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		musicxml.Measure{
 			Number: 1,
 			Attribute: &musicxml.Attribute{
-				Key: musicxml.KeySignature{
+				Key: &musicxml.KeySignature{
 					Fifth: 2, // D major
 				},
 				Time: &struct {
@@ -93,7 +93,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		[]musicxml.Measure{musicxml.Measure{
 			Number: 1,
 			Attribute: &musicxml.Attribute{
-				Key: musicxml.KeySignature{
+				Key: &musicxml.KeySignature{
 					Fifth: 2, // D major
 				},
 				Time: &struct {
@@ -209,7 +209,8 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					gomock.Any(),
 					int(50),
 					int(175),
-					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
+					gomock.Any(),
+					keysig.KeySignature{Signatures: []keysig.Key{keysig.NewKey(&musicxml.KeySignature{Fifth: 2})}},
 					currTimeSig,
 					spilttedLine[0],
 				).Return(staff.StaffInfo{
@@ -220,7 +221,8 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					gomock.Any(),
 					int(50),  // x
 					int(280), // y
-					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
+					gomock.Any(),
+					keysig.KeySignature{Signatures: []keysig.Key{keysig.NewKey(&musicxml.KeySignature{Fifth: 2})}},
 					currTimeSig,
 					spilttedLine[1],
 				).Return(staff.StaffInfo{
@@ -233,7 +235,8 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					gomock.Any(),
 					int(104), // x
 					int(385), // y
-					keysig.NewKeySignature(musicxml.KeySignature{Fifth: 2}),
+					gomock.Any(),
+					keysig.KeySignature{Signatures: []keysig.Key{keysig.NewKey(&musicxml.KeySignature{Fifth: 2})}},
 					currTimeSig,
 					spilttedLine[2],
 				).Return(staff.StaffInfo{

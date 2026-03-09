@@ -18,7 +18,7 @@ import (
 )
 
 type Staff interface {
-	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
+	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
 	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool)
 }
@@ -43,7 +43,7 @@ func NewStaff() Staff {
 	}
 }
 
-func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
+func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 
@@ -53,10 +53,13 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	if len(prevNotes) > 0 {
 		align, staffInfo = ProcessPreviousLines(prevNotes, y)
 	}
-	for _, measure := range measures {
+	for mi, measure := range measures {
 		measure.Build()
 		notes := []*entity.NoteRenderer{}
+
 		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
+		currKeySig := keySignature.GetKeyOnMeasure(ctx, measure.Number)
+
 		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
 		rctx = context.WithValue(rctx, constant.CtxKeyTimeSignature, currTimesig)
 		alignMeasures := []*entity.NoteRenderer{}
@@ -77,7 +80,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				continue
 			}
 
-			n, octave, strikethrough := moveabledo.GetNumberedNotation(keySignature, note)
+			n, octave, strikethrough := moveabledo.GetNumberedNotation(currKeySig, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 
 			if rhythm.HasTies(note) {
@@ -286,7 +289,26 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			}
 			alignMeasures = append(alignMeasures, rightBarlineRenderer)
 		}
+
 		if len(alignMeasures) > 0 {
+			if keySignature.IsMixed {
+				if keyChanges, ok := keySignature.MeasureText[measure.Number]; ok {
+					renderer := alignMeasures[0]
+					renderer.MeasureText = []musicxml.MeasureText{musicxml.MeasureText{Text: keyChanges, TextAlignment: musicxml.TextAlignmentLeft}}
+				}
+
+				lastMeasure := mi == len(measures)-1
+				noCarryOverLine := len(staffInfo.NextLineRenderer) == 0
+
+				if isLastStaff && lastMeasure && noCarryOverLine {
+					firstKeySig := keySignature.GetKeyOnMeasure(ctx, 1)
+					indicator := keysig.TranstionFromTwoKeySignatures(currKeySig, firstKeySig)
+
+					renderer := alignMeasures[len(alignMeasures)-1]
+					renderer.MeasureText = []musicxml.MeasureText{musicxml.MeasureText{Text: indicator, TextAlignment: musicxml.TextAlignmentRight}}
+
+				}
+			}
 			align = append(align, alignMeasures)
 		}
 

@@ -33,8 +33,9 @@ type SlurBezier struct {
 }
 
 type BeamLine struct {
-	Start entity.Coordinate
-	End   entity.Coordinate
+	Start  entity.Coordinate
+	End    entity.Coordinate
+	Number int
 }
 
 type beamSplitMarker struct {

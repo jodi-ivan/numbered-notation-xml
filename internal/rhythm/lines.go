@@ -484,6 +484,48 @@ func cleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, beamNu
 	return notes, markers
 }
 
+func splitSingleBeamQuarter(ctx context.Context, notes []*entity.NoteRenderer, segments []beamSplitMarker, beamNo int) {
+	for _, segment := range segments {
+		diff := (segment.EndIndex - segment.StartIndex) + 1
+
+		switch diff {
+		case 3:
+			notes[segment.StartIndex].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
+			notes[segment.StartIndex+1].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
+		case 4: // split 2x2
+			notes[segment.StartIndex+1].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
+			notes[segment.StartIndex+2].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
+		case 5:
+			notes[segment.StartIndex+1].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
+			notes[segment.StartIndex+2].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
+		case 6:
+			// split 2x2x2
+			notes[segment.StartIndex+1].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
+			notes[segment.StartIndex+2].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
+			notes[segment.StartIndex+3].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
+			notes[segment.StartIndex+4].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
+
+		default:
+			if diff > 6 {
+				startIndex := segment.StartIndex
+				if diff%2 == 1 {
+					notes[startIndex].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
+					notes[startIndex+1].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
+					startIndex = startIndex + 2
+				}
+
+				for i := startIndex + 1; i < segment.EndIndex; i += 2 {
+					notes[i].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
+					if i+1 < len(notes) {
+						notes[i+1].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
+					}
+				}
+			}
+
+		}
+
+	}
+}
 func splitSingleBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer, segments []beamSplitMarker) {
 	for _, segment := range segments {
 		totalBreathmark := 0
@@ -596,6 +638,11 @@ func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.No
 	}
 
 	if len(segments[2]) == 0 {
+		currTs := ts.GetTimesignatureOnMeasure(ctx, notes[segments[1][0].StartIndex].MeasureNumber)
+		if currTs.BeatType == 4 {
+			splitSingleBeamQuarter(ctx, notes, segments[1], 1)
+			return notes
+		}
 		splitSingleBeam(ctx, ts, notes, segments[1])
 		return notes
 	}
@@ -611,161 +658,98 @@ func splitBeam(ctx context.Context, ts timesig.TimeSignature, notes []*entity.No
 			}
 
 		}
-		subSegment := (segments[2])[0]
-		distance := (subSegment.EndIndex - subSegment.StartIndex) + 1
-		startingPoint := (subSegment.StartIndex - segment.StartIndex)
+		splitSingleBeamQuarter(ctx, notes, segments[2], 2)
 
-		if diff == 4 {
-
-			if distance == 1 {
-				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-			} else if distance == 4 {
-				notes[subSegment.StartIndex+1].UpdateBeam(2, musicxml.NoteBeamTypeEnd)
-				notes[subSegment.StartIndex+2].UpdateBeam(2, musicxml.NoteBeamTypeBegin)
+		if diff > 3 && currTs.BeatType == 4 {
+			interval := Interval(segments[2])
+			sort.Sort(interval)
+			unprocessedSegment := []beamSplitMarker{}
+			marker := map[int]bool{}
+			before := beamSplitMarker{
+				StartIndex: segment.StartIndex,
+				EndIndex:   interval[0].StartIndex - 1,
 			}
-		} else if diff == 8 {
 
-			if currTs.BeatType == 4 {
-				// currently taylored to kj-026 and kj-145
-				interval := Interval(segments[2])
-				sort.Sort(interval)
-				unprocessedSegment := []beamSplitMarker{}
-				marker := map[int]bool{}
-				before := beamSplitMarker{
-					StartIndex: segment.StartIndex,
-					EndIndex:   interval[0].StartIndex - 1,
-				}
+			if notes[before.EndIndex+1].IsDotted {
+				before.EndIndex--
+			}
 
-				if notes[before.EndIndex+1].IsDotted {
+			// last note on before double segment to interval
+			if before.EndIndex-before.StartIndex > 1 {
+				if diff%2 == 1 && (before.EndIndex-before.StartIndex+1)%2 == 1 {
+					interval[0].StartIndex--
 					before.EndIndex--
 				}
 
 				unprocessedSegment = append(unprocessedSegment, before)
 
-				between := beamSplitMarker{StartIndex: -1, EndIndex: -1}
-				for _, ss := range interval {
-					notes[ss.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-					marker[ss.EndIndex] = true
-					offset := 1
-					if !notes[ss.StartIndex].IsDotted {
-						offset = 0
-					}
-					notes[ss.StartIndex-offset].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-					marker[ss.StartIndex-offset] = true
-
-					if between.StartIndex == -1 {
-						between.StartIndex = ss.EndIndex + 1
-					} else if between.EndIndex == -1 {
-						between.EndIndex = ss.StartIndex - offset - 1
-
-						unprocessedSegment = append(unprocessedSegment, between)
-
-						between = beamSplitMarker{StartIndex: -1, EndIndex: -1}
-					}
-				}
-
-				// TODO: after the interval to end
-
-				for _, us := range unprocessedSegment {
-					if us.EndIndex > us.StartIndex && (!marker[us.EndIndex] && !marker[us.StartIndex]) {
-						// need proper splitting, but since this is max 8 distance, no need for further splitting
-						notes[us.StartIndex].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-						notes[us.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-					}
-
-				}
-
 			} else {
-				notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-				notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-				notes[segment.StartIndex+4].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-				notes[segment.StartIndex+5].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+				// include only one note to interval
+				// +1 is compensated from interval[0].EndIndex-1
+				hasOneNote := before.EndIndex-before.StartIndex+1 == 1
 
-			}
+				// sanity check
+				canIncludelastNote := interval[0].StartIndex > 0 && len(notes[interval[0].StartIndex-1].Beam) == 1
 
-		} else if diff > 4 {
-			if subSegment.EndIndex <= segment.EndIndex {
-
-				if distance == 1 {
-
-					if startingPoint <= 2 {
-						// split 2x3
-						notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-					} else {
-						// split 3x2
-						notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-					}
-				} else if distance == 2 {
-
-					if currTs.BeatType == 8 {
-						for i := segment.StartIndex; i <= segment.EndIndex; i += 2 {
-							if breathpause.IsBreathMark(notes[i]) {
-								i = i - 1
-								continue
-							}
-
-							if i+3 < len(notes) {
-								notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-								notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-							}
-						}
-						return notes
-					}
-
-					if startingPoint <= 1 {
-						// split 3x2
-						notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[segment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-
-					} else if startingPoint <= 2 {
-						// split 2x3
-						notes[segment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[segment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-					} else {
-
-						// first separate 1st segement of sub segment
-						notes[subSegment.StartIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[subSegment.StartIndex+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-
-						// split 2x2 from segment startSegement to subsegement startSegment
-						for i := segment.StartIndex; i < subSegment.StartIndex-1; i += 2 {
-							notes[i+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-							notes[i+2].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-						}
-
-						// TODO: split 2x2 the rest after subsegement end to first segment end
-
-					}
-				} else if distance == 3 {
-					offset := diff - 5
-					if startingPoint == offset-0 {
-						// split 3x2
-						notes[segment.StartIndex+2+offset].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[segment.StartIndex+3+offset].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-					} else if startingPoint == 2-offset {
-						// split 2x3
-						notes[segment.StartIndex+1+offset].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[segment.StartIndex+2+offset].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-					}
-				} else if distance == 4 {
-					// split the subsegment to 2x2
-					notes[subSegment.StartIndex+1].UpdateBeam(2, musicxml.NoteBeamTypeEnd)
-					notes[subSegment.StartIndex+2].UpdateBeam(2, musicxml.NoteBeamTypeBegin)
-
-					if len(notes) >= subSegment.StartIndex+4 {
-						// the subsegment is 2x2, hence the parent need 4 length.
-						notes[subSegment.StartIndex+3].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-						notes[subSegment.StartIndex+4].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-					}
-				} else {
-					// split 3x2
-					notes[subSegment.StartIndex+2].UpdateBeam(2, musicxml.NoteBeamTypeEnd)
-					notes[subSegment.StartIndex+3].UpdateBeam(2, musicxml.NoteBeamTypeBegin)
+				if hasOneNote && canIncludelastNote {
+					interval[0].StartIndex--
 				}
 			}
+
+			between := beamSplitMarker{StartIndex: -1, EndIndex: -1}
+
+			for _, ss := range interval {
+
+				notes[ss.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+				marker[ss.EndIndex] = true
+				offset := 1
+				if !notes[ss.StartIndex].IsDotted {
+					offset = 0
+				}
+				notes[ss.StartIndex-offset].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+				marker[ss.StartIndex-offset] = true
+
+				if between.StartIndex == -1 {
+					between.StartIndex = ss.EndIndex + 1
+				} else if between.EndIndex == -1 {
+					between.EndIndex = ss.StartIndex - offset - 1
+					if between.EndIndex-between.StartIndex > 0 {
+						notes[between.StartIndex].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+						notes[between.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+						unprocessedSegment = append(unprocessedSegment, between)
+					} else {
+						notes[ss.StartIndex-offset].UpdateBeam(1, musicxml.NoteBeamTypeContinue)
+						notes[ss.StartIndex-offset-1].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+					}
+
+					between = beamSplitMarker{StartIndex: -1, EndIndex: -1}
+				}
+
+			}
+			lastInteval := interval[len(interval)-1]
+			lastSegment := segments[1][len(segments[1])-1]
+			if lastInteval.EndIndex < lastSegment.EndIndex {
+				if lastSegment.EndIndex-lastInteval.EndIndex > 1 {
+					notes[lastInteval.EndIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+					unprocessedSegment = append(unprocessedSegment, beamSplitMarker{
+						StartIndex: lastInteval.EndIndex + 1,
+						EndIndex:   lastSegment.EndIndex,
+					})
+				} else {
+					notes[lastInteval.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeContinue)
+					notes[lastInteval.EndIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+				}
+
+			}
+
+			for _, us := range unprocessedSegment {
+				if us.EndIndex > us.StartIndex && (!marker[us.EndIndex] && !marker[us.StartIndex]) {
+					notes[us.StartIndex].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+					notes[us.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+					splitSingleBeamQuarter(ctx, notes, unprocessedSegment, 1)
+				}
+			}
+
 		}
 	}
 

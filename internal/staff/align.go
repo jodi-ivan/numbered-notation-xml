@@ -52,21 +52,21 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	// proprocessing
 	totalNotes := 0
 	for _, measure := range noteRenderer {
-		var prev, next *entity.NoteRenderer
+		// var prev, next *entity.NoteRenderer
 
-		for i, note := range measure {
+		// for i, note := range measure {
 
-			if i < len(measure)-1 {
-				next = measure[i+1]
-			}
+		// 	if i < len(measure)-1 {
+		// 		next = measure[i+1]
+		// 	}
 
-			//clean up breathmark pause
-			if note.Articulation != nil && note.Articulation.BreathMark != nil {
-				breathpause.AdjustBreathmarkBeamCont(ctx, note, prev, next)
-			}
+		// 	// clean up breathmark pause
+		// 	if note.Articulation != nil && note.Articulation.BreathMark != nil {
+		// 		breathpause.AdjustBreathmarkBeamCont(ctx, note, prev, next)
+		// 	}
 
-			prev = note
-		}
+		// 	prev = note
+		// }
 		totalNotes += len(measure)
 	}
 
@@ -134,7 +134,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			}
 		}
 
-		canv.Group("measure-align")
+		canv.Group("class='measure-align'", fmt.Sprintf("number='%d'", measure[0].MeasureNumber))
 		// if len(measure) > 0 {
 		// 	fmt.Fprintf(canv.Writer(), `<title>Measure %d</title>`, measure[0].MeasureNumber)
 		// }

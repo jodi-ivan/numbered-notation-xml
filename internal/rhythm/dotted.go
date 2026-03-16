@@ -29,7 +29,7 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 			}
 			continueDot = true
 
-		} else if n.IsRest || (breathpause.IsBreathMark(n) && prev != nil && prev.IsLengthTakenFromLyric) {
+		} else if breathpause.IsBreathMark(n) && prev != nil && prev.IsLengthTakenFromLyric {
 			x -= constant.LOWERCASE_LENGTH
 		} else {
 			xNotes = x

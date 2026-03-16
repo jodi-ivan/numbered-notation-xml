@@ -12,11 +12,6 @@ const (
 	SlurTieTypeTie  SlurTieType = "tie"
 )
 
-type beamMarker struct {
-	NoteBeamType   musicxml.NoteBeamType
-	NoteBeginIndex int
-}
-
 type CoordinateWithOctave struct {
 	entity.Coordinate
 	Octave int
@@ -37,14 +32,3 @@ type BeamLine struct {
 	End    entity.Coordinate
 	Number int
 }
-
-type beamSplitMarker struct {
-	StartIndex int
-	EndIndex   int
-}
-
-type Interval []beamSplitMarker
-
-func (c Interval) Len() int           { return len(c) }
-func (c Interval) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
-func (c Interval) Less(i, j int) bool { return c[i].StartIndex < c[j].StartIndex }

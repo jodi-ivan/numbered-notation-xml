@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -24,7 +25,7 @@ func NewRenderAlign() RenderStaffWithAlign {
 	return &renderStaffAlign{
 		Barline:  barline.NewBarline(),
 		Numbered: numbered.New(),
-		Rhythm:   rhythm.New(),
+		Rhythm:   rhythm.New(splitter.New()),
 		Lyric:    lyric.NewLyric(),
 	}
 }
@@ -52,21 +53,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	// proprocessing
 	totalNotes := 0
 	for _, measure := range noteRenderer {
-		// var prev, next *entity.NoteRenderer
-
-		// for i, note := range measure {
-
-		// 	if i < len(measure)-1 {
-		// 		next = measure[i+1]
-		// 	}
-
-		// 	// clean up breathmark pause
-		// 	if note.Articulation != nil && note.Articulation.BreathMark != nil {
-		// 		breathpause.AdjustBreathmarkBeamCont(ctx, note, prev, next)
-		// 	}
-
-		// 	prev = note
-		// }
 		totalNotes += len(measure)
 	}
 

@@ -13,6 +13,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -38,7 +39,7 @@ func NewStaff() Staff {
 		Lyric:       lyric.NewLyric(),
 		Numbered:    numbered.New(),
 		BreathPause: breathpause.New(),
-		Rhythm:      rhythm.New(),
+		Rhythm:      rhythm.New(splitter.New()),
 		RenderAlign: NewRenderAlign(),
 	}
 }

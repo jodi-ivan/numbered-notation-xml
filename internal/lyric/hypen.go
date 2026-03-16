@@ -38,8 +38,8 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 		return nil
 	}
 
-	// every 20% of layout has 3 hypen
-	container := (constant.LAYOUT_WIDTH - (2 - constant.LAYOUT_INDENT_LENGTH)) / 6
+	// every 1/6 of layout has 3 hypen
+	container := (constant.LAYOUT_WIDTH - (2 * constant.LAYOUT_INDENT_LENGTH)) / 6
 	if distance < float64(container) {
 		offset := (distance / 2) - hypenWidth
 		if offset < 0 {

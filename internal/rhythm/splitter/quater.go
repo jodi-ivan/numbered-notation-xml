@@ -82,7 +82,7 @@ func (qs *quaterSpliiter) Split(ctx context.Context, notes []*entity.NoteRendere
 
 		if leftIdx >= 0 {
 			for i, v := range eigthSegment {
-				if i < leftIdx {
+				if i <= leftIdx {
 					unprocessedSegment = append(unprocessedSegment, v)
 				}
 			}

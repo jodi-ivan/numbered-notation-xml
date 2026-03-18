@@ -20,7 +20,6 @@ type versePosition struct {
 	Style    VerseRowStyle
 }
 
-// TODO: add the lyric notes like on kj-5, verse 2
 func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 

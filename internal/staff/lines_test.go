@@ -162,7 +162,6 @@ func TestProcessPreviousLines(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got2 := ProcessPreviousLines(tt.prevNotes, tt.yPos)
-			// TODO: update the condition below to compare got with tt.want.
 			if len(got) == tt.wantTotalNotes {
 				t.Errorf("ProcessPreviousLines() total notes = %v, want %v", got, tt.wantTotalNotes)
 			}

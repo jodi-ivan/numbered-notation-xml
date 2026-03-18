@@ -1,4 +1,4 @@
-package lyric
+package verse
 
 import (
 	"testing"

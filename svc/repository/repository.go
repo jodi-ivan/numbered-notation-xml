@@ -14,8 +14,9 @@ import (
 type Repository interface {
 	GetHymnMetaData(ctx context.Context, hymnNum int, varaint ...string) (*HymnMetadata, error)
 	GetMusicXML(ctx context.Context, filepath string) (musicxml.MusicXML, error)
-	InsertVerse(ctx context.Context, hymn, verse, style, col, row int, content string) (int, error)
+	InsertVerse(ctx context.Context, tx Transactional, hymn, verse, style, col, row int, content string) (int, error)
 	GetHymnVariant(ctx context.Context, hymnNum int) ([]HymnIndicator, error)
+	StartTransaction(ctx context.Context) (Transactional, error)
 }
 
 type repository struct {
@@ -38,7 +39,18 @@ func fillNull(val int) sql.NullInt32 {
 	return result
 }
 
-func (r *repository) InsertVerse(ctx context.Context, hymn, verse, style, col, row int, content string) (int, error) {
+func (r *repository) StartTransaction(ctx context.Context) (Transactional, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	return &sqlTx{
+		tx: tx,
+	}, nil
+}
+
+func (r *repository) InsertVerse(ctx context.Context, tx Transactional, hymn, verse, style, col, row int, content string) (int, error) {
 
 	styleQL := fillNull(style)
 	colQL := fillNull(col)
@@ -47,10 +59,18 @@ func (r *repository) InsertVerse(ctx context.Context, hymn, verse, style, col, r
 	var newID int
 
 	query := sqlx.Rebind(sqlx.QUESTION, qryInsertVerse)
+	if tx != nil {
+		stx := tx.(*sqlTx)
+		err := stx.tx.QueryRow(query, hymn, verse, content, styleQL, colQL, rowQL).Scan(&newID)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		err := r.db.QueryRow(query, hymn, verse, content, styleQL, colQL, rowQL).Scan(&newID)
+		if err != nil {
+			return 0, err
+		}
 
-	err := r.db.QueryRow(query, hymn, verse, content, styleQL, colQL, rowQL).Scan(&newID)
-	if err != nil {
-		return 0, err
 	}
 
 	return newID, nil

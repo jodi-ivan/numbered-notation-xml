@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
+	"github.com/jmoiron/sqlx"
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/verse"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -37,7 +38,7 @@ func (lp *LyricParser) ServeHTTP(w http.ResponseWriter, r *http.Request, ps http
 			continue
 		}
 		for _, w := range words {
-			syllable := lyric.SplitSyllable(w)
+			syllable := verse.SplitSyllable(w)
 			line = append(line, WordBreakdown{
 				Word:      w,
 				Breakdown: syllable,
@@ -49,4 +50,35 @@ func (lp *LyricParser) ServeHTTP(w http.ResponseWriter, r *http.Request, ps http
 	raw, _ := json.MarshalIndent(result, "", "    ")
 	w.WriteHeader(http.StatusOK)
 	w.Write(raw)
+}
+
+type LyricParserV2 struct {
+	Db *sqlx.DB
+}
+
+func (lpv2 LyricParserV2) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	input := strings.ReplaceAll(strings.TrimSpace(string(b)), "\\t", "")
+	breakdown, notindb, err := verse.ProcessSentence(lpv2.Db, input)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"breakdown": breakdown,
+		"generated": notindb,
+	}
+
+	raw, _ := json.MarshalIndent(data, "", "    ")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(raw)
+
 }

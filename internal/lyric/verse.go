@@ -43,7 +43,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		if err != nil {
 			log.Println("[RenderVerse] failed to unmarshal, err ", err)
 		}
-		yPosRow[int(verse.Row.Int16)] = y + (25 * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * 35)
+		yPosRow[int(verse.Row.Int16)] = y + (25 * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * VERSE_SEPARATOR)
 
 		style := VerseRowStyle(verse.StyleRow.Int32)
 
@@ -178,7 +178,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		canv.Gend()
 		canv.Gend()
 
-		y += 35
+		y += VERSE_SEPARATOR
 		maxY = math.Max(maxY, float64(y))
 
 	}

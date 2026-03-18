@@ -177,7 +177,7 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 			text = fmt.Sprintf("<tspan font-style=\"italic\">%s", text)
 		}
 		if len(wrapped) > 1 && i < len(wrapped)-1 {
-			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH)
+			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH-(constant.LAYOUT_INDENT_LENGTH*2))
 		}
 		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
 		y += newLineHeight

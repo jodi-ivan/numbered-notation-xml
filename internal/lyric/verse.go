@@ -122,7 +122,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 
 	for i := 1; i < totalVerse+1; i++ {
 
-		canv.Group("class='verse'")
+		canv.Group("class='verse'", fmt.Sprintf("number='%d'", i+1))
 		yVerse := y
 
 		currentVerse := allVerse[i+1]
@@ -164,17 +164,20 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			y += 25
 
 		}
-		canv.Group()
 
-		for _, c := range allCombine[i+1] {
-			canv.Qbez(
-				int(c[0].X)+x+margin, int(c[0].Y*25)+2+yVerse,
-				int(c[0].X)+x+margin+(int(c[1].X-c[0].X)/2), yVerse+7+(int(c[0].Y)*25),
-				int(c[1].X)+x+margin, int(c[1].Y*25)+2+yVerse,
-				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
-			)
+		if len(allCombine) > 0 {
+			canv.Group()
+
+			for _, c := range allCombine[i+1] {
+				canv.Qbez(
+					int(c[0].X)+x+margin, int(c[0].Y*25)+2+yVerse,
+					int(c[0].X)+x+margin+(int(c[1].X-c[0].X)/2), yVerse+7+(int(c[0].Y)*25),
+					int(c[1].X)+x+margin, int(c[1].Y*25)+2+yVerse,
+					"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
+				)
+			}
+			canv.Gend()
 		}
-		canv.Gend()
 		canv.Gend()
 
 		y += VERSE_SEPARATOR

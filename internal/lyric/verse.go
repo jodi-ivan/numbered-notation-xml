@@ -20,7 +20,6 @@ type versePosition struct {
 	Style    VerseRowStyle
 }
 
-// TODO: add the lyric notes like on kj-5, verse 2
 func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
@@ -43,7 +42,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 		if err != nil {
 			log.Println("[RenderVerse] failed to unmarshal, err ", err)
 		}
-		yPosRow[int(verse.Row.Int16)] = y + (25 * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * 35)
+		yPosRow[int(verse.Row.Int16)] = y + (25 * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * VERSE_SEPARATOR)
 
 		style := VerseRowStyle(verse.StyleRow.Int32)
 
@@ -123,7 +122,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 
 	for i := 1; i < totalVerse+1; i++ {
 
-		canv.Group("class='verse'")
+		canv.Group("class='verse'", fmt.Sprintf("number='%d'", i+1))
 		yVerse := y
 
 		currentVerse := allVerse[i+1]
@@ -165,20 +164,23 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			y += 25
 
 		}
-		canv.Group()
 
-		for _, c := range allCombine[i+1] {
-			canv.Qbez(
-				int(c[0].X)+x+margin, int(c[0].Y*25)+2+yVerse,
-				int(c[0].X)+x+margin+(int(c[1].X-c[0].X)/2), yVerse+7+(int(c[0].Y)*25),
-				int(c[1].X)+x+margin, int(c[1].Y*25)+2+yVerse,
-				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
-			)
+		if len(allCombine) > 0 {
+			canv.Group()
+
+			for _, c := range allCombine[i+1] {
+				canv.Qbez(
+					int(c[0].X)+x+margin, int(c[0].Y*25)+2+yVerse,
+					int(c[0].X)+x+margin+(int(c[1].X-c[0].X)/2), yVerse+7+(int(c[0].Y)*25),
+					int(c[1].X)+x+margin, int(c[1].Y*25)+2+yVerse,
+					"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
+				)
+			}
+			canv.Gend()
 		}
 		canv.Gend()
-		canv.Gend()
 
-		y += 35
+		y += VERSE_SEPARATOR
 		maxY = math.Max(maxY, float64(y))
 
 	}

@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/jodi-ivan/numbered-notation-xml/adapter"
+	lab "github.com/jodi-ivan/numbered-notation-xml/cmd/rest/adapter"
 	"github.com/jodi-ivan/numbered-notation-xml/decorator"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -45,11 +46,20 @@ func main() {
 
 	ws.Register("GET", "/kidung-jemaat/render/:number", httpRender)
 	//TODO: make the path root as config
-	ws.RegisterStatic("/internal/lab/verse-generator/*filepath", "./files/var/www/html/verses-generator")
+	ws.RegisterStatic("/internal/lab/*filepath", "./files/var/www/html/")
 
-	ws.Register("POST", "/internal/verse-parser", &adapter.LyricParser{})
-	ws.Register("PUT", "/internal/verse/hymn/:hymn/verse/:verse", &adapter.VerseManagement{
+	ws.Register("POST", "/internal/verse-parser", &lab.LyricParser{})
+
+	ws.Register("POST", "/internal/v2/verse-parser", &lab.LyricParserV2{
+		Db: db,
+	})
+	ws.Register("PUT", "/internal/verse/hymn/:hymn/verse/:verse", &lab.VerseManagement{
 		VerseRepo: repo,
+	})
+
+	ws.Register("PUT", "/internal/v2/verse/hymn/:number", &lab.VerseManagementV2{
+		VerseRepo: repo,
+		Db:        db,
 	})
 
 	err = ws.Serve(cfg.Webserver.Port)

@@ -75,6 +75,8 @@ func (ts *TimeSignature) GetHumanized() string {
 		ts.humanized = fmt.Sprintf("%d ketuk", ts.Signatures[0].Beat)
 		if ts.Signatures[0].BeatType == 8 {
 			ts.humanized = fmt.Sprintf("%d ketuk (%d x 3)", ts.Signatures[0].Beat, int(math.Max(1, float64(ts.Signatures[0].Beat/3))))
+		} else if ts.Signatures[0].Beat == 5 {
+			ts.humanized = "5 ketuk ( 3 + 2 )"
 		}
 		return ts.humanized
 	}

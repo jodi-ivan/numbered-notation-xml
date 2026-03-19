@@ -137,7 +137,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			staffInfo.Multiline = staffInfo.Multiline || renderer.IsNewLine
 
 			// text above the measure
-			si.SetMeasureTextRenderer(renderer, note, notePos == len(measure.Notes)-1)
+			si.SetMeasureTextRenderer(renderer, note, notePos == len(measure.Notes)-1 && mi == len(measures)-1)
 
 			if len(additionalRenderer) > 0 {
 

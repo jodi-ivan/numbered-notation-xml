@@ -37,7 +37,6 @@ type renderStaffAlign struct {
 	Lyric    lyric.Lyric
 }
 
-// TODO: right align text on the last node.
 func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, ts timesig.TimeSignature, noteRenderer [][]*entity.NoteRenderer) {
 
 	if len(noteRenderer) == 0 {

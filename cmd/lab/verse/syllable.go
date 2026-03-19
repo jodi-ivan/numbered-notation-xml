@@ -1,4 +1,4 @@
-package lyric
+package verse
 
 import (
 	"strings"
@@ -7,7 +7,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 )
 
-// FIXME: number of syllable is equal to number of vowel. it will be false, if word kacau should be splitted [ka][cau]
 func SplitSyllable(word string) []string {
 	vowels := []string{"a", "i", "u", "e", "o", "A", "I", "U", "E", "O"}
 

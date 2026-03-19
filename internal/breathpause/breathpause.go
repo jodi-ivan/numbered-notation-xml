@@ -9,7 +9,6 @@ import (
 )
 
 type BreathPause interface {
-	// XXX: get the proper name for this
 	SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer
 }
 

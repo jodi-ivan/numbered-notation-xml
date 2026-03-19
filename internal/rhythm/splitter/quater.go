@@ -305,7 +305,7 @@ func (qs *quaterSpliiter) SplitSingle(ctx context.Context, notes []*entity.NoteR
 		default:
 			if diff > 6 {
 				startIndex := segment.StartIndex
-				if diff%2 == 1 {
+				if diff%2 == 1 && !notes[startIndex].IsRest {
 					notes[startIndex].UpdateBeam(beamNo, musicxml.NoteBeamTypeEnd)
 					notes[startIndex+1].UpdateBeam(beamNo, musicxml.NoteBeamTypeBegin)
 					startIndex = startIndex + 2

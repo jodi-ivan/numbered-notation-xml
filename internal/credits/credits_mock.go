@@ -37,9 +37,11 @@ func (m *MockCredits) EXPECT() *MockCreditsMockRecorder {
 }
 
 // RenderCredits mocks base method.
-func (m *MockCredits) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) {
+func (m *MockCredits) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) int {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderCredits", ctx, canv, y, metadata, verseFootnotes)
+	ret := m.ctrl.Call(m, "RenderCredits", ctx, canv, y, metadata, verseFootnotes)
+	ret0, _ := ret[0].(int)
+	return ret0
 }
 
 // RenderCredits indicates an expected call of RenderCredits.

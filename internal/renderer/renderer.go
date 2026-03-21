@@ -119,10 +119,10 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 			relativeY = verseInfo.MarginBottom
 		}
 
-		ir.Credits.RenderCredits(ctx, canv, relativeY, metadata.HymnData, metadata.VerseFootNotes)
+		relativeY = ir.Credits.RenderCredits(ctx, canv, relativeY, metadata.HymnData, metadata.VerseFootNotes)
 
 		if metadata.IsForKids.Int16 == 1 {
-			ir.Credits.RenderForKidsFootnotes(ctx, canv, relativeY+30)
+			ir.Credits.RenderForKidsFootnotes(ctx, canv, relativeY+25)
 		}
 	}
 	canv.End()

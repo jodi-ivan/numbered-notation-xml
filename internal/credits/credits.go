@@ -13,7 +13,7 @@ import (
 )
 
 type Credits interface {
-	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes)
+	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) int
 	RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int)
 	RenderMuiscFootnotes(ctx context.Context, canv canvas.Canvas, metadata *repository.HymnMetadata, x, y int)
 }
@@ -118,7 +118,7 @@ func alignText(text string, textLength, targetLength int) string {
 	return strings.ReplaceAll(text, "tspan-font-style", "tspan font-style")
 }
 
-func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) {
+func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) int {
 	leftIndent := indentLyric
 	lyricMusicMerged := metadata.Lyric == metadata.Music
 	copyrightY := y
@@ -230,6 +230,7 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 	canv.Gend()
 
+	return y
 }
 
 func (ci *creditsInteractor) RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int) {

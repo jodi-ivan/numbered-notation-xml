@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -17,25 +16,12 @@ import (
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/token/lowercase"
-	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/usage"
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/category"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/storage"
 )
-
-var originalTitleExp *regexp.Regexp
-
-func init() {
-	if originalTitleExp == nil {
-		originalTitleExp = regexp.MustCompile("<i>.*</i>")
-	}
-
-	// registry.RegisterTokenFilter("ngram", func(config map[string]interface{}, cache *registry.Cache) (analysis.TokenFilter, error) {
-	// 	return ngram.NgramFilterConstructor(config, cache)
-	// })
-
-}
 
 type VerseDoc struct {
 	No      int    `json:"no"`
@@ -44,20 +30,20 @@ type VerseDoc struct {
 	End     int    `json:"end"`
 }
 type Document struct {
-	ID            string        `json:"id"`
-	Title         string        `json:"title"`
-	Content       string        `json:"content"`
-	Catergory     []usage.Entry `json:"categories,omitempty"`
-	HymnNo        int           `json:"hymn_no"`
-	Variant       string        `json:"variant,omitempty"`
-	Verses        []VerseDoc    `json:"verses"`
-	OriginalTitle []string      `json:"original_title"`
-	BE            int           `json:"be_num,omitempty"`
-	NR            int           `json:"nr_num,omitempty"`
-	ForKids       bool          `json:"for_kids"`
-	Copyright     string        `json:"copyright,omitempty"`
-	MusicCredit   string        `json:"music"`
-	Title_ngram   string        `json:"title_ngram"`
+	ID            string           `json:"id"`
+	Title         string           `json:"title"`
+	Content       string           `json:"content"`
+	Catergory     []category.Entry `json:"categories,omitempty"`
+	HymnNo        int              `json:"hymn_no"`
+	Variant       string           `json:"variant,omitempty"`
+	Verses        []VerseDoc       `json:"verses"`
+	OriginalTitle []string         `json:"original_title"`
+	BE            int              `json:"be_num,omitempty"`
+	NR            int              `json:"nr_num,omitempty"`
+	ForKids       bool             `json:"for_kids"`
+	Copyright     string           `json:"copyright,omitempty"`
+	MusicCredit   string           `json:"music"`
+	Title_ngram   string           `json:"title_ngram"`
 }
 
 func GetOriginalTitle(metadata *repository.HymnMetadata) []string {
@@ -164,9 +150,6 @@ func buildContentWithOffsets(verses []VerseDoc) (string, []VerseDoc) {
 		verses[i].Start = sb.Len()
 		sb.WriteString(verses[i].Content)
 		verses[i].End = sb.Len()
-		// if i < len(verses)-1 {
-		// 	sb.WriteString(" ")
-		// }
 	}
 	return sb.String(), verses
 }
@@ -191,7 +174,7 @@ func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Docu
 		Copyright:     metadata.Copyright.String,
 		MusicCredit:   metadata.Music,
 		OriginalTitle: GetOriginalTitle(metadata),
-		Catergory:     []usage.Entry{},
+		Catergory:     []category.Entry{},
 	}
 
 	if len(vaiant) > 0 {
@@ -200,7 +183,7 @@ func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Docu
 	}
 	verses := make([]VerseDoc, len(metadata.Verse)+1)
 	for verse := 1; verse <= len(metadata.Verse)+1; verse++ {
-		currCats := usage.Lookup(num, verse)
+		currCats := category.Lookup(num, verse)
 		for _, curr := range currCats {
 			if cats[curr.H1] == nil {
 				cats[curr.H1] = []string{}
@@ -218,7 +201,7 @@ func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Docu
 				continue
 			}
 			h2s[h2] = true
-			doc.Catergory = append(doc.Catergory, usage.Entry{H1: h1, H2: h2})
+			doc.Catergory = append(doc.Catergory, category.Entry{H1: h1, H2: h2})
 		}
 	}
 

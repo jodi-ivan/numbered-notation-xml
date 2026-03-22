@@ -127,36 +127,46 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 	}
 
 	if len(verseFootnotes) > 0 {
-		y -= 20
 		flatten := []repository.VerseFootNotes{}
+
+		versenoteHeadonlyCnt := 0
 
 		for _, fn := range verseFootnotes {
 			for _, t := range fn {
+				if lyric.VerseNoteStyle(t.MarkerStyle.Int32) == lyric.VerseNoteStyleHeadonly {
+					versenoteHeadonlyCnt++
+					continue
+				}
 				flatten = append(flatten, t)
 			}
 		}
 
-		// Sort the footnotes by its markers
-		sort.Slice(flatten, func(i, j int) bool {
-			return flatten[i].FootnoteMarker.String < flatten[j].FootnoteMarker.String
-		})
+		if versenoteHeadonlyCnt != len(flatten) {
 
-		canv.Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
-		for i, fn := range flatten {
-			lines := strings.Split(fn.Footnote.String, "<br/>")
-			if len(lines) >= 2 {
-				xNotes := int(CalculateLyric(fn.FootnoteMarker.String, true))
-				canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String)
-				for li, line := range lines {
-					canv.Text(constant.LAYOUT_INDENT_LENGTH+20+xNotes, (15*(i+li))+y, line)
+			// Sort the footnotes by its markers
+			sort.Slice(flatten, func(i, j int) bool {
+				return flatten[i].FootnoteMarker.String < flatten[j].FootnoteMarker.String
+			})
+
+			y -= 20
+
+			canv.Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
+			for i, fn := range flatten {
+				lines := strings.Split(fn.Footnote.String, "<br/>")
+				if len(lines) >= 2 {
+					xNotes := int(CalculateLyric(fn.FootnoteMarker.String, true))
+					canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String)
+					for li, line := range lines {
+						canv.Text(constant.LAYOUT_INDENT_LENGTH+20+xNotes, (15*(i+li))+y, line)
+					}
+				} else {
+					canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String+fn.Footnote.String)
 				}
-			} else {
-				canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String+fn.Footnote.String)
 			}
-		}
-		canv.Gend()
+			canv.Gend()
 
-		y += 25 + (len(flatten) * 15)
+			y += 25 + (len(flatten) * 15)
+		}
 	}
 	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)
 	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)

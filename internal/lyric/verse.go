@@ -146,16 +146,21 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 
 			if footnotes, hasFootnotes := verseFootnote[i+1]; hasFootnotes {
 				currentLine, lineHasFootnotes := footnotes[line+1]
+
 				verseStyle := VerseNoteStyle(currentLine.MarkerStyle.Int32)
 				if lineHasFootnotes && verseStyle != VerseNoteStyleHeadless {
 					xPos := x + margin + int(li.CalculateLyricWidth(liveVerse))
-					styleFontSize := ""
-					if verseStyle == VerseNoteStyleAlignRight {
-						styleFontSize = "font-size:60%;"
+					styleFontSize := "font-family:'Figtree';font-weight:600;"
+					switch verseStyle {
+					case VerseNoteStyleAlignRight:
+						styleFontSize = "font-family:'Figtree';font-size:60%;font-weight:600;"
 						approxLineLength := constant.LAYOUT_WIDTH - (2 * defaultX)
 						xPos = x + margin + approxLineLength
+					case VerseNoteStyleHeadonly:
+						styleFontSize = "font-family:'Caladea';font-size:90%;font-weight:600;"
+						xPos -= int(li.CalculateLyricWidth(" ")) // lyric on db is just white spaces
 					}
-					canv.Group("class='footnotes'", fmt.Sprintf(`style="font-family:'Figtree';font-weight:600;font-style:italic;%s"`, styleFontSize))
+					canv.Group("class='footnotes'", fmt.Sprintf(`style="font-style:italic;%s"`, styleFontSize))
 					canv.Text(xPos, y, currentLine.FootnoteMarker.String)
 					canv.Gend()
 				}

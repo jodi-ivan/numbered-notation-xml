@@ -168,10 +168,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			notes = append(notes, renderer)
 
-			hasBreathMark := note.Notations != nil &&
-				note.Notations.Articulation != nil &&
-				note.Notations.Articulation.BreathMark != nil
-
 			// additional renderer is a several new renderer because of
 			// the conversion to numbered
 			// for example, a half note, means an additional note for the dot
@@ -186,14 +182,14 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					NoteLength:    additional.Type,
 					Beam:          map[int]entity.Beam{},
 					MeasureNumber: measure.Number,
-					IsNewLine:     renderer.IsNewLine && (i == len(additionalRenderer)-1) && !hasBreathMark,
+					IsNewLine:     renderer.IsNewLine && (i == len(additionalRenderer)-1) && !note.IsBreathMark(),
 				}
 				if additionalNote.IsNewLine {
 					renderer.IsNewLine = !additionalNote.IsNewLine
 				}
 
 				shouldReplace := notePos+2 < len(measure.Notes) && note.Type == additional.Type
-				if skipNote[notePos+1] && len(additionalRenderer) > 2 && i == len(additionalRenderer)-1 && shouldReplace {
+				if skipNote[notePos+1] && len(additionalRenderer) > 2 && i == len(additionalRenderer)-1 && measure.Notes[notePos+1].IsBreathMark() && shouldReplace {
 					additionalNote.IsDotted = false
 					additionalNote.Note = renderer.Note
 					additionalNote.Octave = renderer.Octave

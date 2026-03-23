@@ -198,8 +198,12 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		for notePos, n := range measure {
 			if n.IsDotted {
 				canv.Text(n.PositionX, y, ".")
-			} else if n.Articulation != nil && n.Articulation.BreathMark != nil {
-				canv.Text(n.PositionX, y-10, ",")
+			} else if breathpause.IsBreathMark(n) {
+				xPos := n.PositionX
+				if n.PositionX-measure[notePos-1].PositionX <= 10 {
+					xPos += (8 + constant.LOWERCASE_LENGTH) / 2 // 8 is average of width charater digit
+				}
+				canv.Text(xPos, y-10, ",")
 			} else if n.Barline != nil {
 				rsa.Barline.RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
 					X: float64(n.PositionX),

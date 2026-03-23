@@ -19,64 +19,64 @@ func (es *eighthSplitter) Split(ctx context.Context, notes []*entity.NoteRendere
 		return
 	}
 
-	for _, segment := range segments[1] {
-		unprocessedSegment := []BeamSplitMarker{}
+	rightMostBeforeSpan, leftMostAfterSpan := -1, -1
+	topSpan := Interval(segments[1])
+	sort.Sort(topSpan)
 
-		// diff := (segment.EndIndex - segment.StartIndex) + 1
-		interval := Interval(segments[2])
-		sort.Sort(interval)
+	bottomSpan := Interval(segments[2])
+	sort.Sort(bottomSpan)
 
-		es.SplitSingle(ctx, notes, ts, segments[2], 2)
+	unprocessedSegment := []BeamSplitMarker{}
 
-		before := BeamSplitMarker{
-			StartIndex: segment.StartIndex,
-			EndIndex:   interval[0].StartIndex - 2,
-		}
-
-		if before.EndIndex > 0 {
-			unprocessedSegment = append(unprocessedSegment, before)
-
-		}
-
-		for is, ss := range interval {
-			for i := ss.StartIndex; i <= ss.EndIndex; i++ {
-				notes[i].UpdateBeam(1, musicxml.NoteBeamTypeContinue)
-				if notes[i].IsDotted {
-					interval[is].EndIndex++
-					if is+1 <= len(interval)-1 {
-						interval[is+1].StartIndex--
-					}
-				}
-
-			}
-
-			notes[ss.StartIndex-1].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-			notes[ss.EndIndex+1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-		}
-
-		after := BeamSplitMarker{
-			StartIndex: interval[len(interval)-1].EndIndex + 1,
-			EndIndex:   segment.EndIndex,
-		}
-
-		if after.EndIndex-after.StartIndex > 1 {
-			unprocessedSegment = append(unprocessedSegment, after)
-		} else {
-			notes[after.StartIndex-1].UpdateBeam(1, musicxml.NoteBeamTypeContinue)
-			notes[after.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-
-		}
-
-		for _, up := range unprocessedSegment {
-			if up.EndIndex >= 0 && up.StartIndex >= 0 && up.EndIndex > up.StartIndex {
-				notes[up.StartIndex].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-				notes[up.EndIndex].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-				es.SplitSingle(ctx, notes, ts, unprocessedSegment, 1)
-			}
-
-		}
-
+	if bottomSpan[0].StartIndex > 0 && notes[bottomSpan[0].StartIndex].IsDotted {
+		bottomSpan[0].StartIndex--
 	}
+
+	for i, top := range topSpan {
+		if top.EndIndex < bottomSpan[0].StartIndex {
+			rightMostBeforeSpan = i
+			unprocessedSegment = append(unprocessedSegment, top)
+		} else if top.StartIndex > bottomSpan[len(bottomSpan)-1].EndIndex {
+			if leftMostAfterSpan == -1 {
+				leftMostAfterSpan = i
+			}
+			unprocessedSegment = append(unprocessedSegment, top)
+		}
+	}
+
+	leftIndexBeforeInterval := topSpan[0].StartIndex
+	if rightMostBeforeSpan != -1 {
+		leftIndexBeforeInterval = topSpan[rightMostBeforeSpan+1].StartIndex
+	}
+
+	if bottomSpan[0].StartIndex > leftIndexBeforeInterval {
+		span := (bottomSpan[0].StartIndex - leftIndexBeforeInterval) % 3
+		switch span {
+		case 0:
+			notes[leftIndexBeforeInterval].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			notes[bottomSpan[0].StartIndex-1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+			notes[bottomSpan[0].StartIndex].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+			unprocessedSegment = append(unprocessedSegment, BeamSplitMarker{StartIndex: leftIndexBeforeInterval, EndIndex: bottomSpan[0].StartIndex - 1})
+		}
+		//TODO 2 or 1 left on the span
+	}
+
+	rightIndexAfterIntervalStartIndex := bottomSpan[len(bottomSpan)-1].EndIndex + 1
+	rightIndexAfterIntervalEndIndex := topSpan[len(topSpan)-1].EndIndex
+	if leftMostAfterSpan != -1 {
+		rightIndexAfterIntervalEndIndex = topSpan[leftMostAfterSpan-1].EndIndex - 1
+	}
+
+	diff := (rightIndexAfterIntervalEndIndex - rightIndexAfterIntervalStartIndex + 1) % 3
+
+	notes[rightIndexAfterIntervalStartIndex-1+diff].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+	notes[rightIndexAfterIntervalStartIndex+diff].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+
+	unprocessedSegment = append(unprocessedSegment, BeamSplitMarker{StartIndex: rightIndexAfterIntervalStartIndex + diff, EndIndex: rightIndexAfterIntervalEndIndex})
+
+	// TODO : in betweeners
+	// TODO: merge breathmatk algorithm
+	es.SplitSingle(ctx, notes, ts, unprocessedSegment, 1)
 
 }
 func (es *eighthSplitter) SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments []BeamSplitMarker, beamNo int) {

@@ -54,3 +54,6 @@ Note merging and splitting
 - 75
 - 127
 - 246
+
+Note width groupping for slur-ties vs lyric length
+-kj-250b

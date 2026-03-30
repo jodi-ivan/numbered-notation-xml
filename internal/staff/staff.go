@@ -85,7 +85,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 
 			if rhythm.HasTies(note) {
-				if notePos+1 < len(measure.Notes) && rhythm.HasTies(measure.Notes[notePos+1]) {
+				if notePos+1 < len(measure.Notes) && rhythm.HasTies(measure.Notes[notePos+1]) && note.Pitch == measure.Notes[notePos+1].Pitch {
 
 					endTieNote := measure.Notes[notePos+1]
 

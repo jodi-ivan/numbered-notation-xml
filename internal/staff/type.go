@@ -14,4 +14,7 @@ type StaffInfo struct {
 const (
 	MEASURE_TEXT_REFREIN = "Refrein"
 	MEASURE_TEXT_FINE    = "Fine"
+
+	FIRST_STAFF_Y_POS   = 95
+	MEASURE_TEXT_OFFSET = 15
 )

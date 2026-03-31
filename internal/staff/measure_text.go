@@ -214,8 +214,7 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 	}
 }
 
-func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) {
-
+func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool {
 	for _, mt := range note.MeasureText {
 		if noteRenderer.MeasureText != nil {
 			noteRenderer.MeasureText = []musicxml.MeasureText{}
@@ -240,5 +239,7 @@ func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRende
 			noteRenderer.MeasureDash[num] = dashType
 		}
 	}
+
+	return len(note.MeasureText) > 0 || directionDashses != nil
 
 }

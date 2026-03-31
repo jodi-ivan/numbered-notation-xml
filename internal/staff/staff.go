@@ -21,7 +21,7 @@ import (
 type Staff interface {
 	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
-	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool)
+	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool
 }
 
 type staffInteractor struct {
@@ -138,7 +138,11 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1
-			si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
+			hasMeasureText := si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
+			if hasMeasureText && y == FIRST_STAFF_Y_POS {
+				y += MEASURE_TEXT_OFFSET
+				staffInfo.MarginBottom = MEASURE_TEXT_OFFSET
+			}
 
 			if len(additionalRenderer) > 0 {
 

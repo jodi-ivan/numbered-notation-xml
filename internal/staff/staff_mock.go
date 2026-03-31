@@ -59,9 +59,11 @@ func (mr *MockStaffMockRecorder) RenderStaff(ctx, canv, x, y, isLastStaff, keySi
 }
 
 // SetMeasureTextRenderer mocks base method.
-func (m *MockStaff) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) {
+func (m *MockStaff) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMeasureTextRenderer", noteRenderer, note, directionDashses, isLastNote)
+	ret := m.ctrl.Call(m, "SetMeasureTextRenderer", noteRenderer, note, directionDashses, isLastNote)
+	ret0, _ := ret[0].(bool)
+	return ret0
 }
 
 // SetMeasureTextRenderer indicates an expected call of SetMeasureTextRenderer.

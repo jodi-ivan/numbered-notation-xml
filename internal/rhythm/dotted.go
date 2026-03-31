@@ -4,6 +4,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
 // TODO: remove the dot positioning operation here, since it handled in the align justify.
@@ -45,6 +46,20 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 				x = (x - diff) + constant.UPPERCASE_LENGTH
 			}
 
+		}
+
+		hasDashedSlur := false
+		for _, s := range n.Slur {
+			if s.LineType == musicxml.NoteSlurLineTypeDashed {
+				hasDashedSlur = true
+				break
+			}
+		}
+		// dont merge notes if it has dashed slur
+		if !hasDashedSlur && (n.Tie != nil || len(n.Slur) > 0) {
+			x -= n.Width
+			x += constant.LOWERCASE_LENGTH * 2
+			n.Width = constant.UPPERCASE_LENGTH
 		}
 
 		prev = n

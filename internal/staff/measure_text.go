@@ -105,7 +105,9 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 	hasStaffText := false
 
-	for _, note := range notes {
+	dashSet := map[int][2]entity.Coordinate{}
+
+	for notePos, note := range notes {
 		if !hasStaffText && len(note.MeasureText) > 0 {
 			canv.Group("class='staff-text'")
 		}
@@ -135,6 +137,34 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 			}
 		}
 
+		for num, dashType := range note.MeasureDash {
+			pair, ok := dashSet[num]
+			if !ok {
+				pair = [2]entity.Coordinate{}
+			}
+
+			loc := entity.Coordinate{
+				X: float64(note.PositionX),
+				Y: float64(note.PositionY),
+			}
+
+			if dashType == musicxml.DirectionDashesTypeStop {
+				loc.X = float64(notes[notePos-1].PositionX) + constant.LOWERCASE_LENGTH
+			}
+
+			switch dashType {
+			case musicxml.DirectionDashesTypeStart:
+				pair[0] = loc
+			case musicxml.DirectionDashesTypeStop:
+				pair[1] = loc
+			}
+			dashSet[num] = pair
+		}
+
+	}
+
+	for _, pair := range dashSet {
+		canv.Line(int(pair[0].X)+constant.LOWERCASE_LENGTH, int(pair[0].Y)-25, int(pair[1].X), int(pair[1].Y)-25, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1;stroke-dasharray:4 8;")
 	}
 	if hasStaffText {
 		canv.Gend()
@@ -184,7 +214,7 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 	}
 }
 
-func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool) {
+func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) {
 
 	for _, mt := range note.MeasureText {
 		if noteRenderer.MeasureText != nil {
@@ -200,4 +230,15 @@ func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRende
 			TextAlignment: alignment,
 		})
 	}
+
+	if directionDashses != nil {
+		if noteRenderer.MeasureDash == nil {
+			noteRenderer.MeasureDash = map[int]musicxml.DirectionDashesType{}
+		}
+
+		for num, dashType := range directionDashses {
+			noteRenderer.MeasureDash[num] = dashType
+		}
+	}
+
 }

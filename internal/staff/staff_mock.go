@@ -59,15 +59,15 @@ func (mr *MockStaffMockRecorder) RenderStaff(ctx, canv, x, y, isLastStaff, keySi
 }
 
 // SetMeasureTextRenderer mocks base method.
-func (m *MockStaff) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool) {
+func (m *MockStaff) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMeasureTextRenderer", noteRenderer, note, isLastNote)
+	m.ctrl.Call(m, "SetMeasureTextRenderer", noteRenderer, note, directionDashses, isLastNote)
 }
 
 // SetMeasureTextRenderer indicates an expected call of SetMeasureTextRenderer.
-func (mr *MockStaffMockRecorder) SetMeasureTextRenderer(noteRenderer, note, isLastNote interface{}) *gomock.Call {
+func (mr *MockStaffMockRecorder) SetMeasureTextRenderer(noteRenderer, note, directionDashses, isLastNote interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMeasureTextRenderer", reflect.TypeOf((*MockStaff)(nil).SetMeasureTextRenderer), noteRenderer, note, isLastNote)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMeasureTextRenderer", reflect.TypeOf((*MockStaff)(nil).SetMeasureTextRenderer), noteRenderer, note, directionDashses, isLastNote)
 }
 
 // SplitLines mocks base method.

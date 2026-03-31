@@ -91,6 +91,8 @@ type Measure struct {
 	Print        *Print       `xml:"print" json:",omitempty"`
 	NewLineIndex map[int]bool `xml:"-"`
 
+	DirectionDashes map[int]map[int]DirectionDashesType `xml:"-"`
+
 	// FIXME: one centralized place for the measured text
 	RightMeasureText *MeasureText
 	PrefixHeader     string
@@ -129,20 +131,43 @@ func (m *Measure) Build() error {
 			if err != nil {
 				return err
 			}
-			if d.DirectionType.Word.Value == "__layout=br" {
+			if len(d.DirectionType) == 0 {
+				continue
+			}
+			initalDirection := d.DirectionType[0]
+			if initalDirection.Word.Value == "__layout=br" {
 				m.NewLineIndex[i-foundDirectionType] = true
 				foundDirectionType++
-			} else if d.DirectionType.Word.Value == "D.C. al Fine" {
+			} else if initalDirection.Word.Value == "D.C. al Fine" {
 				continue
 			} else {
 				measureText = &MeasureText{
-					Text:      d.DirectionType.Word.Value,
-					RelativeY: d.DirectionType.Word.RelativeY,
+					Text:      initalDirection.Word.Value,
+					RelativeY: initalDirection.Word.RelativeY,
 				}
 			}
 
-			if d.DirectionType.Rehearshal != nil {
-				m.PrefixHeader = d.DirectionType.Rehearshal.Value
+			if initalDirection.Rehearshal != nil {
+				m.PrefixHeader = initalDirection.Rehearshal.Value
+			}
+
+			// TODO: multuline stacking dashes
+			if len(d.DirectionType) == 2 && d.DirectionType[1].Dashes != nil || (len(d.DirectionType) == 1 && d.DirectionType[0].Dashes != nil) {
+				pos := 1
+				if d.DirectionType[0].Dashes != nil {
+					pos = 0
+				}
+				direction := d.DirectionType[pos].Dashes
+
+				_, ok := m.DirectionDashes[i]
+				if !ok {
+					if m.DirectionDashes == nil {
+						m.DirectionDashes = map[int]map[int]DirectionDashesType{}
+					}
+					m.DirectionDashes[i] = map[int]DirectionDashesType{}
+				}
+
+				m.DirectionDashes[i][direction.Number] = direction.Type
 			}
 		}
 	}
@@ -278,8 +303,20 @@ type Tie struct {
 }
 
 type Direction struct {
-	Placement     string        `xml:"placement,attr"`
-	DirectionType DirectionType `xml:"direction-type"`
+	Placement     string          `xml:"placement,attr"`
+	DirectionType []DirectionType `xml:"direction-type"`
+}
+
+type DirectionDashesType string
+
+var (
+	DirectionDashesTypeStart DirectionDashesType = "start"
+	DirectionDashesTypeStop  DirectionDashesType = "stop"
+)
+
+type DirectionDashes struct {
+	Type   DirectionDashesType `xml:"type,attr"`
+	Number int                 `xml:"number,attr"`
 }
 
 type DirectionType struct {
@@ -290,6 +327,7 @@ type DirectionType struct {
 	Rehearshal *struct {
 		Value string `xml:",chardata"`
 	} `xml:"rehearsal"`
+	Dashes *DirectionDashes `xml:"dashes"`
 }
 
 type Bool string

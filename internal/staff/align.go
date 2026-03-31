@@ -201,7 +201,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			} else if breathpause.IsBreathMark(n) {
 				xPos := n.PositionX
 				if n.PositionX-measure[notePos-1].PositionX <= 10 {
-					xPos += (8 + constant.LOWERCASE_LENGTH) / 2 // 8 is average of width charater digit
+					xPos += (8 + constant.LOWERCASE_LENGTH) / 3 // 8 is average of width charater digit
 				}
 				canv.Text(xPos, y-10, ",")
 			} else if n.Barline != nil {

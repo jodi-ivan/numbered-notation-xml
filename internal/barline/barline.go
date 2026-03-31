@@ -95,10 +95,10 @@ func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canv
 
 	if barline.Repeat != nil {
 		if barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-			backward = fmt.Sprintf(`<tspan x="%f" y="%f">:</tspan>`, coordinate.X-5, coordinate.Y)
+			backward = fmt.Sprintf(`<tspan x="%f" y="%f">:</tspan>`, coordinate.X-5, coordinate.Y-4)
 		} else if barline.Repeat.Direction == musicxml.BarLineRepeatDirectionForward {
 			//FIXED: adjust the size and position of forward barline
-			forward = fmt.Sprintf(`<tspan x="%f" y="%f">:</tspan>`, coordinate.X+10, coordinate.Y)
+			forward = fmt.Sprintf(`<tspan x="%f" y="%f">:</tspan>`, coordinate.X+10, coordinate.Y-4)
 		}
 	}
 	fmt.Fprintf(canv.Writer(), `<text x="%f" y="%f" style="font-family:Noto Music"> %s <tspan x="%f" y="%f" font-size="180%%"> %s </tspan> %s </text>`,

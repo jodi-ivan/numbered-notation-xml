@@ -45,7 +45,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music|Figtree")))
 	canv.DefEnd()
 
-	relativeY := 100
+	relativeY := 30
 	// render title
 
 	workTitle := ""
@@ -81,7 +81,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, currKeySig.String())
 
 	canv.Text(constant.LAYOUT_INDENT_LENGTH+(3*constant.LOWERCASE_LENGTH)+int(ir.Lyric.CalculateLyricWidth(currKeySig.String())), relativeY, humanizedKeySignature)
-	relativeY += 50
+	relativeY += 35
 
 	staffes := ir.Staff.SplitLines(ctx, music.Part)
 	x := constant.LAYOUT_INDENT_LENGTH
@@ -91,7 +91,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	oldMarginButtom := 0
 	for i, st := range staffes {
 		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, i == len(staffes)-1, keySignature, timeSignature, st, info.NextLineRenderer...)
-		relativeY = relativeY + 80 + info.MarginBottom
+		relativeY = relativeY + 75 + info.MarginBottom
 		if info.ForceNewLine {
 			relativeY += oldMarginButtom
 		}
@@ -107,7 +107,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	for len(info.NextLineRenderer) > 0 {
 		x = constant.LAYOUT_INDENT_LENGTH
 		info = ir.Staff.RenderStaff(ctx, canv, x, relativeY, true, keySignature, timeSignature, nil, info.NextLineRenderer...)
-		relativeY += info.MarginBottom + 80
+		relativeY += info.MarginBottom + 75
 	}
 
 	if metadata != nil {

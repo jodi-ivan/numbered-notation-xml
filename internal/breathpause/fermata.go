@@ -16,7 +16,7 @@ func RenderFermata(ctx context.Context, canv canvas.Canvas, fermata *musicxml.Fe
 		fmt.Fprintf(
 			canv.Writer(),
 			`<text x="%.3f" y="%.3f" style="font-family:Noto Music;font-size:200%%"> %s </text>`,
-			pos.X-4, pos.Y-17.5, fermataUnicode,
+			pos.X-5.5, pos.Y-5, fermataUnicode,
 		)
 	}
 }

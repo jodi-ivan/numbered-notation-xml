@@ -38,7 +38,7 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 		return nil
 	}
 
-	// every 1/6 of layout has 3 hypen
+	// every 1/6 of layout has 2 hypen
 	container := (constant.LAYOUT_WIDTH - (2 * constant.LAYOUT_INDENT_LENGTH)) / 6
 	if distance < float64(container) {
 		offset := (distance / 2) - hypenWidth
@@ -53,8 +53,8 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 		}
 	} else {
 		result := []entity.Coordinate{}
-		totalContainer := math.Floor((distance - (2 * hypenWidth)) / float64(container))
-		totalHypen := (totalContainer * 3)
+		totalContainer := math.Ceil((distance - (2 * hypenWidth)) / float64(container))
+		totalHypen := (totalContainer * 2)
 		if lyricText == "" {
 			result = append(result, entity.Coordinate{
 				X: constant.LAYOUT_INDENT_LENGTH,

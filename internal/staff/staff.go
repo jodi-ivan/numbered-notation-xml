@@ -97,6 +97,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 						// dont process next notes
 						skipNote[notePos+1] = true
+						note.Notations.Tied = nil
 					}
 				}
 			}

@@ -51,14 +51,11 @@ func (es *eighthSplitter) Split(ctx context.Context, notes []*entity.NoteRendere
 
 	if bottomSpan[0].StartIndex > leftIndexBeforeInterval {
 		span := (bottomSpan[0].StartIndex - leftIndexBeforeInterval) % 3
-		switch span {
-		case 0:
-			notes[leftIndexBeforeInterval].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-			notes[bottomSpan[0].StartIndex-1].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-			notes[bottomSpan[0].StartIndex].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
-			unprocessedSegment = append(unprocessedSegment, BeamSplitMarker{StartIndex: leftIndexBeforeInterval, EndIndex: bottomSpan[0].StartIndex - 1})
-		}
-		//TODO 2 or 1 left on the span
+
+		notes[leftIndexBeforeInterval].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+		notes[bottomSpan[0].StartIndex-1-span].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
+		notes[bottomSpan[0].StartIndex-span].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+		unprocessedSegment = append(unprocessedSegment, BeamSplitMarker{StartIndex: leftIndexBeforeInterval, EndIndex: bottomSpan[0].StartIndex - 1 - span})
 	}
 
 	rightIndexAfterIntervalStartIndex := bottomSpan[len(bottomSpan)-1].EndIndex + 1

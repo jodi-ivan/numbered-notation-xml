@@ -70,30 +70,30 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 		canv.Group("class='staff-topping'")
 
 		for i, pair := range pairs {
-			x1 := int(math.Round(pair[0].X)) - offsetStart[pairsBar[i][0]]
-			x2 := int(math.Round(pair[1].X)) - offsetEnd[pairsBar[i][1]]
-			canv.Text(x1+3, int(math.Round(pair[0].Y))-12, pairsData[i], `style="font-weight:bold;font-size:90%"`)
+			x1 := int(math.Round(pair[0].X)) + (offsetStart[pairsBar[i][0]] * 2) + 5
+			x2 := int(math.Round(pair[1].X)) - offsetEnd[pairsBar[i][1]] - 5
+			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:60%"`)
 			// vertical line at start
 			canv.Line(
 				x1,
-				int(math.Round(pair[0].Y))-19,
+				int(math.Round(pair[0].Y))-20,
 				x1,
-				int(math.Round(pair[1].Y))-25,
+				int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
 			canv.Line(
 				x1,
-				int(math.Round(pair[0].Y))-25,
+				int(math.Round(pair[0].Y))-30,
 				x2,
-				int(math.Round(pair[1].Y))-25,
+				int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
 			// vertical line at end
 			canv.Line(
 				x2,
-				int(math.Round(pair[0].Y))-19,
+				int(math.Round(pair[0].Y))-20,
 				x2,
-				int(math.Round(pair[1].Y))-25,
+				int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
 		}

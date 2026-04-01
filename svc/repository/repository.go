@@ -111,7 +111,7 @@ func (r *repository) GetHymnMetaData(ctx context.Context, hymnNum int, variant .
 		}
 
 		if verse.VerseFootNotesID.Valid {
-			verseNum := int(verse.HymnVerse.VerseNum.Int32)
+			verseNum := int(verse.FootNotesVerseNum.Int32)
 			linePos := int(verse.VerseFootNotes.LinePos.Int32)
 			if _, ok := result.VerseFootNotes[verseNum]; !ok {
 				result.VerseFootNotes[verseNum] = map[int]VerseFootNotes{}
@@ -119,7 +119,6 @@ func (r *repository) GetHymnMetaData(ctx context.Context, hymnNum int, variant .
 
 			result.VerseFootNotes[verseNum][linePos] = verse.VerseFootNotes
 		}
-
 	}
 
 	return result, nil

@@ -22,6 +22,7 @@ const (
     b.row_pos,
     b.content,
     c.id as footnote_id,
+	c.verse_num as footnote_v_num,
     c.line_pos,
     c.footnote_marker,
     c.marker_style,
@@ -31,9 +32,8 @@ LEFT JOIN jdy_hymn_verces b
     ON a.hymn_number = b.hymn_num 
     AND (a.hymn_variant = b.hymn_variant OR (a.hymn_variant IS NULL AND b.hymn_variant IS NULL))
 LEFT JOIN verse_footnotes c
-    ON b.hymn_num = c.hymne_num 
-    AND (b.hymn_variant = c.hymne_variant OR (b.hymn_variant IS NULL AND c.hymne_variant IS NULL))
-    AND b.verse_num = c.verse_num
+    ON a.hymn_number = c.hymne_num 
+    AND (a.hymn_variant = c.hymne_variant OR (a.hymn_variant IS NULL AND c.hymne_variant IS NULL))
 WHERE a.hymn_number = ?
 	`
 

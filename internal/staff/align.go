@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -175,6 +176,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 				lyricVal := entity.LyricVal(text).String()
 				if len(n.Lyric) > lyric.MAX_VERSE_IN_MUSIC {
 					yPos = yPos + (math.Trunc(float64(i)/lyric.MAX_LINE_PER_VERSE_IN_MUSIC) * lyric.LINE_BETWEEN_LYRIC)
+				}
+				if strings.HasPrefix(lyricVal, "*") {
+					xPos -= int(rsa.Lyric.CalculateLyricWidth("*"))
 				}
 				canv.Text(xPos, int(yPos), lyricVal)
 				rsa.Lyric.RenderElision(ctx, canv, text, i, entity.Coordinate{X: float64(xPos), Y: yPos})

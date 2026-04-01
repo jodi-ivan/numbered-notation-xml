@@ -128,15 +128,16 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 
 	if len(verseFootnotes) > 0 {
 		flatten := []repository.VerseFootNotes{}
-
 		versenoteHeadonlyCnt := 0
-
+		hasInternalItalic := false
 		for _, fn := range verseFootnotes {
 			for _, t := range fn {
+				hasInternalItalic = hasInternalItalic || strings.Contains(t.FootnoteMarker.String, "<i>") || strings.Contains(t.Footnote.String, "<i>")
 				if lyric.VerseNoteStyle(t.MarkerStyle.Int32) == lyric.VerseNoteStyleHeadonly {
 					versenoteHeadonlyCnt++
 					continue
 				}
+
 				flatten = append(flatten, t)
 			}
 		}
@@ -148,24 +149,44 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 				return flatten[i].FootnoteMarker.String < flatten[j].FootnoteMarker.String
 			})
 
-			y -= 20
+			y -= 10
 
-			canv.Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
+			footnotesStyle := ""
+			if !hasInternalItalic {
+				footnotesStyle = "font-style:italic"
+			}
+			canv.Group("class='footnotes'", fmt.Sprintf(`style="font-size:60%%;font-family:'Figtree';font-weight:600;%s"`, footnotesStyle))
+			totalLine := 0
 			for i, fn := range flatten {
 				lines := strings.Split(fn.Footnote.String, "<br/>")
 				if len(lines) >= 2 {
-					xNotes := int(CalculateLyric(fn.FootnoteMarker.String, true))
-					canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String)
+					marker := strings.ReplaceAll(fn.FootnoteMarker.String, "<i>", "<tspan font-style=\"italic\">")
+					marker = strings.ReplaceAll(marker, "</i>", "</tspan>")
+
+					clean := strings.ReplaceAll(fn.FootnoteMarker.String, "<i>", "")
+					clean = strings.ReplaceAll(clean, "</i>", "")
+
+					xNotes := int(CalculateLyric(clean, true))
+					fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`,
+						constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y,
+						marker,
+					)
 					for li, line := range lines {
-						canv.Text(constant.LAYOUT_INDENT_LENGTH+20+xNotes, (15*(i+li))+y, line)
+						line = strings.ReplaceAll(line, "<i>", "<tspan font-style=\"italic\">")
+						line = strings.ReplaceAll(line, "</i>", "</tspan>")
+						fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`,
+							constant.LAYOUT_INDENT_LENGTH+20+xNotes, (15*(i+li))+y,
+							line,
+						)
 					}
+					y += (15 * (i + len(lines)))
 				} else {
+					totalLine++
 					canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String+fn.Footnote.String)
 				}
 			}
 			canv.Gend()
-
-			y += 25 + (len(flatten) * 15)
+			y += 15 + (totalLine * 15)
 		}
 	}
 	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)

@@ -51,9 +51,10 @@ type HymnVerse struct {
 }
 
 type VerseFootNotes struct {
-	VerseFootNotesID sql.NullInt32  `db:"footnote_id"`
-	LinePos          sql.NullInt32  `db:"line_pos"`
-	FootnoteMarker   sql.NullString `db:"footnote_marker"`
-	MarkerStyle      sql.NullInt32  `db:"marker_style"`
-	Footnote         sql.NullString `db:"footnote"`
+	VerseFootNotesID  sql.NullInt32  `db:"footnote_id"`
+	FootNotesVerseNum sql.NullInt32  `db:"footnote_v_num"`
+	LinePos           sql.NullInt32  `db:"line_pos"`
+	FootnoteMarker    sql.NullString `db:"footnote_marker"`
+	MarkerStyle       sql.NullInt32  `db:"marker_style"`
+	Footnote          sql.NullString `db:"footnote"`
 }

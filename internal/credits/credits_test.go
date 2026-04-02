@@ -83,8 +83,7 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ci := creditsInteractor{}
-			lines, lenLines := ci.autoWrapText(tt.args.text, tt.args.leftIndent)
+			lines, lenLines := autoWrapText(tt.args.text, tt.args.leftIndent)
 			if !assert.Equal(t, tt.lines, lines) {
 				t.Errorf("creditsInteractor.autoWrapText() lines got = %v, want %v", lines, tt.lines)
 			}
@@ -310,7 +309,7 @@ func Test_creditsInteractor_RenderCredits(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ci := creditsInteractor{}
-			ci.RenderCredits(context.Background(), tt.initCanv(ctrl), tt.args.y, tt.args.metadata, tt.args.verseFootNotes)
+			ci.RenderCredits(context.Background(), tt.initCanv(ctrl), &tt.args.y, tt.args.metadata)
 		})
 	}
 }
@@ -331,51 +330,4 @@ func (m *customStringMatcher) Matches(x interface{}) bool {
 
 func (m *customStringMatcher) String() string {
 	return "contains " + m.expected
-}
-
-// Usage in Test
-// mockObj.EXPECT().SomeMethod(&customStringMatcher{expected: "corp"}).Return(nil)
-
-func Test_creditsInteractor_RenderForKidsFootnotes(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	tests := []struct {
-		name string // description of this test case
-
-		// Named input parameters for target function.
-		canv func(ctrl *gomock.Controller) *canvas.MockCanvas
-		y    int
-	}{
-		{
-			name: "default",
-			y:    100,
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(c)
-				writerMock := canvas.NewMockWriter(c)
-				canv.EXPECT().Writer().Return(writerMock)
-				macther := &customStringMatcher{
-					T: t,
-					expected: `<text x="50" y="100">
-				<tspan font-style="italic">Semua nyayian dengan tanda</tspan>
-				<tspan font-style="bold" font-size="125%">☆</tspan>
-				<tspan font-style="italic">: khusus untuk anak-anak</tspan>
-			</text>`,
-				}
-				canv.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				writerMock.EXPECT().Write(macther)
-				canv.EXPECT().Gend()
-				return canv
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var ci creditsInteractor
-			var canv *canvas.MockCanvas
-			if tt.canv != nil {
-				canv = tt.canv(ctrl)
-			}
-			ci.RenderForKidsFootnotes(context.Background(), canv, tt.y)
-		})
-	}
 }

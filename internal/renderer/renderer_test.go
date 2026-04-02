@@ -252,7 +252,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 						Number: 1,
 					},
 					Title: "Unittest",
-				}, nil)
+				})
 
 				return cMock
 			},

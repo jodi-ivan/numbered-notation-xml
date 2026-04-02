@@ -7,6 +7,9 @@ const (
 	newLineHeight       int = 15
 )
 
+const EMPTY_SUBTITLE = "Subtitle"
+const SUBTITLE_SIZE_RATIO = 1.1
+
 var charWidth = map[string]float64{
 	"A": 8, "a": 4.9,
 	"B": 6, "b": 6,
@@ -37,8 +40,8 @@ var charWidth = map[string]float64{
 	"1": 3.97, ".": 2,
 	"2": 5.36, ",": 2,
 	"3": 5.33, " ": 2,
-	"4": 6,
-	"5": 5.52,
+	"4": 6, "(": 3.43,
+	"5": 5.52, ")": 3.43,
 	"6": 6,
 	"7": 5.33,
 	"8": 6,

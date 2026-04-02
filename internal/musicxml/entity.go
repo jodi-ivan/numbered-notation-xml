@@ -52,7 +52,8 @@ type MusicXML struct {
 type CreditType string
 
 const (
-	CreditTypeTitle CreditType = "title"
+	CreditTypeTitle    CreditType = "title"
+	CreditTypeSubtitle CreditType = "subtitle"
 )
 
 type Credit struct {

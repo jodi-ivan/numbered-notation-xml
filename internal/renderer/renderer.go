@@ -49,9 +49,14 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	// render title
 
 	workTitle := ""
+	subtitle := ""
 	for _, v := range music.Credit {
 		if v.Type == musicxml.CreditTypeTitle {
 			workTitle = strings.ToUpper(v.Words)
+		}
+
+		if v.Type == musicxml.CreditTypeSubtitle && v.Words != credits.EMPTY_SUBTITLE {
+			subtitle = v.Words
 		}
 	}
 	if metadata != nil {
@@ -69,6 +74,15 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	titleWidth := ir.Lyric.CalculateLyricWidth(workTitle)
 	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
 	canv.Text(int(titleX), relativeY, workTitle)
+	if subtitle != "" {
+		num := 0.0
+		if metadata != nil {
+			num = ir.Lyric.CalculateLyricWidth(fmt.Sprintf("%d. ", metadata.Number)) / 2
+		}
+		subtitleWidth := (credits.CalculateLyric(subtitle, false) * credits.SUBTITLE_SIZE_RATIO)
+		subtitleX := (constant.LAYOUT_WIDTH / 2) - (subtitleWidth * 0.5)
+		canv.Text(int(subtitleX+num), relativeY+18, subtitle, `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
+	}
 
 	relativeY += 25
 

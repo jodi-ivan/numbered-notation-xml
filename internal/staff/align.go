@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"unicode"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -214,6 +215,10 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 					Y: float64(y),
 				})
 			} else {
+				if len(n.LeadingHeader) == 1 && unicode.IsNumber(rune(n.LeadingHeader[0])) {
+					canv.Circle(n.PositionX+4, n.PositionY-28, 6, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
+					canv.Text(n.PositionX+1, n.PositionY-25, n.LeadingHeader, `font-weight="600"`, `style="font-size:60%"`)
+				}
 				xPos := n.PositionX
 				noteStr := fmt.Sprintf("%d", n.Note)
 				noteWidth := rsa.Lyric.CalculateLyricWidth(noteStr)

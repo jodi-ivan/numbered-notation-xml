@@ -69,6 +69,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if len(measure.Barline) > 0 {
 			leftBarlineRenderer, barlineInfo := si.Barline.GetRendererLeftBarline(measure, x, lastRightBarlinePosition)
 			if leftBarlineRenderer != nil {
+				if h, ok := measure.PrefixHeader[0]; ok {
+					leftBarlineRenderer.LeadingHeader = h
+				}
 				alignMeasures = append(alignMeasures, leftBarlineRenderer)
 				x += barlineInfo.XIncrement
 			}
@@ -98,6 +101,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 						// dont process next notes
 						skipNote[notePos+1] = true
 						note.Notations.Tied = nil
+
 					}
 				}
 			}
@@ -127,8 +131,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 				TimeModifications: note.TimeModification,
 
-				// FIXME: duplicate if the barline exist
-				LeadingHeader: measure.PrefixHeader,
+				LeadingHeader: measure.PrefixHeader[notePos],
 			}
 
 			if note.Notations != nil && note.Notations.Fermata != nil {

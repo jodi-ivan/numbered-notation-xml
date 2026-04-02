@@ -95,7 +95,7 @@ type Measure struct {
 
 	// FIXME: one centralized place for the measured text
 	RightMeasureText *MeasureText
-	PrefixHeader     string
+	PrefixHeader     map[int]string
 }
 
 func (m *Measure) Build() error {
@@ -148,7 +148,10 @@ func (m *Measure) Build() error {
 			}
 
 			if initalDirection.Rehearshal != nil {
-				m.PrefixHeader = initalDirection.Rehearshal.Value
+				if m.PrefixHeader == nil {
+					m.PrefixHeader = map[int]string{}
+				}
+				m.PrefixHeader[i-foundDirectionType] = initalDirection.Rehearshal.Value
 			}
 
 			// TODO: multuline stacking dashes

@@ -41,7 +41,6 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 			Width:         int(barlineWidth[leftBarline.BarStyle]) + BARLINE_AFTER_SPACE,
 			Barline:       &leftBarline,
 			MeasureNumber: measure.Number,
-			LeadingHeader: measure.PrefixHeader,
 		}
 
 		incr := 5

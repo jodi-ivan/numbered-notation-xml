@@ -1,7 +1,9 @@
 package canvas
 
 import (
+	"fmt"
 	"io"
+	"strings"
 
 	svg "github.com/ajstarks/svgo"
 )
@@ -43,6 +45,7 @@ type Canvas interface {
 	Qbez(sx int, sy int, cx int, cy int, ex int, ey int, s ...string)
 	Qbezier(sx int, sy int, cx int, cy int, ex int, ey int, tx int, ty int, s ...string)
 	Text(x int, y int, t string, s ...string)
+	TextUnescaped(x float64, y float64, t string, s ...string)
 	Writer() io.Writer
 
 	Delegator() Delegator
@@ -99,6 +102,16 @@ func (c *_canvas) Delegator() Delegator {
 		return &delegatorDiscard{}
 	}
 	return c.d
+}
+
+func (c *_canvas) TextUnescaped(x float64, y float64, t string, s ...string) {
+	fmt.Fprintf(c.Writer(),
+		`<text x="%.2f" y="%.2f" %s>%s</text>`,
+		x, y,
+		strings.Join(s, " "),
+		t,
+	)
+
 }
 
 func NewCanvas(s *svg.SVG) Canvas {

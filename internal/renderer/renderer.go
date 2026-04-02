@@ -6,12 +6,12 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/header"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -44,58 +44,13 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	canv.Def()
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music|Figtree")))
 	canv.DefEnd()
-
-	relativeY := 35
-	// render title
-
-	workTitle := ""
-	subtitle := ""
-	for _, v := range music.Credit {
-		if v.Type == musicxml.CreditTypeTitle {
-			workTitle = strings.ToUpper(v.Words)
-		}
-
-		if v.Type == musicxml.CreditTypeSubtitle && v.Words != credits.EMPTY_SUBTITLE {
-			subtitle = v.Words
-		}
-	}
-	if metadata != nil {
-		workTitle = fmt.Sprintf("%d. %s", metadata.Number, strings.ToUpper(metadata.Title))
-		if metadata.Variant.Valid {
-			workTitle = fmt.Sprintf("%d%s. %s", metadata.Number, strings.ToLower(metadata.Variant.String), strings.ToUpper(metadata.Title))
-		}
-		if metadata.TitleFootnotes.Valid {
-			workTitle += " *"
-		}
-		if metadata.IsForKids.Int16 == 1 {
-			fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d"><tspan font-style="bold" font-size="125%%">☆</tspan></text>`, constant.LAYOUT_INDENT_LENGTH, relativeY)
-		}
-	}
-	titleWidth := ir.Lyric.CalculateLyricWidth(workTitle)
-	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
-	canv.Text(int(titleX), relativeY, workTitle)
-	if subtitle != "" {
-		num := 0.0
-		if metadata != nil {
-			num = ir.Lyric.CalculateLyricWidth(fmt.Sprintf("%d. ", metadata.Number)) / 2
-		}
-		subtitleWidth := (credits.CalculateLyric(subtitle, false) * credits.SUBTITLE_SIZE_RATIO)
-		subtitleX := (constant.LAYOUT_WIDTH / 2) - (subtitleWidth * 0.5)
-		canv.Text(int(subtitleX+num), relativeY+18, subtitle, `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
-	}
-
-	relativeY += 25
-
 	keySignature := keysig.NewKeySignature(ctx, music.Part.Measures)
-	currKeySig := keySignature.GetKeyOnMeasure(ctx, 1)
 	timeSignature := timesig.NewTimeSignatures(ctx, music.Part.Measures)
 
-	humanizedKeySignature := timeSignature.GetHumanized()
+	header.RenderSheetHeader(ctx, canv, music.Credit, metadata)
+	header.RenderSignatures(ctx, canv, keySignature, timeSignature)
 
-	canv.Text(constant.LAYOUT_INDENT_LENGTH, relativeY, currKeySig.String())
-
-	canv.Text(constant.LAYOUT_INDENT_LENGTH+(3*constant.LOWERCASE_LENGTH)+int(ir.Lyric.CalculateLyricWidth(currKeySig.String())), relativeY, humanizedKeySignature)
-	relativeY += 35
+	relativeY := constant.TITLE_Y_POS + header.HEADER_OFFSET
 
 	staffes := ir.Staff.SplitLines(ctx, music.Part)
 	x := constant.LAYOUT_INDENT_LENGTH

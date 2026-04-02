@@ -45,23 +45,23 @@ func autoWrapText(text string, leftIndent int) ([]string, []int) {
 	for _, word := range full {
 		word = strings.TrimSpace(word)
 		length += spaceWidth + 4
-		if strings.HasPrefix(word, "<i>") || italic {
-			cleaned := strings.TrimSuffix(word, "</i>")
-			cleaned = strings.TrimPrefix(cleaned, "<i>")
+		if strings.HasPrefix(word, utils.ITALIC_OPENING) || italic {
+			cleaned := strings.TrimSuffix(word, utils.ITALIC_CLOSING)
+			cleaned = strings.TrimPrefix(cleaned, utils.ITALIC_OPENING)
 			length += int(utils.CalculateSecondaryLyricWidth(cleaned))
 			if !italic {
-				result = append(result, fmt.Sprintf("<tspan font-style=\"italic\">%s", cleaned))
+				result = append(result, fmt.Sprintf("%s %s", utils.TSPAN_OPENING, cleaned))
 			} else {
 
-				if !strings.HasSuffix(word, "</i>") {
+				if !strings.HasSuffix(word, utils.ITALIC_CLOSING) {
 					result = append(result, word)
 				}
 			}
-			if !strings.HasSuffix(word, "</i>") {
+			if !strings.HasSuffix(word, utils.ITALIC_CLOSING) {
 				italic = true
 			} else {
 				italic = false
-				result = append(result, fmt.Sprintf("%s</tspan>", cleaned))
+				result = append(result, fmt.Sprintf("%s %s", cleaned, utils.TSPAN_CLOSING))
 			}
 		} else {
 			length += int(utils.CalculateSecondaryLyricWidth(word))
@@ -70,7 +70,7 @@ func autoWrapText(text string, leftIndent int) ([]string, []int) {
 
 		if length >= available {
 			if italic {
-				result = append(result, "</tspan>")
+				result = append(result, utils.TSPAN_CLOSING)
 			}
 
 			lines = append(lines, strings.Join(result, " "))
@@ -91,14 +91,16 @@ func autoWrapText(text string, leftIndent int) ([]string, []int) {
 // this will FORCE the text to be aligned
 // added spaces between words, with assumed that the length of the space is 2px
 func alignText(text string, textLength, targetLength int) string {
+	escaped := "tspan-font-style"
+	unescaped := "tspan font-style"
 	// clean the tag
-	text = strings.ReplaceAll(text, "tspan font-style", "tspan-font-style")
+	text = strings.ReplaceAll(text, unescaped, escaped)
 	words := strings.Fields(text)
 	spaceLeft := targetLength - textLength
 	if len(words) > 2 && (spaceLeft > (len(words)-2)*spaceWidth) {
 		text = strings.Join(words, strings.Repeat("&#160;", (spaceLeft/(len(words)-2))))
 	}
-	return strings.ReplaceAll(text, "tspan-font-style", "tspan font-style")
+	return strings.ReplaceAll(text, escaped, unescaped)
 }
 
 func formatAndRenderText(canv canvas.Canvas, y, leftIndent int, text string) []string {
@@ -106,11 +108,11 @@ func formatAndRenderText(canv canvas.Canvas, y, leftIndent int, text string) []s
 	for i, line := range wrapped {
 		text := line
 		hasBegin := strings.Contains(line, "<tspan font-style=")
-		hasEnd := strings.Contains(line, "</tspan>")
+		hasEnd := strings.Contains(line, utils.TSPAN_CLOSING)
 		if hasBegin && !hasEnd {
-			text = fmt.Sprintf("%s</tspan>", text)
+			text = fmt.Sprintf("%s %s", text, utils.TSPAN_CLOSING)
 		} else if !hasBegin && hasEnd {
-			text = fmt.Sprintf("<tspan font-style=\"italic\">%s", text)
+			text = fmt.Sprintf("%s %s", utils.TSPAN_OPENING, text)
 		}
 		if len(wrapped) > 1 && i < len(wrapped)-1 {
 			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH-(constant.LAYOUT_INDENT_LENGTH*2))

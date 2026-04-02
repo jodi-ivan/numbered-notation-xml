@@ -120,7 +120,7 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 
 			offset := 0
 			if note.Fermata != nil {
-				offset = 10
+				offset = 15
 			}
 
 			for i, t := range note.MeasureText {

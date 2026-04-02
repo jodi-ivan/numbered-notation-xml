@@ -143,7 +143,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1
 			hasMeasureText := si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
-			if hasMeasureText && y == FIRST_STAFF_Y_POS {
+			if hasMeasureText && (y == FIRST_STAFF_Y_POS || renderer.Fermata != nil) {
 				y += MEASURE_TEXT_OFFSET
 				staffInfo.MarginBottom = MEASURE_TEXT_OFFSET
 			}

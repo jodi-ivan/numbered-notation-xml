@@ -188,7 +188,6 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				l.EXPECT().CalculateLyricWidth("do = d").Return(float64(100))
 
 				l.EXPECT().CalculateLyricWidth("1. UNITTEST").Return(float64(100))
-				l.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), int(490), map[int]repository.HymnVerse{}, nil).Return(lyric.VerseInfo{MarginBottom: 40})
 
 				return l
 			},

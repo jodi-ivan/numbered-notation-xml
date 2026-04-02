@@ -39,6 +39,20 @@ func (m *MockStaff) EXPECT() *MockStaffMockRecorder {
 	return m.recorder
 }
 
+// Render mocks base method.
+func (m *MockStaff) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Render", ctx, canv, part, keySignature, timeSignature)
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Render indicates an expected call of Render.
+func (mr *MockStaffMockRecorder) Render(ctx, canv, part, keySignature, timeSignature interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Render", reflect.TypeOf((*MockStaff)(nil).Render), ctx, canv, part, keySignature, timeSignature)
+}
+
 // RenderStaff mocks base method.
 func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo {
 	m.ctrl.T.Helper()

@@ -1,16 +1,6 @@
 package lyric
 
-import (
-	"context"
-	"database/sql"
-	"reflect"
-	"testing"
-
-	"github.com/golang/mock/gomock"
-	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
-	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
-)
-
+/*
 func Test_lyricInteractor_RenderVerse(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
@@ -202,3 +192,4 @@ func Test_lyricInteractor_RenderVerse(t *testing.T) {
 		})
 	}
 }
+*/

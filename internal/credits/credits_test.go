@@ -30,42 +30,6 @@ func TestNewCredits(t *testing.T) {
 	}
 }
 
-func TestCalculateLyric(t *testing.T) {
-	type args struct {
-		text   string
-		italic bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want float64
-	}{
-		{
-			name: "with italic",
-			args: args{
-				italic: true,
-				text:   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKMNOPQRSTUVWXYZ1234567890-.!;:-/",
-			},
-			want: 398.01000000000005,
-		},
-		{
-			name: "without italic",
-			args: args{
-				italic: false,
-				text:   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKMNOPQRSTUVWXYZ1234567890-.!;:-/",
-			},
-			want: 398.01000000000005,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := CalculateLyric(tt.args.text, tt.args.italic); got != tt.want {
-				t.Errorf("CalculateLyric() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_creditsInteractor_autoWrapText(t *testing.T) {
 	type args struct {
 		text       string

@@ -1,4 +1,4 @@
-package lyric
+package verse
 
 import (
 	"context"
@@ -9,18 +9,15 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-type versePosition struct {
-	Col      int
-	Row      int
-	RowWidth int
-	Style    VerseRowStyle
-}
+var li = lyric.NewLyric()
 
-func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
+func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
 	allVerse := map[int][]string{}
@@ -28,7 +25,6 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 	maxRightPost := float64(0)
 	allCombine := map[int][][2]entity.Coordinate{}
 	versePos := map[int]versePosition{}
-	marginRight := 0
 	multiColumn := false
 	yPosRow := map[int]int{}
 	maxY := float64(0)
@@ -100,7 +96,7 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			}
 			lineLength = math.Max(lineLength, li.CalculateLyricWidth(lineText))
 			if verse.Col.Int16 == 1 {
-				marginRight = int(lineLength)
+				// marginRight = int(lineLength)
 			} else if verse.Col.Int16 == 2 {
 				maxRightPost = math.Max(maxRightPost, lineLength)
 				multiColumn = multiColumn || true
@@ -133,7 +129,6 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			margin = constant.LAYOUT_WIDTH - (constant.LAYOUT_INDENT_LENGTH * 3) - int(maxRightPost)
 			yVerse = yPosRow[versePos[i+1].Row]
 			y = yVerse
-			_ = marginRight
 		}
 
 		if versePos[i+1].Style == VerseRowStyleSingleColumn {
@@ -147,16 +142,16 @@ func (li *lyricInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, 
 			if footnotes, hasFootnotes := verseFootnote[i+1]; hasFootnotes {
 				currentLine, lineHasFootnotes := footnotes[line+1]
 
-				verseStyle := VerseNoteStyle(currentLine.MarkerStyle.Int32)
-				if lineHasFootnotes && verseStyle != VerseNoteStyleHeadless {
+				verseStyle := footnote.VerseNoteStyle(currentLine.MarkerStyle.Int32)
+				if lineHasFootnotes && verseStyle != footnote.VerseNoteStyleHeadless {
 					xPos := x + margin + int(li.CalculateLyricWidth(liveVerse))
 					styleFontSize := "font-family:'Figtree';font-weight:600;"
 					switch verseStyle {
-					case VerseNoteStyleAlignRight:
+					case footnote.VerseNoteStyleAlignRight:
 						styleFontSize = "font-family:'Figtree';font-size:60%;font-weight:600;"
 						approxLineLength := constant.LAYOUT_WIDTH - (2 * defaultX)
 						xPos = x + margin + approxLineLength
-					case VerseNoteStyleHeadonly:
+					case footnote.VerseNoteStyleHeadonly:
 						styleFontSize = "font-family:'Caladea';font-size:90%;font-weight:600;"
 						xPos -= int(li.CalculateLyricWidth(" ")) // lyric on db is just white spaces
 					}

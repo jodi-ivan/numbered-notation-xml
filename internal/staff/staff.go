@@ -22,6 +22,7 @@ type Staff interface {
 	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
 	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool
+	Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int
 }
 
 type staffInteractor struct {

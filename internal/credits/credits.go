@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -15,7 +17,6 @@ import (
 type Credits interface {
 	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) int
 	RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int)
-	RenderMuiscFootnotes(ctx context.Context, canv canvas.Canvas, metadata *repository.HymnMetadata, x, y int)
 }
 
 type creditsInteractor struct {
@@ -26,19 +27,6 @@ func NewCredits() Credits {
 	return &creditsInteractor{
 		Lyric: lyric.NewLyric(), // REFACTOR: reuse instance of the lyric
 	}
-}
-
-func CalculateLyric(text string, italic bool) float64 {
-	res := 0.0
-	for _, l := range text {
-		w, ok := charWidth[string(l)]
-		if !ok {
-			w = 6
-		}
-		res += w
-	}
-
-	return res
 }
 
 // autowrapText wrap the text based on the layout length
@@ -65,7 +53,7 @@ func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string
 		if strings.HasPrefix(word, "<i>") || italic {
 			cleaned := strings.TrimSuffix(word, "</i>")
 			cleaned = strings.TrimPrefix(cleaned, "<i>")
-			length += int(CalculateLyric(cleaned, true))
+			length += int(utils.CalculateSecondaryLyricWidth(cleaned))
 			if !italic {
 				result = append(result, fmt.Sprintf("<tspan font-style=\"italic\">%s", cleaned))
 			} else {
@@ -81,7 +69,7 @@ func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string
 				result = append(result, fmt.Sprintf("%s</tspan>", cleaned))
 			}
 		} else {
-			length += int(CalculateLyric(word, false))
+			length += int(utils.CalculateSecondaryLyricWidth(word))
 			result = append(result, word)
 		}
 
@@ -133,7 +121,7 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 		for _, fn := range verseFootnotes {
 			for _, t := range fn {
 				hasInternalItalic = hasInternalItalic || strings.Contains(t.FootnoteMarker.String, "<i>") || strings.Contains(t.Footnote.String, "<i>")
-				if lyric.VerseNoteStyle(t.MarkerStyle.Int32) == lyric.VerseNoteStyleHeadonly {
+				if footnote.VerseNoteStyle(t.MarkerStyle.Int32) == footnote.VerseNoteStyleHeadonly {
 					versenoteHeadonlyCnt++
 					continue
 				}
@@ -166,7 +154,7 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 					clean := strings.ReplaceAll(fn.FootnoteMarker.String, "<i>", "")
 					clean = strings.ReplaceAll(clean, "</i>", "")
 
-					xNotes := int(CalculateLyric(clean, true))
+					xNotes := int(utils.CalculateSecondaryLyricWidth(clean))
 					fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`,
 						constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y,
 						marker,
@@ -222,8 +210,8 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 	}
 
 	if metadata.Copyright.Valid {
-		length := CalculateLyric(metadata.Copyright.String, false)
-		lastMusicLen := CalculateLyric(wrapped[len(wrapped)-1], false)
+		length := utils.CalculateSecondaryLyricWidth(metadata.Copyright.String)
+		lastMusicLen := utils.CalculateSecondaryLyricWidth(wrapped[len(wrapped)-1])
 		if (constant.LAYOUT_WIDTH - (leftIndent + int(lastMusicLen) + int(length))) < constant.LAYOUT_INDENT_LENGTH {
 			copyrightY += newLineHeight
 			y += newLineHeight
@@ -248,7 +236,7 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 	}
 
 	if ref != "" {
-		l := CalculateLyric(ref, false)
+		l := utils.CalculateSecondaryLyricWidth(ref)
 		canv.Text(constant.LAYOUT_WIDTH-constant.UPPERCASE_LENGTH-int(l), y, ref)
 	}
 

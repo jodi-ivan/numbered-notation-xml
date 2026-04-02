@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -60,7 +60,7 @@ func renderSubtitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.C
 		if metadata != nil {
 			num = ir.CalculateLyricWidth(fmt.Sprintf("%d. ", metadata.Number)) / 2
 		}
-		subtitleWidth := (credits.CalculateLyric(subtitle, false) * SUBTITLE_TO_CREDITS_SIZE_RATIO)
+		subtitleWidth := (utils.CalculateSecondaryLyricWidth(subtitle) * SUBTITLE_TO_CREDITS_SIZE_RATIO)
 		subtitleX := (constant.LAYOUT_WIDTH / 2) - (subtitleWidth * 0.5)
 		canv.Text(int(subtitleX+num), relativeY+SUBTITLE_Y_POS, subtitle, SUBTITLE_ATTR)
 	}

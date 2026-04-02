@@ -10,7 +10,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
-	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -24,7 +23,6 @@ func init() {
 
 type Lyric interface {
 	CalculateLyricWidth(string) float64
-	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo
 	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
 	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)

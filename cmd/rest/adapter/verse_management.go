@@ -11,10 +11,10 @@ import (
 	"unicode"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/verse"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
+	lab_verse "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/verse"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/julienschmidt/httprouter"
 )
@@ -27,7 +27,7 @@ type Input struct {
 	Style   int                      `json:"style"`
 	Col     int                      `json:"col"`
 	Row     int                      `json:"row"`
-	Content [][]lyric.LyricWordVerse `json:"content"`
+	Content [][]verse.LyricWordVerse `json:"content"`
 }
 
 func (vm *VerseManagement) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -143,10 +143,10 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 		verses[currentVerse] = append(verses[currentVerse], line)
 	}
 
-	collection := map[int][][]lyric.LyricWordVerse{}
+	collection := map[int][][]verse.LyricWordVerse{}
 
 	for no, lines := range verses {
-		param := make([][]lyric.LyricWordVerse, len(lines))
+		param := make([][]verse.LyricWordVerse, len(lines))
 		for l, line := range lines {
 			words := strings.Split(line, " ")
 			for _, word := range words {
@@ -156,9 +156,9 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 				if strings.Contains(cleanup, "_") {
 					cleanup = strings.ReplaceAll(cleanup, "_", "")
 				}
-				bRes := lyric.LyricWordVerse{
+				bRes := verse.LyricWordVerse{
 					Word:      strings.ReplaceAll(cleanup, "|", "-"),
-					Breakdown: []lyric.LyricPartVerse{},
+					Breakdown: []verse.LyricPartVerse{},
 				}
 
 				for i, b := range breakdown {
@@ -176,7 +176,7 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 						word = strings.ReplaceAll(word, "_", "")
 						start, end := -1, -1
 						for ir, r := range b {
-							if verse.IsVowel(string(r)) || (r == 'h' && start != -1) {
+							if lab_verse.IsVowel(string(r)) || (r == 'h' && start != -1) {
 								if start == -1 {
 									start = ir
 								} else {
@@ -185,9 +185,9 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 							}
 						}
 
-						partBreakdown := []lyric.LyricStylePart{}
+						partBreakdown := []verse.LyricStylePart{}
 						if start == 0 {
-							partBreakdown = []lyric.LyricStylePart{
+							partBreakdown = []verse.LyricStylePart{
 								{
 									Text:      b[start : end+1],
 									Underline: true,
@@ -198,7 +198,7 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 								},
 							}
 						} else if end == len(b)-1 {
-							partBreakdown = []lyric.LyricStylePart{
+							partBreakdown = []verse.LyricStylePart{
 								{
 									Text:      b[0:start],
 									Underline: false,
@@ -209,7 +209,7 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 								},
 							}
 						} else {
-							partBreakdown = []lyric.LyricStylePart{
+							partBreakdown = []verse.LyricStylePart{
 								{
 									Text:      b[0:start],
 									Underline: false,
@@ -225,7 +225,7 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 							}
 
 						}
-						bRes.Breakdown = append(bRes.Breakdown, lyric.LyricPartVerse{
+						bRes.Breakdown = append(bRes.Breakdown, verse.LyricPartVerse{
 							Text:      b,
 							Type:      syll,
 							Combine:   true,
@@ -233,7 +233,7 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 						})
 
 					} else {
-						bRes.Breakdown = append(bRes.Breakdown, lyric.LyricPartVerse{
+						bRes.Breakdown = append(bRes.Breakdown, verse.LyricPartVerse{
 							Text: b,
 							Type: syll,
 						})
@@ -241,7 +241,7 @@ func (vmv2 *VerseManagementV2) ServeHTTP(w http.ResponseWriter, r *http.Request,
 				}
 
 				if param[l] == nil {
-					param[l] = []lyric.LyricWordVerse{}
+					param[l] = []verse.LyricWordVerse{}
 				}
 				param[l] = append(param[l], bRes)
 			}

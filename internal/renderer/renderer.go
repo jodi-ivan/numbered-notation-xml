@@ -57,7 +57,6 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		footnote.RenderMusicFootnotes(ctx, canv, metadata, relativeY)
 		verseInfo := verse.RenderVerse(ctx, canv, relativeY, metadata.Verse, metadata.VerseFootNotes)
 
-		// FIXED: Y is 0 value (at the top of pages) when there is no verses
 		if verseInfo.MarginBottom != 0 {
 			relativeY = verseInfo.MarginBottom
 		}

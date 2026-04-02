@@ -37,27 +37,13 @@ func (m *MockCredits) EXPECT() *MockCreditsMockRecorder {
 }
 
 // RenderCredits mocks base method.
-func (m *MockCredits) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) int {
+func (m *MockCredits) RenderCredits(ctx context.Context, canv canvas.Canvas, y *int, metadata repository.HymnData) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RenderCredits", ctx, canv, y, metadata, verseFootnotes)
-	ret0, _ := ret[0].(int)
-	return ret0
+	m.ctrl.Call(m, "RenderCredits", ctx, canv, y, metadata)
 }
 
 // RenderCredits indicates an expected call of RenderCredits.
-func (mr *MockCreditsMockRecorder) RenderCredits(ctx, canv, y, metadata, verseFootnotes interface{}) *gomock.Call {
+func (mr *MockCreditsMockRecorder) RenderCredits(ctx, canv, y, metadata interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderCredits", reflect.TypeOf((*MockCredits)(nil).RenderCredits), ctx, canv, y, metadata, verseFootnotes)
-}
-
-// RenderForKidsFootnotes mocks base method.
-func (m *MockCredits) RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderForKidsFootnotes", ctx, canv, y)
-}
-
-// RenderForKidsFootnotes indicates an expected call of RenderForKidsFootnotes.
-func (mr *MockCreditsMockRecorder) RenderForKidsFootnotes(ctx, canv, y interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderForKidsFootnotes", reflect.TypeOf((*MockCredits)(nil).RenderForKidsFootnotes), ctx, canv, y)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderCredits", reflect.TypeOf((*MockCredits)(nil).RenderCredits), ctx, canv, y, metadata)
 }

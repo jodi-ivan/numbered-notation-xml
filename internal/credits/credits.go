@@ -3,11 +3,9 @@ package credits
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -15,8 +13,7 @@ import (
 )
 
 type Credits interface {
-	RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) int
-	RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int)
+	RenderCredits(ctx context.Context, canv canvas.Canvas, y *int, metadata repository.HymnData)
 }
 
 type creditsInteractor struct {
@@ -35,9 +32,7 @@ func NewCredits() Credits {
 // returns:
 //   - the breakdown lines, with parse <i> to <tspan>
 //   - the length for each line
-//
-// FIXME: error non character after </i> without spaces. ie. `</i>,` will return parsing error
-func (ci *creditsInteractor) autoWrapText(text string, leftIndent int) ([]string, []int) {
+func autoWrapText(text string, leftIndent int) ([]string, []int) {
 	full := strings.Fields(text)
 	result := []string{}
 	length := 0
@@ -106,86 +101,8 @@ func alignText(text string, textLength, targetLength int) string {
 	return strings.ReplaceAll(text, "tspan-font-style", "tspan font-style")
 }
 
-func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData, verseFootnotes map[int]map[int]repository.VerseFootNotes) int {
-	leftIndent := indentLyric
-	lyricMusicMerged := metadata.Lyric == metadata.Music
-	copyrightY := y
-	if lyricMusicMerged {
-		leftIndent = indentMusicAndLyric
-	}
-
-	if len(verseFootnotes) > 0 {
-		flatten := []repository.VerseFootNotes{}
-		versenoteHeadonlyCnt := 0
-		hasInternalItalic := false
-		for _, fn := range verseFootnotes {
-			for _, t := range fn {
-				hasInternalItalic = hasInternalItalic || strings.Contains(t.FootnoteMarker.String, "<i>") || strings.Contains(t.Footnote.String, "<i>")
-				if footnote.VerseNoteStyle(t.MarkerStyle.Int32) == footnote.VerseNoteStyleHeadonly {
-					versenoteHeadonlyCnt++
-					continue
-				}
-
-				flatten = append(flatten, t)
-			}
-		}
-
-		if versenoteHeadonlyCnt != len(flatten) {
-
-			// Sort the footnotes by its markers
-			sort.Slice(flatten, func(i, j int) bool {
-				return flatten[i].FootnoteMarker.String < flatten[j].FootnoteMarker.String
-			})
-
-			y -= 10
-
-			footnotesStyle := ""
-			if !hasInternalItalic {
-				footnotesStyle = "font-style:italic"
-			}
-			canv.Group("class='footnotes'", fmt.Sprintf(`style="font-size:60%%;font-family:'Figtree';font-weight:600;%s"`, footnotesStyle))
-			totalLine := 0
-			for i, fn := range flatten {
-				lines := strings.Split(fn.Footnote.String, "<br/>")
-				if len(lines) >= 2 {
-					marker := strings.ReplaceAll(fn.FootnoteMarker.String, "<i>", "<tspan font-style=\"italic\">")
-					marker = strings.ReplaceAll(marker, "</i>", "</tspan>")
-
-					clean := strings.ReplaceAll(fn.FootnoteMarker.String, "<i>", "")
-					clean = strings.ReplaceAll(clean, "</i>", "")
-
-					xNotes := int(utils.CalculateSecondaryLyricWidth(clean))
-					fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`,
-						constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y,
-						marker,
-					)
-					for li, line := range lines {
-						line = strings.ReplaceAll(line, "<i>", "<tspan font-style=\"italic\">")
-						line = strings.ReplaceAll(line, "</i>", "</tspan>")
-						fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`,
-							constant.LAYOUT_INDENT_LENGTH+20+xNotes, (15*(i+li))+y,
-							line,
-						)
-					}
-					y += (15 * (i + len(lines)))
-				} else {
-					totalLine++
-					canv.Text(constant.LAYOUT_INDENT_LENGTH+20, (15*i)+y, fn.FootnoteMarker.String+fn.Footnote.String)
-				}
-			}
-			canv.Gend()
-			y += 15 + (totalLine * 15)
-		}
-	}
-	wrapped, lenLines := ci.autoWrapText(metadata.Lyric, leftIndent)
-	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-
-	prefix := "Syair: "
-	if lyricMusicMerged {
-		prefix = "Syair dan lagu :"
-	}
-	canv.Text(constant.LAYOUT_INDENT_LENGTH, y, prefix)
-
+func formatAndRenderText(canv canvas.Canvas, y, leftIndent int, text string) []string {
+	wrapped, lenLines := autoWrapText(text, leftIndent)
 	for i, line := range wrapped {
 		text := line
 		hasBegin := strings.Contains(line, "<tspan font-style=")
@@ -198,30 +115,58 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 		if len(wrapped) > 1 && i < len(wrapped)-1 {
 			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH-(constant.LAYOUT_INDENT_LENGTH*2))
 		}
-		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH+leftIndent, y, text)
-		y += newLineHeight
+		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+leftIndent), float64(y+(i*newLineHeight)), text)
 	}
-	copyrightY = y
+
+	return wrapped
+}
+
+func renderMusicAndLyric(canv canvas.Canvas, y *int, metadata repository.HymnData) (lastLineIndent float64) {
+	leftIndent := indentLyric
+
+	lyricMusicMerged := metadata.Lyric == metadata.Music
+	if lyricMusicMerged {
+		leftIndent = indentMusicAndLyric
+	}
+
+	prefix := PREFIX_LYRIC
+	if lyricMusicMerged {
+		prefix = PREFIX_MERGED_LYRIC_MUSIC
+	}
+	canv.Text(constant.LAYOUT_INDENT_LENGTH, *y, prefix)
+
+	wrapped := formatAndRenderText(canv, *y, leftIndent, metadata.Lyric)
+	*y += newLineHeight * len(wrapped)
 
 	if !lyricMusicMerged {
-		musicCredit := strings.ReplaceAll(metadata.Music, "<i>", "<tspan font-style=\"italic\">")
-		musicCredit = strings.ReplaceAll(musicCredit, "</i>", "</tspan>")
-		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">Lagu: %s</text>`, constant.LAYOUT_INDENT_LENGTH, y, musicCredit)
+		canv.Text(constant.LAYOUT_INDENT_LENGTH, *y, PREFIX_MUSIC)
+		wrapped = formatAndRenderText(canv, *y, leftIndent, metadata.Music)
+		*y += newLineHeight * len(wrapped)
 	}
 
-	if metadata.Copyright.Valid {
-		length := utils.CalculateSecondaryLyricWidth(metadata.Copyright.String)
-		lastMusicLen := utils.CalculateSecondaryLyricWidth(wrapped[len(wrapped)-1])
-		if (constant.LAYOUT_WIDTH - (leftIndent + int(lastMusicLen) + int(length))) < constant.LAYOUT_INDENT_LENGTH {
-			copyrightY += newLineHeight
-			y += newLineHeight
+	*y = *y - newLineHeight
+	return float64(leftIndent) + utils.CalculateSecondaryLyricWidth(wrapped[len(wrapped)-1])
+}
 
-		}
+func renderCopyright(canv canvas.Canvas, y *int, leftIndent float64, metadata repository.HymnData) {
 
-		canv.Text(constant.LAYOUT_WIDTH-int(length)-constant.LAYOUT_INDENT_LENGTH+constant.UPPERCASE_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
-		y += newLineHeight
+	if !metadata.Copyright.Valid {
+		return
 	}
 
+	copyrightY := *y
+	length := utils.CalculateSecondaryLyricWidth(metadata.Copyright.String)
+	if constant.LAYOUT_WIDTH-int(leftIndent+length) < constant.LAYOUT_INDENT_LENGTH {
+		copyrightY += newLineHeight
+		*y = *y + newLineHeight
+	}
+
+	canv.Text(constant.LAYOUT_WIDTH-int(length)-constant.LAYOUT_INDENT_LENGTH+constant.UPPERCASE_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
+	*y = *y + newLineHeight
+
+}
+
+func renderReferences(canv canvas.Canvas, y int, metadata repository.HymnData) {
 	ref := ""
 	if metadata.RefBE.Valid {
 		ref += fmt.Sprintf("BE %d", metadata.RefBE.Int16)
@@ -239,25 +184,16 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 		l := utils.CalculateSecondaryLyricWidth(ref)
 		canv.Text(constant.LAYOUT_WIDTH-constant.UPPERCASE_LENGTH-int(l), y, ref)
 	}
-
-	if metadata.TitleFootnotes.Valid {
-		notes := "<tspan font-style=\"italic\">*  " + metadata.TitleFootnotes.String + "</tspan>"
-		y += 30
-		fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">%s</text>`, constant.LAYOUT_INDENT_LENGTH, y, notes)
-
-	}
-
-	canv.Gend()
-
-	return y
 }
 
-func (ci *creditsInteractor) RenderForKidsFootnotes(ctx context.Context, canv canvas.Canvas, y int) {
-	canv.Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-	fmt.Fprintf(canv.Writer(), `<text x="%d" y="%d">
-				<tspan font-style="italic">Semua nyayian dengan tanda</tspan>
-				<tspan font-style="bold" font-size="125%%">☆</tspan>
-				<tspan font-style="italic">: khusus untuk anak-anak</tspan>
-			</text>`, constant.LAYOUT_INDENT_LENGTH, y)
+func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y *int, metadata repository.HymnData) {
+	canv.Group(GROUP_CLASSNAME, GROUP_STYLE)
+
+	lastLineIndent := renderMusicAndLyric(canv, y, metadata)
+
+	renderCopyright(canv, y, lastLineIndent, metadata)
+	renderReferences(canv, *y, metadata)
+
 	canv.Gend()
+
 }

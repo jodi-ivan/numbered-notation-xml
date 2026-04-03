@@ -1,5 +1,10 @@
 package numbered
 
+import (
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+)
+
 type DotPosition struct {
 	beforeXpos int
 	afterXPos  int
@@ -24,4 +29,24 @@ func (dt *DotPosition) Render(endPosition int) {
 	// reset here
 	dt.beforeXpos = endPosition
 	dt.Address = []*int{}
+}
+
+func ReplaceDotWithNumbered(dot, number *entity.NoteRenderer) *entity.NoteRenderer {
+	dot.IsDotted = false
+	dot.Note = number.Note
+	dot.Octave = number.Octave
+	dot.Strikethrough = number.Strikethrough
+
+	number.Tie = &entity.Slur{
+		Number: 1,
+		Type:   musicxml.NoteSlurTypeStart,
+	}
+
+	dot.Tie = &entity.Slur{
+		Number: 1,
+		Type:   musicxml.NoteSlurTypeStop,
+	}
+
+	return dot
+
 }

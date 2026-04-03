@@ -88,35 +88,24 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(currKeySig, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 
-			if rhythm.HasTies(note) {
-				if notePos+1 < len(measure.Notes) && rhythm.HasTies(measure.Notes[notePos+1]) && note.Pitch == measure.Notes[notePos+1].Pitch {
-
-					endTieNote := measure.Notes[notePos+1]
-
-					mergedNoteLegth := rhythm.MergeNote(ctx, note, endTieNote, currTimesig)
-					if mergedNoteLegth < 3 {
-						noteLength = mergedNoteLegth
-
-						note = rhythm.TransferStopSlurAndBreathmark(endTieNote, note)
-
-						// dont process next notes
-						skipNote[notePos+1] = true
-						note.Notations.Tied = nil
-
-					}
+			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) {
+				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength {
+					note, noteLength = mergedNote, mergedLength
+					skipNote[notePos+1] = true
 				}
+
 			}
 
 			// additionalRenderer is all the new notes that needs represented in numbered when the original musicxml doesnot
 			// for example a half note C have to be represented by following . next to number
-			additionalRenderer := si.Numbered.GetLengthNote(rctx, timeSignature, measure.Number, noteLength)
+			additionalNotes := si.Numbered.GetLengthNote(rctx, timeSignature, measure.Number, noteLength)
 			if skipNote[notePos+1] {
 				// split notes by the beam. currently only happen when there is ties
 				next := measure.Notes[notePos+1]
 				if notePos+2 < len(measure.Notes) {
 					next = measure.Notes[notePos+2]
 				}
-				additionalRenderer = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
+				additionalNotes = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
 			}
 			renderer := &entity.NoteRenderer{
 				PositionX:     x,
@@ -149,25 +138,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				staffInfo.MarginBottom = MEASURE_TEXT_OFFSET
 			}
 
-			if len(additionalRenderer) > 0 {
-
-				// the first additional notes is always altering the current note
-				addRenderer := additionalRenderer[0]
-				switch addRenderer.Type {
-				case musicxml.NoteLength16th:
-					renderer.Beam[2] = entity.Beam{
-						Number: 2,
-						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-					}
-					fallthrough
-				case musicxml.NoteLengthEighth:
-					renderer.Beam[1] = entity.Beam{
-						Number: 1,
-						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-					}
-				}
-			}
-			// set the beam, slur and ties
 			si.Rhythm.SetRhythmNotation(renderer, note, n)
 
 			// lyric
@@ -176,64 +146,17 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				staffInfo.MarginBottom = verseInfo.MarginBottom
 			}
 
-			notes = append(notes, renderer)
-
-			// additional renderer is a several new renderer because of
-			// the conversion to numbered
-			// for example, a half note, means an additional note for the dot
-			for i, additional := range additionalRenderer {
-				if i == 0 {
-					continue
+			additonalRenderer := numbered.RendererFromAdditional(note, renderer, additionalNotes)
+			if len(additonalRenderer) > 2 {
+				additionalNote := additonalRenderer[len(additonalRenderer)-1]
+				shouldReplace := notePos+2 < len(measure.Notes) && note.Type == additionalNotes[len(additionalNotes)-1].Type
+				if skipNote[notePos+1] && measure.Notes[notePos+1].IsBreathMark() && shouldReplace {
+					additonalRenderer[len(additonalRenderer)-1] = numbered.ReplaceDotWithNumbered(additionalNote, renderer)
 				}
-				additionalNote := &entity.NoteRenderer{
-					PositionY:     int(y),
-					Width:         constant.LOWERCASE_LENGTH,
-					IsDotted:      additional.IsDotted,
-					NoteLength:    additional.Type,
-					Beam:          map[int]entity.Beam{},
-					MeasureNumber: measure.Number,
-					IsNewLine:     renderer.IsNewLine && (i == len(additionalRenderer)-1) && !note.IsBreathMark(),
-				}
-				if additionalNote.IsNewLine {
-					renderer.IsNewLine = !additionalNote.IsNewLine
-				}
-
-				shouldReplace := notePos+2 < len(measure.Notes) && note.Type == additional.Type
-				if skipNote[notePos+1] && len(additionalRenderer) > 2 && i == len(additionalRenderer)-1 && measure.Notes[notePos+1].IsBreathMark() && shouldReplace {
-					additionalNote.IsDotted = false
-					additionalNote.Note = renderer.Note
-					additionalNote.Octave = renderer.Octave
-					additionalNote.Strikethrough = renderer.Strikethrough
-
-					renderer.Tie = &entity.Slur{
-						Number: 1,
-						Type:   musicxml.NoteSlurTypeStart,
-					}
-
-					additionalNote.Tie = &entity.Slur{
-						Number: 1,
-						Type:   musicxml.NoteSlurTypeStop,
-					}
-
-				}
-
-				switch additional.Type {
-				case musicxml.NoteLength16th:
-					additionalNote.Beam[2] = entity.Beam{
-						Number: 2,
-						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-					}
-					fallthrough
-				case musicxml.NoteLengthEighth:
-					additionalNote.Beam[1] = entity.Beam{
-						Number: 1,
-						Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-					}
-				}
-
-				notes = append(notes, additionalNote)
 
 			}
+
+			notes = append(notes, additonalRenderer...)
 
 			breathPauseRenderer := si.BreathPause.SetAndGetBreathPauseRenderer(renderer, note)
 			if breathPauseRenderer != nil {
@@ -288,7 +211,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			x += barline.BARLINE_AFTER_SPACE
 			if measure.RightMeasureText != nil {
 				rightBarlineRenderer.MeasureText = []musicxml.MeasureText{
-					musicxml.MeasureText{
+					{
 						Text:          measure.RightMeasureText.Text,
 						RelativeY:     measure.RightMeasureText.RelativeY,
 						TextAlignment: musicxml.TextAlignmentRight,
@@ -303,7 +226,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			if keySignature.IsMixed {
 				if keyChanges, ok := keySignature.MeasureText[measure.Number]; ok {
 					renderer := alignMeasures[0]
-					renderer.MeasureText = []musicxml.MeasureText{musicxml.MeasureText{Text: keyChanges, TextAlignment: musicxml.TextAlignmentLeft}}
+					renderer.MeasureText = []musicxml.MeasureText{{Text: keyChanges, TextAlignment: musicxml.TextAlignmentLeft}}
 				}
 
 				lastMeasure := mi == len(measures)-1
@@ -314,7 +237,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					indicator := keysig.TranstionFromTwoKeySignatures(currKeySig, firstKeySig)
 
 					renderer := alignMeasures[len(alignMeasures)-1]
-					renderer.MeasureText = []musicxml.MeasureText{musicxml.MeasureText{Text: indicator, TextAlignment: musicxml.TextAlignmentRight}}
+					renderer.MeasureText = []musicxml.MeasureText{{Text: indicator, TextAlignment: musicxml.TextAlignmentRight}}
 
 				}
 			}

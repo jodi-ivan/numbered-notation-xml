@@ -1,11 +1,8 @@
 package rhythm
 
 import (
-	"context"
-
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 )
 
 func (ri *rhythmInteractor) SetRhythmNotation(noteRenderer *entity.NoteRenderer, note musicxml.Note, numberedNote int) {
@@ -65,13 +62,4 @@ func TransferStopSlurAndBreathmark(from, to musicxml.Note) musicxml.Note {
 
 func HasTies(note musicxml.Note) bool {
 	return note.Notations != nil && note.Notations.Tied != nil
-}
-
-func MergeNote(ctx context.Context, current, next musicxml.Note, ts timesig.Time) float64 {
-	if !(current.Pitch.Step == next.Pitch.Step && next.Pitch.Octave == current.Pitch.Octave) {
-		return 0
-	}
-
-	return ts.GetNoteLength(ctx, current) + ts.GetNoteLength(ctx, next)
-
 }

@@ -26,11 +26,11 @@ func TestRenderFermata(t *testing.T) {
 		},
 		{
 			name: "everything went fine",
+			pos:  entity.NewCoordinate(50, 100),
 			canv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				writerMock := canvas.NewMockWriter(ctrl)
-				writerMock.EXPECT().Write([]byte(`<text x="-4.000" y="-17.500" style="font-family:Noto Music;font-size:200%"> &#x1D110; </text>`))
-				canv.EXPECT().Writer().Return(writerMock)
+				// writerMock := canvas.NewMockWriter(ctrl)
+				canv.EXPECT().TextUnescaped(44.5, float64(95), "&#x1D110;", `style="font-family:Noto Music;font-size:200%"`)
 				return canv
 			},
 			fermata: &musicxml.Femata{},

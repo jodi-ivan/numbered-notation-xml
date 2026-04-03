@@ -2,7 +2,6 @@ package breathpause
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -13,10 +12,10 @@ func RenderFermata(ctx context.Context, canv canvas.Canvas, fermata *musicxml.Fe
 	if fermata != nil {
 		fermataUnicode := `&#x1D110;`
 
-		fmt.Fprintf(
-			canv.Writer(),
-			`<text x="%.3f" y="%.3f" style="font-family:Noto Music;font-size:200%%"> %s </text>`,
-			pos.X-5.5, pos.Y-5, fermataUnicode,
+		canv.TextUnescaped(
+			pos.X-5.5, pos.Y-5,
+			fermataUnicode,
+			`style="font-family:Noto Music;font-size:200%"`,
 		)
 	}
 }

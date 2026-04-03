@@ -9,15 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNew(t *testing.T) {
-
-	t.Run("constructor", func(t *testing.T) {
-		if got := New(); !assert.NotNil(t, got) {
-			t.Fail()
-		}
-	})
-}
-
 func Test_numberedInteractor_GetLengthNote(t *testing.T) {
 	type args struct {
 		ts         timesig.TimeSignature

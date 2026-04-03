@@ -2,10 +2,16 @@ package numbered
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"slices"
+	"unicode"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -21,9 +27,13 @@ type Numbered interface {
 	RenderOctave(ctx context.Context, canv canvas.Canvas, octave int, pos entity.Coordinate)
 	SplitNote(ctx context.Context, noteLength float64, ts timesig.Time, flag, next musicxml.NoteLength) []NoteLength
 	RenderStrikethrough(ctx context.Context, canv canvas.Canvas, strikethrough bool, pos entity.Coordinate)
+	RenderNote(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer, y, rightAlignOffset int)
 }
 
-type numberedInteractor struct{}
+type numberedInteractor struct {
+	Barline barline.Barline
+	Lyric   lyric.Lyric
+}
 
 func (ni *numberedInteractor) SplitNote(ctx context.Context, noteLength float64, ts timesig.Time, flag, next musicxml.NoteLength) []NoteLength {
 	base := map[musicxml.NoteLength]float64{
@@ -167,6 +177,46 @@ func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.Time
 	return result
 }
 
-func New() Numbered {
-	return &numberedInteractor{}
+func (ni *numberedInteractor) RenderNote(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer, y, rightAlignOffset int) {
+	for notePos, n := range measure {
+		if n.IsDotted {
+			canv.Text(n.PositionX, y, ".")
+		} else if breathpause.IsBreathMark(n) {
+			xPos := n.PositionX
+			if n.PositionX-measure[notePos-1].PositionX <= 10 {
+				xPos += (8 + constant.LOWERCASE_LENGTH) / 3
+			}
+			canv.Text(xPos, y-10, ",")
+		} else if n.Barline != nil {
+			ni.Barline.RenderBarline(ctx, canv, *n.Barline,
+				entity.NewCoordinate(float64(n.PositionX), float64(y)))
+		} else {
+			if len(n.LeadingHeader) == 1 && unicode.IsNumber(rune(n.LeadingHeader[0])) {
+				canv.Circle(n.PositionX+4, n.PositionY-28, 6, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
+				canv.Text(n.PositionX+1, n.PositionY-25, n.LeadingHeader, `font-weight="600"`, `style="font-size:60%"`)
+			}
+			xPos := n.PositionX
+			noteStr := fmt.Sprintf("%d", n.Note)
+			noteWidth := ni.Lyric.CalculateLyricWidth(noteStr)
+			if notePos == len(measure)-1 {
+				xPos = xPos + rightAlignOffset - int(math.Round(noteWidth))
+			}
+			canv.Text(xPos, y, noteStr)
+
+			coordinate := entity.Coordinate{X: float64(xPos), Y: float64(n.PositionY)}
+			ni.RenderStrikethrough(ctx, canv, n.Strikethrough, coordinate)
+			breathpause.RenderFermata(ctx, canv, n.Fermata, coordinate)
+			ni.RenderOctave(ctx, canv, n.Octave, coordinate)
+			n.PositionX = xPos
+		}
+
+	}
+
+}
+
+func New(l lyric.Lyric, b barline.Barline) Numbered {
+	return &numberedInteractor{
+		Barline: b,
+		Lyric:   l,
+	}
 }

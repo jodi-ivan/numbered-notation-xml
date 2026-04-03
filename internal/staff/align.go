@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"unicode"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -23,11 +22,14 @@ type RenderStaffWithAlign interface {
 }
 
 func NewRenderAlign() RenderStaffWithAlign {
+
+	barlineInteractor := barline.NewBarline()
+	lyricInteractor := lyric.NewLyric()
 	return &renderStaffAlign{
-		Barline:  barline.NewBarline(),
-		Numbered: numbered.New(),
+		Numbered: numbered.New(lyricInteractor, barlineInteractor),
 		Rhythm:   rhythm.New(splitter.New()),
-		Lyric:    lyric.NewLyric(),
+		Barline:  barlineInteractor,
+		Lyric:    lyricInteractor,
 	}
 }
 
@@ -124,43 +126,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		rsa.Lyric.RenderLyrics(ctx, canv, measure)
 
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
-		for notePos, n := range measure {
-			if n.IsDotted {
-				canv.Text(n.PositionX, y, ".")
-			} else if breathpause.IsBreathMark(n) {
-				xPos := n.PositionX
-				if n.PositionX-measure[notePos-1].PositionX <= 10 {
-					xPos += (8 + constant.LOWERCASE_LENGTH) / 3
-				}
-				canv.Text(xPos, y-10, ",")
-			} else if n.Barline != nil {
-				rsa.Barline.RenderBarline(ctx, canv, *n.Barline, entity.Coordinate{
-					X: float64(n.PositionX),
-					Y: float64(y),
-				})
-			} else {
-				if len(n.LeadingHeader) == 1 && unicode.IsNumber(rune(n.LeadingHeader[0])) {
-					canv.Circle(n.PositionX+4, n.PositionY-28, 6, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
-					canv.Text(n.PositionX+1, n.PositionY-25, n.LeadingHeader, `font-weight="600"`, `style="font-size:60%"`)
-				}
-				xPos := n.PositionX
-				noteStr := fmt.Sprintf("%d", n.Note)
-				noteWidth := rsa.Lyric.CalculateLyricWidth(noteStr)
-				if notePos == len(measure)-1 {
-					xPos = xPos + rightAlignOffset - int(math.Round(noteWidth))
-				}
-				canv.Text(xPos, y, noteStr)
 
-				coordinate := entity.Coordinate{X: float64(xPos), Y: float64(n.PositionY)}
-				rsa.Numbered.RenderStrikethrough(ctx, canv, n.Strikethrough, coordinate)
-				breathpause.RenderFermata(ctx, canv, n.Fermata, coordinate)
-				rsa.Numbered.RenderOctave(ctx, canv, n.Octave, coordinate)
-				n.PositionX = xPos
-
-			}
-
-		}
-
+		rsa.Numbered.RenderNote(ctx, canv, measure, y, rightAlignOffset)
 		rsa.Rhythm.RenderBeam(ctx, canv, ts, measure)
 		rsa.RenderMeasureText(ctx, canv, measure)
 		RenderTuplet(ctx, canv, measure)

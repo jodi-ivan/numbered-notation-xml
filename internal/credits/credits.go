@@ -50,7 +50,7 @@ func autoWrapText(text string, leftIndent int) ([]string, []int) {
 			cleaned = strings.TrimPrefix(cleaned, utils.ITALIC_OPENING)
 			length += int(utils.CalculateSecondaryLyricWidth(cleaned))
 			if !italic {
-				result = append(result, fmt.Sprintf("%s %s", utils.TSPAN_OPENING, cleaned))
+				result = append(result, fmt.Sprintf("%s%s", utils.TSPAN_OPENING, cleaned))
 			} else {
 
 				if !strings.HasSuffix(word, utils.ITALIC_CLOSING) {
@@ -61,7 +61,7 @@ func autoWrapText(text string, leftIndent int) ([]string, []int) {
 				italic = true
 			} else {
 				italic = false
-				result = append(result, fmt.Sprintf("%s %s", cleaned, utils.TSPAN_CLOSING))
+				result = append(result, fmt.Sprintf("%s%s", cleaned, utils.TSPAN_CLOSING))
 			}
 		} else {
 			length += int(utils.CalculateSecondaryLyricWidth(word))
@@ -107,7 +107,7 @@ func formatAndRenderText(canv canvas.Canvas, y, leftIndent int, text string) []s
 	wrapped, lenLines := autoWrapText(text, leftIndent)
 	for i, line := range wrapped {
 		text := line
-		hasBegin := strings.Contains(line, "<tspan font-style=")
+		hasBegin := strings.Contains(line, TSPAN_CONTAINS_CHECK)
 		hasEnd := strings.Contains(line, utils.TSPAN_CLOSING)
 		if hasBegin && !hasEnd {
 			text = fmt.Sprintf("%s %s", text, utils.TSPAN_CLOSING)
@@ -118,6 +118,7 @@ func formatAndRenderText(canv canvas.Canvas, y, leftIndent int, text string) []s
 			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH-(constant.LAYOUT_INDENT_LENGTH*2))
 		}
 		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+leftIndent), float64(y+(i*newLineHeight)), text)
+		wrapped[i] = text
 	}
 
 	return wrapped
@@ -147,7 +148,12 @@ func renderMusicAndLyric(canv canvas.Canvas, y *int, metadata repository.HymnDat
 	}
 
 	*y = *y - newLineHeight
-	return float64(leftIndent) + utils.CalculateSecondaryLyricWidth(wrapped[len(wrapped)-1])
+	lastLine := wrapped[len(wrapped)-1]
+	if strings.Contains(lastLine, TSPAN_CONTAINS_CHECK) {
+		lastLine = utils.CleanSpan(lastLine)
+	}
+
+	return float64(leftIndent) + utils.CalculateSecondaryLyricWidth(lastLine)
 }
 
 func renderCopyright(canv canvas.Canvas, y *int, leftIndent float64, metadata repository.HymnData) {

@@ -10,6 +10,8 @@ const (
 const (
 	GROUP_CLASSNAME = "class='credit'"
 	GROUP_STYLE     = `style="font-size:60%;font-family:'Figtree';font-weight:600"`
+
+	TSPAN_CONTAINS_CHECK = "<tspan font-style="
 )
 
 const (

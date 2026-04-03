@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -30,60 +29,13 @@ type Lyric interface {
 	CalculateMarginLeft(txt string) float64
 	CalculateOverallWidth(ls []entity.Lyric) float64
 	SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition
+	RenderLyrics(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
 }
 
 type lyricInteractor struct{}
 
 func NewLyric() Lyric {
 	return &lyricInteractor{}
-}
-
-func (li *lyricInteractor) CalculateOverallWidth(ls []entity.Lyric) float64 {
-	result := 0.0
-
-	for _, v := range ls {
-		result = math.Max(result, li.CalculateLyricWidth(entity.LyricVal(v.Text).String()))
-	}
-	return result
-}
-
-func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
-	// Only for Caladea font
-	width := map[string]float64{
-		"A": 9.59, "a": 7.52, "1": 9.28,
-		"B": 9.27, "b": 8.32, "2": 7.55,
-		"C": 8.1, "c": 6.74, "3": 7.43,
-		"D": 10, "d": 8.32, "4": 8.57,
-		"E": 8.65, "e": 7.06, "5": 7.61,
-		"F": 8.15, "f": 5.87, "6": 7.53,
-		"G": 8.63, "g": 7.35, "7": 7.53,
-		"H": 11.15, "h": 8.86, "8": 8,
-		"I": 5.49, "i": 4.44, "9": 7.65,
-		"J": 4.99, "j": 4.76, "0": 8.57,
-		"K": 10.08, "k": 8.43, ",": 3.28,
-		"L": 8.02, "l": 4.34, "'": 3.28,
-		"M": 14.21, "m": 13.01, ".": 3.3,
-		"N": 11.09, "n": 8.94, "!": 4.58,
-		"O": 9.59, "o": 7.69, ";": 4.23,
-		"P": 8.53, "p": 8.32, " ": 4,
-		"Q": 9.59, "q": 8.02, "-": 5.27,
-		"R": 9.81, "r": 6.34, "—": 16,
-		"S": 7.25, "s": 6.28, "*": 6.83,
-		"T": 8.92, "t": 5.21, "\"": 8,
-		"U": 11, "u": 8.74, "+": 8.86,
-		"V": 9.57, "v": 8.08,
-		"W": 14.23, "w": 12.08,
-		"X": 9.95, "x": 7.78,
-		"Y": 8.92, "y": 8.18,
-		"Z": 8.11, "z": 6.85,
-	}
-	res := 0.0
-
-	for _, l := range txt {
-		res += width[string(l)]
-	}
-
-	return res
 }
 
 // SetLyricRenderer prepares the renderer for lyrics, also calculate space underneath the note and after the note
@@ -142,9 +94,6 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 	} else {
 		noteRenderer.Width = lyricWidth + 6
 		noteRenderer.IsLengthTakenFromLyric = true
-		// if float64(lyricWidth) < float64(noteWidth+constant.UPPERCASE_LENGTH) {
-		// 	noteRenderer.Width = constant.UPPERCASE_LENGTH * 1.7
-		// }
 	}
 	noteRenderer.Width += constant.LOWERCASE_LENGTH / 2 // lyric padding
 
@@ -153,72 +102,70 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 	}
 }
 
-func (li *lyricInteractor) CalculateMarginLeft(txt string) float64 {
-	if numberedLyric.Match([]byte(txt)) {
-		subStr := numberedLyric.FindStringSubmatch(txt)
-		if len(subStr) == 0 {
-			return 0
-		}
+func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+	prefixes := map[string]LyricPosition{}
 
-		return li.CalculateLyricWidth(strings.Join(subStr, "")) * -1
-	}
-	return 0
-}
+	canv.Group("class='lyric'", "style='font-family:Caladea'")
+	var prev *entity.NoteRenderer
+	minPrefix := float64(constant.LAYOUT_INDENT_LENGTH)
 
-func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
-	lyricVal := entity.LyricVal(note.Lyric[part].Text).String()
-	if note.PositionX == constant.LAYOUT_INDENT_LENGTH || (leftBarline != nil && leftBarline.Barline != nil) {
-		xPos := note.PositionX
-
-		hasLeftBarline := leftBarline != nil && leftBarline.Barline != nil
-		if len(note.Lyric) > 2 {
-
-			if hasLeftBarline {
-				xPos -= leftBarline.Width - barline.BARLINE_AFTER_SPACE + 5
+	for _, n := range measure {
+		yPos := float64(n.PositionY)
+		for i, l := range n.Lyric {
+			if len(l.Text) == 0 {
+				continue
 			}
 
-			parts := strings.Split(lyricVal, ".")
-			if len(parts) == 2 {
+			xPos := n.PositionX
+			yPos = float64(n.PositionY + DISTANCE_NOTE_TO_LYRIC + (i * LINE_BETWEEN_LYRIC))
+			text := l.Text
 
-				header := LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: float64(xPos) - li.CalculateLyricWidth(parts[0]+"."),
-						Y: float64(note.PositionY + 25 + (part * LINE_BETWEEN_LYRIC)),
-					},
-					Lyrics: entity.Lyric{
-						Syllabic: musicxml.LyricSyllabicTypeSingle,
-						Text: []entity.Text{
-							entity.Text{
-								Value: parts[0] + ".",
-							},
-						},
-					},
+			prefix := li.SplitLyricPrefix(n, i, prev)
+			if len(prefix) == 1 {
+				text = prefix[0].Lyrics.Text
+				xPos, yPos = int(prefix[0].Coordinate.X), prefix[0].Coordinate.Y
+			} else if len(prefix) == 2 {
+				if n.LeadingHeader != "" {
+					prefixWidth := li.CalculateLyricWidth(n.LeadingHeader)
+					minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X-prefixWidth)
+					prefixes[n.LeadingHeader] = LyricPosition{
+						Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
+						Lyrics:     entity.Lyric{Text: []entity.Text{{Value: n.LeadingHeader}}},
+					}
 				}
+				minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X)
+				text = prefix[1].Lyrics.Text
+				xPos, yPos = int(prefix[1].Coordinate.X), prefix[1].Coordinate.Y
 
-				mainLyric := LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: float64(xPos),
-						Y: float64(note.PositionY + 25 + (part * LINE_BETWEEN_LYRIC)),
-					},
-					Lyrics: note.Lyric[part],
+				if len(n.Lyric) > MAX_VERSE_IN_MUSIC {
+					prefix[0].Coordinate.Y = yPos + (math.Trunc(float64(i)/MAX_LINE_PER_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC)
 				}
-				mainLyric.Lyrics.Text[0] = entity.Text{Value: strings.ReplaceAll(mainLyric.Lyrics.Text[0].Value, parts[0]+".", "")}
-
-				return []LyricPosition{header, mainLyric}
+				prefixes[entity.LyricVal(prefix[0].Lyrics.Text).String()] = prefix[0]
 			}
+
+			lyricVal := entity.LyricVal(text).String()
+			if len(n.Lyric) > MAX_VERSE_IN_MUSIC {
+				yPos = yPos + (math.Trunc(float64(i)/MAX_LINE_PER_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC)
+			}
+			if strings.HasPrefix(lyricVal, "*") {
+				xPos -= int(li.CalculateLyricWidth("*"))
+			}
+			canv.Text(xPos, int(yPos), lyricVal)
+			li.RenderElision(ctx, canv, text, i, entity.Coordinate{X: float64(xPos), Y: yPos})
+			n.Lyric[i] = l
 		}
 
-		xPos += int(li.CalculateMarginLeft(lyricVal))
-		return []LyricPosition{
-			LyricPosition{
-				Coordinate: entity.Coordinate{
-					X: float64(xPos),
-					Y: float64(note.PositionY + 25 + (part * LINE_BETWEEN_LYRIC)),
-				},
-				Lyrics: note.Lyric[part],
-			},
+		if len(prefixes) > 0 {
+			canv.Group("class='leading-header'")
+			for _, p := range prefixes {
+				prefixVal := entity.LyricVal(p.Lyrics.Text).String()
+				canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal)
+			}
+			prefixes = nil
+			canv.Gend()
 		}
+		prev = n
 	}
 
-	return nil
+	canv.Gend()
 }

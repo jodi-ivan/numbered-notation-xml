@@ -117,6 +117,18 @@ func (mr *MockLyricMockRecorder) RenderHypen(ctx, canv, measure interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderHypen", reflect.TypeOf((*MockLyric)(nil).RenderHypen), ctx, canv, measure)
 }
 
+// RenderLyrics mocks base method.
+func (m *MockLyric) RenderLyrics(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderLyrics", ctx, canv, measure)
+}
+
+// RenderLyrics indicates an expected call of RenderLyrics.
+func (mr *MockLyricMockRecorder) RenderLyrics(ctx, canv, measure interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderLyrics", reflect.TypeOf((*MockLyric)(nil).RenderLyrics), ctx, canv, measure)
+}
+
 // SetLyricRenderer mocks base method.
 func (m *MockLyric) SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo {
 	m.ctrl.T.Helper()

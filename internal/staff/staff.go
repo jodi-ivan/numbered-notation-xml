@@ -35,10 +35,12 @@ type staffInteractor struct {
 }
 
 func NewStaff() Staff {
+	barlineInteractor := barline.NewBarline()
+	lyricInteractor := lyric.NewLyric()
 	return &staffInteractor{
-		Barline:     barline.NewBarline(),
-		Lyric:       lyric.NewLyric(),
-		Numbered:    numbered.New(),
+		Barline:     barlineInteractor,
+		Lyric:       lyricInteractor,
+		Numbered:    numbered.New(lyricInteractor, barlineInteractor),
 		BreathPause: breathpause.New(),
 		Rhythm:      rhythm.New(splitter.New()),
 		RenderAlign: NewRenderAlign(),

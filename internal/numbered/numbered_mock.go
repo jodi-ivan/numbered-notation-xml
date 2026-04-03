@@ -52,6 +52,18 @@ func (mr *MockNumberedMockRecorder) GetLengthNote(ctx, ts, measure, noteLength i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLengthNote", reflect.TypeOf((*MockNumbered)(nil).GetLengthNote), ctx, ts, measure, noteLength)
 }
 
+// RenderNote mocks base method.
+func (m *MockNumbered) RenderNote(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer, y, rightAlignOffset int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderNote", ctx, canv, measure, y, rightAlignOffset)
+}
+
+// RenderNote indicates an expected call of RenderNote.
+func (mr *MockNumberedMockRecorder) RenderNote(ctx, canv, measure, y, rightAlignOffset interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderNote", reflect.TypeOf((*MockNumbered)(nil).RenderNote), ctx, canv, measure, y, rightAlignOffset)
+}
+
 // RenderOctave mocks base method.
 func (m *MockNumbered) RenderOctave(ctx context.Context, canv canvas.Canvas, octave int, pos entity.Coordinate) {
 	m.ctrl.T.Helper()

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"strings"
 	"unicode"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
@@ -76,7 +75,6 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	}
 
 	added := float64(remaining) / (float64(totalNotes))
-	prefixes := map[string]lyric.LyricPosition{}
 
 	canv.Group("staff")
 	for mi, measure := range noteRenderer { // staff
@@ -122,83 +120,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		}
 
 		canv.Group("class='measure-align'", fmt.Sprintf("number='%d'", measure[0].MeasureNumber))
-		// if len(measure) > 0 {
-		// 	fmt.Fprintf(canv.Writer(), `<title>Measure %d</title>`, measure[0].MeasureNumber)
-		// }
 
-		canv.Group("class='lyric'", "style='font-family:Caladea'")
-		var prev *entity.NoteRenderer
-		minPrefix := float64(constant.LAYOUT_INDENT_LENGTH)
+		rsa.Lyric.RenderLyrics(ctx, canv, measure)
 
-		for _, n := range measure {
-			yPos := float64(n.PositionY)
-			for i, l := range n.Lyric {
-				if len(l.Text) == 0 {
-					continue
-				}
-
-				xPos := n.PositionX
-				yPos = float64(n.PositionY + 25 + (i * lyric.LINE_BETWEEN_LYRIC))
-				prefix := rsa.Lyric.SplitLyricPrefix(n, i, prev)
-				text := l.Text
-				if len(prefix) == 1 {
-					text = prefix[0].Lyrics.Text
-					xPos = int(prefix[0].Coordinate.X)
-					yPos = prefix[0].Coordinate.Y
-				} else if len(prefix) == 2 {
-					if n.LeadingHeader != "" {
-						prefixWidth := rsa.Lyric.CalculateLyricWidth(n.LeadingHeader)
-						minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X-prefixWidth)
-						prefixes[n.LeadingHeader] = lyric.LyricPosition{
-							Coordinate: entity.Coordinate{
-								X: float64(n.PositionX),
-								Y: float64(n.PositionY),
-							},
-							Lyrics: entity.Lyric{
-								Text: []entity.Text{
-									entity.Text{
-										Value: n.LeadingHeader,
-									},
-								},
-							},
-						}
-					}
-					minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X)
-					text = prefix[1].Lyrics.Text
-					xPos = int(prefix[1].Coordinate.X)
-					yPos = prefix[1].Coordinate.Y
-
-					if len(n.Lyric) > lyric.MAX_VERSE_IN_MUSIC {
-						prefix[0].Coordinate.Y = yPos + (math.Trunc(float64(i)/lyric.MAX_LINE_PER_VERSE_IN_MUSIC) * lyric.LINE_BETWEEN_LYRIC)
-					}
-					prefixes[entity.LyricVal(prefix[0].Lyrics.Text).String()] = prefix[0]
-				}
-
-				lyricVal := entity.LyricVal(text).String()
-				if len(n.Lyric) > lyric.MAX_VERSE_IN_MUSIC {
-					yPos = yPos + (math.Trunc(float64(i)/lyric.MAX_LINE_PER_VERSE_IN_MUSIC) * lyric.LINE_BETWEEN_LYRIC)
-				}
-				if strings.HasPrefix(lyricVal, "*") {
-					xPos -= int(rsa.Lyric.CalculateLyricWidth("*"))
-				}
-				canv.Text(xPos, int(yPos), lyricVal)
-				rsa.Lyric.RenderElision(ctx, canv, text, i, entity.Coordinate{X: float64(xPos), Y: yPos})
-				n.Lyric[i] = l
-			}
-
-			if len(prefixes) > 0 {
-				canv.Group("class='leading-header'")
-				for _, p := range prefixes {
-					prefixVal := entity.LyricVal(p.Lyrics.Text).String()
-					canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal)
-				}
-				prefixes = nil
-				canv.Gend()
-			}
-			prev = n
-		}
-
-		canv.Gend()
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		for notePos, n := range measure {
 			if n.IsDotted {
@@ -206,7 +130,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			} else if breathpause.IsBreathMark(n) {
 				xPos := n.PositionX
 				if n.PositionX-measure[notePos-1].PositionX <= 10 {
-					xPos += (8 + constant.LOWERCASE_LENGTH) / 3 // 8 is average of width charater digit
+					xPos += (8 + constant.LOWERCASE_LENGTH) / 3
 				}
 				canv.Text(xPos, y-10, ",")
 			} else if n.Barline != nil {

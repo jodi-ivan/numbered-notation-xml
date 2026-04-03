@@ -1,13 +1,12 @@
 package credits
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
@@ -125,195 +124,6 @@ func Test_alignText(t *testing.T) {
 	}
 }
 
-func Test_creditsInteractor_RenderCredits(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	type args struct {
-		y              int
-		metadata       repository.HymnData
-		verseFootNotes map[int]map[int]repository.VerseFootNotes
-	}
-	tests := []struct {
-		name     string
-		args     args
-		initCanv func(ctrl *gomock.Controller) *canvas.MockCanvas
-	}{
-		{
-			name: "music and lyric same, no BE, no NR",
-			args: args{
-				y: 150,
-				metadata: repository.HymnData{
-					Lyric: "this is from unittest",
-					Music: "this is from unittest",
-				},
-			},
-			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				res := canvas.NewMockCanvas(ctrl)
-				writer := canvas.NewMockWriter(ctrl)
-				res.EXPECT().Writer().Return(writer)
-
-				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				res.EXPECT().Text(50, 150, "Syair dan lagu :")
-				writer.EXPECT().Write([]byte("<text x=\"118\" y=\"150\">this is from unittest</text>"))
-				res.EXPECT().Gend()
-				return res
-			},
-		},
-		{
-			name: "music and lyric same, no BE, no NR, with copy right and title notes",
-			args: args{
-				y: 150,
-				metadata: repository.HymnData{
-					Lyric: "this is from unittest",
-					Music: "this is from unittest",
-					Copyright: sql.NullString{
-						Valid:  true,
-						String: "unittest",
-					},
-					TitleFootnotes: sql.NullString{
-						Valid:  true,
-						String: "bisa juga dinyanyikan dengan lagu unittest",
-					},
-				},
-			},
-			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				res := canvas.NewMockCanvas(ctrl)
-				writer := canvas.NewMockWriter(ctrl)
-				res.EXPECT().Writer().Return(writer).Times(2)
-				res.EXPECT().Text(654, 165, "© unittest")
-				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				res.EXPECT().Text(50, 150, "Syair dan lagu :")
-				writer.EXPECT().Write([]byte("<text x=\"118\" y=\"150\">this is from unittest</text>"))
-				writer.EXPECT().Write([]byte(`<text x="50" y="195"><tspan font-style="italic">*  bisa juga dinyanyikan dengan lagu unittest</tspan></text>`))
-				res.EXPECT().Gend()
-				return res
-			},
-		},
-		{
-			name: "music and lyric different, with BE and with NR. no italic",
-			args: args{
-				y: 150,
-				metadata: repository.HymnData{
-					Lyric: "this is lyric from unittest",
-					Music: "this is music from unittest",
-					RefNR: sql.NullInt16{
-						Valid: true,
-						Int16: 1,
-					},
-					RefBE: sql.NullInt16{
-						Valid: true,
-						Int16: 1,
-					},
-				},
-			},
-			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				res := canvas.NewMockCanvas(ctrl)
-				writer := canvas.NewMockWriter(ctrl)
-				res.EXPECT().Writer().Return(writer).Times(2)
-
-				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				res.EXPECT().Gend()
-				res.EXPECT().Text(50, 150, "Syair: ")
-				writer.EXPECT().Write([]byte("<text x=\"80\" y=\"150\">this is lyric from unittest</text>"))
-				writer.EXPECT().Write([]byte("<text x=\"50\" y=\"165\">Lagu: this is music from unittest</text>"))
-				res.EXPECT().Text(647, 165, "BE 1, NR 1")
-
-				return res
-			},
-		},
-
-		{
-			name: "music and lyric different,  italic break down to multiple lines",
-			args: args{
-				y: 150,
-				metadata: repository.HymnData{
-					Lyric: "this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <i>Also added a long italic text for breaking down the text to the new line.</i>",
-					Music: "this is music from unittest",
-				},
-			},
-			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				res := canvas.NewMockCanvas(ctrl)
-				writer := canvas.NewMockWriter(ctrl)
-				res.EXPECT().Writer().Return(writer).Times(3)
-
-				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				res.EXPECT().Gend()
-				res.EXPECT().Text(50, 150, "Syair: ")
-				line1 := `this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style="italic">Also added a long italic text for breaking </tspan>`
-				line2 := `<tspan font-style="italic">down the text to the new line.</tspan>`
-
-				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="150">%s</text>`, line1)))
-				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="165">%s</text>`, line2)))
-				writer.EXPECT().Write([]byte(`<text x="50" y="180">Lagu: this is music from unittest</text>`))
-
-				return res
-			},
-		},
-		{
-			name: "music and lyric different,  italic break down to multiple lines with copy right and verse footnotes",
-			args: args{
-				y: 150,
-				metadata: repository.HymnData{
-					Lyric: "this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <i>Also added a long italic text for breaking down the text to the new line.</i>",
-					Music: "this is music from unittest",
-					Copyright: sql.NullString{
-						Valid:  true,
-						String: "unittest",
-					},
-				},
-				verseFootNotes: map[int]map[int]repository.VerseFootNotes{
-					1: map[int]repository.VerseFootNotes{
-						1: repository.VerseFootNotes{
-							LinePos: sql.NullInt32{
-								Valid: true,
-								Int32: 1,
-							},
-							MarkerStyle: sql.NullInt32{
-								Valid: true,
-								Int32: 0,
-							},
-							FootnoteMarker: sql.NullString{
-								Valid:  true,
-								String: "*",
-							},
-							Footnote: sql.NullString{
-								Valid:  true,
-								String: " adalah unittest",
-							},
-						},
-					},
-				},
-			},
-			initCanv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				res := canvas.NewMockCanvas(ctrl)
-				writer := canvas.NewMockWriter(ctrl)
-				res.EXPECT().Writer().Return(writer).Times(3)
-
-				res.EXPECT().Group("class='credit'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				res.EXPECT().Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
-				res.EXPECT().Gend().Times(2)
-				res.EXPECT().Text(50, 170, "Syair: ")
-				line1 := `this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style="italic">Also added a long italic text for breaking </tspan>`
-				line2 := `<tspan font-style="italic">down the text to the new line.</tspan>`
-
-				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="170">%s</text>`, line1)))
-				writer.EXPECT().Write([]byte(fmt.Sprintf(`<text x="80" y="185">%s</text>`, line2)))
-				writer.EXPECT().Write([]byte(`<text x="50" y="200">Lagu: this is music from unittest</text>`))
-				res.EXPECT().Text(654, 200, "© unittest")
-				res.EXPECT().Text(70, 130, "* adalah unittest")
-
-				return res
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ci := creditsInteractor{}
-			ci.RenderCredits(context.Background(), tt.initCanv(ctrl), &tt.args.y, tt.args.metadata)
-		})
-	}
-}
-
 type customStringMatcher struct {
 	expected string
 	T        assert.TestingT
@@ -330,4 +140,298 @@ func (m *customStringMatcher) Matches(x interface{}) bool {
 
 func (m *customStringMatcher) String() string {
 	return "contains " + m.expected
+}
+
+func Test_formatAndRenderText(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		canv       func(*gomock.Controller) *canvas.MockCanvas
+		y          int
+		leftIndent int
+		text       string
+		want       []string
+	}{
+		{
+			name: "nothing happened",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				return canvas.NewMockCanvas(c)
+			},
+			want: []string{},
+		},
+		{
+			name: "one line without italic",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+				canvMock.EXPECT().TextUnescaped(50.0, 100.0, "this is the text without italic")
+
+				return canvMock
+			},
+			y:    100,
+			text: "this is the text without italic",
+			want: []string{"this is the text without italic"},
+		},
+		{
+			name: "one linewithout <i>italic</i>",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+				canvMock.EXPECT().TextUnescaped(50.0, 100.0, `this is the text with <tspan font-style="italic">Foreign title</tspan>`)
+
+				return canvMock
+			},
+			y:    100,
+			text: "this is the text with <i>Foreign title</i>",
+			want: []string{`this is the text with <tspan font-style="italic">Foreign title</tspan>`},
+		},
+		{
+			name: "with italic terminated is broken down to two lines",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+				canvMock.EXPECT().TextUnescaped(100.0, 100.0,
+					`this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style="italic">Also added a long italic text for breaking </tspan>`)
+
+				canvMock.EXPECT().TextUnescaped(100.0, 115.0,
+					`<tspan font-style="italic"> down the text to the new line.</tspan>`)
+				return canvMock
+			},
+			y:          100,
+			leftIndent: constant.LAYOUT_INDENT_LENGTH,
+			text:       "this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <i>Also added a long italic text for breaking down the text to the new line.</i>",
+			want: []string{
+				"this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also added a long italic text for breaking </tspan>",
+				"<tspan font-style=\"italic\"> down the text to the new line.</tspan>",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatAndRenderText(tt.canv(ctrl), tt.y, tt.leftIndent, tt.text)
+			if !assert.Equal(t, tt.want, got) {
+				t.Errorf("formatAndRenderText() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_renderMusicAndLyric(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	initialY := 100
+	initialY2 := 100
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		canv     func(c *gomock.Controller) *canvas.MockCanvas
+		y        *int
+		metadata repository.HymnData
+		want     float64
+		wantY    int
+	}{
+		{
+			name: "different music and lyric",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvasMock := canvas.NewMockCanvas(c)
+				canvasMock.EXPECT().Text(50, 100, "Syair:")
+				canvasMock.EXPECT().TextUnescaped(80.0, 100.0, "Lyric unittest")
+				canvasMock.EXPECT().Text(50, 115, "Lagu:")
+				canvasMock.EXPECT().TextUnescaped(80.0, 115.0, "Music unittest")
+
+				return canvasMock
+			},
+			y: &initialY,
+			metadata: repository.HymnData{
+				Lyric: "Lyric unittest",
+				Music: "Music unittest",
+			},
+			want:  94.65,
+			wantY: 115,
+		},
+		{
+			name: "same music and lyric",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvasMock := canvas.NewMockCanvas(c)
+				canvasMock.EXPECT().Text(50, 100, "Syair dan lagu: ")
+				canvasMock.EXPECT().TextUnescaped(118.0, 100.0,
+					`<tspan font-style="italic">unittest rocks!</tspan>`)
+
+				return canvasMock
+			},
+			y: &initialY2,
+			metadata: repository.HymnData{
+				Lyric: "<i>unittest rocks!</i>",
+				Music: "<i>unittest rocks!</i>",
+			},
+			want:  utils.CalculateSecondaryLyricWidth("unittest rocks!") + 68,
+			wantY: 100,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := renderMusicAndLyric(tt.canv(ctrl), tt.y, tt.metadata)
+			if !assert.Equal(t, tt.want, got) {
+				t.Errorf("renderMusicAndLyric() = %v, want %v", got, tt.want)
+			}
+
+			if !assert.Equal(t, tt.wantY, *tt.y) {
+				t.Errorf("&y renderMusicAndLyric() = %v, want %v", *tt.y, tt.wantY)
+			}
+		})
+	}
+}
+
+func Test_renderCopyright(t *testing.T) {
+	newYPtr := func() *int {
+		i := 100
+
+		return &i
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		canv       func(c *gomock.Controller) *canvas.MockCanvas
+		y          *int
+		leftIndent float64
+		wantY      int
+		metadata   repository.HymnData
+	}{
+		{
+			name:  "no copyright",
+			y:     newYPtr(),
+			wantY: 100,
+			metadata: repository.HymnData{
+				Copyright: sql.NullString{},
+			},
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				return nil
+			},
+		},
+		{
+			name:  "copyright",
+			y:     newYPtr(),
+			wantY: 115,
+			metadata: repository.HymnData{
+				Copyright: sql.NullString{
+					Valid:  true,
+					String: "unittest",
+				},
+			},
+			leftIndent: 100,
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+
+				canvMock.EXPECT().Text(654, 100, "© unittest")
+				return canvMock
+			},
+		},
+		{
+			name:  "copyright offset to new line",
+			y:     newYPtr(),
+			wantY: 130,
+			metadata: repository.HymnData{
+				Copyright: sql.NullString{
+					Valid:  true,
+					String: "this is long copyright",
+				},
+			},
+			leftIndent: 600,
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+
+				canvMock.EXPECT().Text(597, 115, "© this is long copyright")
+				return canvMock
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			renderCopyright(tt.canv(ctrl), tt.y, tt.leftIndent, tt.metadata)
+
+			if !assert.Equal(t, tt.wantY, *tt.y) {
+				t.Errorf("&y renderCopyright() = %v, want %v", *tt.y, tt.wantY)
+			}
+		})
+	}
+}
+
+func Test_renderReferences(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		canv     func(c *gomock.Controller) *canvas.MockCanvas
+		y        int
+		metadata repository.HymnData
+	}{
+		{
+			name: "",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				return nil
+			},
+			y:        115,
+			metadata: repository.HymnData{},
+		},
+		{
+			name: "BE only",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+				canvMock.EXPECT().Text(671, 115, "BE 100")
+				return canvMock
+			},
+			y: 115,
+			metadata: repository.HymnData{
+				RefBE: sql.NullInt16{
+					Valid: true,
+					Int16: 100,
+				},
+			},
+		},
+		{
+			name: "NR only",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+				canvMock.EXPECT().Text(669, 115, "NR 100")
+				return canvMock
+			},
+			y: 115,
+			metadata: repository.HymnData{
+				RefNR: sql.NullInt16{
+					Valid: true,
+					Int16: 100,
+				},
+			},
+		},
+		{
+			name: "Both",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(c)
+				canvMock.EXPECT().Text(635, 115, "BE 100, NR 100")
+				return canvMock
+			},
+			y: 115,
+			metadata: repository.HymnData{
+				RefNR: sql.NullInt16{
+					Valid: true,
+					Int16: 100,
+				},
+				RefBE: sql.NullInt16{
+					Valid: true,
+					Int16: 100,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			renderReferences(tt.canv(ctrl), tt.y, tt.metadata)
+		})
+	}
 }

@@ -21,3 +21,8 @@ func ReplaceItalicToSpanWithClean(italic string) (tspan string, clean string) {
 	clean = strings.ReplaceAll(italic, ITALIC_OPENING, "")
 	return tspan, strings.ReplaceAll(clean, ITALIC_CLOSING, "")
 }
+
+func CleanSpan(span string) string {
+	prefix := strings.ReplaceAll(span, TSPAN_OPENING, "")
+	return strings.ReplaceAll(prefix, TSPAN_CLOSING, "")
+}

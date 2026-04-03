@@ -93,19 +93,23 @@ func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canv
 	backward := ""
 
 	if barline.Repeat != nil {
-		if barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-			backward = fmt.Sprintf(`<tspan x="%f" y="%f">:</tspan>`, coordinate.X-5, coordinate.Y-4)
-		} else if barline.Repeat.Direction == musicxml.BarLineRepeatDirectionForward {
-			//FIXED: adjust the size and position of forward barline
-			forward = fmt.Sprintf(`<tspan x="%f" y="%f">:</tspan>`, coordinate.X+10, coordinate.Y-4)
+		switch barline.Repeat.Direction {
+		case musicxml.BarLineRepeatDirectionBackward:
+			backward = fmt.Sprintf(`<tspan x="%.2f" y="%.2f">:</tspan>`, coordinate.X-5, coordinate.Y-4)
+		case musicxml.BarLineRepeatDirectionForward:
+			forward = fmt.Sprintf(`<tspan x="%.2f" y="%.2f">:</tspan>`, coordinate.X+10, coordinate.Y-4)
 		}
 	}
-	fmt.Fprintf(canv.Writer(), `<text x="%f" y="%f" style="font-family:Noto Music"> %s <tspan x="%f" y="%f" font-size="180%%"> %s </tspan> %s </text>`,
-		coordinate.X,
-		coordinate.Y+6,
+	barlineWithRepeat := fmt.Sprintf(`%s<tspan x="%.2f" y="%.2f" font-size="180%%">%s</tspan>%s`,
 		backward,
-		coordinate.X,
-		coordinate.Y+6, unicode[barline.BarStyle], forward)
+		coordinate.X, coordinate.Y+6,
+		unicode[barline.BarStyle], forward)
+
+	canv.TextUnescaped(
+		coordinate.X, coordinate.Y+6,
+		barlineWithRepeat,
+		`style="font-family:Noto Music"`,
+	)
 
 }
 

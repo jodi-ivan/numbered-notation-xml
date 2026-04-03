@@ -77,7 +77,7 @@ func Test_barlineInteractor_GetRendererLeftBarline(t *testing.T) {
 			},
 			wantNoteRenderer: &entity.NoteRenderer{
 				PositionX: 25,
-				Width:     int(barlineWidth[musicxml.BarLineStyleLightLight]),
+				Width:     10,
 				Barline: &musicxml.Barline{
 					Location: musicxml.BarlineLocationLeft,
 					BarStyle: musicxml.BarLineStyleLightLight,
@@ -86,7 +86,7 @@ func Test_barlineInteractor_GetRendererLeftBarline(t *testing.T) {
 			},
 
 			wantBarlineInfo: &BarlineInfo{
-				XIncrement: 5,
+				XIncrement: 9,
 			},
 		},
 		{
@@ -109,7 +109,7 @@ func Test_barlineInteractor_GetRendererLeftBarline(t *testing.T) {
 			},
 			wantNoteRenderer: &entity.NoteRenderer{
 				PositionX: 30,
-				Width:     int(barlineWidth[musicxml.BarLineStyleHeavyLight]),
+				Width:     11,
 				Barline: &musicxml.Barline{
 					Location: musicxml.BarlineLocationLeft,
 					BarStyle: musicxml.BarLineStyleHeavyLight,
@@ -119,7 +119,7 @@ func Test_barlineInteractor_GetRendererLeftBarline(t *testing.T) {
 			},
 
 			wantBarlineInfo: &BarlineInfo{
-				XIncrement: 25,
+				XIncrement: 29,
 			},
 		},
 	}
@@ -155,7 +155,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 				measure: musicxml.Measure{
 					Number: 1,
 					Barline: []musicxml.Barline{
-						musicxml.Barline{
+						{
 							Location: musicxml.BarlineLocationRight,
 						},
 					},
@@ -168,6 +168,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 				Barline: &musicxml.Barline{
 					Location: musicxml.BarlineLocationRight,
 				},
+				Width: 4,
 			},
 		},
 		{
@@ -177,10 +178,10 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 				measure: musicxml.Measure{
 					Number: 1,
 					Barline: []musicxml.Barline{
-						musicxml.Barline{
+						{
 							Location: musicxml.BarlineLocationLeft,
 						},
-						musicxml.Barline{
+						{
 							Location: musicxml.BarlineLocationRight,
 							BarStyle: musicxml.BarLineStyleLightHeavy,
 							Repeat: &musicxml.BarLineRepeat{
@@ -194,6 +195,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 			wantRenderer: &entity.NoteRenderer{
 				MeasureNumber: 1,
 				PositionX:     25,
+				Width:         4,
 				Barline: &musicxml.Barline{
 					Location: musicxml.BarlineLocationRight,
 					BarStyle: musicxml.BarLineStyleLightHeavy,
@@ -246,15 +248,14 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(ctrl)
 
-				writerMock := canvas.NewMockWriter(ctrl)
-
-				writerMock.EXPECT().Write([]byte(`<text x="25.000000" y="131.000000" style="font-family:Noto Music">  <tspan x="25.000000" y="131.000000" font-size="180%"> &#x01D102; </tspan>  </text>`))
-				canvMock.EXPECT().Writer().Return(writerMock)
+				canvMock.EXPECT().TextUnescaped(float64(25), float64(131),
+					`<tspan x="25.00" y="131.00" font-size="180%">&#x01D102;</tspan>`,
+					`style="font-family:Noto Music"`)
 
 				return canvMock
 			},
 		},
-		// case 2: repeat left - forward
+		//case 2: repeat left - forward
 		{
 			name: "repeat left forward",
 			args: args{
@@ -273,10 +274,11 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(ctrl)
 
-				writerMock := canvas.NewMockWriter(ctrl)
-
-				writerMock.EXPECT().Write([]byte(`<text x="25.000000" y="131.000000" style="font-family:Noto Music">  <tspan x="25.000000" y="131.000000" font-size="180%"> &#x01D103; </tspan> <tspan x="35.000000" y="125.000000">:</tspan> </text>`))
-				canvMock.EXPECT().Writer().Return(writerMock)
+				canvMock.EXPECT().TextUnescaped(
+					float64(25), float64(131),
+					`<tspan x="25.00" y="131.00" font-size="180%">&#x01D103;</tspan><tspan x="35.00" y="121.00">:</tspan>`,
+					`style="font-family:Noto Music"`,
+				)
 
 				return canvMock
 			},
@@ -300,10 +302,9 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(ctrl)
 
-				writerMock := canvas.NewMockWriter(ctrl)
-
-				writerMock.EXPECT().Write([]byte(`<text x="25.000000" y="131.000000" style="font-family:Noto Music"> <tspan x="20.000000" y="125.000000">:</tspan> <tspan x="25.000000" y="131.000000" font-size="180%"> &#x01D102; </tspan>  </text>`))
-				canvMock.EXPECT().Writer().Return(writerMock)
+				canvMock.EXPECT().TextUnescaped(float64(25), float64(131),
+					`<tspan x="20.00" y="121.00">:</tspan><tspan x="25.00" y="131.00" font-size="180%">&#x01D102;</tspan>`,
+					`style="font-family:Noto Music"`)
 
 				return canvMock
 			},

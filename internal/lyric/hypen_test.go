@@ -35,30 +35,21 @@ func Test_lyricInteractor_CalculateHypen(t *testing.T) {
 			name: "gap too small to fit a hypen",
 			args: args{
 				prevLyric: &LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: 25,
-						Y: 120,
-					},
+					Coordinate: entity.NewCoordinate(25, 120),
+
 					Lyrics: entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeBegin,
 						Text: []entity.Text{
-							entity.Text{
-								Value: "hel",
-							},
+							{Value: "hel"},
 						},
 					},
 				},
 				currentLyric: &LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: 45.26,
-						Y: 120,
-					},
+					Coordinate: entity.NewCoordinate(45.26, 120),
 					Lyrics: entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeEnd,
 						Text: []entity.Text{
-							entity.Text{
-								Value: "lo",
-							},
+							{Value: "lo"},
 						},
 					},
 				},
@@ -68,94 +59,57 @@ func Test_lyricInteractor_CalculateHypen(t *testing.T) {
 			name: "short distance between two lyrics",
 			args: args{
 				prevLyric: &LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: 25,
-						Y: 120,
-					},
+					Coordinate: entity.NewCoordinate(25, 120),
 					Lyrics: entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeBegin,
 						Text: []entity.Text{
-							entity.Text{
-								Value: "hel", // width 20.46
-							},
+							{Value: "hel"}, // width 20.46
+
 						},
 					},
 				},
 				currentLyric: &LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: 53,
-						Y: 120,
-					},
+					Coordinate: entity.NewCoordinate(53, 120),
 					Lyrics: entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeEnd,
 						Text: []entity.Text{
-							entity.Text{
-								Value: "lo",
-							},
+							{Value: "lo"},
 						},
 					},
 				},
 			},
 			wantLocation: []entity.Coordinate{
-				entity.Coordinate{
-					X: 45.26,
-					Y: 120,
-				},
+				entity.NewCoordinate(45.26, 120),
 			},
 		},
 		{
 			name: "long distance between two lyrics",
 			args: args{
 				prevLyric: &LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: 25,
-						Y: 120,
-					},
+					Coordinate: entity.NewCoordinate(25, 120),
 					Lyrics: entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeBegin,
 						Text: []entity.Text{
-							entity.Text{
-								Value: "hel", // width 20.46
-							},
+							{Value: "hel"}, // width 20.46
 						},
 					},
 				},
 				currentLyric: &LyricPosition{
-					Coordinate: entity.Coordinate{
-						X: 350,
-						Y: 120,
-					},
+					Coordinate: entity.NewCoordinate(350, 120),
 					Lyrics: entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeEnd,
 						Text: []entity.Text{
-							entity.Text{
-								Value: "lo",
-							},
+							{Value: "lo"},
 						},
 					},
 				},
 			},
 			wantLocation: []entity.Coordinate{
-				entity.Coordinate{
-					X: 96.05,
-					Y: 120,
-				},
-				entity.Coordinate{
-					X: 146.84,
-					Y: 120,
-				},
-				entity.Coordinate{
-					X: 197.63,
-					Y: 120,
-				},
-				entity.Coordinate{
-					X: 248.42000000000002,
-					Y: 120,
-				},
-				entity.Coordinate{
-					X: 299.21,
-					Y: 120,
-				},
+				entity.NewCoordinate(96.05, 120),
+				entity.NewCoordinate(146.84, 120),
+				entity.NewCoordinate(197.63, 120),
+				entity.NewCoordinate(248.42000000000002, 120),
+				entity.NewCoordinate(299.21, 120),
 			},
 		},
 	}
@@ -209,7 +163,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			},
 			args: args{
 				measure: []*entity.NoteRenderer{
-					&entity.NoteRenderer{},
+					{},
 				},
 			},
 		},
@@ -217,20 +171,18 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				writerMock := canvas.NewMockWriter(ctrl)
 				canv.EXPECT().Group("hyphens")
-				canv.EXPECT().Writer().Return(writerMock).Times(2)
-				writerMock.EXPECT().Write([]byte(`<text x="78.8850" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="33.6500" y="25">-</text>`))
+				canv.EXPECT().TextUnescaped(78.8850, float64(25), "-")
+				canv.EXPECT().TextUnescaped(33.6500, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
 				measure: []*entity.NoteRenderer{
-					&entity.NoteRenderer{
+					{
 						PositionX: 25,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
 									entity.Text{
 										Value: "E",
@@ -240,12 +192,12 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 40,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
+									{
 										Value: "xam",
 									},
 								},
@@ -253,12 +205,12 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 100,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
+									{
 										Value: "ple",
 									},
 								},
@@ -271,65 +223,55 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 		},
 		{
 			name: "Positive case. begin-middle-end-single",
-			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(ctrl)
-				writerMock := canvas.NewMockWriter(ctrl)
+			initCanvMock: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Group("hyphens")
-				canv.EXPECT().Writer().Return(writerMock).Times(2)
-				writerMock.EXPECT().Write([]byte(`<text x="78.8850" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="33.6500" y="25">-</text>`))
+				canv.EXPECT().TextUnescaped(78.885, float64(25), "-")
+				canv.EXPECT().TextUnescaped(33.6500, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
 				measure: []*entity.NoteRenderer{
-					&entity.NoteRenderer{
+					{
 						PositionX: 25,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "E",
-									},
+									{Value: "E"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeBegin,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 40,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "xam",
-									},
+									{Value: "xam"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeMiddle,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 100,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "ple",
-									},
+									{Value: "ple"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeEnd,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 160,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "duh",
-									},
+									{Value: "duh"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeSingle,
 							},
@@ -342,64 +284,54 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-middle-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				writerMock := canvas.NewMockWriter(ctrl)
 				canv.EXPECT().Group("hyphens")
-				canv.EXPECT().Writer().Return(writerMock).Times(3)
-				writerMock.EXPECT().Write([]byte(`<text x="120.7500" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="90.0900" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="55.0350" y="25">-</text>`))
+				canv.EXPECT().TextUnescaped(120.7500, float64(25), "-")
+				canv.EXPECT().TextUnescaped(90.0900, float64(25), "-")
+				canv.EXPECT().TextUnescaped(55.0350, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
 				measure: []*entity.NoteRenderer{
-					&entity.NoteRenderer{
+					{
 						PositionX: 25,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "Na",
-									},
+									{Value: "Na"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeBegin,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 77,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "si",
-									},
+									{Value: "si"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeMiddle,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 103,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "go",
-									},
+									{Value: "go"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeMiddle,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 134,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "reng",
-									},
+									{Value: "reng"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeEnd,
 							},
@@ -412,77 +344,65 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-end-begin-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				writerMock := canvas.NewMockWriter(ctrl)
 				canv.EXPECT().Group("hyphens")
-				canv.EXPECT().Writer().Return(writerMock).Times(3)
-				writerMock.EXPECT().Write([]byte(`<text x="161.1300" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="127.0650" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="49.0950" y="25">-</text>`))
+				canv.EXPECT().TextUnescaped(161.1300, float64(25), "-")
+				canv.EXPECT().TextUnescaped(127.0650, float64(25), "-")
+				canv.EXPECT().TextUnescaped(49.0950, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
 				measure: []*entity.NoteRenderer{
-					&entity.NoteRenderer{
+					{
 						PositionX: 25,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "Ma",
-									},
+									{Value: "Ma"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeBegin,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 62,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "kan",
-									},
+									{Value: "kan"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeEnd,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 102,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "Ber",
-									},
+									{Value: "Ber"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeBegin,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 140,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "sa",
-									},
+									{Value: "sa"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeMiddle,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 179,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "ma",
-									},
+									{Value: "ma"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeEnd,
 							},
@@ -495,90 +415,76 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-middle-end-single-begin-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				writerMock := canvas.NewMockWriter(ctrl)
 				canv.EXPECT().Group("hyphens")
-				canv.EXPECT().Writer().Return(writerMock).Times(3)
-				writerMock.EXPECT().Write([]byte(`<text x="243.0950" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="79.1300" y="25">-</text>`))
-				writerMock.EXPECT().Write([]byte(`<text x="50.0650" y="25">-</text>`))
+				canv.EXPECT().TextUnescaped(243.0950, float64(25), "-")
+				canv.EXPECT().TextUnescaped(79.1300, float64(25), "-")
+				canv.EXPECT().TextUnescaped(50.0650, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
 				measure: []*entity.NoteRenderer{
-					&entity.NoteRenderer{
+					{
 						PositionX: 25,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "Ber",
-									},
+									{Value: "Ber"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeBegin,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 63,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "sa",
-									},
+									{Value: "sa"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeMiddle,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 92,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "ma",
-									},
+									{Value: "ma"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeEnd,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 179,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "dan",
-									},
+									{Value: "dan"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeSingle,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 219,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "Ma",
-									},
+									{Value: "Ma"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeBegin,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 256,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "kan",
-									},
+									{Value: "kan"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeEnd,
 							},
@@ -587,136 +493,45 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 				},
 			},
 		},
-		// {
-		// 	name: "Positive case. single-single-begin-middle-middle",
-		// 	initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-		// 		canv := canvas.NewMockCanvas(ctrl)
-		// 		writerMock := canvas.NewMockWriter(ctrl)
-		// 		canv.EXPECT().Group("hyphens")
-		// 		canv.EXPECT().Writer().Return(writerMock).Times(3)
-		// 		writerMock.EXPECT().Write([]byte(`<text x="187.2050" y="25">-</text>`))
-		// 		writerMock.EXPECT().Write([]byte(`<text x="163.6300" y="25">-</text>`))
-		// 		writerMock.EXPECT().Write([]byte(`<text x="198.0000" y="25">-</text>`))
-		// 		canv.EXPECT().Gend()
-		// 		return canv
-		// 	},
-		// 	args: args{
-		// 		measure: []*entity.NoteRenderer{
-		// 			&entity.NoteRenderer{
-		// 				PositionX: 25,
-		// 				Lyric: []entity.Lyric{
-		// 					entity.Lyric{
-		// 						Text: []entity.Text{
-		// 							entity.Text{
-		// 								Value: "Boom",
-		// 							},
-		// 						},
-		// 						Syllabic: musicxml.LyricSyllabicTypeSingle,
-		// 					},
-		// 				},
-		// 			},
-		// 			&entity.NoteRenderer{
-		// 				PositionX: 78,
-		// 				Lyric: []entity.Lyric{
-		// 					entity.Lyric{
-		// 						Text: []entity.Text{
-		// 							entity.Text{
-		// 								Value: "Boom",
-		// 							},
-		// 						},
-		// 						Syllabic: musicxml.LyricSyllabicTypeSingle,
-		// 					},
-		// 				},
-		// 			},
-		// 			&entity.NoteRenderer{
-		// 				PositionX: 140,
-		// 				Lyric: []entity.Lyric{
-		// 					entity.Lyric{
-		// 						Text: []entity.Text{
-		// 							entity.Text{
-		// 								Value: "Sha",
-		// 							},
-		// 						},
-		// 						Syllabic: musicxml.LyricSyllabicTypeBegin,
-		// 					},
-		// 				},
-		// 			},
-		// 			&entity.NoteRenderer{
-		// 				PositionX: 171,
-		// 				Lyric: []entity.Lyric{
-		// 					entity.Lyric{
-		// 						Text: []entity.Text{
-		// 							entity.Text{
-		// 								Value: "ka",
-		// 							},
-		// 						},
-		// 						Syllabic: musicxml.LyricSyllabicTypeMiddle,
-		// 					},
-		// 				},
-		// 			},
-		// 			&entity.NoteRenderer{
-		// 				PositionX: 198,
-		// 				Lyric: []entity.Lyric{
-		// 					entity.Lyric{
-		// 						Text: []entity.Text{
-		// 							entity.Text{
-		// 								Value: "la",
-		// 							},
-		// 						},
-		// 						Syllabic: musicxml.LyricSyllabicTypeMiddle,
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
 		{
 			name: "Positive case. middle-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				writerMock := canvas.NewMockWriter(ctrl)
 				canv.EXPECT().Group("hyphens")
-				canv.EXPECT().Writer().Return(writerMock)
-				writerMock.EXPECT().Write([]byte(`<text x="43.2050" y="25">-</text>`))
+				canv.EXPECT().TextUnescaped(43.2050, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
 				measure: []*entity.NoteRenderer{
-					&entity.NoteRenderer{
+					{
 						PositionX: 25,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "ka",
-									},
+									{Value: "ka"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeMiddle,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 56,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "sum",
-									},
+									{Value: "sum"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeEnd,
 							},
 						},
 					},
-					&entity.NoteRenderer{
+					{
 						PositionX: 96,
 						Lyric: []entity.Lyric{
-							entity.Lyric{
+							{
 								Text: []entity.Text{
-									entity.Text{
-										Value: "Boom",
-									},
+									{Value: "Boom"},
 								},
 								Syllabic: musicxml.LyricSyllabicTypeSingle,
 							},

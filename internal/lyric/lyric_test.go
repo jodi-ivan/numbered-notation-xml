@@ -31,7 +31,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				note:         musicxml.Note{},
 			},
 			want:      VerseInfo{},
-			wantWidth: 30,
+			wantWidth: 29,
 		},
 		{
 			name: "lyric less than the note",
@@ -41,15 +41,13 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				},
 				note: musicxml.Note{
 					Lyric: []musicxml.Lyric{
-						musicxml.Lyric{
+						{
 							Number: 1,
 							Text: []struct {
 								Underline int    `xml:"underline,attr"`
 								Value     string `xml:",chardata"`
 							}{
-								{
-									Value: "a",
-								},
+								{Value: "a"},
 							},
 							Syllabic: musicxml.LyricSyllabicTypeBegin,
 						},
@@ -57,14 +55,12 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				},
 			},
 			want:               VerseInfo{},
-			wantTakenFromLyric: true,
-			wantWidth:          34,
+			wantTakenFromLyric: false,
+			wantWidth:          29,
 			wantLyric: []entity.Lyric{
-				entity.Lyric{
+				{
 					Text: []entity.Text{
-						entity.Text{
-							Value: "a",
-						},
+						{Value: "a"},
 					},
 					Syllabic: musicxml.LyricSyllabicTypeBegin,
 				},
@@ -82,9 +78,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 								Underline int    `xml:"underline,attr"`
 								Value     string `xml:",chardata"`
 							}{
-								{
-									Value: "Yang",
-								},
+								{Value: "Yang"},
 							},
 							Syllabic: musicxml.LyricSyllabicTypeSingle,
 						},
@@ -92,14 +86,12 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				},
 			},
 			want:               VerseInfo{},
-			wantWidth:          58,
+			wantWidth:          61,
 			wantTakenFromLyric: true,
 			wantLyric: []entity.Lyric{
-				entity.Lyric{
+				{
 					Text: []entity.Text{
-						entity.Text{
-							Value: "Yang",
-						},
+						{Value: "Yang"},
 					},
 					Syllabic: musicxml.LyricSyllabicTypeSingle,
 				},

@@ -696,7 +696,7 @@ func TestTimeSignature_GetHumanized(t *testing.T) {
 					},
 				},
 			},
-			want: "6 (2 x 3) ketuk",
+			want: "6 ketuk (2 x 3)",
 		},
 		{
 			name: "multi",

@@ -25,19 +25,19 @@ func Test_lyricInteractor_RenderElision(t *testing.T) {
 		{
 			name: "no underline",
 			text: []entity.Text{
-				entity.Text{Value: "unit"},
-				entity.Text{Value: "test"},
+				{Value: "unit"},
+				{Value: "test"},
 			},
 		},
 		{
-			name: "no underline",
+			name: "has underline",
 			text: []entity.Text{
-				entity.Text{Value: "unit"},
-				entity.Text{Value: "test", Underline: 1},
+				{Value: "unit"},
+				{Value: "test", Underline: 1},
 			},
 			initCanvas: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Qbez(107, 128, 119, 134, 131, 128, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(107, 102, 119, 108, 131, 102, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
 				return canv
 			},
 			pos: entity.Coordinate{

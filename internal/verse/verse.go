@@ -15,33 +15,47 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-var li = lyric.NewLyric()
+type Verse interface {
+	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo
+}
 
-func elisionPosition(p LyricPartVerse, y int, lineText, wordPart string) [2]entity.Coordinate {
+type verseInteractor struct {
+	Footnote footnote.Footnote
+	Lyric    lyric.Lyric
+}
+
+func New(f footnote.Footnote, l lyric.Lyric) Verse {
+	return &verseInteractor{
+		Footnote: f,
+		Lyric:    l,
+	}
+}
+
+func (v *verseInteractor) elisionPosition(p LyricPartVerse, y int, lineText, wordPart string) [2]entity.Coordinate {
 	x1 := float64(0)
 	x2 := float64(0)
-	for _, v := range p.Breakdown {
-		if v.Underline {
-			x2 = x1 + li.CalculateLyricWidth(v.Text)
-			if len(v.Text) > 0 {
-				x2 -= (li.CalculateLyricWidth(string(v.Text[len(v.Text)-1])) / 2)
+	for _, b := range p.Breakdown {
+		if b.Underline {
+			x2 = x1 + v.Lyric.CalculateLyricWidth(b.Text)
+			if len(b.Text) > 0 {
+				x2 -= (v.Lyric.CalculateLyricWidth(string(b.Text[len(b.Text)-1])) / 2)
 			}
 
 			break
 		} else {
-			x1 += li.CalculateLyricWidth(v.Text)
+			x1 += v.Lyric.CalculateLyricWidth(b.Text)
 
 		}
 	}
 
-	startPosition := li.CalculateLyricWidth(lineText) + li.CalculateLyricWidth(wordPart)
+	startPosition := v.Lyric.CalculateLyricWidth(lineText) + v.Lyric.CalculateLyricWidth(wordPart)
 	return [2]entity.Coordinate{
 		entity.NewCoordinate(startPosition+x1, float64(y)),
 		entity.NewCoordinate(startPosition+x2, float64(y)),
 	}
 }
 
-func parse(y int, verses map[int]repository.HymnVerse) ParsedVerseWithInfo {
+func (v *verseInteractor) parse(y int, verses map[int]repository.HymnVerse) ParsedVerseWithInfo {
 
 	result := ParsedVerseWithInfo{
 		Verses:        map[int]ParsedVerse{},
@@ -84,14 +98,14 @@ func parse(y int, verses map[int]repository.HymnVerse) ParsedVerseWithInfo {
 				wordPart := ""
 				for _, p := range word.Breakdown {
 					if p.Combine {
-						elisionPos := elisionPosition(p, iLine, lineText, wordPart)
+						elisionPos := v.elisionPosition(p, iLine, lineText, wordPart)
 						parsedVerse.ElisionMarks = append(parsedVerse.ElisionMarks, elisionPos)
 					}
 					wordPart = wordPart + p.Text
 				}
 				lineText = lineText + " " + word.Word
 			}
-			result.MaxLineWidth = math.Max(result.MaxLineWidth, li.CalculateLyricWidth(lineText))
+			result.MaxLineWidth = math.Max(result.MaxLineWidth, v.Lyric.CalculateLyricWidth(lineText))
 			if verse.Col.Int16 == 2 {
 				result.MaxRightPos = math.Max(result.MaxRightPos, result.MaxLineWidth)
 				result.IsMultiColumn = result.IsMultiColumn || true
@@ -104,10 +118,10 @@ func parse(y int, verses map[int]repository.HymnVerse) ParsedVerseWithInfo {
 	return result
 }
 
-func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
+func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
-	parsedVerse := parse(y, verses)
+	parsedVerse := v.parse(y, verses)
 
 	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (parsedVerse.MaxLineWidth / 2)))
 	x := defaultX
@@ -137,7 +151,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]
 		}
 
 		prefixNum := fmt.Sprintf("%d. ", i+1)
-		canv.Text(x-5-int(li.CalculateLyricWidth(prefixNum))+margin, y, prefixNum)
+		canv.Text(x-5-int(v.Lyric.CalculateLyricWidth(prefixNum))+margin, y, prefixNum)
 		for line, liveVerse := range currentVerse.Verse {
 			canv.Text(x+margin, y, liveVerse)
 			cursor := footnote.VerseLineCursor{
@@ -146,7 +160,7 @@ func RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]
 				Leftmargin: margin,
 				LineText:   liveVerse,
 			}
-			footnote.AssignFootnotesMarker(canv, entity.NewCoordinate(float64(x), float64(y)), defaultX, cursor, verseFootnote)
+			v.Footnote.AssignFootnotesMarker(canv, entity.NewCoordinate(float64(x), float64(y)), defaultX, cursor, verseFootnote)
 			y += LINE_DISTANCE
 		}
 

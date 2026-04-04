@@ -9,7 +9,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderMusicFootnotes(ctx context.Context, canv canvas.Canvas, metadata *repository.HymnMetadata, y int) {
+func (fi *footnoteInteractor) RenderMusicFootnotes(ctx context.Context, canv canvas.Canvas, metadata *repository.HymnMetadata, y int) {
 	if !metadata.Footnotes.Valid {
 		return
 	}

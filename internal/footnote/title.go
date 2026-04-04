@@ -7,7 +7,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderTitleFootnotes(canv canvas.Canvas, y int, metadata repository.HymnData) {
+func (fi *footnoteInteractor) RenderTitleFootnotes(canv canvas.Canvas, y int, metadata repository.HymnData) {
 	if !metadata.TitleFootnotes.Valid && metadata.IsForKids.Int16 != 1 {
 		return
 	}

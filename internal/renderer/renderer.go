@@ -31,6 +31,7 @@ type rendererInteractor struct {
 	Credits  credits.Credits
 	Footnote footnote.Footnote
 	Verse    verse.Verse
+	Header   header.Header
 }
 
 func NewRenderer() Renderer {
@@ -42,6 +43,7 @@ func NewRenderer() Renderer {
 		Credits:  credits.NewCredits(),
 		Footnote: f,
 		Verse:    verse.New(f, l),
+		Header:   header.NewHeader(l),
 	}
 }
 
@@ -54,8 +56,8 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	keySignature := keysig.NewKeySignature(ctx, music.Part.Measures)
 	timeSignature := timesig.NewTimeSignatures(ctx, music.Part.Measures)
 
-	header.RenderSheetHeader(ctx, canv, music.Credit, metadata)
-	header.RenderSignatures(ctx, canv, keySignature, timeSignature)
+	ir.Header.RenderSheetHeader(ctx, canv, music.Credit, metadata)
+	ir.Header.RenderKeyandTimeSignatures(ctx, canv, keySignature, timeSignature)
 
 	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature)
 

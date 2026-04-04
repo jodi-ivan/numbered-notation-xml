@@ -6,16 +6,31 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-var ir = lyric.NewLyric()
+type Header interface {
+	RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata)
+	RenderKeyandTimeSignatures(ctx context.Context, canv canvas.Canvas, key keysig.KeySignature, timeSignature timesig.TimeSignature)
+}
 
-func renderTitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
+type headerInteractor struct {
+	Lyric lyric.Lyric
+}
+
+func NewHeader(l lyric.Lyric) Header {
+	return &headerInteractor{
+		Lyric: l,
+	}
+}
+
+func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
 	relativeY := constant.TITLE_Y_POS
 
 	workTitle := ""
@@ -39,35 +54,39 @@ func renderTitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Cred
 				FOR_KIDS_ELMNT)
 		}
 	}
-	titleWidth := ir.CalculateLyricWidth(workTitle)
+	titleWidth := hi.Lyric.CalculateLyricWidth(workTitle)
 	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
 	canv.Text(int(titleX), relativeY, workTitle)
 
 }
 
-func renderSubtitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
+func (hi *headerInteractor) renderSubtitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
 	relativeY := constant.TITLE_Y_POS
 
 	subtitle := ""
 	for _, v := range credit {
-		if v.Type == musicxml.CreditTypeSubtitle && v.Words != EMPTY_SUBTITLE {
+		if v.Type == musicxml.CreditTypeSubtitle && (!strings.EqualFold(v.Words, EMPTY_SUBTITLE) || v.Words == "") {
 			subtitle = v.Words
 		}
 	}
 
-	if subtitle != "" {
-		num := 0.0
-		if metadata != nil {
-			num = ir.CalculateLyricWidth(fmt.Sprintf("%d. ", metadata.Number)) / 2
-		}
-		subtitleWidth := (utils.CalculateSecondaryLyricWidth(subtitle) * SUBTITLE_TO_CREDITS_SIZE_RATIO)
-		subtitleX := (constant.LAYOUT_WIDTH / 2) - (subtitleWidth * 0.5)
-		canv.Text(int(subtitleX+num), relativeY+SUBTITLE_Y_POS, subtitle, SUBTITLE_ATTR)
+	if subtitle == "" {
+		return
 	}
+
+	num := 0.0
+	if metadata != nil {
+		num = hi.Lyric.CalculateLyricWidth(fmt.Sprintf("%d. ", metadata.Number)) / 2
+		if metadata.Variant.Valid {
+			num = hi.Lyric.CalculateLyricWidth(fmt.Sprintf("%d%s. ", metadata.Number, metadata.Variant.String)) / 2
+		}
+	}
+	subtitleWidth := (utils.CalculateSecondaryLyricWidth(subtitle) * SUBTITLE_TO_CREDITS_SIZE_RATIO)
+	subtitleX := (constant.LAYOUT_WIDTH / 2) - (subtitleWidth * 0.5)
+	canv.Text(int(subtitleX+num), relativeY+SUBTITLE_Y_POS, subtitle, SUBTITLE_ATTR)
 }
 
-func RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
-	renderTitle(ctx, canv, credit, metadata)
-	renderSubtitle(ctx, canv, credit, metadata)
-
+func (hi *headerInteractor) RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
+	hi.renderTitle(ctx, canv, credit, metadata)
+	hi.renderSubtitle(ctx, canv, credit, metadata)
 }

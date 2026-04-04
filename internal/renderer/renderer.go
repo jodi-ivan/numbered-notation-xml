@@ -26,16 +26,22 @@ type Renderer interface {
 }
 
 type rendererInteractor struct {
-	Lyric   lyric.Lyric
-	Staff   staff.Staff
-	Credits credits.Credits
+	Lyric    lyric.Lyric
+	Staff    staff.Staff
+	Credits  credits.Credits
+	Footnote footnote.Footnote
+	Verse    verse.Verse
 }
 
 func NewRenderer() Renderer {
+	l := lyric.NewLyric()
+	f := footnote.New(l)
 	return &rendererInteractor{
-		Lyric:   lyric.NewLyric(),
-		Staff:   staff.NewStaff(),
-		Credits: credits.NewCredits(),
+		Lyric:    l,
+		Staff:    staff.NewStaff(),
+		Credits:  credits.NewCredits(),
+		Footnote: f,
+		Verse:    verse.New(f, l),
 	}
 }
 
@@ -54,15 +60,15 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature)
 
 	if metadata != nil {
-		footnote.RenderMusicFootnotes(ctx, canv, metadata, relativeY)
-		verseInfo := verse.RenderVerse(ctx, canv, relativeY, metadata.Verse, metadata.VerseFootNotes)
+		ir.Footnote.RenderMusicFootnotes(ctx, canv, metadata, relativeY)
+		verseInfo := ir.Verse.RenderVerse(ctx, canv, relativeY, metadata.Verse, metadata.VerseFootNotes)
 
 		if verseInfo.MarginBottom != 0 {
 			relativeY = verseInfo.MarginBottom
 		}
-		footnote.RenderVerseFootnotes(canv, &relativeY, metadata.VerseFootNotes)
+		ir.Footnote.RenderVerseFootnotes(canv, &relativeY, metadata.VerseFootNotes)
 		ir.Credits.RenderCredits(ctx, canv, &relativeY, metadata.HymnData)
-		footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
+		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
 
 	}
 	canv.End()

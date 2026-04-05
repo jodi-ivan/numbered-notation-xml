@@ -2,10 +2,10 @@ package staff
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -13,395 +13,263 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/stretchr/testify/assert"
 )
 
-func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
+func Test_alignJustify(t *testing.T) {
+	count := func() *int {
+		c := 10
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	type args struct {
-		y            int
-		noteRenderer [][]*entity.NoteRenderer
+		return &c
 	}
 	tests := []struct {
-		name       string
-		canv       func(ctrl *gomock.Controller) *canvas.MockCanvas
-		interactor func(ctrl *gomock.Controller) *renderStaffAlign
-		args       args
+		name string // description of this test case
+		// Named input parameters for target function.
+		measure      []*entity.NoteRenderer
+		y            int
+		addedSpace   float64
+		count        *int
+		measureIndex int
+		lastMeasure  bool
+		wantMeasures []*entity.NoteRenderer
+		wantCount    int
 	}{
 		{
-			name: "default",
-			args: args{
-				y: 195,
-				noteRenderer: [][]*entity.NoteRenderer{
-					[]*entity.NoteRenderer{
-						&entity.NoteRenderer{
-							MeasureNumber: 1,
-							PositionX:     50,
-							PositionY:     195,
-							Note:          2,
-							NoteLength:    musicxml.NoteLengthEighth,
-							Width:         17,
-							Beam: map[int]entity.Beam{
-								1: entity.Beam{
-									Number: 1,
-									Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-								},
-							},
-							Lyric: []entity.Lyric{
-								entity.Lyric{
-									Text: []entity.Text{
-										entity.Text{
-											Value: "Jo",
-										},
-									},
-									Syllabic: musicxml.LyricSyllabicTypeBegin,
-								},
-							},
-							IsLengthTakenFromLyric: true,
-						},
-						&entity.NoteRenderer{
-							PositionX:  67,
-							PositionY:  195,
-							Note:       3,
-							NoteLength: musicxml.NoteLengthEighth,
-							Width:      34,
-							Beam: map[int]entity.Beam{
-								1: entity.Beam{
-									Number: 1,
-									Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-								},
-							},
-							Lyric: []entity.Lyric{
-								entity.Lyric{
-									Text: []entity.Text{
-										entity.Text{
-											Value: "dy",
-										},
-									},
-									Syllabic: musicxml.LyricSyllabicTypeEnd,
-								},
-							},
-							MeasureNumber:          1,
-							IndexPosition:          1,
-							IsLengthTakenFromLyric: true,
-						},
-						&entity.NoteRenderer{
-							PositionX:  101,
-							PositionY:  195,
-							Note:       4,
-							NoteLength: musicxml.NoteLengthEighth,
-							Width:      34,
-							Lyric: []entity.Lyric{
-								entity.Lyric{
-									Text: []entity.Text{
-										entity.Text{
-											Value: "Lum",
-										},
-									},
-									Syllabic: musicxml.LyricSyllabicTypeBegin,
-								},
-							},
-							Beam: map[int]entity.Beam{
-								1: entity.Beam{
-									Number: 1,
-									Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-								},
-							},
-							MeasureNumber:          1,
-							IsLengthTakenFromLyric: true,
-							IndexPosition:          2,
-						},
-						&entity.NoteRenderer{
-							PositionX:  135,
-							PositionY:  195,
-							Note:       5,
-							NoteLength: musicxml.NoteLengthEighth,
-							Width:      29,
-							Beam: map[int]entity.Beam{
-								1: entity.Beam{
-									Number: 1,
-									Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-								},
-							},
-							Lyric: []entity.Lyric{
-								entity.Lyric{
-									Text: []entity.Text{
-										entity.Text{
-											Value: "ban",
-										},
-									},
-									Syllabic: musicxml.LyricSyllabicTypeMiddle,
-								},
-							},
-							IsLengthTakenFromLyric: true,
-							MeasureNumber:          1,
-							IndexPosition:          3,
-						},
-						&entity.NoteRenderer{
-							PositionX:  110,
-							PositionY:  195,
-							Note:       3,
-							NoteLength: musicxml.NoteLengthQuarter,
-							Width:      17,
-							Beam:       map[int]entity.Beam{},
-							Lyric: []entity.Lyric{
-								entity.Lyric{
-									Text: []entity.Text{
-										entity.Text{
-											Value: "to",
-										},
-									},
-									Syllabic: musicxml.LyricSyllabicTypeMiddle,
-								},
-							},
-							IsLengthTakenFromLyric: true,
-							MeasureNumber:          1,
-							IndexPosition:          4,
-						},
-						&entity.NoteRenderer{
-							PositionX:  181,
-							PositionY:  195,
-							Note:       1,
-							NoteLength: musicxml.NoteLengthEighth,
-							Width:      19,
-							Beam: map[int]entity.Beam{
-								1: entity.Beam{
-									Number: 1,
-									Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-								},
-							},
-							Lyric: []entity.Lyric{
-								entity.Lyric{
-									Text: []entity.Text{
-										entity.Text{
-											Value: "ru",
-										},
-									},
-									Syllabic: musicxml.LyricSyllabicTypeMiddle,
-								},
-							},
-							IsLengthTakenFromLyric: true,
-							MeasureNumber:          1,
-							IndexPosition:          5,
-						},
-						&entity.NoteRenderer{
-							PositionX:  200,
-							PositionY:  195,
-							Note:       2,
-							NoteLength: musicxml.NoteLengthEighth,
-							Width:      35,
-							Beam: map[int]entity.Beam{
-								1: entity.Beam{
-									Number: 1,
-									Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-								},
-							},
-							Tie: &entity.Slur{
-								Number: 2,
-								Type:   musicxml.NoteSlurTypeStart,
-							},
-							Lyric: []entity.Lyric{
-								entity.Lyric{
-									Text: []entity.Text{
-										entity.Text{
-											Value: "an",
-										},
-									},
-									Syllabic: musicxml.LyricSyllabicTypeEnd,
-								},
-							},
-							MeasureNumber:          1,
-							IsLengthTakenFromLyric: true,
-							IndexPosition:          6,
-						},
-						&entity.NoteRenderer{
-							PositionX: 235,
-							PositionY: 195,
-							Barline: &musicxml.Barline{
-								BarStyle: musicxml.BarLineStyleRegular,
-							},
-							MeasureNumber: 1,
-						},
-						&entity.NoteRenderer{
-							PositionX:  250,
-							PositionY:  195,
-							Note:       2,
-							NoteLength: musicxml.NoteLengthWhole,
-							Width:      15,
-							Beam:       map[int]entity.Beam{},
-							Tie: &entity.Slur{
-								Number: 2,
-								Type:   musicxml.NoteSlurTypeStop,
-							},
-							MeasureNumber: 2,
-						},
-						&entity.NoteRenderer{
-							PositionX:     270,
-							PositionY:     195,
-							IsDotted:      true,
-							NoteLength:    musicxml.NoteLengthQuarter,
-							Width:         15,
-							Beam:          map[int]entity.Beam{},
-							MeasureNumber: 2,
-							IndexPosition: 1,
-						},
-						&entity.NoteRenderer{
-							PositionX:     290,
-							PositionY:     195,
-							IsDotted:      true,
-							NoteLength:    musicxml.NoteLengthQuarter,
-							Width:         15,
-							Beam:          map[int]entity.Beam{},
-							MeasureNumber: 2,
-							IndexPosition: 2,
-						},
-						&entity.NoteRenderer{
-							PositionX:     310,
-							PositionY:     195,
-							IsDotted:      true,
-							NoteLength:    musicxml.NoteLengthQuarter,
-							Width:         15,
-							Beam:          map[int]entity.Beam{},
-							MeasureNumber: 2,
-							IndexPosition: 3,
-						},
-						&entity.NoteRenderer{
-							PositionX:  325,
-							PositionY:  195,
-							NoteLength: musicxml.NoteLengthQuarter,
-							Barline: &musicxml.Barline{
-								Location: musicxml.BarlineLocationRight,
-								BarStyle: musicxml.BarLineStyleLightHeavy,
-							},
-							Beam:          map[int]entity.Beam{},
-							MeasureNumber: 2,
-						},
-					},
-				},
+			name:         "First measure",
+			y:            100,
+			addedSpace:   8,
+			count:        count(),
+			wantCount:    14,
+			measureIndex: 0,
+			measure: []*entity.NoteRenderer{
+				{PositionX: 50},
+				{PositionX: 55, IsDotted: true}, {PositionX: 60, IsDotted: true}, {PositionX: 65, IsDotted: true},
+				{PositionX: 70, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
 			},
-			canv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(ctrl)
-				canv.EXPECT().Group("staff")
-				canv.EXPECT().Group("measure-align")
-				canv.EXPECT().Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
-
-				canv.EXPECT().Text(int(50), int(195), "2")
-				canv.EXPECT().Text(int(97), int(195), "3")
-				canv.EXPECT().Text(int(162), int(195), "4")
-				canv.EXPECT().Text(int(227), int(195), "5")
-				canv.EXPECT().Text(int(232), int(195), "3")
-				canv.EXPECT().Text(int(334), int(195), "1")
-				canv.EXPECT().Text(int(384), int(195), "2")
-				canv.EXPECT().Text(int(495), int(195), "2")
-
-				canv.EXPECT().Text(int(538), int(195), ".")
-				canv.EXPECT().Text(int(581), int(195), ".")
-				canv.EXPECT().Text(int(624), int(195), ".")
-
-				canv.EXPECT().Text(int(50), int(220), "Jo")
-				canv.EXPECT().Text(int(97), int(220), "dy")
-				canv.EXPECT().Text(int(162), int(220), "Lum")
-				canv.EXPECT().Text(int(227), int(220), "ban")
-				canv.EXPECT().Text(int(232), int(220), "to")
-				canv.EXPECT().Text(int(334), int(220), "ru")
-				canv.EXPECT().Text(int(384), int(220), "an")
-
-				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
-				// canv.EXPECT().Group("class='staff-text'")
-
-				canv.EXPECT().Gend().Times(4)
-				return canv
+			wantMeasures: []*entity.NoteRenderer{
+				{PositionX: 50, PositionY: 100},
+				{PositionX: 79, PositionY: 100, IsDotted: true}, {PositionX: 108, PositionY: 100, IsDotted: true}, {PositionX: 137, PositionY: 100, IsDotted: true},
+				{PositionX: 169, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
 			},
-			interactor: func(ctrl *gomock.Controller) *renderStaffAlign {
-				barlineMock := barline.NewMockBarline(ctrl)
-				numberedMock := numbered.NewMockNumbered(ctrl)
-				rhythmMock := rhythm.NewMockRhythm(ctrl)
-				lyricMock := lyric.NewMockLyric(ctrl)
-				res := &renderStaffAlign{
-					Barline:  barlineMock,
-					Numbered: numberedMock,
-					Rhythm:   rhythmMock,
-					Lyric:    lyricMock,
-				}
-
-				barlineMock.EXPECT().RenderBarline(gomock.Any(), gomock.Any(), musicxml.Barline{
-					BarStyle: musicxml.BarLineStyleRegular,
-				}, entity.Coordinate{
-					X: 450,
-					Y: 195,
-				})
-				barlineMock.EXPECT().RenderBarline(gomock.Any(), gomock.Any(), musicxml.Barline{
-					Location: musicxml.BarlineLocationRight,
-					BarStyle: musicxml.BarLineStyleLightHeavy,
-				}, entity.Coordinate{
-					X: 670,
-					Y: 195,
-				})
-
-				numberedMock.EXPECT().RenderOctave(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-				numberedMock.EXPECT().RenderStrikethrough(gomock.Any(), gomock.Any(), false, gomock.Any()).AnyTimes()
-
-				rhythmMock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
-				rhythmMock.EXPECT().RenderSlurTies(gomock.Any(), gomock.Any(), IsEqual([]*entity.NoteRenderer{
-					&entity.NoteRenderer{
-						PositionX:  384,
-						PositionY:  195,
-						Note:       2,
-						NoteLength: musicxml.NoteLengthEighth,
-						Width:      35,
-						Beam: map[int]entity.Beam{
-							1: entity.Beam{
-								Number: 1,
-								Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
-							},
-						},
-						Tie: &entity.Slur{
-							Number: 2,
-							Type:   musicxml.NoteSlurTypeStart,
-						},
-						Lyric: []entity.Lyric{
-							entity.Lyric{
-								Text: []entity.Text{
-									entity.Text{
-										Value: "an",
-									},
-								},
-								Syllabic: musicxml.LyricSyllabicTypeEnd,
-							},
-						},
-						MeasureNumber:          1,
-						IsLengthTakenFromLyric: true,
-						IndexPosition:          6,
-					},
-					&entity.NoteRenderer{
-						PositionX:  495,
-						PositionY:  195,
-						Note:       2,
-						NoteLength: musicxml.NoteLengthWhole,
-						Width:      15,
-						Beam:       map[int]entity.Beam{},
-						Tie: &entity.Slur{
-							Number: 2,
-							Type:   musicxml.NoteSlurTypeStop,
-						},
-						MeasureNumber: 2,
-					},
-				}, t), float64(670))
-				lyricMock.EXPECT().RenderHypen(gomock.Any(), gomock.Any(), gomock.Any())
-				lyricMock.EXPECT().CalculateMarginLeft(gomock.Any()).Return(float64(0))
-				lyricMock.EXPECT().CalculateLyricWidth(gomock.Any()).Return(float64(8)).AnyTimes()
-				lyricMock.EXPECT().RenderElision(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-				return res
-
+		},
+		{
+			name:         "Last measure",
+			y:            100,
+			addedSpace:   8,
+			count:        count(),
+			wantCount:    14,
+			measureIndex: 1,
+			lastMeasure:  true,
+			measure: []*entity.NoteRenderer{
+				{PositionX: 50},
+				{PositionX: 55, IsDotted: true}, {PositionX: 60, IsDotted: true}, {PositionX: 65, IsDotted: true},
+				{PositionX: 70, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
+			},
+			wantMeasures: []*entity.NoteRenderer{
+				{PositionX: 130, PositionY: 100},
+				{PositionX: 115, PositionY: 100, IsDotted: true}, {PositionX: 100, PositionY: 100, IsDotted: true}, {PositionX: 85, PositionY: 100, IsDotted: true},
+				{PositionX: 70, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			(tt.interactor(ctrl)).RenderWithAlign(context.Background(), tt.canv(ctrl), tt.args.y, timesig.TimeSignature{}, tt.args.noteRenderer)
+			alignJustify(tt.measure, tt.y, tt.addedSpace, tt.count, tt.measureIndex, tt.lastMeasure)
+
+			assert.Equal(t, tt.wantMeasures, tt.measure, "alignJustify")
+			assert.Equal(t, tt.wantCount, *tt.count, "Count aligned")
+		})
+	}
+}
+
+func Test_renderStaffAlign_getAddedSpace(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rightAlignOffset := func() *int {
+		rao := 0
+
+		return &rao
+	}
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		lastNote   *entity.NoteRenderer
+		lyricMock  func(c *gomock.Controller) *lyric.MockLyric
+		totalNotes int
+		want       float64
+		want2      int
+
+		rightAlignOffset      *int
+		wantRrightAlignOffset int
+	}{
+		{
+			name:             "last note is barline",
+			rightAlignOffset: rightAlignOffset(),
+			lastNote: &entity.NoteRenderer{
+				PositionX: 650,
+				Barline: &musicxml.Barline{
+					BarStyle: musicxml.BarLineStyleHeavyLight,
+				},
+			},
+			totalNotes: 8,
+
+			want:  1.5375,
+			want2: 670,
+
+			wantRrightAlignOffset: 0,
+		},
+		{
+			name:             "last note is lyric",
+			rightAlignOffset: rightAlignOffset(),
+			lastNote: &entity.NoteRenderer{
+				PositionX: 650,
+				Lyric: []entity.Lyric{
+					{Text: []entity.Text{{Value: "unit"}}},
+					{Text: []entity.Text{{Value: "testing"}}},
+				},
+			},
+			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+				li := lyric.NewMockLyric(c)
+				li.EXPECT().CalculateOverallWidth([]entity.Lyric{
+					{Text: []entity.Text{{Value: "unit"}}},
+					{Text: []entity.Text{{Value: "testing"}}},
+				}).Return(10.0)
+				return li
+			},
+			totalNotes: 8,
+			want:       1.25,
+			want2:      670,
+
+			wantRrightAlignOffset: 5,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var rsa renderStaffAlign
+			if tt.lyricMock != nil {
+				rsa.Lyric = tt.lyricMock(ctrl)
+			}
+			got, got2 := rsa.getAddedSpace(tt.lastNote, tt.rightAlignOffset, tt.totalNotes)
+
+			assert.Equal(t, tt.want, got, "renderStaffAlign_getAddedSpace --> added")
+			assert.Equal(t, tt.want2, got2, "renderStaffAlign_getAddedSpace --> lastPos")
+			assert.Equal(t, tt.wantRrightAlignOffset, *tt.rightAlignOffset, "renderStaffAlign_getAddedSpace --> &(rightAlignOffset)")
+
+		})
+	}
+}
+
+func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	measures := []musicxml.Measure{
+		{
+			Number: 1,
+			Attribute: &musicxml.Attribute{
+				Key: &musicxml.KeySignature{
+					Fifth: 2, // D major
+				},
+				Time: &struct {
+					Beats    int `xml:"beats"`
+					BeatType int `xml:"beat-type"`
+				}{
+					Beats:    4,
+					BeatType: 4,
+				},
+			},
+		},
+	}
+
+	expectMeasures := map[int][]*entity.NoteRenderer{
+		1: {
+			{MeasureNumber: 1, PositionX: 50, PositionY: 100},
+			{MeasureNumber: 1, PositionX: 100, PositionY: 100, IsDotted: true}, {MeasureNumber: 1, PositionX: 150, PositionY: 100, IsDotted: true}, {MeasureNumber: 1, PositionX: 200, PositionY: 100, IsDotted: true},
+			{MeasureNumber: 1, PositionX: 250, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
+			{MeasureNumber: 1, PositionX: 307, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}},
+		},
+		2: {
+			{MeasureNumber: 2, PositionX: 358, PositionY: 100},
+			{MeasureNumber: 2, PositionX: 408, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 458, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 508, PositionY: 100, IsDotted: true},
+			{MeasureNumber: 2, PositionX: 559, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
+			{MeasureNumber: 2, PositionX: 674, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleHeavyLight}},
+		},
+	}
+
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		canv         func(c *gomock.Controller) *canvas.MockCanvas
+		numberedMock func(c *gomock.Controller) *numbered.MockNumbered
+		rhythmMock   func(c *gomock.Controller) *rhythm.MockRhythm
+		lyricMock    func(c *gomock.Controller) *lyric.MockLyric
+		y            int
+		ts           timesig.TimeSignature
+		noteRenderer [][]*entity.NoteRenderer
+	}{
+		{
+			name: "default",
+			noteRenderer: [][]*entity.NoteRenderer{
+				{
+					{MeasureNumber: 1, PositionX: 50},
+					{MeasureNumber: 1, PositionX: 55, IsDotted: true}, {MeasureNumber: 1, PositionX: 60, IsDotted: true}, {MeasureNumber: 1, PositionX: 65, IsDotted: true},
+					{MeasureNumber: 1, PositionX: 70, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
+					{MeasureNumber: 1, PositionX: 75, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}},
+				},
+				{
+					{MeasureNumber: 2, PositionX: 80},
+					{MeasureNumber: 2, PositionX: 85, IsDotted: true}, {MeasureNumber: 2, PositionX: 90, IsDotted: true}, {MeasureNumber: 2, PositionX: 95, IsDotted: true},
+					{MeasureNumber: 2, PositionX: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
+					{MeasureNumber: 2, PositionX: 105, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleHeavyLight}},
+				},
+			},
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+				canv.EXPECT().Group("class='staff'")
+				canv.EXPECT().Group("class='measure-align'", "number='1'")
+				canv.EXPECT().Group("class='measure-align'", "number='2'")
+				canv.EXPECT().Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'").Times(2)
+				canv.EXPECT().Gend().Times(5)
+				return canv
+			},
+			ts: timesig.NewTimeSignatures(context.Background(), measures),
+			y:  100,
+			numberedMock: func(c *gomock.Controller) *numbered.MockNumbered {
+				mock := numbered.NewMockNumbered(c)
+				mock.EXPECT().RenderNote(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[1]}, 100, 0)
+				mock.EXPECT().RenderNote(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[2]}, 100, 0)
+
+				return mock
+			},
+			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
+				mock := rhythm.NewMockRhythm(c)
+				ts := timesig.NewTimeSignatures(context.Background(), measures)
+				mock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[1]})
+				mock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[2]})
+				mock.EXPECT().RenderSlurTies(gomock.Any(), gomock.Any(),
+					testifyMatcher{expected: []*entity.NoteRenderer{}, t: t},
+					float64(670),
+				)
+
+				return mock
+			},
+			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+				mock := lyric.NewMockLyric(c)
+				mock.EXPECT().RenderLyrics(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[1]})
+				mock.EXPECT().RenderLyrics(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[2]})
+				mock.EXPECT().RenderHypen(gomock.Any(), gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
+				return mock
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// TODO: construct the receiver type.
+			var rsa renderStaffAlign
+			rsa.Numbered = tt.numberedMock(ctrl)
+			rsa.Rhythm = tt.rhythmMock(ctrl)
+			rsa.Lyric = tt.lyricMock(ctrl)
+			rsa.RenderWithAlign(context.Background(), tt.canv(ctrl), tt.y, tt.ts, tt.noteRenderer)
 		})
 	}
 }

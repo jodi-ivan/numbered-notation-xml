@@ -98,7 +98,7 @@ func (ts *TimeSignature) GetHumanized() string {
 	return ts.humanized
 }
 
-func (ts *TimeSignature) GetTimesignatureOnMeasure(ctx context.Context, measure int) Time {
+func (ts TimeSignature) GetTimesignatureOnMeasure(ctx context.Context, measure int) Time {
 	if len(ts.Signatures) == 1 {
 		return ts.Signatures[0]
 	}

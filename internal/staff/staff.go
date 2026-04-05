@@ -206,10 +206,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		} else {
 			alignMeasures = append(alignMeasures, filteredNotes...)
 
-			lastRightBarlinePosition = &entity.Coordinate{
-				X: float64(rightBarlineRenderer.PositionX),
-				Y: float64(y),
-			}
+			lastbarPos := entity.NewCoordinate(float64(rightBarlineRenderer.PositionX), float64(y))
+			lastRightBarlinePosition = &lastbarPos
+
 			x += barline.BARLINE_AFTER_SPACE
 			if measure.RightMeasureText != nil {
 				rightBarlineRenderer.MeasureText = []musicxml.MeasureText{

@@ -151,8 +151,7 @@ func TestProcessPreviousLines(t *testing.T) {
 			},
 			wantTotalNotes: 3,
 			wantStaffInfo: StaffInfo{
-				MarginLeft: constant.LAYOUT_INDENT_LENGTH,
-				Multiline:  true,
+				Multiline: true,
 				NextLineRenderer: []*entity.NoteRenderer{
 					&entity.NoteRenderer{},
 				},
@@ -165,9 +164,9 @@ func TestProcessPreviousLines(t *testing.T) {
 			if len(got) == tt.wantTotalNotes {
 				t.Errorf("ProcessPreviousLines() total notes = %v, want %v", got, tt.wantTotalNotes)
 			}
-			assert.Equal(t, got2.MarginBottom, tt.wantStaffInfo.MarginBottom, "Margin bottom")
-			assert.Equal(t, got2.MarginLeft, tt.wantStaffInfo.MarginLeft, "Margin left")
-			assert.Equal(t, len(got2.NextLineRenderer), len(tt.wantStaffInfo.NextLineRenderer), "staff info next line")
+			assert.Equal(t, tt.wantStaffInfo.MarginBottom, got2.MarginBottom, "Margin bottom")
+			assert.Equal(t, tt.wantStaffInfo.MarginLeft, got2.MarginLeft, "Margin left")
+			assert.Equal(t, len(tt.wantStaffInfo.NextLineRenderer), len(got2.NextLineRenderer), "staff info next line")
 
 		})
 	}

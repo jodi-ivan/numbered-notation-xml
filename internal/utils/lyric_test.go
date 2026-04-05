@@ -17,7 +17,7 @@ func TestCalculateSecondaryLyricWidth(t *testing.T) {
 		{
 			name: "all of them",
 			text: "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwYyZz1.2,3 4(5)67890",
-			want: 0,
+			want: 366.2,
 		},
 	}
 	for _, tt := range tests {

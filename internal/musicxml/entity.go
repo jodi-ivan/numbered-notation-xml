@@ -155,7 +155,6 @@ func (m *Measure) Build() error {
 				m.PrefixHeader[i-foundDirectionType] = initalDirection.Rehearshal.Value
 			}
 
-			// TODO: multuline stacking dashes
 			if len(d.DirectionType) == 2 && d.DirectionType[1].Dashes != nil || (len(d.DirectionType) == 1 && d.DirectionType[0].Dashes != nil) {
 				pos := 1
 				if d.DirectionType[0].Dashes != nil {
@@ -163,8 +162,7 @@ func (m *Measure) Build() error {
 				}
 				direction := d.DirectionType[pos].Dashes
 
-				_, ok := m.DirectionDashes[i]
-				if !ok {
+				if _, ok := m.DirectionDashes[i]; !ok {
 					if m.DirectionDashes == nil {
 						m.DirectionDashes = map[int]map[int]DirectionDashesType{}
 					}

@@ -346,6 +346,182 @@ func TestMeasure_Build(t *testing.T) {
 				NewLineIndex: map[int]bool{},
 			},
 		},
+		{
+			name: "Ritardando dashs",
+			m: func() *Measure {
+				return &Measure{
+					Appendix: []Element{
+						Element{
+							Content: pitch,
+						},
+						Element{
+							Content: `<direction-type><words>Rit.</words></direction-type><direction-type><dashes type="start" number="1" /> </direction-type>`,
+						},
+						Element{
+							Content: pitch,
+						},
+						Element{
+							Content: `<direction-type><dashes type="stop" number="1" /> </direction-type>`,
+						},
+					},
+				}
+			},
+			wantMeasure: &Measure{
+				Appendix: []Element{
+					Element{
+						Content: pitch,
+					},
+					Element{
+						Content: `<direction-type><words>Rit.</words></direction-type><direction-type><dashes type="start" number="1" /> </direction-type>`,
+					},
+					Element{
+						Content: pitch,
+					},
+					Element{
+						Content: `<direction-type><dashes type="stop" number="1" /> </direction-type>`,
+					},
+				},
+				Notes: []Note{
+					Note{
+						Pitch: struct {
+							Step   string `xml:"step"`
+							Octave int    `xml:"octave"`
+						}{Step: "G", Octave: 4},
+						Type: NoteLengthHalf,
+						Lyric: []Lyric{
+							Lyric{
+								Number:   1,
+								Syllabic: LyricSyllabicTypeEnd,
+								Text: []struct {
+									Underline int    `xml:"underline,attr"`
+									Value     string `xml:",chardata"`
+								}{
+									{
+										Value: "rap",
+									},
+								},
+							},
+						},
+					},
+					Note{
+						Pitch: struct {
+							Step   string `xml:"step"`
+							Octave int    `xml:"octave"`
+						}{Step: "G", Octave: 4},
+						Type: NoteLengthHalf,
+						MeasureText: []MeasureText{
+							{
+								Text: "Rit.",
+							},
+						},
+						Lyric: []Lyric{
+							Lyric{
+								Number:   1,
+								Syllabic: LyricSyllabicTypeEnd,
+								Text: []struct {
+									Underline int    `xml:"underline,attr"`
+									Value     string `xml:",chardata"`
+								}{
+									{
+										Value: "rap",
+									},
+								},
+							},
+						},
+					},
+				},
+				NewLineIndex: map[int]bool{},
+				DirectionDashes: map[int]map[int]DirectionDashesType{
+					1: map[int]DirectionDashesType{
+						1: DirectionDashesTypeStart,
+					},
+					3: map[int]DirectionDashesType{
+						1: DirectionDashesTypeStop,
+					},
+				},
+				RightMeasureText: &MeasureText{},
+			},
+		},
+		{
+			name: "Rehearsal",
+			m: func() *Measure {
+				return &Measure{
+					Appendix: []Element{
+						Element{
+							Content: `<direction-type><rehearsal>1</rehearsal></direction-type>`,
+						},
+						Element{
+							Content: pitch,
+						},
+						Element{
+							Content: pitch,
+						},
+					},
+				}
+			},
+			wantMeasure: &Measure{
+				Appendix: []Element{
+					Element{
+						Content: `<direction-type><rehearsal>1</rehearsal></direction-type>`,
+					},
+					Element{
+						Content: pitch,
+					},
+					Element{
+						Content: pitch,
+					},
+				},
+				Notes: []Note{
+					Note{
+						Pitch: struct {
+							Step   string `xml:"step"`
+							Octave int    `xml:"octave"`
+						}{Step: "G", Octave: 4},
+						Type:        NoteLengthHalf,
+						MeasureText: []MeasureText{{}},
+						Lyric: []Lyric{
+							Lyric{
+								Number:   1,
+								Syllabic: LyricSyllabicTypeEnd,
+								Text: []struct {
+									Underline int    `xml:"underline,attr"`
+									Value     string `xml:",chardata"`
+								}{
+									{
+										Value: "rap",
+									},
+								},
+							},
+						},
+					},
+					Note{
+						Pitch: struct {
+							Step   string `xml:"step"`
+							Octave int    `xml:"octave"`
+						}{Step: "G", Octave: 4},
+						Type: NoteLengthHalf,
+						Lyric: []Lyric{
+							Lyric{
+								Number:   1,
+								Syllabic: LyricSyllabicTypeEnd,
+								Text: []struct {
+									Underline int    `xml:"underline,attr"`
+									Value     string `xml:",chardata"`
+								}{
+									{
+										Value: "rap",
+									},
+								},
+							},
+						},
+					},
+				},
+				NewLineIndex: map[int]bool{},
+				PrefixHeader: map[int]string{
+					0: "1",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

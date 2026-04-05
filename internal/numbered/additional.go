@@ -6,7 +6,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
-func RendererFromAdditional(note musicxml.Note, header *entity.NoteRenderer, additionals []NoteLength) []*entity.NoteRenderer {
+func (ni *numberedInteractor) RendererFromAdditional(note musicxml.Note, header *entity.NoteRenderer, additionals []NoteLength) []*entity.NoteRenderer {
 
 	result := []*entity.NoteRenderer{}
 	for i, additional := range additionals {
@@ -34,7 +34,7 @@ func RendererFromAdditional(note musicxml.Note, header *entity.NoteRenderer, add
 				Number: 2,
 				Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 			}
-			fallthrough
+			fallthrough // fall through becasuse 16 notes is always 2 lines
 		case musicxml.NoteLengthEighth:
 			additionalNote.Beam[1] = entity.Beam{
 				Number: 1,

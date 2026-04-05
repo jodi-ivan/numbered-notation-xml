@@ -88,6 +88,20 @@ func (mr *MockNumberedMockRecorder) RenderStrikethrough(ctx, canv, strikethrough
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderStrikethrough", reflect.TypeOf((*MockNumbered)(nil).RenderStrikethrough), ctx, canv, strikethrough, pos)
 }
 
+// RendererFromAdditional mocks base method.
+func (m *MockNumbered) RendererFromAdditional(note musicxml.Note, header *entity.NoteRenderer, additionals []NoteLength) []*entity.NoteRenderer {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RendererFromAdditional", note, header, additionals)
+	ret0, _ := ret[0].([]*entity.NoteRenderer)
+	return ret0
+}
+
+// RendererFromAdditional indicates an expected call of RendererFromAdditional.
+func (mr *MockNumberedMockRecorder) RendererFromAdditional(note, header, additionals interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RendererFromAdditional", reflect.TypeOf((*MockNumbered)(nil).RendererFromAdditional), note, header, additionals)
+}
+
 // SplitNote mocks base method.
 func (m *MockNumbered) SplitNote(ctx context.Context, noteLength float64, ts timesig.Time, flag, next musicxml.NoteLength) []NoteLength {
 	m.ctrl.T.Helper()

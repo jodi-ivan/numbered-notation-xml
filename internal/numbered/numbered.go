@@ -28,6 +28,7 @@ type Numbered interface {
 	SplitNote(ctx context.Context, noteLength float64, ts timesig.Time, flag, next musicxml.NoteLength) []NoteLength
 	RenderStrikethrough(ctx context.Context, canv canvas.Canvas, strikethrough bool, pos entity.Coordinate)
 	RenderNote(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer, y, rightAlignOffset int)
+	RendererFromAdditional(note musicxml.Note, header *entity.NoteRenderer, additionals []NoteLength) []*entity.NoteRenderer
 }
 
 type numberedInteractor struct {
@@ -183,17 +184,17 @@ func (ni *numberedInteractor) RenderNote(ctx context.Context, canv canvas.Canvas
 			canv.Text(n.PositionX, y, ".")
 		} else if breathpause.IsBreathMark(n) {
 			xPos := n.PositionX
-			if n.PositionX-measure[notePos-1].PositionX <= 10 {
-				xPos += (8 + constant.LOWERCASE_LENGTH) / 3
+			if n.PositionX-measure[notePos-1].PositionX <= MIN_DISTANCE_BREATH {
+				xPos += (AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
 			}
-			canv.Text(xPos, y-10, ",")
+			canv.Text(xPos, y-Y_OFFSET_BREATH, ",")
 		} else if n.Barline != nil {
 			ni.Barline.RenderBarline(ctx, canv, *n.Barline,
 				entity.NewCoordinate(float64(n.PositionX), float64(y)))
 		} else {
 			if len(n.LeadingHeader) == 1 && unicode.IsNumber(rune(n.LeadingHeader[0])) {
-				canv.Circle(n.PositionX+4, n.PositionY-28, 6, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
-				canv.Text(n.PositionX+1, n.PositionY-25, n.LeadingHeader, `font-weight="600"`, `style="font-size:60%"`)
+				canv.Circle(n.PositionX+REHERSHAL_CIRCLE_X_OFFSET, n.PositionY-REHERSHAL_CIRCLE_Y_OFFSET, REHERSHAL_CIRCLE_RADIUS, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
+				canv.Text(n.PositionX+REHERSHAL_TEXT_X_OFFSET, n.PositionY-REHERSHAL_TEXT_Y_OFFSET, n.LeadingHeader, `font-weight="600"`, `style="font-size:60%"`)
 			}
 			xPos := n.PositionX
 			noteStr := fmt.Sprintf("%d", n.Note)

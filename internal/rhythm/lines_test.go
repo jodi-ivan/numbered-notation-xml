@@ -7,6 +7,8 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -352,6 +354,96 @@ func Test_rhythmInteractor_RenderSlurTies(t *testing.T) {
 			}
 			var ri rhythmInteractor
 			ri.RenderSlurTies(context.Background(), canv, tt.notes, tt.maxXPosition)
+		})
+	}
+}
+
+func Test_rhythmInteractor_RenderBeam(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		canv         func(*gomock.Controller) *canvas.MockCanvas
+		beamSplitter func(*gomock.Controller) *splitter.MockBeamSplitter
+
+		ts    timesig.TimeSignature
+		notes []*entity.NoteRenderer
+	}{
+		{
+			name: "no notes",
+			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
+				bs := splitter.NewMockBeamSplitter(c)
+				bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				return bs
+			},
+		},
+		{
+			name: "no beam",
+			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
+				bs := splitter.NewMockBeamSplitter(c)
+				bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				return bs
+			},
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+
+				return canv
+			},
+			notes: []*entity.NoteRenderer{
+				{},
+				{},
+			},
+		},
+		{
+			name: "has beam",
+			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
+				bs := splitter.NewMockBeamSplitter(c)
+				bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				return bs
+			},
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+				canv.EXPECT().Group("class='beam'")
+				canv.EXPECT().Line(49, 81, 64, 81, `fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.2`)
+				canv.EXPECT().Gend()
+				return canv
+			},
+			notes: []*entity.NoteRenderer{
+				{
+					PositionX: 50,
+					PositionY: 100,
+					Beam: map[int]entity.Beam{
+						1: {
+							Number: 1,
+							Type:   musicxml.NoteBeamTypeBegin,
+						},
+					},
+				},
+				{
+					PositionX: 55,
+					PositionY: 100,
+					Beam: map[int]entity.Beam{
+						1: {
+							Number: 1,
+							Type:   musicxml.NoteBeamTypeEnd,
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ri rhythmInteractor
+			ri.BeamSplitter = tt.beamSplitter(ctrl)
+
+			canv := canvas.Canvas(nil)
+			if tt.canv != nil {
+				canv = tt.canv(ctrl)
+			}
+			ri.RenderBeam(context.Background(), canv, tt.ts, tt.notes)
 		})
 	}
 }

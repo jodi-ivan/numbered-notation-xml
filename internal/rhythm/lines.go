@@ -141,26 +141,21 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 		hasTies := false
 		if note.Tie != nil {
 			hasTies = true
-			if note.Tie.Type == musicxml.NoteSlurTypeStart {
+			switch note.Tie.Type {
+			case musicxml.NoteSlurTypeStart:
 				ties[note.Note] = SlurBezier{
 					SlurTieType: SlurTieTypeTie,
 					Start: CoordinateWithOctave{
-						Coordinate: entity.Coordinate{
-							X: float64(note.PositionX),
-							Y: float64(note.PositionY),
-						},
-						Octave: note.Octave,
+						Coordinate: entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY)),
+						Octave:     note.Octave,
 					},
 					LineType: note.Tie.LineType,
 				}
-			} else if note.Tie.Type == musicxml.NoteSlurTypeStop {
+			case musicxml.NoteSlurTypeStop:
 				temp := ties[note.Note]
 				temp.End = CoordinateWithOctave{
-					Coordinate: entity.Coordinate{
-						X: float64(note.PositionX),
-						Y: float64(note.PositionY),
-					},
-					Octave: note.Octave,
+					Coordinate: entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY)),
+					Octave:     note.Octave,
 				}
 				ties[note.Note] = temp
 
@@ -177,26 +172,18 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 			if s.Type == musicxml.NoteSlurTypeStop || s.Type == musicxml.NoteSlurTypeHop {
 				temp := slurs[s.Number]
 				temp.End = CoordinateWithOctave{
-					Coordinate: entity.Coordinate{
-						X: float64(note.PositionX - 2),
-						Y: float64(yPos),
-					},
-					Octave: note.Octave,
+					Coordinate: entity.NewCoordinate(float64(note.PositionX-2), float64(yPos)),
+					Octave:     note.Octave,
 				}
 
 				if temp.Start.X == 0 && temp.Start.Y == 0 {
 					temp.Start = CoordinateWithOctave{
-						Coordinate: entity.Coordinate{
-							X: float64(note.PositionX - constant.UPPERCASE_LENGTH),
-							Y: float64(yPos),
-						},
-						Octave: 0,
+						Coordinate: entity.NewCoordinate(float64(note.PositionX-constant.UPPERCASE_LENGTH), float64(yPos)),
+						Octave:     0,
 					}
 				}
 				slurs[s.Number] = temp
-
 				slurSets = append(slurSets, slurs[s.Number])
-
 				delete(slurs, s.Number)
 
 			}
@@ -205,11 +192,8 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 				slurs[s.Number] = SlurBezier{
 					SlurTieType: SlurTieTypeSlur,
 					Start: CoordinateWithOctave{
-						Coordinate: entity.Coordinate{
-							X: float64(note.PositionX + 2),
-							Y: float64(yPos),
-						},
-						Octave: note.Octave,
+						Coordinate: entity.NewCoordinate(float64(note.PositionX+2), float64(yPos)),
+						Octave:     note.Octave,
 					},
 					LineType: s.LineType,
 				}
@@ -224,11 +208,8 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 			temp := slur
 			if temp.End.Coordinate.X == 0 && temp.End.Coordinate.Y == 0 {
 				temp.End = CoordinateWithOctave{
-					Coordinate: entity.Coordinate{
-						X: float64(maxXPosition - 5),
-						Y: float64(temp.Start.Y),
-					},
-					Octave: 0,
+					Coordinate: entity.NewCoordinate(float64(maxXPosition-5), float64(temp.Start.Y)),
+					Octave:     0,
 				}
 			}
 			slurSets = append(slurSets, temp)
@@ -254,39 +235,24 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, 
 			switch b.Type {
 			case musicxml.NoteBeamTypeBegin:
 				beams[b.Number] = BeamLine{
-					Start: entity.Coordinate{
-						X: float64(note.PositionX),
-						Y: positionY,
-					},
+					Start:  entity.NewCoordinate(float64(note.PositionX), positionY),
 					Number: b.Number,
 				}
 			case musicxml.NoteBeamTypeEnd:
-
 				beam := beams[b.Number]
 
 				if beam.Start.X == 0 {
 					beams[b.Number] = BeamLine{
-						Start: entity.Coordinate{
-							X: float64(note.PositionX),
-							Y: positionY,
-						},
-						End: entity.Coordinate{
-							X: float64(note.PositionX) + 8,
-							Y: positionY,
-						},
+						Start:  entity.NewCoordinate(float64(note.PositionX), positionY),
+						End:    entity.NewCoordinate(float64(note.PositionX)+8, positionY),
 						Number: b.Number,
 					}
-
 				} else {
-					beam.End = entity.Coordinate{
-						X: float64(note.PositionX) + 8,
-						Y: beam.Start.Y,
-					}
+					beam.End = entity.NewCoordinate(float64(note.PositionX)+8, beam.Start.Y)
 					beams[b.Number] = beam
 				}
 
 				beamSets = append(beamSets, beams[b.Number])
-
 				delete(beams, b.Number)
 			}
 		}

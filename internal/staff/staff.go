@@ -148,7 +148,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				staffInfo.MarginBottom = verseInfo.MarginBottom
 			}
 
-			additonalRenderer := numbered.RendererFromAdditional(note, renderer, additionalNotes)
+			additonalRenderer := si.Numbered.RendererFromAdditional(note, renderer, additionalNotes)
 			if len(additonalRenderer) > 2 {
 				additionalNote := additonalRenderer[len(additonalRenderer)-1]
 				shouldReplace := notePos+2 < len(measure.Notes) && note.Type == additionalNotes[len(additionalNotes)-1].Type

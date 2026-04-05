@@ -42,7 +42,7 @@ func Test_numberedInteractor_RenderOctave(t *testing.T) {
 			},
 			initCanvas: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Circle(55, 135, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
+				canv.EXPECT().Circle(55, 135, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.75")
 				return canv
 			},
 		},
@@ -57,7 +57,7 @@ func Test_numberedInteractor_RenderOctave(t *testing.T) {
 			},
 			initCanvas: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Circle(55, 155, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.5")
+				canv.EXPECT().Circle(55, 155, 1, "fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.75")
 				return canv
 			},
 		},

@@ -9,11 +9,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/jarcoal/httpmock"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/header"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
@@ -52,6 +54,9 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		src: url(https://fonts.gstatic.com/s/oldstandardtt/v1/defailt.ttf) format('truetype');
 	  }
 	  `
+	creditsData := []musicxml.Credit{
+		{Type: musicxml.CreditTypeTitle, Words: "Unit Test"},
+	}
 
 	measures := []musicxml.Measure{
 		musicxml.Measure{
@@ -89,45 +94,22 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		},
 	}
 
-	spilttedLine := [][]musicxml.Measure{
-		[]musicxml.Measure{musicxml.Measure{
-			Number: 1,
-			Attribute: &musicxml.Attribute{
-				Key: &musicxml.KeySignature{
-					Fifth: 2, // D major
-				},
-				Time: &struct {
-					Beats    int `xml:"beats"`
-					BeatType int `xml:"beat-type"`
-				}{
-					Beats:    4,
-					BeatType: 4,
-				},
+	keySignature := keysig.NewKeySignature(context.Background(), measures)
+	timeSignature := timesig.NewTimeSignatures(context.Background(), measures)
+
+	metadata := &repository.HymnMetadata{
+		HymnData: repository.HymnData{
+			HymnIndicator: repository.HymnIndicator{
+				Number: 1,
 			},
-		}},
-		[]musicxml.Measure{
-			musicxml.Measure{
-				Number: 2,
-				Print: &musicxml.Print{
-					NewSystem: musicxml.PrintNewSystemTypeYes,
-				},
-			},
-			musicxml.Measure{
-				Number: 3,
-			},
+			Title: "Unittest",
 		},
-		[]musicxml.Measure{
-			musicxml.Measure{
-				Number: 4,
-				Print: &musicxml.Print{
-					NewSystem: musicxml.PrintNewSystemTypeYes,
-				},
-			},
-			musicxml.Measure{
-				Number: 5,
-			},
-		},
+		Verse: map[int]repository.HymnVerse{},
 	}
+	/*
+		httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Caladea%7COld+Standard+TT%7CNoto+Music%7CFigtree",
+					httpmock.NewStringResponder(200, googleFont))
+	*/
 
 	type args struct {
 		music    musicxml.MusicXML
@@ -137,13 +119,58 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		name string
 		args args
 
-		lyricMock   func(ctrl *gomock.Controller) *lyric.MockLyric
-		staffMock   func(ctrl *gomock.Controller) *staff.MockStaff
-		creditsMock func(ctrl *gomock.Controller) *credits.MockCredits
-		canvasMock  func(ctrl *gomock.Controller) *canvas.MockCanvas
+		canvasMock func(ctrl *gomock.Controller) *canvas.MockCanvas
+		headerMock func(ctrl *gomock.Controller) *header.MockHeader
+		staffMock  func(ctrl *gomock.Controller) *staff.MockStaff
+
+		// optional
+		creditsMock  func(ctrl *gomock.Controller) *credits.MockCredits
+		footnoteMock func(ctrl *gomock.Controller) *footnote.MockFootnote
+		verseMock    func(ctrl *gomock.Controller) *verse.MockVerse
 	}{
 		{
-			name: "default",
+			name: "empty metadata",
+			args: args{
+				music: musicxml.MusicXML{
+					Part: musicxml.Part{
+						Measures: measures,
+					},
+					Credit: creditsData,
+				},
+			},
+			canvasMock: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+				writerMock := canvas.NewMockWriter(c)
+
+				httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Caladea%7COld+Standard+TT%7CNoto+Music%7CFigtree",
+					httpmock.NewStringResponder(200, googleFont))
+				style := fmt.Sprintf(fontfmt, googleFont)
+
+				canv.EXPECT().Start(720, 2000)
+				canv.EXPECT().Def()
+				canv.EXPECT().Writer().Return(writerMock)
+				writerMock.EXPECT().Write([]byte(style))
+				canv.EXPECT().DefEnd()
+				canv.EXPECT().End()
+
+				return canv
+			},
+
+			headerMock: func(c *gomock.Controller) *header.MockHeader {
+				mockHeader := header.NewMockHeader(c)
+
+				mockHeader.EXPECT().RenderSheetHeader(gomock.Any(), gomock.Any(), creditsData, nil)
+				mockHeader.EXPECT().RenderKeyandTimeSignatures(gomock.Any(), gomock.Any(), keySignature, timeSignature)
+				return mockHeader
+			},
+			staffMock: func(c *gomock.Controller) *staff.MockStaff {
+				mockStaff := staff.NewMockStaff(c)
+				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature)
+				return mockStaff
+			},
+		},
+		{
+			name: "with metadata",
 			args: args{
 				metadata: &repository.HymnMetadata{
 					HymnData: repository.HymnData{
@@ -158,103 +185,61 @@ func Test_rendererInteractor_Render(t *testing.T) {
 					Part: musicxml.Part{
 						Measures: measures,
 					},
+					Credit: creditsData,
 				},
 			},
-			canvasMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(ctrl)
+			canvasMock: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+				writerMock := canvas.NewMockWriter(c)
 
 				httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Caladea%7COld+Standard+TT%7CNoto+Music%7CFigtree",
 					httpmock.NewStringResponder(200, googleFont))
-
-				writerMock := canvas.NewMockWriter(ctrl)
 				style := fmt.Sprintf(fontfmt, googleFont)
-				writerMock.EXPECT().Write([]byte(style))
 
-				canv.EXPECT().Start(int(720), int(2000))
+				canv.EXPECT().Start(720, 2000)
 				canv.EXPECT().Def()
 				canv.EXPECT().Writer().Return(writerMock)
+				writerMock.EXPECT().Write([]byte(style))
 				canv.EXPECT().DefEnd()
-				canv.EXPECT().Text(int(310), int(100), "1. UNITTEST")
-
-				canv.EXPECT().Text(int(50), int(125), "do = d")
-				canv.EXPECT().Text(int(195), int(125), "4 ketuk")
 				canv.EXPECT().End()
 
 				return canv
 			},
-			lyricMock: func(ctrl *gomock.Controller) *lyric.MockLyric {
-				l := lyric.NewMockLyric(ctrl)
 
-				l.EXPECT().CalculateLyricWidth("do = d").Return(float64(100))
+			headerMock: func(c *gomock.Controller) *header.MockHeader {
+				mockHeader := header.NewMockHeader(c)
 
-				l.EXPECT().CalculateLyricWidth("1. UNITTEST").Return(float64(100))
-
-				return l
+				mockHeader.EXPECT().RenderSheetHeader(gomock.Any(), gomock.Any(), creditsData, metadata)
+				mockHeader.EXPECT().RenderKeyandTimeSignatures(gomock.Any(), gomock.Any(), keySignature, timeSignature)
+				return mockHeader
 			},
-			staffMock: func(ctrl *gomock.Controller) *staff.MockStaff {
-				mockStaff := staff.NewMockStaff(ctrl)
-				mockStaff.EXPECT().SplitLines(gomock.Any(), musicxml.Part{Measures: measures}).Return(spilttedLine)
-
-				currTimeSig := timesig.TimeSignature{
-					Signatures: []timesig.Time{
-						timesig.Time{Measure: 1, Beat: 4, BeatType: 4},
-					},
-				}
-
-				currTimeSig.GetHumanized()
-
-				mockStaff.EXPECT().RenderStaff(
-					gomock.Any(),
-					gomock.Any(),
-					int(50),
-					int(175),
-					gomock.Any(),
-					keysig.KeySignature{Signatures: []keysig.Key{keysig.NewKey(&musicxml.KeySignature{Fifth: 2})}},
-					currTimeSig,
-					spilttedLine[0],
-				).Return(staff.StaffInfo{
-					MarginBottom: 25,
-				})
-				mockStaff.EXPECT().RenderStaff(
-					gomock.Any(),
-					gomock.Any(),
-					int(50),  // x
-					int(280), // y
-					gomock.Any(),
-					keysig.KeySignature{Signatures: []keysig.Key{keysig.NewKey(&musicxml.KeySignature{Fifth: 2})}},
-					currTimeSig,
-					spilttedLine[1],
-				).Return(staff.StaffInfo{
-					MarginBottom: 25,
-					Multiline:    true,
-					MarginLeft:   100,
-				})
-				mockStaff.EXPECT().RenderStaff(
-					gomock.Any(),
-					gomock.Any(),
-					int(104), // x
-					int(385), // y
-					gomock.Any(),
-					keysig.KeySignature{Signatures: []keysig.Key{keysig.NewKey(&musicxml.KeySignature{Fifth: 2})}},
-					currTimeSig,
-					spilttedLine[2],
-				).Return(staff.StaffInfo{
-					MarginBottom: 25,
-					Multiline:    false,
-				})
+			staffMock: func(c *gomock.Controller) *staff.MockStaff {
+				mockStaff := staff.NewMockStaff(c)
+				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature).Return(100)
 				return mockStaff
 			},
-			creditsMock: func(ctrl *gomock.Controller) *credits.MockCredits {
-				cMock := credits.NewMockCredits(ctrl)
 
-				cMock.EXPECT().RenderCredits(gomock.Any(), gomock.Any(), int(40), repository.HymnData{
-					HymnIndicator: repository.HymnIndicator{
-						Number: 1,
-					},
-					Title: "Unittest",
-				})
+			footnoteMock: func(c *gomock.Controller) *footnote.MockFootnote {
+				fm := footnote.NewMockFootnote(c)
+				pos := 150
+				fm.EXPECT().RenderMusicFootnotes(gomock.Any(), gomock.Any(), metadata, 100)
+				fm.EXPECT().RenderVerseFootnotes(gomock.Any(), &pos, metadata.VerseFootNotes)
+				fm.EXPECT().RenderTitleFootnotes(gomock.Any(), 150, metadata.HymnData)
+				return fm
+			},
 
-				return cMock
+			verseMock: func(c *gomock.Controller) *verse.MockVerse {
+				vm := verse.NewMockVerse(c)
+				vm.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), 100, metadata.Verse, metadata.VerseFootNotes).Return(verse.VerseInfo{MarginBottom: 150})
+				return vm
+
+			},
+
+			creditsMock: func(c *gomock.Controller) *credits.MockCredits {
+				cm := credits.NewMockCredits(c)
+				pos := 150
+				cm.EXPECT().RenderCredits(gomock.Any(), gomock.Any(), &pos, metadata.HymnData)
+				return cm
 			},
 		},
 	}
@@ -262,10 +247,21 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ir := rendererInteractor{
-				Lyric:   tt.lyricMock(ctrl),
-				Staff:   tt.staffMock(ctrl),
-				Credits: tt.creditsMock(ctrl),
+				Staff:  tt.staffMock(ctrl),
+				Header: tt.headerMock(ctrl),
 			}
+			if tt.creditsMock != nil {
+				ir.Credits = tt.creditsMock(ctrl)
+
+			}
+			if tt.footnoteMock != nil {
+				ir.Footnote = tt.footnoteMock(ctrl)
+
+			}
+			if tt.verseMock != nil {
+				ir.Verse = tt.verseMock(ctrl)
+			}
+
 			ir.Render(context.Background(), tt.args.music, tt.canvasMock(ctrl), tt.args.metadata)
 		})
 	}
@@ -288,6 +284,9 @@ func TestNewRenderer(t *testing.T) {
 				assert.NotNil(t, cast.Lyric)
 				assert.NotNil(t, cast.Staff)
 				assert.NotNil(t, cast.Credits)
+				assert.NotNil(t, cast.Footnote)
+				assert.NotNil(t, cast.Verse)
+				assert.NotNil(t, cast.Header)
 
 			}
 

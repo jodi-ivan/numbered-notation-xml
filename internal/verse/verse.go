@@ -31,7 +31,7 @@ func New(f footnote.Footnote, l lyric.Lyric) Verse {
 	}
 }
 
-func (v *verseInteractor) elisionPosition(p LyricPartVerse, y int, lineText, wordPart string) [2]entity.Coordinate {
+func (v *verseInteractor) elisionPosition(p LyricPartVerse, y int, lineBeforeWord, syllableBeforeElision string) [2]entity.Coordinate {
 	x1 := float64(0)
 	x2 := float64(0)
 	for _, b := range p.Breakdown {
@@ -48,7 +48,7 @@ func (v *verseInteractor) elisionPosition(p LyricPartVerse, y int, lineText, wor
 		}
 	}
 
-	startPosition := v.Lyric.CalculateLyricWidth(lineText) + v.Lyric.CalculateLyricWidth(wordPart)
+	startPosition := v.Lyric.CalculateLyricWidth(lineBeforeWord) + v.Lyric.CalculateLyricWidth(syllableBeforeElision)
 	return [2]entity.Coordinate{
 		entity.NewCoordinate(startPosition+x1, float64(y)),
 		entity.NewCoordinate(startPosition+x2, float64(y)),

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -30,6 +31,16 @@ func NewHeader(l lyric.Lyric) Header {
 	}
 }
 
+func hasTitleNotes(verseNotes *repository.HymnMetadata) bool {
+	for _, notes := range verseNotes.VerseFootNotes {
+		for _, line := range notes {
+			if footnote.VerseNoteStyle(line.MarkerStyle.Int32) == footnote.VerseNoteStyleForTitle {
+				return true
+			}
+		}
+	}
+	return false
+}
 func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
 	relativeY := constant.TITLE_Y_POS
 
@@ -45,7 +56,7 @@ func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas,
 		if metadata.Variant.Valid {
 			workTitle = fmt.Sprintf(TITLE_VARIANT_FMT, metadata.Number, strings.ToLower(metadata.Variant.String), strings.ToUpper(metadata.Title))
 		}
-		if metadata.TitleFootnotes.Valid {
+		if metadata.TitleFootnotes.Valid || hasTitleNotes(metadata) {
 			workTitle += TITLE_FOOTNOTES
 		}
 		if metadata.IsForKids.Int16 == 1 {

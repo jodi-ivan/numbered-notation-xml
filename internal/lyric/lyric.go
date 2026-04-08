@@ -107,7 +107,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 
 	canv.Group("class='lyric'", "style='font-family:Caladea'")
 	var prev *entity.NoteRenderer
-	minPrefix := float64(constant.LAYOUT_INDENT_LENGTH)
+	minPrefix := float64(constant.LAYOUT_WIDTH)
 
 	for _, n := range measure {
 		yPos := float64(n.PositionY)
@@ -161,7 +161,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 				prefixVal := entity.LyricVal(p.Lyrics.Text).String()
 				canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal)
 			}
-			prefixes = nil
+			prefixes = map[string]LyricPosition{}
 			canv.Gend()
 		}
 		prev = n

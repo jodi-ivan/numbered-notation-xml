@@ -51,7 +51,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 
-	var lastRightBarlinePosition *entity.Coordinate
+	var lastRightBarlinePosition *barline.CoordinateWithBarline
 
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
@@ -207,7 +207,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			alignMeasures = append(alignMeasures, filteredNotes...)
 
 			lastbarPos := entity.NewCoordinate(float64(rightBarlineRenderer.PositionX), float64(y))
-			lastRightBarlinePosition = &lastbarPos
+			lastRightBarlinePosition = &barline.CoordinateWithBarline{
+				Coordinate: lastbarPos,
+				Barline:    *rightBarlineRenderer.Barline,
+			}
 
 			x += barline.BARLINE_AFTER_SPACE
 			if measure.RightMeasureText != nil {

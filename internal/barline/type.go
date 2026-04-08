@@ -1,10 +1,12 @@
 package barline
 
 import (
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
 const BARLINE_AFTER_SPACE int = 4
+const LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT = 5
 
 var (
 	// only support noto-music font
@@ -27,4 +29,9 @@ var (
 
 type BarlineInfo struct {
 	XIncrement int
+}
+
+type CoordinateWithBarline struct {
+	entity.Coordinate
+	Barline musicxml.Barline
 }

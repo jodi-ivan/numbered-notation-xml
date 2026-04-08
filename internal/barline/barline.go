@@ -11,7 +11,7 @@ import (
 )
 
 type Barline interface {
-	GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *entity.Coordinate) (*entity.NoteRenderer, *BarlineInfo)
+	GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *CoordinateWithBarline) (*entity.NoteRenderer, *BarlineInfo)
 	GetRendererRightBarline(measure musicxml.Measure, x int) (int, *entity.NoteRenderer)
 	RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate)
 }
@@ -25,7 +25,7 @@ func NewBarline() Barline {
 // GetRendererLeftBarline render the left side of the barline
 // this is only utilize then the barline is not regular barline
 // since the regular left barline is already added by default
-func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *entity.Coordinate) (*entity.NoteRenderer, *BarlineInfo) {
+func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *CoordinateWithBarline) (*entity.NoteRenderer, *BarlineInfo) {
 
 	if len(measure.Barline) == 0 {
 		return nil, nil
@@ -33,8 +33,13 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 	leftBarline := measure.Barline[0]
 	if (leftBarline.Location == musicxml.BarlineLocationLeft) && (leftBarline.BarStyle != musicxml.BarLineStyleRegular) {
 		pos := x
+		lastBarlineRepeat := lastRightBarlinePosition != nil && lastRightBarlinePosition.Barline.Repeat != nil
+
 		if lastRightBarlinePosition != nil {
 			pos = int(lastRightBarlinePosition.X)
+			if lastBarlineRepeat {
+				pos += LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT
+			}
 		}
 		result := &entity.NoteRenderer{
 			PositionX:     pos,
@@ -44,8 +49,7 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 		}
 
 		incr := 5
-
-		if leftBarline.Repeat != nil {
+		if leftBarline.Repeat != nil && !lastBarlineRepeat {
 			// HACK: do we need to check the direction == forward in this?
 			incr += constant.UPPERCASE_LENGTH
 		}

@@ -126,7 +126,7 @@ func Test_barlineInteractor_GetRendererLeftBarline(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bi := barlineInteractor{}
-			got, got1 := bi.GetRendererLeftBarline(tt.args.measure, tt.args.x, tt.args.lastRightBarlinePosition)
+			got, got1 := bi.GetRendererLeftBarline(tt.args.measure, tt.args.x, &CoordinateWithBarline{Coordinate: *tt.args.lastRightBarlinePosition})
 			if !assert.Equal(t, tt.wantNoteRenderer, got) {
 				t.Errorf("barlineInteractor.GetRendererLeftBarline() got = %v, want %v", got, tt.wantNoteRenderer)
 			}

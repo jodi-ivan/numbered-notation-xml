@@ -45,10 +45,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 					Lyric: []musicxml.Lyric{
 						{
 							Number: 1,
-							Text: []struct {
-								Underline int    `xml:"underline,attr"`
-								Value     string `xml:",chardata"`
-							}{
+							Text: []musicxml.LyricText{
 								{Value: "a"},
 							},
 							Syllabic: musicxml.LyricSyllabicTypeBegin,
@@ -76,10 +73,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 					Lyric: []musicxml.Lyric{
 						{
 							Number: 2,
-							Text: []struct {
-								Underline int    `xml:"underline,attr"`
-								Value     string `xml:",chardata"`
-							}{
+							Text: []musicxml.LyricText{
 								{Value: "Yang"},
 							},
 							Syllabic: musicxml.LyricSyllabicTypeSingle,
@@ -108,10 +102,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 					Lyric: []musicxml.Lyric{
 						{
 							Number: 1,
-							Text: []struct {
-								Underline int    `xml:"underline,attr"`
-								Value     string `xml:",chardata"`
-							}{
+							Text: []musicxml.LyricText{
 								{Value: "Yang"},
 							},
 							Syllabic: musicxml.LyricSyllabicTypeSingle,

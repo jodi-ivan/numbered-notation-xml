@@ -18,6 +18,8 @@ func (lv LyricVal) String() string {
 type Text struct {
 	Value     string
 	Underline int
+	Bold      bool
+	Italic    bool
 }
 type Lyric struct {
 	Text     []Text

@@ -12,12 +12,20 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-var numberedLyric *regexp.Regexp
+var (
+	numberedLyric *regexp.Regexp
+	baitPrefix    *regexp.Regexp
+)
 
 func init() {
 	if numberedLyric == nil {
 		numberedLyric, _ = regexp.Compile(`^\d*\.\s{0,1}`)
 	}
+
+	if baitPrefix == nil {
+		baitPrefix, _ = regexp.Compile(`^(bait)\d*\:`)
+	}
+
 }
 
 type Lyric interface {
@@ -135,6 +143,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 				}
 				minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X)
 				text = prefix[1].Lyrics.Text
+				l.Text = text
 				xPos, yPos = int(prefix[1].Coordinate.X), prefix[1].Coordinate.Y
 
 				if len(n.Lyric) > MAX_VERSE_IN_MUSIC {
@@ -159,7 +168,15 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 			canv.Group("class='leading-header'")
 			for _, p := range prefixes {
 				prefixVal := entity.LyricVal(p.Lyrics.Text).String()
-				canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal)
+				style := []string{}
+				if p.Lyrics.Text[0].Italic {
+					style = []string{
+						`font-style="italic"`,
+						`font-size="90%"`,
+					}
+					minPrefix += li.CalculateLyricWidth(prefixVal) * 0.1
+				}
+				canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal, style...)
 			}
 			prefixes = map[string]LyricPosition{}
 			canv.Gend()

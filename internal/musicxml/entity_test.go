@@ -69,10 +69,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -140,10 +137,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -161,10 +155,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -235,10 +226,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -256,10 +244,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -310,10 +295,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -331,10 +313,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -392,10 +371,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -418,10 +394,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -483,10 +456,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},
@@ -504,10 +474,7 @@ func TestMeasure_Build(t *testing.T) {
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []struct {
-									Underline int    `xml:"underline,attr"`
-									Value     string `xml:",chardata"`
-								}{
+								Text: []LyricText{
 									{
 										Value: "rap",
 									},

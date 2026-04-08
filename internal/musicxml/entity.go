@@ -398,16 +398,6 @@ type NotationSlur struct {
 	LineType NoteSlurLineType `xml:"line-type,attr"`
 }
 
-type Lyric struct {
-	locationAttr
-	Number int `xml:"number,attr"`
-	Text   []struct {
-		Underline int    `xml:"underline,attr"`
-		Value     string `xml:",chardata"`
-	} `xml:"text"`
-	Syllabic LyricSyllabic `xml:"syllabic"`
-}
-
 type BarLineStyle string
 
 const (

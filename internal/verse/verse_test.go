@@ -188,11 +188,11 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Group("class='verses'", "style='font-family:Caladea'")
 				canv.EXPECT().Group("class='verse'", "number='2'")
-				canv.EXPECT().Text(566, 300, "2. ")
-				canv.EXPECT().Text(580, 300, " Dalam dunia 'ku dikawal")
+				canv.EXPECT().Text(541, 300, "2. ")
+				canv.EXPECT().Text(555, 300, " Dalam dunia 'ku dikawal")
 
 				canv.EXPECT().Group()
-				canv.EXPECT().Qbez(607, 302, 609, 307, 611, 302, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(582, 302, 584, 307, 586, 302, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
 				canv.EXPECT().Gend().Times(3)
 				return canv
 			},
@@ -201,7 +201,7 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 				cursor := footnote.VerseLineCursor{
 					VerseNo:    2,
 					LinePos:    1,
-					Leftmargin: 480,
+					Leftmargin: 455,
 					LineText:   " Dalam dunia 'ku dikawal",
 				}
 				fn.EXPECT().AssignFootnotesMarker(gomock.Any(), entity.NewCoordinate(100, 300), 315, cursor, nil)

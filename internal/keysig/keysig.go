@@ -17,36 +17,17 @@ type Key struct {
 }
 
 type KeySignature struct {
-	IsMixed     bool
-	MeasureText map[int]string
-	Signatures  []Key
+	IsMixed    bool
+	Signatures []Key
 }
 
 // TODO: support more than once key known (processed) signature changes. currently only support once or all keys
 func NewKeySignature(ctx context.Context, measures []musicxml.Measure) KeySignature {
 	signatures := []Key{}
-	various := map[int]bool{}
-	inidcator := map[int]string{}
 
 	for _, measure := range measures {
 		if measure.Attribute != nil && measure.Attribute.Key != nil {
-			if various[measure.Attribute.Key.Fifth] {
-				continue
-			}
-			various[measure.Attribute.Key.Fifth] = true
-
-			if len(signatures) == 0 {
-				key := NewKey(measure.Attribute.Key)
-				key.Measure = measure.Number
-				signatures = append(signatures, key)
-				continue
-			}
-
-			// detect changes
-			lastKey := signatures[len(signatures)-1]
-			indicatorText, mode := Transtion(lastKey.Fifth, lastKey.Mode.String(), measure.Attribute.Key.Fifth)
-			inidcator[measure.Number] = indicatorText
-			key := NewKey(&musicxml.KeySignature{Fifth: measure.Attribute.Key.Fifth, Mode: mode.String()})
+			key := NewKey(measure.Attribute.Key)
 			key.Measure = measure.Number
 			signatures = append(signatures, key)
 
@@ -54,9 +35,8 @@ func NewKeySignature(ctx context.Context, measures []musicxml.Measure) KeySignat
 	}
 
 	return KeySignature{
-		IsMixed:     len(signatures) > 1,
-		Signatures:  signatures,
-		MeasureText: inidcator,
+		IsMixed:    len(signatures) > 1,
+		Signatures: signatures,
 	}
 
 }
@@ -90,61 +70,6 @@ func (ks *KeySignature) GetKeyOnMeasure(ctx context.Context, measure int) Key {
 	}
 
 	return prev
-}
-
-// Mode metadata for offsets (semitones from Ionian) and Solfège mapping
-var modeInfo = map[string]struct {
-	Offset  int
-	Solfege []string
-}{
-	"major":      {0, []string{"do", "re", "mi", "fa", "sol", "la", "ti"}},
-	"dorian":     {2, []string{"re", "mi", "fa", "sol", "la", "ti", "do"}},
-	"phrygian":   {4, []string{"mi", "fa", "sol", "la", "ti", "do", "re"}},
-	"lydian":     {5, []string{"fa", "sol", "la", "ti", "do", "re", "mi"}},
-	"mixolydian": {7, []string{"sol", "la", "ti", "do", "re", "mi", "fa"}},
-	"minor":      {9, []string{"la", "ti", "do", "re", "mi", "fa", "sol"}},
-	"locrian":    {11, []string{"ti", "do", "re", "mi", "fa", "sol", "la"}},
-}
-
-func Transtion(oldFifths int, oldMode string, newFifths int) (string, Mode) {
-	// 1. Calculate the Tonic Pitch of the old key
-	// Pitch = (Fifths * 7 + ModeOffset) mod 12
-	oldTonic := (oldFifths*7 + modeInfo[oldMode].Offset) % 12
-	if oldTonic < 0 {
-		oldTonic += 12
-	}
-
-	// 2. Educated Guess: The Tonic remains the same (Parallel Key)
-	// Find which mode for 'newFifths' results in the same Tonic
-	guessedMode := "major"
-	for mode, info := range modeInfo {
-		currentTonic := (newFifths*7 + info.Offset) % 12
-		if currentTonic < 0 {
-			currentTonic += 12
-		}
-		if currentTonic == oldTonic {
-			guessedMode = mode
-			break
-		}
-	}
-
-	// 3. Generate Pivot Notation for the Dominant (5th degree)
-	// In hymns, the pivot is almost always the Dominant note (index 4)
-	oldPivotName := modeInfo[oldMode].Solfege[4]
-	newPivotName := modeInfo[guessedMode].Solfege[4]
-
-	return fmt.Sprintf("%s = %s", oldPivotName, newPivotName), NewMode(guessedMode)
-}
-
-func TranstionFromTwoKeySignatures(from, to Key) string {
-	indicator := ""
-	if from.BuildScale()[0] == to.BuildScale()[0] {
-		indicator = fmt.Sprintf("%s = %s", to.Mode.Mode.GetNumberedRoot(), from.Mode.Mode.GetNumberedRoot())
-	} else {
-		indicator, _ = Transtion(to.Fifth, to.Mode.String(), from.Fifth)
-	}
-
-	return indicator
 }
 
 func NewKey(key *musicxml.KeySignature) Key {

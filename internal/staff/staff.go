@@ -52,7 +52,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 
 	var lastRightBarlinePosition *barline.CoordinateWithBarline
-
+	yOffset := false
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
 		align, staffInfo = ProcessPreviousLines(prevNotes, y)
@@ -90,7 +90,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(currKeySig, note)
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 
-			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) {
+			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) && currTimesig.IsCommonTime() {
 				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength {
 					note, noteLength = mergedNote, mergedLength
 					skipNote[notePos+1] = true
@@ -135,9 +135,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1
 			hasMeasureText := si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
-			if hasMeasureText && (y == FIRST_STAFF_Y_POS || renderer.Fermata != nil) {
-				y += MEASURE_TEXT_OFFSET
-				staffInfo.MarginBottom = MEASURE_TEXT_OFFSET
+			if hasMeasureText {
+				yOffset = true
 			}
 
 			si.Rhythm.SetRhythmNotation(renderer, note, n)
@@ -227,27 +226,13 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		if len(alignMeasures) > 0 {
-			if keySignature.IsMixed {
-				if keyChanges, ok := keySignature.MeasureText[measure.Number]; ok {
-					renderer := alignMeasures[0]
-					renderer.MeasureText = []musicxml.MeasureText{{Text: keyChanges, TextAlignment: musicxml.TextAlignmentLeft}}
-				}
-
-				lastMeasure := mi == len(measures)-1
-				noCarryOverLine := len(staffInfo.NextLineRenderer) == 0
-
-				if isLastStaff && lastMeasure && noCarryOverLine {
-					firstKeySig := keySignature.GetKeyOnMeasure(ctx, 1)
-					indicator := keysig.TranstionFromTwoKeySignatures(currKeySig, firstKeySig)
-
-					renderer := alignMeasures[len(alignMeasures)-1]
-					renderer.MeasureText = []musicxml.MeasureText{{Text: indicator, TextAlignment: musicxml.TextAlignmentRight}}
-
-				}
-			}
 			align = append(align, alignMeasures)
 		}
 
+	}
+	if yOffset {
+		y += MEASURE_TEXT_OFFSET
+		staffInfo.MarginBottom = MEASURE_TEXT_OFFSET
 	}
 
 	si.RenderAlign.RenderWithAlign(ctx, canv, y, timeSignature, align)

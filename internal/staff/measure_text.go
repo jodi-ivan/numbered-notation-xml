@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 
@@ -124,6 +125,7 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 			}
 
 			for i, t := range note.MeasureText {
+
 				style := []string{`font-style:italic`}
 				if t.Text != MEASURE_TEXT_REFREIN && t.Text != MEASURE_TEXT_FINE {
 					style = append(style, `font-size:65%`, `font-weight:bold`)
@@ -133,7 +135,9 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 					textLength := rsa.Lyric.CalculateLyricWidth(t.Text)
 					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
 				}
-				canv.Text(xPos, note.PositionY-offset-25-(i*-15), t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
+
+				origPos := (len(note.MeasureText) - 1) * 10
+				canv.Text(xPos, (note.PositionY-origPos)-offset-25-(i*-10), t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
 			}
 		}
 
@@ -215,14 +219,20 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 }
 
 func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool {
+	var affectMarginbottom = []string{"Refrein", "Fine"}
+	count := 0
 	for _, mt := range note.MeasureText {
-		if noteRenderer.MeasureText != nil {
+		if noteRenderer.MeasureText == nil {
 			noteRenderer.MeasureText = []musicxml.MeasureText{}
 		}
 		alignment := musicxml.TextAlignmentLeft
 		if isLastNote {
 			alignment = musicxml.TextAlignmentRight
 		}
+		if slices.Contains(affectMarginbottom, mt.Text) {
+			count++
+		}
+
 		noteRenderer.MeasureText = append(noteRenderer.MeasureText, musicxml.MeasureText{
 			Text:          mt.Text,
 			RelativeY:     mt.RelativeY,
@@ -240,6 +250,6 @@ func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRende
 		}
 	}
 
-	return len(note.MeasureText) > 0 || directionDashses != nil
+	return count > 0
 
 }

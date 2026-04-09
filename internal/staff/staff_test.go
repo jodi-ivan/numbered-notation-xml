@@ -170,7 +170,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
 				rm := rhythm.NewMockRhythm(c)
 				rm.EXPECT().SetRhythmNotation(gomock.Any(), gomock.Any(), 3)
-				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 110).Return(50, 110)
+				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 95).Return(50, 95)
 				return rm
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -186,7 +186,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			},
 			barlineMock: func(c *gomock.Controller) *barline.MockBarline {
 				bm := barline.NewMockBarline(c)
-				bm.EXPECT().GetRendererRightBarline(gomock.Any(), 50).Return(50, &entity.NoteRenderer{PositionX: 90})
+				bm.EXPECT().GetRendererRightBarline(gomock.Any(), 50).Return(50, &entity.NoteRenderer{PositionX: 90, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}})
 				return bm
 			},
 			renderAlignMock: func(c *gomock.Controller) *MockRenderStaffWithAlign {
@@ -216,7 +216,11 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 						{Type: musicxml.NoteLengthQuarter, IsDotted: true},
 						{Type: musicxml.NoteLengthEighth, IsDotted: true},
 					})
-				nm.EXPECT().RendererFromAdditional(testifyMatcher{t: t, expected: getNote(kj075[0].Appendix, 0)}, gomock.Any(), []numbered.NoteLength{
+				expectedNote := getNote(kj075[0].Appendix, 0)
+				if expectedNote.Notations != nil {
+					expectedNote.Notations.Tied = nil
+				}
+				nm.EXPECT().RendererFromAdditional(testifyMatcher{t: t, expected: expectedNote}, gomock.Any(), []numbered.NoteLength{
 					{Type: musicxml.NoteLengthQuarter},
 					{Type: musicxml.NoteLengthQuarter, IsDotted: true},
 					{Type: musicxml.NoteLengthEighth, IsDotted: true},
@@ -246,7 +250,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			},
 			barlineMock: func(c *gomock.Controller) *barline.MockBarline {
 				bm := barline.NewMockBarline(c)
-				bm.EXPECT().GetRendererRightBarline(gomock.Any(), 50).Return(50, &entity.NoteRenderer{PositionX: 90})
+				bm.EXPECT().GetRendererRightBarline(gomock.Any(), 50).Return(50, &entity.NoteRenderer{PositionX: 90, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}})
 				return bm
 			},
 			renderAlignMock: func(c *gomock.Controller) *MockRenderStaffWithAlign {
@@ -268,7 +272,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 
 			got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, tt.isLastStaff, tt.keySignature, tt.timeSignature, tt.measures, tt.prevNotes...)
 
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want, got, "StaffInfo assert")
 
 		})
 	}

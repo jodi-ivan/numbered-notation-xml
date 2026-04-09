@@ -55,6 +55,11 @@ func TransferStopSlurAndBreathmark(from, to musicxml.Note) musicxml.Note {
 				Articulation: from.Notations.Articulation,
 			}
 		}
+
+	}
+
+	if to.Notations != nil {
+		to.Notations.Tied = nil
 	}
 
 	return to

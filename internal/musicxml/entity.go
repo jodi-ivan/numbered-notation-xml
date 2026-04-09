@@ -101,7 +101,7 @@ type Measure struct {
 
 func (m *Measure) Build() error {
 	m.NewLineIndex = map[int]bool{}
-	var measureText *MeasureText
+	var measureText []MeasureText
 	foundDirectionType := 0
 	for i, elmnt := range m.Appendix {
 		cleanedContent := strings.TrimSpace(elmnt.Content)
@@ -114,17 +114,13 @@ func (m *Measure) Build() error {
 				return err
 			}
 
-			if measureText != nil {
+			if len(measureText) > 0 {
 				if n.MeasureText == nil {
 					n.MeasureText = []MeasureText{}
 				}
 
-				n.MeasureText = append(n.MeasureText, MeasureText{
-					Text:      measureText.Text,
-					RelativeY: measureText.RelativeY,
-				})
-
-				measureText = nil
+				n.MeasureText = append(n.MeasureText, measureText...)
+				measureText = []MeasureText{}
 			}
 			m.Notes = append(m.Notes, n)
 		} else if strings.HasPrefix(cleanedContent, "\u003cdirection-type\u003e") {
@@ -136,16 +132,17 @@ func (m *Measure) Build() error {
 				continue
 			}
 			initalDirection := d.DirectionType[0]
+
 			if initalDirection.Word.Value == "__layout=br" {
 				m.NewLineIndex[i-foundDirectionType] = true
 				foundDirectionType++
 			} else if initalDirection.Word.Value == "D.C. al Fine" {
 				continue
 			} else {
-				measureText = &MeasureText{
+				measureText = append(measureText, MeasureText{
 					Text:      initalDirection.Word.Value,
 					RelativeY: initalDirection.Word.RelativeY,
-				}
+				})
 			}
 
 			if initalDirection.Rehearshal != nil {
@@ -174,11 +171,8 @@ func (m *Measure) Build() error {
 		}
 	}
 
-	if measureText != nil {
-		m.RightMeasureText = &MeasureText{
-			Text:      measureText.Text,
-			RelativeY: measureText.RelativeY,
-		}
+	if len(measureText) > 0 {
+		m.RightMeasureText = &measureText[0]
 	}
 
 	return nil

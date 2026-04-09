@@ -130,6 +130,8 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 	}
 	totalVerse := len(parsedVerse.Verses)
 
+	offset := 0.0
+
 	maxY := float64(0)
 	for i := 1; i < totalVerse+1; i++ {
 
@@ -140,24 +142,45 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 
 		// number verse
 		margin := 0
-		if currentVerse.Position.Col == 2 && VerseRowStyle(currentVerse.Position.RowWidth) == VerseRowStyleDualColumn {
-			margin = constant.LAYOUT_WIDTH - (constant.LAYOUT_INDENT_LENGTH * 3) - int(parsedVerse.MaxRightPos)
-			yVerse = parsedVerse.RowPositionY[currentVerse.Position.Row]
-			y = yVerse
+		if parsedVerse.IsMultiColumn {
+			if currentVerse.Position.Col == 2 {
+				margin = constant.LAYOUT_WIDTH - (constant.LAYOUT_INDENT_LENGTH * 3.5) - int(parsedVerse.MaxRightPos)
+				yVerse = parsedVerse.RowPositionY[currentVerse.Position.Row]
+				y = yVerse
+			} else if currentVerse.Position.Style == VerseRowStyleSingleColumn {
+				margin = -1 * (constant.LAYOUT_INDENT_LENGTH / 4)
+			}
+		}
+
+		if parsedVerse.IsMultiColumn && totalVerse > 3 && totalVerse%2 == 1 { // clamp the gap --> col 1 increase margin, col 2 decrease margin
+			if parsedVerse.IsMultiColumn && constant.LAYOUT_WIDTH > parsedVerse.MaxLineWidth*4 {
+				offset = parsedVerse.MaxLineWidth / 2
+			}
+
+			if currentVerse.Position.Col == 1 {
+				offset = math.Abs(offset)
+			} else {
+				offset = math.Abs(offset) * -1
+			}
+
+			if currentVerse.Position.Style == VerseRowStyleSingleColumn {
+				offset = (constant.LAYOUT_INDENT_LENGTH / 4)
+			}
 		}
 
 		if currentVerse.Position.Style == VerseRowStyleSingleColumn {
 			x = defaultX + int(constant.LAYOUT_INDENT_LENGTH/2)
 		}
+		xPos := x + margin + int(offset)
 
 		prefixNum := fmt.Sprintf("%d. ", i+1)
-		canv.Text(x-5-int(v.Lyric.CalculateLyricWidth(prefixNum))+margin, y, prefixNum)
+		canv.Text(xPos-5-int(v.Lyric.CalculateLyricWidth(prefixNum)), y, prefixNum)
 		for line, liveVerse := range currentVerse.Verse {
-			canv.Text(x+margin, y, liveVerse)
+			canv.Text(xPos, y, liveVerse)
 			cursor := footnote.VerseLineCursor{
 				VerseNo:    i + 1,
 				LinePos:    line + 1,
-				Leftmargin: margin,
+				Leftmargin: margin + int(offset),
 				LineText:   liveVerse,
 			}
 			v.Footnote.AssignFootnotesMarker(canv, entity.NewCoordinate(float64(x), float64(y)), defaultX, cursor, verseFootnote)
@@ -167,8 +190,8 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		if len(currentVerse.ElisionMarks) > 0 {
 			canv.Group()
 			for _, c := range currentVerse.ElisionMarks {
-				x0 := int(c[0].X) + x + margin
-				x1 := int(c[1].X) + x + margin
+				x0 := int(c[0].X) + xPos
+				x1 := int(c[1].X) + xPos
 				xMid := x0 + (x1-x0)/2
 
 				y0 := int(c[0].Y*LINE_DISTANCE) + ELISION_Y_OFFSET + yVerse

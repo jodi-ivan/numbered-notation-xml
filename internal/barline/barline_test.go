@@ -126,7 +126,11 @@ func Test_barlineInteractor_GetRendererLeftBarline(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bi := barlineInteractor{}
-			got, got1 := bi.GetRendererLeftBarline(tt.args.measure, tt.args.x, &CoordinateWithBarline{Coordinate: *tt.args.lastRightBarlinePosition})
+			var c *CoordinateWithBarline
+			if tt.args.lastRightBarlinePosition != nil {
+				c = &CoordinateWithBarline{Coordinate: *tt.args.lastRightBarlinePosition}
+			}
+			got, got1 := bi.GetRendererLeftBarline(tt.args.measure, tt.args.x, c)
 			if !assert.Equal(t, tt.wantNoteRenderer, got) {
 				t.Errorf("barlineInteractor.GetRendererLeftBarline() got = %v, want %v", got, tt.wantNoteRenderer)
 			}
@@ -161,7 +165,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 					},
 				},
 			},
-			wantBarlinePos: 25,
+			wantBarlinePos: 29,
 			wantRenderer: &entity.NoteRenderer{
 				MeasureNumber: 1,
 				PositionX:     25,
@@ -191,7 +195,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 					},
 				},
 			},
-			wantBarlinePos: 35,
+			wantBarlinePos: 24,
 			wantRenderer: &entity.NoteRenderer{
 				MeasureNumber: 1,
 				PositionX:     25,

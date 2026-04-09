@@ -84,8 +84,8 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 		Width:         BARLINE_AFTER_SPACE,
 		// HACK: why there is no width define here?
 	}
+	x += BARLINE_AFTER_SPACE
 	if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-		x += constant.LOWERCASE_LENGTH
 		x -= 5 // the semicolon offset
 	}
 

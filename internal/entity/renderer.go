@@ -36,6 +36,7 @@ type Slur struct {
 type Beam struct {
 	Number int
 	Type   musicxml.NoteBeamType
+	Locked bool
 }
 
 type Articulation struct {
@@ -78,13 +79,31 @@ type NoteRenderer struct {
 	TimeModifications *musicxml.TimeModification
 }
 
+func (nr *NoteRenderer) UpdateBeamWithLock(beamNum int, beamType musicxml.NoteBeamType) {
+	newBeam := nr.Beam
+	if len(newBeam) == 0 {
+		return
+	}
+
+	if b, ok := newBeam[beamNum]; !ok || b.Locked {
+		return
+	}
+
+	newBeam[beamNum] = Beam{
+		Number: beamNum,
+		Type:   beamType,
+		Locked: true,
+	}
+
+}
+
 func (nr *NoteRenderer) UpdateBeam(beamNum int, beamType musicxml.NoteBeamType) {
 	newBeam := nr.Beam
 	if len(newBeam) == 0 {
 		return
 	}
 
-	if _, ok := newBeam[beamNum]; !ok {
+	if b, ok := newBeam[beamNum]; !ok || b.Locked {
 		return
 	}
 

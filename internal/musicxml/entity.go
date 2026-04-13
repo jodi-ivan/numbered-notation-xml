@@ -357,7 +357,7 @@ const (
 
 type Tuplet struct {
 	Type   TupletType `xml:"type,attr"`
-	Braket Bool       `xml:"braket,attr"`
+	Braket Bool       `xml:"bracket,attr"`
 }
 
 type FemataType string
@@ -400,7 +400,7 @@ const (
 	BarLineStyleLightLight BarLineStyle = "light-light"
 	BarLineStyleHeavyHeavy BarLineStyle = "heavy-heavy"
 	BarLineStyleHeavyLight BarLineStyle = "heavy-light"
-	BarLineStyleHeavyNone  BarLineStyle = "none"
+	BarLineStyleNone       BarLineStyle = "none"
 )
 
 type BarLineRepeatDirection string

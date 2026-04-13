@@ -83,6 +83,23 @@ func (m *MockCanvas) EXPECT() *MockCanvasMockRecorder {
 	return m.recorder
 }
 
+// CenterRect mocks base method.
+func (m *MockCanvas) CenterRect(x, y, w, h int, s ...string) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{x, y, w, h}
+	for _, a := range s {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "CenterRect", varargs...)
+}
+
+// CenterRect indicates an expected call of CenterRect.
+func (mr *MockCanvasMockRecorder) CenterRect(x, y, w, h interface{}, s ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{x, y, w, h}, s...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CenterRect", reflect.TypeOf((*MockCanvas)(nil).CenterRect), varargs...)
+}
+
 // Circle mocks base method.
 func (m *MockCanvas) Circle(x, y, r int, s ...string) {
 	m.ctrl.T.Helper()
@@ -244,6 +261,23 @@ func (mr *MockCanvasMockRecorder) Qbezier(sx, sy, cx, cy, ex, ey, tx, ty interfa
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{sx, sy, cx, cy, ex, ey, tx, ty}, s...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Qbezier", reflect.TypeOf((*MockCanvas)(nil).Qbezier), varargs...)
+}
+
+// Rect mocks base method.
+func (m *MockCanvas) Rect(x, y, w, h int, s ...string) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{x, y, w, h}
+	for _, a := range s {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Rect", varargs...)
+}
+
+// Rect indicates an expected call of Rect.
+func (mr *MockCanvasMockRecorder) Rect(x, y, w, h interface{}, s ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{x, y, w, h}, s...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rect", reflect.TypeOf((*MockCanvas)(nil).Rect), varargs...)
 }
 
 // Start mocks base method.

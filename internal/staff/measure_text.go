@@ -177,29 +177,30 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 }
 
 func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
-	pairs := [][2]entity.Coordinate{}
+	pairs := [][2]CoordinateWithTuplet{}
 	pairData := []int{}
 	for _, n := range notes {
-		if n.Tuplet != nil {
+		if n.Tuplet == nil {
+			continue
+		}
 
-			switch n.Tuplet.Type {
-			case musicxml.TupletTypeStart:
-				pairs = append(pairs, [2]entity.Coordinate{
-					entity.Coordinate{
-						X: float64(n.PositionX),
-						Y: float64(n.PositionY),
-					},
-				})
-				pairData = append(pairData, n.TimeModifications.ActualNotes.Value)
-			case musicxml.TupletTypeStop:
-				curr := pairs[len(pairs)-1]
-				curr[1] = entity.Coordinate{
-					X: float64(n.PositionX),
-					Y: float64(n.PositionY),
-				}
-
-				pairs[len(pairs)-1] = curr
+		switch n.Tuplet.Type {
+		case musicxml.TupletTypeStart:
+			pairs = append(pairs, [2]CoordinateWithTuplet{
+				{
+					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
+					Tuplet:     *n.Tuplet,
+				},
+			})
+			pairData = append(pairData, n.TimeModifications.ActualNotes.Value)
+		case musicxml.TupletTypeStop:
+			curr := pairs[len(pairs)-1]
+			curr[1] = CoordinateWithTuplet{
+				Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
+				Tuplet:     *n.Tuplet,
 			}
+
+			pairs[len(pairs)-1] = curr
 		}
 	}
 
@@ -210,9 +211,18 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 			end := pair[1]
 			start := pair[0]
 
-			x := end.X - start.X
+			x := start.X + ((end.X - start.X) / 2)
+			if start.Tuplet.Braket == musicxml.BoolYes {
+				canv.Qbez(
+					int(start.X), int(end.Y)-22,
+					int(x)+4, int(start.Y)-38,
+					int(end.X)+8, int(end.Y)-22,
+					"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8",
+				)
+				canv.CenterRect(int(x)+4, int(start.Y)-26, 10, 12, "fill:white;stroke:none;")
+			}
+			canv.Text(int(x), int(start.Y)-22, fmt.Sprintf("%d", pairData[i]))
 
-			canv.Text(int((start.X + (x / 2))), int(start.Y)-20, fmt.Sprintf("%d", pairData[i]))
 		}
 		canv.Gend()
 	}

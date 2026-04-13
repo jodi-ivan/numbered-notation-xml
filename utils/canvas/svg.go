@@ -42,6 +42,8 @@ type Canvas interface {
 	Circle(x int, y int, r int, s ...string)
 	Line(x1 int, y1 int, x2 int, y2 int, s ...string)
 	Path(d string, s ...string)
+	Rect(x int, y int, w int, h int, s ...string)
+	CenterRect(x int, y int, w int, h int, s ...string)
 	Qbez(sx int, sy int, cx int, cy int, ex int, ey int, s ...string)
 	Qbezier(sx int, sy int, cx int, cy int, ex int, ey int, tx int, ty int, s ...string)
 	Text(x int, y int, t string, s ...string)
@@ -91,6 +93,13 @@ func (c *_canvas) Qbezier(sx int, sy int, cx int, cy int, ex int, ey int, tx int
 }
 func (c *_canvas) Text(x int, y int, t string, s ...string) {
 	c.s.Text(x, y, t, s...)
+}
+
+func (c *_canvas) Rect(x int, y int, w int, h int, s ...string) {
+	c.s.Rect(x, y, w, h, s...)
+}
+func (c *_canvas) CenterRect(x int, y int, w int, h int, s ...string) {
+	c.s.CenterRect(x, y, w, h, s...)
 }
 
 func (c *_canvas) Writer() io.Writer {

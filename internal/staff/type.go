@@ -1,6 +1,9 @@
 package staff
 
-import "github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+import (
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+)
 
 type StaffInfo struct {
 	Multiline        bool
@@ -9,6 +12,11 @@ type StaffInfo struct {
 	NextLineRenderer []*entity.NoteRenderer
 
 	ForceNewLine bool
+}
+
+type CoordinateWithTuplet struct {
+	entity.Coordinate
+	Tuplet musicxml.Tuplet
 }
 
 const (

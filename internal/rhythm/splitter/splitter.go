@@ -34,6 +34,7 @@ func (bs *beamSplitter) Split(ctx context.Context, notes []*entity.NoteRenderer,
 	beamSegments[2] = CleanBeamByNumber(ctx, notes, 2)
 
 	currentTimesig := ts.GetTimesignatureOnMeasure(ctx, measureNumber)
+	beamSegments[1] = splitTuplet(notes, beamSegments[1])
 	switch currentTimesig.BeatType {
 	case 4, 2:
 		bs.quarter.Split(ctx, notes, ts, beamSegments)

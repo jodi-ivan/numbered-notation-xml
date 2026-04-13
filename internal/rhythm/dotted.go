@@ -1,6 +1,8 @@
 package rhythm
 
 import (
+	"math"
+
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -15,6 +17,7 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 	lastDotLoc := 0
 	dotCount := 0
 
+	hasDashedSlur := false
 	var prev *entity.NoteRenderer
 
 	revisionX := map[int]int{}
@@ -39,7 +42,12 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 		}
 		n.PositionX = x
 		n.PositionY = y
-		x += n.Width
+		if n.IsLengthTakenFromLyric {
+			x += n.Width
+		} else {
+			x += int(math.Min(constant.UPPERCASE_LENGTH*2, float64(n.Width)))
+			// x += 4
+		}
 		if prev != nil && prev.IsLengthTakenFromLyric && n.IsDotted {
 			if float64(prev.Width) > float64(constant.UPPERCASE_LENGTH*dotCount) {
 				diff := (prev.Width - (constant.UPPERCASE_LENGTH * dotCount))
@@ -48,7 +56,6 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 
 		}
 
-		hasDashedSlur := false
 		for _, s := range n.Slur {
 			if s.LineType == musicxml.NoteSlurLineTypeDashed {
 				hasDashedSlur = true
@@ -60,6 +67,7 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 			x -= n.Width
 			x += constant.LOWERCASE_LENGTH * 2
 			n.Width = constant.UPPERCASE_LENGTH
+			hasDashedSlur = false
 		}
 
 		prev = n

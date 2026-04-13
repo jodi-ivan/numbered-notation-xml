@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -28,37 +29,33 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 	}
 
 	offsetStart := map[musicxml.BarLineStyle]int{
-		musicxml.BarLineStyleRegular:    9,
-		musicxml.BarLineStyleLightHeavy: 4,
+		musicxml.BarLineStyleRegular:    2,
+		musicxml.BarLineStyleLightHeavy: int(barline.GetBarlineWidth(musicxml.BarLineStyleLightHeavy)),
 	}
 
 	offsetEnd := map[musicxml.BarLineStyle]int{
 		musicxml.BarLineStyleLightHeavy: -3,
 	}
-	for _, note := range notes {
+	for notePos, note := range notes {
 		if note.Barline != nil && note.Barline.Ending != nil {
 			switch note.Barline.Ending.Type {
 			case musicxml.BarlineEndingTypeStart:
-				pairs = append(pairs, [2]entity.Coordinate{
-					entity.Coordinate{
-						X: float64(note.PositionX),
-						Y: float64(note.PositionY),
-					},
-				})
+				pos := entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY))
+				if notePos > 0 && notes[notePos-1].Barline != nil &&
+					notes[notePos-1].Barline.BarStyle != musicxml.BarLineStyleNone {
+					pos = entity.NewCoordinate(float64(notes[notePos-1].PositionX), float64(notes[notePos-1].PositionY))
+
+				}
+				pairs = append(pairs, [2]entity.Coordinate{pos})
 				pairsData = append(pairsData, note.Barline.Ending.Number)
 				beginTarget, ok := rightMeasureMap[note.MeasureNumber-1]
 				if !ok {
 					beginTarget = musicxml.BarLineStyleRegular
 				}
-				pairsBar = append(pairsBar, [2]musicxml.BarLineStyle{
-					beginTarget,
-				})
+				pairsBar = append(pairsBar, [2]musicxml.BarLineStyle{beginTarget})
 			case musicxml.BarlineEndingTypeStop, musicxml.BarlineEndingTypeDiscontinue:
 				curr := pairs[len(pairs)-1]
-				curr[1] = entity.Coordinate{
-					X: float64(note.PositionX),
-					Y: float64(note.PositionY),
-				}
+				curr[1] = entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY))
 
 				pairs[len(pairs)-1] = curr
 
@@ -71,13 +68,13 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 		canv.Group("class='staff-topping'")
 
 		for i, pair := range pairs {
-			x1 := int(math.Round(pair[0].X)) + (offsetStart[pairsBar[i][0]] * 2) + 5
+			x1 := int(math.Round(pair[0].X)) + offsetStart[pairsBar[i][0]]
 			x2 := int(math.Round(pair[1].X)) - offsetEnd[pairsBar[i][1]] - 5
 			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:60%"`)
 			// vertical line at start
 			canv.Line(
 				x1,
-				int(math.Round(pair[0].Y))-20,
+				int(math.Round(pair[0].Y))-25,
 				x1,
 				int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
@@ -89,10 +86,13 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 				int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
+			if i%2 == 1 {
+				continue
+			}
 			// vertical line at end
 			canv.Line(
 				x2,
-				int(math.Round(pair[0].Y))-20,
+				int(math.Round(pair[0].Y))-25,
 				x2,
 				int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
@@ -172,6 +172,14 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 	}
 
 	for _, pair := range dashSet {
+		if pair[1].X == 0 {
+			n := notes[len(notes)-1]
+			if n.Barline != nil {
+				n = notes[len(notes)-2]
+			}
+			pair[1].X = float64(n.PositionX) + 4
+			pair[1].Y = pair[0].Y
+		}
 		canv.Line(int(pair[0].X)+constant.LOWERCASE_LENGTH, int(pair[0].Y)-25, int(pair[1].X), int(pair[1].Y)-25, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1;stroke-dasharray:4 8;")
 	}
 	if hasStaffText {

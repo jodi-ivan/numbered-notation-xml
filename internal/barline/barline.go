@@ -38,7 +38,7 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 		if lastRightBarlinePosition != nil {
 			pos = int(lastRightBarlinePosition.X)
 			if lastBarlineRepeat {
-				pos += LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT
+				pos += LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT - int(barlineWidth[musicxml.BarLineStyleHeavyHeavy]/2)
 			}
 		}
 		result := &entity.NoteRenderer{
@@ -84,7 +84,8 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 		Width:         BARLINE_AFTER_SPACE,
 		// HACK: why there is no width define here?
 	}
-	x += BARLINE_AFTER_SPACE
+
+	// x += BARLINE_AFTER_SPACE
 	if barline.Repeat != nil && barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
 		x -= 5 // the semicolon offset
 	}

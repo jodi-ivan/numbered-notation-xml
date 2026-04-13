@@ -141,7 +141,12 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 				}
 
 				origPos := (len(note.MeasureText) - 1) * 10
-				canv.Text(xPos, (note.PositionY-origPos)-offset-25-(i*-10), t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
+				y := (note.PositionY - origPos) - offset - 25 - (i * -10)
+				if t.RelativeY < 0 {
+					y = note.PositionY + (i * 10) + (len(note.Lyric) * 25) + 20
+					style = []string{"font-size:60%", "font-family:'Figtree'", "font-weight:600"}
+				}
+				canv.Text(xPos, y, t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
 			}
 		}
 

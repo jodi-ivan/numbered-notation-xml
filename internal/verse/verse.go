@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -69,7 +70,7 @@ func (v *verseInteractor) parse(y int, verses map[int]repository.HymnVerse) Pars
 
 		err := json.Unmarshal([]byte(verse.Content.String), &whole)
 		if err != nil {
-			log.Println("[RenderVerse] failed to unmarshal, err ", err)
+			log.Printf("[RenderVerse] failed to unmarshal for verse %d, err %s\n", i, err.Error())
 			return result
 		}
 
@@ -176,7 +177,10 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		prefixNum := fmt.Sprintf("%d. ", i+1)
 		canv.Text(xPos-5-int(v.Lyric.CalculateLyricWidth(prefixNum)), y, prefixNum)
 		for line, liveVerse := range currentVerse.Verse {
-			canv.Text(xPos, y, liveVerse)
+			if strings.HasPrefix(liveVerse, "    ") {
+				liveVerse = strings.ReplaceAll(liveVerse, "    ", strings.Repeat("&#160;", 4))
+			}
+			canv.TextUnescaped(float64(xPos), float64(y), liveVerse)
 			cursor := footnote.VerseLineCursor{
 				VerseNo:    i + 1,
 				LinePos:    line + 1,

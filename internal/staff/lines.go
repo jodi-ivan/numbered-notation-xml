@@ -105,6 +105,13 @@ func PrepareNextLines(staffInfo StaffInfo, notes []*entity.NoteRenderer, rightBa
 	if staffInfo.MarginBottom < (maxTotalLyric-1)*25 {
 		staffInfo.MarginBottom = (maxTotalLyric - 1) * 25
 	}
+
+	if len(staffInfo.NextLineRenderer) == 0 && rightBarline.Barline.BarStyle == musicxml.BarLineStyleNone {
+		return StaffInfo{
+			NextLineRenderer: []*entity.NoteRenderer{},
+			MarginLeft:       constant.LAYOUT_INDENT_LENGTH,
+		}
+	}
 	staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, rightBarline)
 	return staffInfo
 

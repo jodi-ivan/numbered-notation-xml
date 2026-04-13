@@ -70,6 +70,10 @@ type TimeSignature struct {
 	humanized  string
 }
 
+func (ts *TimeSignature) IsEmpty() bool {
+	return len(ts.Signatures) == 0
+}
+
 func (ts *TimeSignature) GetHumanized() string {
 	if ts.humanized != "" {
 		return ts.humanized
@@ -103,6 +107,11 @@ func (ts *TimeSignature) GetHumanized() string {
 }
 
 func (ts TimeSignature) GetTimesignatureOnMeasure(ctx context.Context, measure int) Time {
+	if ts.IsEmpty() {
+		return Time{
+			BeatType: 4,
+		}
+	}
 	if len(ts.Signatures) == 1 {
 		return ts.Signatures[0]
 	}

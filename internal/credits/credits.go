@@ -45,6 +45,11 @@ func autoWrapText(text string, leftIndent int) ([]string, []int) {
 	for _, word := range full {
 		word = strings.TrimSpace(word)
 		length += spaceWidth + 4
+		wordLength := int(utils.CalculateSecondaryLyricWidth(word))
+		if length+wordLength < available && strings.HasPrefix(word, utils.ITALIC_OPENING) && strings.HasSuffix(word, utils.ITALIC_CLOSING) {
+			result = append(result, utils.ReplaceItalicToSpan(word))
+			continue
+		}
 		if strings.HasPrefix(word, utils.ITALIC_OPENING) || italic {
 			cleaned := strings.TrimSuffix(word, utils.ITALIC_CLOSING)
 			cleaned = strings.TrimPrefix(cleaned, utils.ITALIC_OPENING)
@@ -64,7 +69,7 @@ func autoWrapText(text string, leftIndent int) ([]string, []int) {
 				result = append(result, fmt.Sprintf("%s%s", cleaned, utils.TSPAN_CLOSING))
 			}
 		} else {
-			length += int(utils.CalculateSecondaryLyricWidth(word))
+			length += wordLength
 			result = append(result, word)
 		}
 
@@ -195,6 +200,10 @@ func renderReferences(canv canvas.Canvas, y int, metadata repository.HymnData) {
 }
 
 func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canvas, y *int, metadata repository.HymnData) {
+
+	if metadata.Lyric == "" {
+		return
+	}
 	canv.Group(GROUP_CLASSNAME, GROUP_STYLE)
 
 	lastLineIndent := renderMusicAndLyric(canv, y, metadata)

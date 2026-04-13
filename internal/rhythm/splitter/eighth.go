@@ -67,7 +67,9 @@ func (es *eighthSplitter) Split(ctx context.Context, notes []*entity.NoteRendere
 	diff := (rightIndexAfterIntervalEndIndex - rightIndexAfterIntervalStartIndex + 1) % 3
 
 	notes[rightIndexAfterIntervalStartIndex-1+diff].UpdateBeam(1, musicxml.NoteBeamTypeEnd)
-	notes[rightIndexAfterIntervalStartIndex+diff].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+	if rightIndexAfterIntervalStartIndex+diff < len(notes) {
+		notes[rightIndexAfterIntervalStartIndex+diff].UpdateBeam(1, musicxml.NoteBeamTypeBegin)
+	}
 
 	unprocessedSegment = append(unprocessedSegment, BeamSplitMarker{StartIndex: rightIndexAfterIntervalStartIndex + diff, EndIndex: rightIndexAfterIntervalEndIndex})
 

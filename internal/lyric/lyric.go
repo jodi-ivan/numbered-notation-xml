@@ -5,7 +5,9 @@ import (
 	"math"
 	"regexp"
 	"strings"
+	"unicode"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -85,9 +87,6 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 			}
 			noteRenderer.Lyric[currLyric.Number-1] = l
 			currWidth := int(math.Round(li.CalculateLyricWidth(lyricText)))
-			if currLyric.Syllabic == musicxml.LyricSyllabicTypeEnd || currLyric.Syllabic == musicxml.LyricSyllabicTypeSingle {
-				currWidth += constant.LOWERCASE_LENGTH
-			}
 
 			lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
 		}
@@ -117,7 +116,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 	var prev *entity.NoteRenderer
 	minPrefix := float64(constant.LAYOUT_WIDTH)
 
-	for _, n := range measure {
+	for notePos, n := range measure {
 		yPos := float64(n.PositionY)
 		for i, l := range n.Lyric {
 			if len(l.Text) == 0 {
@@ -133,14 +132,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 				text = prefix[0].Lyrics.Text
 				xPos, yPos = int(prefix[0].Coordinate.X), prefix[0].Coordinate.Y
 			} else if len(prefix) == 2 {
-				if n.LeadingHeader != "" {
-					prefixWidth := li.CalculateLyricWidth(n.LeadingHeader)
-					minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X-prefixWidth)
-					prefixes[n.LeadingHeader] = LyricPosition{
-						Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
-						Lyrics:     entity.Lyric{Text: []entity.Text{{Value: n.LeadingHeader}}},
-					}
-				}
+
 				minPrefix = math.Min(minPrefix, prefix[0].Coordinate.X)
 				text = prefix[1].Lyrics.Text
 				l.Text = text
@@ -150,6 +142,18 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 					prefix[0].Coordinate.Y = yPos + (math.Trunc(float64(i)/MAX_LINE_PER_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC)
 				}
 				prefixes[entity.LyricVal(prefix[0].Lyrics.Text).String()] = prefix[0]
+			}
+
+			if n.LeadingHeader != "" && !unicode.IsNumber(rune(n.LeadingHeader[0])) {
+				prefixWidth := li.CalculateLyricWidth(n.LeadingHeader)
+				if notePos > 0 && measure[notePos-1].Barline != nil {
+					prefixWidth += barline.GetBarlineWidth(measure[notePos-1].Barline.BarStyle)
+				}
+				minPrefix = math.Min(minPrefix, float64(n.PositionX)-prefixWidth-constant.LOWERCASE_LENGTH)
+				prefixes[n.LeadingHeader] = LyricPosition{
+					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
+					Lyrics:     entity.Lyric{Text: []entity.Text{{Value: n.LeadingHeader}}},
+				}
 			}
 
 			lyricVal := entity.LyricVal(text).String()

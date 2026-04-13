@@ -124,6 +124,10 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 				offset = 15
 			}
 
+			if notes[0].Barline != nil && notes[0].Barline.Ending != nil {
+				offset += 8
+			}
+
 			for i, t := range note.MeasureText {
 
 				style := []string{`font-style:italic`}

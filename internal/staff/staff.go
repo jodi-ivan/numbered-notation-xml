@@ -2,6 +2,7 @@ package staff
 
 import (
 	"context"
+	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -52,6 +53,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 
 	var lastRightBarlinePosition *barline.CoordinateWithBarline
+	yOffsetRepeat := false
 	yOffset := false
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
@@ -59,6 +61,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	}
 	for mi, measure := range measures {
 		measure.Build()
+
 		notes := []*entity.NoteRenderer{}
 
 		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
@@ -77,6 +80,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				}
 				alignMeasures = append(alignMeasures, leftBarlineRenderer)
 				x += barlineInfo.XIncrement
+
+				yOffsetRepeat = yOffsetRepeat || leftBarlineRenderer.Barline.Ending != nil
 			}
 		}
 
@@ -91,7 +96,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
 
 			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) && currTimesig.IsCommonTime() {
-				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength {
+				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength && mergedLength < 3 {
 					note, noteLength = mergedNote, mergedLength
 					skipNote[notePos+1] = true
 				}
@@ -135,7 +140,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1
 			hasMeasureText := si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
-			if hasMeasureText {
+			if hasMeasureText || (len(note.MeasureText) > 0 && y == FIRST_STAFF_Y_POS) {
 				yOffset = true
 			}
 
@@ -211,7 +216,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				Barline:    *rightBarlineRenderer.Barline,
 			}
 
-			x += barline.BARLINE_AFTER_SPACE
+			x += constant.LOWERCASE_LENGTH
 			if measure.RightMeasureText != nil {
 				rightBarlineRenderer.MeasureText = []musicxml.MeasureText{
 					{
@@ -232,7 +237,12 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	}
 	if yOffset {
 		y += MEASURE_TEXT_OFFSET
-		staffInfo.MarginBottom = MEASURE_TEXT_OFFSET
+		staffInfo.MarginBottom = int(math.Max(MEASURE_TEXT_OFFSET, float64(staffInfo.MarginBottom)))
+
+		if yOffsetRepeat {
+			y += 10
+			staffInfo.MarginBottom += 10
+		}
 	}
 
 	si.RenderAlign.RenderWithAlign(ctx, canv, y, timeSignature, align)

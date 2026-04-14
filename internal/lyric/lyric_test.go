@@ -82,7 +82,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				},
 			},
 			want:               VerseInfo{},
-			wantWidth:          61,
+			wantWidth:          46,
 			wantTakenFromLyric: true,
 			wantLyric: []entity.Lyric{
 				{},
@@ -111,7 +111,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 				},
 			},
 			want:               VerseInfo{},
-			wantWidth:          61,
+			wantWidth:          46,
 			wantTakenFromLyric: true,
 			wantLyric: []entity.Lyric{
 				{

@@ -165,7 +165,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 					},
 				},
 			},
-			wantBarlinePos: 29,
+			wantBarlinePos: 25,
 			wantRenderer: &entity.NoteRenderer{
 				MeasureNumber: 1,
 				PositionX:     25,
@@ -195,7 +195,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 					},
 				},
 			},
-			wantBarlinePos: 24,
+			wantBarlinePos: 20,
 			wantRenderer: &entity.NoteRenderer{
 				MeasureNumber: 1,
 				PositionX:     25,

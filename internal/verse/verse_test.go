@@ -189,7 +189,7 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 				canv.EXPECT().Group("class='verses'", "style='font-family:Caladea'")
 				canv.EXPECT().Group("class='verse'", "number='2'")
 				canv.EXPECT().Text(541, 300, "2. ")
-				canv.EXPECT().Text(555, 300, " Dalam dunia 'ku dikawal")
+				canv.EXPECT().TextUnescaped(555.0, 300.0, " Dalam dunia 'ku dikawal")
 
 				canv.EXPECT().Group()
 				canv.EXPECT().Qbez(582, 302, 584, 307, 586, 302, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")

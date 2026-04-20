@@ -15,7 +15,8 @@ type Note struct {
 
 	TimeModification *TimeModification `xml:"time-modification"`
 
-	MeasureText []MeasureText `xml:"-"`
+	MeasureText   []MeasureText `xml:"-"`
+	IndexPosition int           `xml:"-"`
 }
 
 func (n Note) IsBreathMark() bool {

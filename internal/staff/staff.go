@@ -3,6 +3,7 @@ package staff
 import (
 	"context"
 	"math"
+	"slices"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -16,14 +17,16 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
+	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 type Staff interface {
-	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
+	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, metadata *repository.HymnMetadata, measures []musicxml.Measure, data StaffData) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
 	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool
-	Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int
+	Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *repository.HymnMetadata) int
 }
 
 type staffInteractor struct {
@@ -48,24 +51,28 @@ func NewStaff() Staff {
 	}
 }
 
-func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
+func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, metadata *repository.HymnMetadata, measures []musicxml.Measure, data StaffData) (staffInfo StaffInfo) {
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 
 	var lastRightBarlinePosition *barline.CoordinateWithBarline
-	yOffsetRepeat := false
-	yOffset := false
+	yOffsetRepeat, yOffset := false, false
+	refreinStartNote := false
 	align := [][]*entity.NoteRenderer{}
-	if len(prevNotes) > 0 {
-		align, staffInfo = ProcessPreviousLines(prevNotes, y)
+	pos := 0
+	startSyllable := data.SyllableCount
+	if len(data.PrevNotes) > 0 {
+		align, staffInfo = ProcessPreviousLines(data.PrevNotes, y)
+		pos = data.PrevNotes[len(data.PrevNotes)-1].IndexPosition + 1
 	}
 	for mi, measure := range measures {
+		mSyllcount := 0
 		measure.Build()
 
 		notes := []*entity.NoteRenderer{}
 
-		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
-		currKeySig := keySignature.GetKeyOnMeasure(ctx, measure.Number)
+		currTimesig := data.TimeSig.GetTimesignatureOnMeasure(ctx, measure.Number)
+		currKeySig := data.KeySig.GetKeyOnMeasure(ctx, measure.Number)
 
 		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
 		rctx = context.WithValue(rctx, constant.CtxKeyTimeSignature, currTimesig)
@@ -93,7 +100,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			}
 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(currKeySig, note)
-			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
+			noteLength := data.TimeSig.GetNoteLength(rctx, measure.Number, note)
 
 			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) && currTimesig.IsCommonTime() {
 				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength && mergedLength < 3 {
@@ -105,7 +112,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			// additionalRenderer is all the new notes that needs represented in numbered when the original musicxml doesnot
 			// for example a half note C have to be represented by following . next to number
-			additionalNotes := si.Numbered.GetLengthNote(rctx, timeSignature, measure.Number, noteLength)
+			additionalNotes := si.Numbered.GetLengthNote(rctx, data.TimeSig, measure.Number, noteLength)
 			if skipNote[notePos+1] {
 				// split notes by the beam. currently only happen when there is ties
 				next := measure.Notes[notePos+1]
@@ -129,7 +136,11 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				TimeModifications: note.TimeModification,
 
 				LeadingHeader: measure.PrefixHeader[notePos],
+				IndexPosition: pos + note.IndexPosition + data.IndexStart,
 			}
+
+			// log.Println(measure.Number, pos+note.IndexPosition+data.IndexStart, data.IndexStart, pos, note.IndexPosition)
+			staffInfo.EndIndex = pos + note.IndexPosition + data.IndexStart
 
 			if note.Notations != nil && note.Notations.Fermata != nil {
 				renderer.Fermata = note.Notations.Fermata
@@ -142,19 +153,35 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			hasMeasureText := si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
 			if hasMeasureText || (len(note.MeasureText) > 0 && y == FIRST_STAFF_Y_POS) {
 				yOffset = true
+
+				isRefrein := slices.ContainsFunc(renderer.MeasureText, func(t musicxml.MeasureText) bool {
+					return t.Text == "Refrein"
+				})
+
+				if hasMeasureText && isRefrein && renderer.MeasureNumber == 1 && notePos == 0 {
+					staffInfo.StartRenderOtherNotes = false
+				}
+
+				refreinStartNote = isRefrein
 			}
 
 			si.Rhythm.SetRhythmNotation(renderer, note, n)
 
 			// lyric
-			verseInfo := si.Lyric.SetLyricRenderer(renderer, note)
+			verseInfo := si.Lyric.SetLyricRenderer(renderer, note.Lyric)
 			if staffInfo.MarginBottom < verseInfo.MarginBottom {
 				staffInfo.MarginBottom = verseInfo.MarginBottom
+			}
+
+			if verseInfo.HasLyric {
+				mSyllcount++
+				staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || lyric.HasPrefix(renderer)
 			}
 
 			additonalRenderer := si.Numbered.RendererFromAdditional(note, renderer, additionalNotes)
 			if len(additonalRenderer) > 2 {
 				additionalNote := additonalRenderer[len(additonalRenderer)-1]
+
 				shouldReplace := notePos+2 < len(measure.Notes) && note.Type == additionalNotes[len(additionalNotes)-1].Type
 				if skipNote[notePos+1] && measure.Notes[notePos+1].IsBreathMark() && shouldReplace {
 					additonalRenderer[len(additonalRenderer)-1] = numbered.ReplaceDotWithNumbered(additionalNote, renderer)
@@ -169,7 +196,26 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				notes = append(notes, breathPauseRenderer)
 			}
 
+			if notePos == len(measure.Notes)-1 {
+				pos = measure.Notes[len(measure.Notes)-1].IndexPosition + 1
+			}
+
 		}
+
+		if (data.ReffAtStart || staffInfo.StartRenderOtherNotes) || (measures[0].Number == 1 && !refreinStartNote) {
+			marginBottom := verse.LoadOtherVerse(notes, metadata, startSyllable)
+			if staffInfo.MarginBottom < marginBottom {
+				staffInfo.MarginBottom = marginBottom
+			}
+			startSyllable += mSyllcount
+			staffInfo.StartRenderOtherNotes = true
+		} else {
+			mSyllcount = 0
+			startSyllable = 0
+			staffInfo.SyllableCount = 0
+		}
+
+		// data || staffinfo
 
 		x, y = si.Rhythm.AdjustMultiDottedRenderer(notes, x, y)
 		var rightBarlineRenderer *entity.NoteRenderer
@@ -245,7 +291,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 	}
 
-	si.RenderAlign.RenderWithAlign(ctx, canv, y, timeSignature, align)
+	staffInfo.SyllableCount += startSyllable
+
+	si.RenderAlign.RenderWithAlign(ctx, canv, y, data.TimeSig, align)
 
 	return
 }

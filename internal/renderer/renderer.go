@@ -59,7 +59,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	ir.Header.RenderSheetHeader(ctx, canv, music.Credit, metadata)
 	ir.Header.RenderKeyandTimeSignatures(ctx, canv, keySignature, timeSignature)
 
-	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature)
+	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature, metadata)
 
 	if metadata != nil {
 		ir.Footnote.RenderMusicFootnotes(ctx, canv, metadata, relativeY)

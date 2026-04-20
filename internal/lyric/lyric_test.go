@@ -126,7 +126,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			li := &lyricInteractor{}
-			if got := li.SetLyricRenderer(tt.args.noteRenderer, tt.args.note); !assert.Equal(t, tt.want, got) {
+			if got := li.SetLyricRenderer(tt.args.noteRenderer, tt.args.note.Lyric); !assert.Equal(t, tt.want, got) {
 				t.Errorf("lyricInteractor.SetLyricRenderer() = %v, want %v", got, tt.want)
 			}
 

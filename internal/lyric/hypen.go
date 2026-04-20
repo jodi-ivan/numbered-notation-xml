@@ -164,7 +164,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 
 	if len(pos) > 0 { // add unpaired syllable before move on to next staff
 		for i, p := range pos {
-			if p[0] != nil && p[1] == nil { // append to end of file
+			if p[0] != nil && p[1] == nil && i < len(lastLyric) { // append to end of file
 				lastXHypen := float64(constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH)
 
 				pEnd := LyricPosition{

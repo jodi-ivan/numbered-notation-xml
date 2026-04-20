@@ -130,17 +130,17 @@ func (mr *MockLyricMockRecorder) RenderLyrics(ctx, canv, measure interface{}) *g
 }
 
 // SetLyricRenderer mocks base method.
-func (m *MockLyric) SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo {
+func (m *MockLyric) SetLyricRenderer(noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetLyricRenderer", noteRenderer, note)
+	ret := m.ctrl.Call(m, "SetLyricRenderer", noteRenderer, rawLyric)
 	ret0, _ := ret[0].(VerseInfo)
 	return ret0
 }
 
 // SetLyricRenderer indicates an expected call of SetLyricRenderer.
-func (mr *MockLyricMockRecorder) SetLyricRenderer(noteRenderer, note interface{}) *gomock.Call {
+func (mr *MockLyricMockRecorder) SetLyricRenderer(noteRenderer, rawLyric interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLyricRenderer", reflect.TypeOf((*MockLyric)(nil).SetLyricRenderer), noteRenderer, note)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLyricRenderer", reflect.TypeOf((*MockLyric)(nil).SetLyricRenderer), noteRenderer, rawLyric)
 }
 
 // SplitLyricPrefix mocks base method.

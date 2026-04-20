@@ -32,7 +32,7 @@ func init() {
 
 type Lyric interface {
 	CalculateLyricWidth(string) float64
-	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
+	SetLyricRenderer(noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
 	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
 	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate)
@@ -49,18 +49,18 @@ func NewLyric() Lyric {
 }
 
 // SetLyricRenderer prepares the renderer for lyrics, also calculate space underneath the note and after the note
-func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo {
+func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo {
 	// lyric
 	var lyricWidth, noteWidth, marginBottom int
 
-	if len(note.Lyric) > 0 {
-		marginBottom = ((len(note.Lyric) - 1) * 25)
-		if len(note.Lyric) > MAX_VERSE_IN_MUSIC {
-			marginBottom += int(len(note.Lyric)/MAX_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC
+	if len(rawLyric) > 0 {
+		marginBottom = ((len(rawLyric) - 1) * 25)
+		if len(rawLyric) > MAX_VERSE_IN_MUSIC {
+			marginBottom += int(len(rawLyric)/MAX_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC
 		}
 
-		noteRenderer.Lyric = make([]entity.Lyric, len(note.Lyric))
-		for _, currLyric := range note.Lyric {
+		noteRenderer.Lyric = make([]entity.Lyric, len(rawLyric))
+		for _, currLyric := range rawLyric {
 			lyricText := ""
 			l := entity.Lyric{
 				Syllabic: currLyric.Syllabic,
@@ -76,9 +76,9 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 			}
 
 			l.Text = texts
-			if currLyric.Number > len(note.Lyric) {
+			if currLyric.Number > len(rawLyric) {
 
-				for i := len(note.Lyric); i < currLyric.Number; i++ {
+				for i := len(rawLyric); i < currLyric.Number; i++ {
 					noteRenderer.Lyric = append(noteRenderer.Lyric, entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeMiddle,
 						Text:     []entity.Text{{}},
@@ -106,6 +106,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 
 	return VerseInfo{
 		MarginBottom: marginBottom,
+		HasLyric:     len(rawLyric) > 0,
 	}
 }
 

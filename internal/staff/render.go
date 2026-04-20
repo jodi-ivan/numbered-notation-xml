@@ -10,10 +10,11 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
+func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *repository.HymnMetadata) int {
 
 	relativeY := constant.TITLE_Y_POS + header.HEADER_OFFSET
 
@@ -23,8 +24,17 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
 	oldMarginButtom := 0
-	for i, st := range staffes {
-		info = si.RenderStaff(ctx, canv, x, relativeY, i == len(staffes)-1, keySignature, timeSignature, st, info.NextLineRenderer...)
+	for _, st := range staffes {
+		data := StaffData{
+			TimeSig:       timeSignature,
+			KeySig:        keySignature,
+			PrevNotes:     info.NextLineRenderer,
+			SyllableCount: info.SyllableCount,
+			IndexStart:    info.EndIndex,
+			ReffAtStart:   info.StartRenderOtherNotes,
+		}
+
+		info = si.RenderStaff(ctx, canv, x, relativeY, metadata, st, data)
 		relativeY = relativeY + 70 + info.MarginBottom
 		if info.ForceNewLine {
 			relativeY += oldMarginButtom
@@ -39,8 +49,16 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	}
 
 	for len(info.NextLineRenderer) > 0 {
+		data := StaffData{
+			TimeSig:       timeSignature,
+			KeySig:        keySignature,
+			PrevNotes:     info.NextLineRenderer,
+			SyllableCount: info.SyllableCount,
+			IndexStart:    info.EndIndex,
+			ReffAtStart:   info.StartRenderOtherNotes,
+		}
 		x = constant.LAYOUT_INDENT_LENGTH
-		info = si.RenderStaff(ctx, canv, x, relativeY, true, keySignature, timeSignature, nil, info.NextLineRenderer...)
+		info = si.RenderStaff(ctx, canv, x, relativeY, metadata, nil, data)
 		relativeY += info.MarginBottom + 70
 	}
 

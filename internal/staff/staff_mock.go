@@ -13,6 +13,7 @@ import (
 	keysig "github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	musicxml "github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	timesig "github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	repository "github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -40,36 +41,31 @@ func (m *MockStaff) EXPECT() *MockStaffMockRecorder {
 }
 
 // Render mocks base method.
-func (m *MockStaff) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
+func (m *MockStaff) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *repository.HymnMetadata) int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Render", ctx, canv, part, keySignature, timeSignature)
+	ret := m.ctrl.Call(m, "Render", ctx, canv, part, keySignature, timeSignature, metadata)
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
 // Render indicates an expected call of Render.
-func (mr *MockStaffMockRecorder) Render(ctx, canv, part, keySignature, timeSignature interface{}) *gomock.Call {
+func (mr *MockStaffMockRecorder) Render(ctx, canv, part, keySignature, timeSignature, metadata interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Render", reflect.TypeOf((*MockStaff)(nil).Render), ctx, canv, part, keySignature, timeSignature)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Render", reflect.TypeOf((*MockStaff)(nil).Render), ctx, canv, part, keySignature, timeSignature, metadata)
 }
 
 // RenderStaff mocks base method.
-func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo {
+func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, metadata *repository.HymnMetadata, measures []musicxml.Measure, data StaffData) StaffInfo {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, canv, x, y, isLastStaff, keySignature, timeSignature, measures}
-	for _, a := range prevNotes {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RenderStaff", varargs...)
+	ret := m.ctrl.Call(m, "RenderStaff", ctx, canv, x, y, metadata, measures, data)
 	ret0, _ := ret[0].(StaffInfo)
 	return ret0
 }
 
 // RenderStaff indicates an expected call of RenderStaff.
-func (mr *MockStaffMockRecorder) RenderStaff(ctx, canv, x, y, isLastStaff, keySignature, timeSignature, measures interface{}, prevNotes ...interface{}) *gomock.Call {
+func (mr *MockStaffMockRecorder) RenderStaff(ctx, canv, x, y, metadata, measures, data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, canv, x, y, isLastStaff, keySignature, timeSignature, measures}, prevNotes...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderStaff", reflect.TypeOf((*MockStaff)(nil).RenderStaff), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderStaff", reflect.TypeOf((*MockStaff)(nil).RenderStaff), ctx, canv, x, y, metadata, measures, data)
 }
 
 // SetMeasureTextRenderer mocks base method.

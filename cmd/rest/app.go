@@ -47,6 +47,7 @@ func main() {
 	ws.Register("GET", "/kidung-jemaat/render/:number", httpRender)
 	//TODO: make the path root as config
 	ws.RegisterStatic("/internal/lab/*filepath", "./files/var/www/html/")
+	ws.RegisterStatic("/assets/fonts/*filepath", "./files/var/www/fonts/")
 
 	ws.Register("POST", "/internal/verse-parser", &lab.LyricParser{})
 

@@ -15,7 +15,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 	pairs := [][2]entity.Coordinate{}
 	pairsData := []string{}
 	pairsBar := [][2]musicxml.BarLineStyle{}
@@ -40,10 +40,10 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 		if note.Barline != nil && note.Barline.Ending != nil {
 			switch note.Barline.Ending.Type {
 			case musicxml.BarlineEndingTypeStart:
-				pos := entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY))
+				pos := entity.NewCoordinate(float64(note.PositionX), float64(y))
 				if notePos > 0 && notes[notePos-1].Barline != nil &&
 					notes[notePos-1].Barline.BarStyle != musicxml.BarLineStyleNone {
-					pos = entity.NewCoordinate(float64(notes[notePos-1].PositionX), float64(notes[notePos-1].PositionY))
+					pos = entity.NewCoordinate(float64(notes[notePos-1].PositionX), float64(y))
 
 				}
 				pairs = append(pairs, [2]entity.Coordinate{pos})
@@ -55,7 +55,7 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 				pairsBar = append(pairsBar, [2]musicxml.BarLineStyle{beginTarget})
 			case musicxml.BarlineEndingTypeStop, musicxml.BarlineEndingTypeDiscontinue:
 				curr := pairs[len(pairs)-1]
-				curr[1] = entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY))
+				curr[1] = entity.NewCoordinate(float64(note.PositionX), float64(y))
 
 				pairs[len(pairs)-1] = curr
 
@@ -73,17 +73,13 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:60%"`)
 			// vertical line at start
 			canv.Line(
-				x1,
-				int(math.Round(pair[0].Y))-25,
-				x1,
-				int(math.Round(pair[1].Y))-30,
+				x1, int(math.Round(pair[0].Y))-25,
+				x1, int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
 			canv.Line(
-				x1,
-				int(math.Round(pair[0].Y))-30,
-				x2,
-				int(math.Round(pair[1].Y))-30,
+				x1, int(math.Round(pair[0].Y))-30,
+				x2, int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
 			if i%2 == 1 {
@@ -91,10 +87,8 @@ func RenderMeasureTopping(ctx context.Context, canv canvas.Canvas, notes []*enti
 			}
 			// vertical line at end
 			canv.Line(
-				x2,
-				int(math.Round(pair[0].Y))-25,
-				x2,
-				int(math.Round(pair[1].Y))-30,
+				x2, int(math.Round(pair[0].Y))-25,
+				x2, int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
 		}
@@ -141,12 +135,12 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 				}
 
 				origPos := (len(note.MeasureText) - 1) * 10
-				y := (note.PositionY - origPos) - offset - 25 - (i * -10)
+				yPos := (note.PositionY - origPos) - offset - 25 - (i * -10)
 				if t.RelativeY < 0 {
-					y = note.PositionY + (i * 10) + (len(note.Lyric) * 25) + 20
+					yPos = note.PositionY + (i * 10) + (len(note.Lyric) * 25) + 20
 					style = []string{"font-size:60%", "font-family:'Figtree'", "font-weight:600"}
 				}
-				canv.Text(xPos, y, t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
+				canv.Text(xPos, yPos, t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
 			}
 		}
 
@@ -193,7 +187,7 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 
 }
 
-func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func RenderTuplet(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 	pairs := [][2]CoordinateWithTuplet{}
 	pairData := []int{}
 	for _, n := range notes {
@@ -205,7 +199,7 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 		case musicxml.TupletTypeStart:
 			pairs = append(pairs, [2]CoordinateWithTuplet{
 				{
-					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
+					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
 					Tuplet:     *n.Tuplet,
 				},
 			})
@@ -213,7 +207,7 @@ func RenderTuplet(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteR
 		case musicxml.TupletTypeStop:
 			curr := pairs[len(pairs)-1]
 			curr[1] = CoordinateWithTuplet{
-				Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
+				Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
 				Tuplet:     *n.Tuplet,
 			}
 

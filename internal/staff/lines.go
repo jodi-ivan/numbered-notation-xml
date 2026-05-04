@@ -3,8 +3,9 @@ package staff
 import (
 	"context"
 
-	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
@@ -36,7 +37,7 @@ func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [
 	return append(result, currentLine)
 }
 
-func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, yPos int) ([][]*entity.NoteRenderer, StaffInfo) {
+func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignature, yPos int) ([][]*entity.NoteRenderer, StaffInfo) {
 	result := [][]*entity.NoteRenderer{}
 	staffInfo := StaffInfo{}
 	pos := -1
@@ -66,7 +67,8 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, yPos int) ([][]*enti
 			result[0] = append(result[0], barlineNote)
 
 			offset = 2
-			staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+			key := ks.GetKeyOnMeasure(context.Background(), prevNotes[0].MeasureNumber) // TEST: need to be tested
+			staffInfo.MarginLeft = gregorian.GetLeftIndent(key)
 			prevNotes[pos].IsNewLine = false
 			staffInfo.ForceNewLine = true
 		}
@@ -75,16 +77,21 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, yPos int) ([][]*enti
 		staffInfo.Multiline = true
 	} else {
 		result = append(result, prevNotes)
-		staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+
+		key := ks.GetKeyOnMeasure(context.Background(), prevNotes[0].MeasureNumber)
+		staffInfo.MarginLeft = gregorian.GetLeftIndent(key)
 	}
 
 	return result, staffInfo
 }
 
-func PrepareNextLines(staffInfo StaffInfo, notes []*entity.NoteRenderer, rightBarline *entity.NoteRenderer) StaffInfo {
+func PrepareNextLines(staffInfo StaffInfo, ks keysig.KeySignature, notes []*entity.NoteRenderer, rightBarline *entity.NoteRenderer) StaffInfo {
 	proceed := false
 	maxTotalLyric := 1
 
+	key := ks.GetKeyOnMeasure(context.Background(), notes[0].MeasureNumber)
+
+	indent := gregorian.GetLeftIndent(key)
 	for _, note := range notes {
 		if !proceed {
 			if note.IsNewLine {
@@ -98,7 +105,7 @@ func PrepareNextLines(staffInfo StaffInfo, notes []*entity.NoteRenderer, rightBa
 		}
 
 		if len(staffInfo.NextLineRenderer) == 0 {
-			note.PositionX = constant.LAYOUT_INDENT_LENGTH
+			note.PositionX = indent
 		}
 		staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, note)
 	}
@@ -109,7 +116,7 @@ func PrepareNextLines(staffInfo StaffInfo, notes []*entity.NoteRenderer, rightBa
 	if len(staffInfo.NextLineRenderer) == 0 && rightBarline.Barline.BarStyle == musicxml.BarLineStyleNone {
 		return StaffInfo{
 			NextLineRenderer: []*entity.NoteRenderer{},
-			MarginLeft:       constant.LAYOUT_INDENT_LENGTH,
+			MarginLeft:       indent,
 		}
 	}
 	staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, rightBarline)

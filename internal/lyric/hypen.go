@@ -67,7 +67,7 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 
 // RenderHypen writes the hypen
 // @measure :is the notes for the whole staff (flatten across measures)
-func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	pos := map[int][2]*LyricPosition{}
 
 	// for tracking the pair of begin to end
@@ -82,7 +82,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, canv canvas.Canvas, 
 			continue
 		}
 
-		yPos := float64(n.PositionY) + 25
+		yPos := float64(y) + 25
 
 		spacing := func(y float64, i int) float64 {
 			if len(n.Lyric) > MAX_VERSE_IN_MUSIC {

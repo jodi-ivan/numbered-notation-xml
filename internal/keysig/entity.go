@@ -19,21 +19,21 @@ func (ksm KeySignatureMode) GetNumberedRoot() string {
 }
 
 var accidentalsSet = map[int][]string{
-	7:  []string{"F", "C", "G", "D", "A", "E", "B"},
-	6:  []string{"F", "C", "G", "D", "A", "E"},
-	5:  []string{"C", "D", "F", "G", "A"},
-	4:  []string{"F", "G", "C", "D"},
-	3:  []string{"C", "F", "G"},
-	2:  []string{"F", "C"},
-	1:  []string{"F"},
-	0:  []string{},
-	-1: []string{"B"},
-	-2: []string{"B", "E"},
-	-3: []string{"E", "A", "B"},
-	-4: []string{"A", "B", "D", "E"},
-	-5: []string{"D", "E", "G", "A", "B"},
-	-6: []string{"G", "A", "B", "C", "D", "E"},
-	-7: []string{"B", "E", "A", "D", "G", "C", "F"},
+	7:  {"F", "C", "G", "D", "A", "E", "B"},
+	6:  {"F", "C", "G", "D", "A", "E"},
+	5:  {"F", "C", "G", "D", "A"},
+	4:  {"F", "C", "G", "D"},
+	3:  {"F", "C", "G"},
+	2:  {"F", "C"},
+	1:  {"F"},
+	0:  {},
+	-1: {"B"},
+	-2: {"B", "E"},
+	-3: {"B", "E", "A"},
+	-4: {"B", "E", "A", "D"},
+	-5: {"B", "E", "A", "D", "G"},
+	-6: {"B", "E", "A", "D", "G", "C"},
+	-7: {"B", "E", "A", "D", "G", "C", "F"},
 }
 
 var modeRoot = map[string]map[int]string{

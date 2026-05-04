@@ -1,0 +1,10 @@
+package gregorian
+
+const (
+	CLEF_WIDTH    = 30
+	PADDING_WIDTH = 10
+
+	ACCIDENTAL_KEY_SIGNATURE_WIDTH = 8
+
+	STAFF_OFFSET = 60
+)

@@ -99,6 +99,9 @@ func (ks *Key) GetBasedPitch() string {
 	return result
 }
 
+func (ks *Key) GetAccidentals() []string {
+	return accidentalsSet[ks.Fifth]
+}
 func (ks Key) GetPitchWithAccidental(note musicxml.Note) string {
 	pitch := note.Pitch.Step
 	var accidental musicxml.NoteAccidental

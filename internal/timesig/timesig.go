@@ -67,6 +67,7 @@ func (t Time) GetNoteLength(ctx context.Context, note musicxml.Note) float64 {
 type TimeSignature struct {
 	IsMixed    bool
 	Signatures []Time
+	UniqueSign []Time
 	humanized  string
 }
 
@@ -150,27 +151,33 @@ func (ts *TimeSignature) GetNoteLength(ctx context.Context, measure int, note mu
 func NewTimeSignatures(ctx context.Context, measures []musicxml.Measure) TimeSignature {
 
 	times := []Time{}
-
+	unique := []Time{}
 	various := map[string]bool{}
 
 	for _, measure := range measures {
 		if measure.Attribute != nil && measure.Attribute.Time != nil {
 			key := fmt.Sprintf("%d/%d", measure.Attribute.Time.Beats, measure.Attribute.Time.BeatType)
-			various[key] = true
+
 			beatType := measure.Attribute.Time.BeatType
 			if beatType == 1 {
 				beatType = 4
 			}
-			times = append(times, Time{
+			t := Time{
 				Measure:  measure.Number,
 				Beat:     measure.Attribute.Time.Beats,
 				BeatType: beatType,
-			})
+			}
+			if _, ok := various[key]; !ok {
+				various[key] = true
+				unique = append(unique, t)
+			}
+			times = append(times, t)
 		}
 	}
 
 	return TimeSignature{
 		IsMixed:    len(various) > 1,
+		UniqueSign: unique,
 		Signatures: times,
 	}
 }

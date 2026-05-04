@@ -20,7 +20,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 
 	staffes := si.SplitLines(ctx, part)
 	key := keySignature.GetKeyOnMeasure(ctx, 1)
-	x := gregorian.GetLeftIndentWithTimeSignature(key)
+	x := gregorian.GetLeftIndentWithTimeSignature(key, timeSignature)
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
@@ -48,7 +48,11 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	for len(info.NextLineRenderer) > 0 {
 		key = keySignature.GetKeyOnMeasure(ctx, info.NextLineRenderer[0].MeasureNumber)
 		x = gregorian.GetLeftIndent(key)
-		info = si.RenderStaff(ctx, canv, x, relativeY, len(staffes)-1, true, keySignature, timeSignature, nil, info.NextLineRenderer...)
+		idx := len(staffes) - 1
+		if idx == 0 {
+			idx = 1
+		}
+		info = si.RenderStaff(ctx, canv, x, relativeY, idx, true, keySignature, timeSignature, nil, info.NextLineRenderer...)
 		relativeY += info.MarginBottom + 130
 	}
 

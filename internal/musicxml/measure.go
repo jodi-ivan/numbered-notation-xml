@@ -5,6 +5,24 @@ import (
 	"strings"
 )
 
+type RepeatInfoType string
+
+const (
+	RepeatInfoTypeOpening RepeatInfoType = "opening"
+	RepeatInfoTypeMiddle  RepeatInfoType = "middle"
+	RepeatInfoTypeClosing RepeatInfoType = "closing"
+	RepeatInfoTypeBoth    RepeatInfoType = "both"
+)
+
+type RepeatInfo struct {
+	Type                 RepeatInfoType
+	SyllableCount        int
+	StartPosition        int
+	OffsetSyllable       int
+	StartIndex           int
+	SectionSyllableCount int
+}
+
 type Measure struct {
 	Appendix     []Element    `xml:",any"`
 	Number       int          `xml:"number,attr"`
@@ -19,6 +37,7 @@ type Measure struct {
 	// FIXME: one centralized place for the measured text
 	RightMeasureText *MeasureText   `xml:"-"`
 	PrefixHeader     map[int]string `xml:"-"`
+	RepeatInfo       *RepeatInfo
 }
 
 func (m *Measure) Build() error {

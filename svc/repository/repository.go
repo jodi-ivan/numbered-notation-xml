@@ -134,6 +134,10 @@ func (r *repository) GetMusicXML(ctx context.Context, filepath string) (musicxml
 
 	var music musicxml.MusicXML
 	err = xml.Unmarshal(content, &music)
+	if err != nil {
+		return musicxml.MusicXML{}, err
+	}
+
 	return music, err
 }
 

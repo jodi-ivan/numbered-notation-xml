@@ -44,7 +44,10 @@ func getFirstPos(notes []*entity.NoteRenderer) int {
 
 func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int) int {
 
-	verse := metadata.Verse[2]
+	verse, ok := metadata.Verse[2] // for know hardcoded two for testing visual
+	if !ok {
+		return 0
+	}
 
 	// TODO: double parsing on the verse.go
 	whole := [][]LyricWordVerse{}
@@ -77,20 +80,20 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 			continue
 		}
 
-		newLyric := lyric.GetMusicxmlLyric(note)
+		newLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
 		txt := flattenSyll[syll].Text
 		if lyric.HasPrefix(note) {
-			txt = "2." + txt
+			txt = "2." + txt // for now, hardcoded. if the lyric has prefix.
 		}
 		newLyric = append(newLyric, musicxml.Lyric{
 			Text: []musicxml.LyricText{
-				{Value: txt},
+				{Value: txt}, // add the lyric to them
 			},
 			Syllabic: flattenSyll[syll].Type,
 			Number:   len(newLyric) + 1,
 		})
 
-		info := li.SetLyricRenderer(note, newLyric)
+		info := li.SetLyricRenderer(note, newLyric) // the one that calculate the margin, padding and width of the notes.
 		if marginBottom < info.MarginBottom {
 			marginBottom = info.MarginBottom
 		}

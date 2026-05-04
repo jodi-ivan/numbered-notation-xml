@@ -114,27 +114,22 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	canv.Gend()
 
 	canv.Group(`class="clef"`, `style="font-size:2em"`)
-	canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH+8, float64(initialY+15), `&#xF026;`)
+	canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH+5, float64(initialY+15), `&#xF026;`)
 	canv.Gend()
 
-	x += 35 + float64(len(accidentalSet)*8)
+	x += 35 + float64(len(accidentalSet)*ACCIDENTAL_KEY_SIGNATURE_WIDTH) + PADDING_WIDTH
 
 	if staffPos == 0 {
-		canv.Group(`class="timesig"`, `style="font-size:2em"`)
-		canv.TextUnescaped(x+10, float64(lines[0]+lines[2])/2, `&#xF034;`)
-		canv.TextUnescaped(x+10, float64(lines[2]+lines[4])/2, `&#xF034;`)
-		canv.Gend()
-		x += 10
-
+		timesig.RenderGregorian(ctx, canv, lines, timeSignature, x)
 	}
 
 	canv.Gend()
 	return 0
 }
 
-func GetLeftIndentWithTimeSignature(key keysig.Key) int {
+func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignature) int {
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
-	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + timesig.GREGORIAN_WIDTH + (PADDING_WIDTH * 3) + keySigWith
+	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(timeSig.UniqueSign)) + (PADDING_WIDTH * 3) + keySigWith
 }
 
 func GetLeftIndent(key keysig.Key) int {

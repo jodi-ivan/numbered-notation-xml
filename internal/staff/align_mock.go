@@ -10,6 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	entity "github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	keysig "github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	timesig "github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -38,13 +39,13 @@ func (m *MockRenderStaffWithAlign) EXPECT() *MockRenderStaffWithAlignMockRecorde
 }
 
 // RenderWithAlign mocks base method.
-func (m *MockRenderStaffWithAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, y int, ts timesig.TimeSignature, noteRenderer [][]*entity.NoteRenderer) {
+func (m *MockRenderStaffWithAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, staffPos, y int, ts timesig.TimeSignature, ks keysig.KeySignature, noteRenderer [][]*entity.NoteRenderer) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderWithAlign", ctx, canv, y, ts, noteRenderer)
+	m.ctrl.Call(m, "RenderWithAlign", ctx, canv, staffPos, y, ts, ks, noteRenderer)
 }
 
 // RenderWithAlign indicates an expected call of RenderWithAlign.
-func (mr *MockRenderStaffWithAlignMockRecorder) RenderWithAlign(ctx, canv, y, ts, noteRenderer interface{}) *gomock.Call {
+func (mr *MockRenderStaffWithAlignMockRecorder) RenderWithAlign(ctx, canv, staffPos, y, ts, ks, noteRenderer interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderWithAlign", reflect.TypeOf((*MockRenderStaffWithAlign)(nil).RenderWithAlign), ctx, canv, y, ts, noteRenderer)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderWithAlign", reflect.TypeOf((*MockRenderStaffWithAlign)(nil).RenderWithAlign), ctx, canv, staffPos, y, ts, ks, noteRenderer)
 }

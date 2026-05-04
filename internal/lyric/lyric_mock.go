@@ -106,27 +106,27 @@ func (mr *MockLyricMockRecorder) RenderElision(ctx, canv, text, lyricPart, pos i
 }
 
 // RenderHypen mocks base method.
-func (m *MockLyric) RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (m *MockLyric) RenderHypen(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderHypen", ctx, canv, measure)
+	m.ctrl.Call(m, "RenderHypen", ctx, y, canv, measure)
 }
 
 // RenderHypen indicates an expected call of RenderHypen.
-func (mr *MockLyricMockRecorder) RenderHypen(ctx, canv, measure interface{}) *gomock.Call {
+func (mr *MockLyricMockRecorder) RenderHypen(ctx, y, canv, measure interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderHypen", reflect.TypeOf((*MockLyric)(nil).RenderHypen), ctx, canv, measure)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderHypen", reflect.TypeOf((*MockLyric)(nil).RenderHypen), ctx, y, canv, measure)
 }
 
 // RenderLyrics mocks base method.
-func (m *MockLyric) RenderLyrics(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (m *MockLyric) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderLyrics", ctx, canv, measure)
+	m.ctrl.Call(m, "RenderLyrics", ctx, y, canv, measure)
 }
 
 // RenderLyrics indicates an expected call of RenderLyrics.
-func (mr *MockLyricMockRecorder) RenderLyrics(ctx, canv, measure interface{}) *gomock.Call {
+func (mr *MockLyricMockRecorder) RenderLyrics(ctx, y, canv, measure interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderLyrics", reflect.TypeOf((*MockLyric)(nil).RenderLyrics), ctx, canv, measure)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderLyrics", reflect.TypeOf((*MockLyric)(nil).RenderLyrics), ctx, y, canv, measure)
 }
 
 // SetLyricRenderer mocks base method.
@@ -144,15 +144,15 @@ func (mr *MockLyricMockRecorder) SetLyricRenderer(noteRenderer, note interface{}
 }
 
 // SplitLyricPrefix mocks base method.
-func (m *MockLyric) SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
+func (m *MockLyric) SplitLyricPrefix(note *entity.NoteRenderer, y, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SplitLyricPrefix", note, part, leftBarline)
+	ret := m.ctrl.Call(m, "SplitLyricPrefix", note, y, part, leftBarline)
 	ret0, _ := ret[0].([]LyricPosition)
 	return ret0
 }
 
 // SplitLyricPrefix indicates an expected call of SplitLyricPrefix.
-func (mr *MockLyricMockRecorder) SplitLyricPrefix(note, part, leftBarline interface{}) *gomock.Call {
+func (mr *MockLyricMockRecorder) SplitLyricPrefix(note, y, part, leftBarline interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SplitLyricPrefix", reflect.TypeOf((*MockLyric)(nil).SplitLyricPrefix), note, part, leftBarline)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SplitLyricPrefix", reflect.TypeOf((*MockLyric)(nil).SplitLyricPrefix), note, y, part, leftBarline)
 }

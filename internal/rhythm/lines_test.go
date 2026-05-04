@@ -353,7 +353,7 @@ func Test_rhythmInteractor_RenderSlurTies(t *testing.T) {
 				canv = tt.canv(ctrl)
 			}
 			var ri rhythmInteractor
-			ri.RenderSlurTies(context.Background(), canv, tt.notes, tt.maxXPosition)
+			ri.RenderSlurTies(context.Background(), 100, canv, tt.notes, tt.maxXPosition)
 		})
 	}
 }
@@ -443,7 +443,7 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 			if tt.canv != nil {
 				canv = tt.canv(ctrl)
 			}
-			ri.RenderBeam(context.Background(), canv, tt.ts, tt.notes)
+			ri.RenderBeam(context.Background(), 100, canv, tt.ts, tt.notes)
 		})
 	}
 }

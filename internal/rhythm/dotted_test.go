@@ -5,6 +5,7 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -267,7 +268,7 @@ func Test_rhythmInteractor_AdjustMultiDottedRenderer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ri := &rhythmInteractor{}
-			gotX, gotY := ri.AdjustMultiDottedRenderer(tt.args.notes, tt.args.x, tt.args.y)
+			gotX, gotY := ri.AdjustMultiDottedRenderer(tt.args.notes, tt.args.x, tt.args.y, keysig.KeySignature{})
 			if gotX != tt.wantX {
 				t.Errorf("rhythmInteractor.AdjustMultiDottedRenderer() got X = %v, want %v", gotX, tt.wantX)
 			}

@@ -35,11 +35,15 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			x = info.MarginLeft + barline.BARLINE_AFTER_SPACE
 			info.Multiline = false
 		} else {
-			measure := st[0]
-			if i < len(staffes)-1 {
-				measure = staffes[i+1][0]
+			if len(st) == 0 {
+				key = keySignature.GetKeyOnMeasure(ctx, 1)
+			} else {
+				measure := st[0]
+				if i < len(staffes)-1 {
+					measure = staffes[i+1][0]
+				}
+				key = keySignature.GetKeyOnMeasure(ctx, measure.Number)
 			}
-			key = keySignature.GetKeyOnMeasure(ctx, measure.Number)
 			x = gregorian.GetLeftIndent(key)
 		}
 		oldMarginButtom = info.MarginBottom

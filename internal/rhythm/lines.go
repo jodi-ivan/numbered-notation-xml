@@ -131,7 +131,7 @@ func quadBezierLength(p0, p1, p2 entity.Coordinate, steps int) float64 {
 	return length
 }
 
-func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
+func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
 	slurs := map[int]SlurBezier{}
 	slurSets := []SlurBezier{}
 
@@ -146,7 +146,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 				ties[note.Note] = SlurBezier{
 					SlurTieType: SlurTieTypeTie,
 					Start: CoordinateWithOctave{
-						Coordinate: entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY)),
+						Coordinate: entity.NewCoordinate(float64(note.PositionX), float64(y)),
 						Octave:     note.Octave,
 					},
 					LineType: note.Tie.LineType,
@@ -154,7 +154,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 			case musicxml.NoteSlurTypeStop:
 				temp := ties[note.Note]
 				temp.End = CoordinateWithOctave{
-					Coordinate: entity.NewCoordinate(float64(note.PositionX), float64(note.PositionY)),
+					Coordinate: entity.NewCoordinate(float64(note.PositionX), float64(y)),
 					Octave:     note.Octave,
 				}
 				ties[note.Note] = temp
@@ -165,7 +165,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 		}
 
 		for _, s := range note.Slur {
-			yPos := note.PositionY
+			yPos := y
 			if hasTies {
 				yPos += 3
 			}
@@ -221,7 +221,7 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, canv canvas.Canv
 
 }
 
-func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
+func (ri *rhythmInteractor) RenderBeam(ctx context.Context, y int, canv canvas.Canvas, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
 
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}
@@ -230,7 +230,7 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, canv canvas.Canvas, 
 	for _, note := range notes {
 
 		for _, b := range note.Beam {
-			positionY := float64(note.PositionY - 22 + ((b.Number) * 3))
+			positionY := float64(y - 22 + ((b.Number) * 3))
 
 			switch b.Type {
 			case musicxml.NoteBeamTypeBegin:

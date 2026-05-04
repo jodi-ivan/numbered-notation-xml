@@ -204,7 +204,7 @@ func (ni *numberedInteractor) RenderNote(ctx context.Context, canv canvas.Canvas
 			}
 			canv.Text(xPos, y, noteStr)
 
-			coordinate := entity.Coordinate{X: float64(xPos), Y: float64(n.PositionY)}
+			coordinate := entity.Coordinate{X: float64(xPos), Y: float64(y)}
 			ni.RenderStrikethrough(ctx, canv, n.Strikethrough, coordinate)
 			breathpause.RenderFermata(ctx, canv, n.Fermata, coordinate)
 			ni.RenderOctave(ctx, canv, n.Octave, coordinate)

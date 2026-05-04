@@ -3,6 +3,7 @@ package barline
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -13,7 +14,7 @@ import (
 type Barline interface {
 	GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *CoordinateWithBarline) (*entity.NoteRenderer, *BarlineInfo)
 	GetRendererRightBarline(measure musicxml.Measure, x int) (int, *entity.NoteRenderer)
-	RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate)
+	RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate, s ...string)
 }
 
 type barlineInteractor struct{}
@@ -38,7 +39,7 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 		if lastRightBarlinePosition != nil {
 			pos = int(lastRightBarlinePosition.X)
 			if lastBarlineRepeat {
-				pos += LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT - int(barlineWidth[musicxml.BarLineStyleHeavyHeavy]/2)
+				pos += LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT
 			}
 		}
 		result := &entity.NoteRenderer{
@@ -93,7 +94,7 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 	return x, barlineRenderer
 }
 
-func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate) {
+func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate, styles ...string) {
 	forward := ""
 	backward := ""
 
@@ -105,9 +106,14 @@ func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canv
 			forward = fmt.Sprintf(`<tspan x="%.2f" y="%.2f">:</tspan>`, coordinate.X+10, coordinate.Y-4)
 		}
 	}
-	barlineWithRepeat := fmt.Sprintf(`%s<tspan x="%.2f" y="%.2f" font-size="180%%">%s</tspan>%s`,
+
+	if len(styles) == 0 {
+		styles = append(styles, `font-size="180%"`)
+	}
+	barlineWithRepeat := fmt.Sprintf(`%s<tspan x="%.2f" y="%.2f" %s >%s</tspan>%s`,
 		backward,
 		coordinate.X, coordinate.Y+6,
+		strings.Join(styles, " "),
 		unicode[barline.BarStyle], forward)
 
 	canv.TextUnescaped(

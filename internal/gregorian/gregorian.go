@@ -65,7 +65,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	lines := [5]int{}
 
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
-	x2 := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 4
+	x2 := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8
 	canv.Group(`class="staff-line"`)
 	for i := 0; i <= 4; i++ {
 		lines[i] = y - 70
@@ -76,7 +76,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	canv.Gend()
 
 	canv.Group(`class="notes"`, `style="font-size:2em"`)
-	for _, note := range notes {
+	for i, note := range notes {
 		if note.IsAdditional {
 			continue
 		}
@@ -89,6 +89,39 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 			canv.TextUnescaped(float64(note.PositionX), GetYpos(lines, 8, note.AbsoluteOctave, rune(note.AbsoluteNote[0])),
 				bean,
 				fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
+			continue
+		}
+
+		if note.Barline != nil {
+			switch note.Barline.BarStyle {
+			case musicxml.BarLineStyleRegular:
+				pos := note.PositionX
+				if i == len(notes)-1 {
+					pos += 4
+				}
+				canv.Line(pos, lines[0], pos, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+
+			case musicxml.BarLineStyleLightLight:
+				canv.Line(note.PositionX+1, lines[0], note.PositionX+1, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+				canv.Line(note.PositionX+4, lines[0], note.PositionX+4, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+
+			case musicxml.BarLineStyleLightHeavy:
+				canv.Line(note.PositionX+1, lines[0], note.PositionX+1, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+				canv.Line(note.PositionX+6, lines[0]+2, note.PositionX+6, lines[4]-2, "fill:none;stroke:#000000;stroke-linecap:square;stroke-width:4.6")
+
+				if note.Barline.Repeat != nil && note.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
+					canv.Text(note.PositionX-6, lines[2]+5, ":", `style="font-family:Noto Music;font-size:0.6em"`)
+				}
+
+			case musicxml.BarLineStyleHeavyLight:
+				canv.Line(note.PositionX+2, lines[0]+2, note.PositionX+2, lines[4]-2, "fill:none;stroke:#000000;stroke-linecap:square;stroke-width:4.6")
+				canv.Line(note.PositionX+7, lines[0], note.PositionX+7, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+
+				if note.Barline.Repeat != nil && note.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionForward {
+					canv.Text(note.PositionX+8, lines[2]+5, ":", `style="font-family:Noto Music;font-size:0.6em"`)
+				}
+
+			}
 		}
 
 	}
@@ -129,7 +162,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignature) int {
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
-	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(timeSig.UniqueSign)) + (PADDING_WIDTH * 3) + keySigWith
+	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(timeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(timeSig.UniqueSign)-1)) + keySigWith)
 }
 
 func GetLeftIndent(key keysig.Key) int {

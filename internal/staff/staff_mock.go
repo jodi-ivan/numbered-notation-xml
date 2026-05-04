@@ -54,9 +54,9 @@ func (mr *MockStaffMockRecorder) Render(ctx, canv, part, keySignature, timeSigna
 }
 
 // RenderStaff mocks base method.
-func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo {
+func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, canv, x, y, isLastStaff, keySignature, timeSignature, measures}
+	varargs := []interface{}{ctx, canv, x, y, staffPos, isLastStaff, keySignature, timeSignature, measures}
 	for _, a := range prevNotes {
 		varargs = append(varargs, a)
 	}
@@ -66,9 +66,9 @@ func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y in
 }
 
 // RenderStaff indicates an expected call of RenderStaff.
-func (mr *MockStaffMockRecorder) RenderStaff(ctx, canv, x, y, isLastStaff, keySignature, timeSignature, measures interface{}, prevNotes ...interface{}) *gomock.Call {
+func (mr *MockStaffMockRecorder) RenderStaff(ctx, canv, x, y, staffPos, isLastStaff, keySignature, timeSignature, measures interface{}, prevNotes ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, canv, x, y, isLastStaff, keySignature, timeSignature, measures}, prevNotes...)
+	varargs := append([]interface{}{ctx, canv, x, y, staffPos, isLastStaff, keySignature, timeSignature, measures}, prevNotes...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderStaff", reflect.TypeOf((*MockStaff)(nil).RenderStaff), varargs...)
 }
 

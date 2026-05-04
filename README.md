@@ -78,3 +78,5 @@ Development pauses occasionally when I research better automation approaches
 - https://alkitab.sabda.org/resource.php?res=kidung_jemaat
 - https://www.musicca.com/dictionary/scales 
 - https://www.gkiharapanindah.org/download/rekap-kidung-jemaat/
+- https://mymusictheory.com/more-music-theory-topics/key-signatures-chart/
+- https://fontdrop.info/#/?darkmode=true 

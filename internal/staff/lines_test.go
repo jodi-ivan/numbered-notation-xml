@@ -6,6 +6,7 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/stretchr/testify/assert"
 )
@@ -160,7 +161,7 @@ func TestProcessPreviousLines(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got2 := ProcessPreviousLines(tt.prevNotes, tt.yPos)
+			got, got2 := ProcessPreviousLines(tt.prevNotes, keysig.KeySignature{}, tt.yPos)
 			if len(got) == tt.wantTotalNotes {
 				t.Errorf("ProcessPreviousLines() total notes = %v, want %v", got, tt.wantTotalNotes)
 			}

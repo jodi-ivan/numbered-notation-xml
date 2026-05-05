@@ -118,7 +118,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			renderer := &entity.NoteRenderer{
 				PositionX: x, PositionY: int(y),
 				Note: n, NoteLength: note.Type, Octave: octave, Strikethrough: strikethrough,
-				IsRest: (note.Rest != nil),
+				NoteValue: noteLength,
+				IsRest:    (note.Rest != nil),
 
 				Beam:          map[int]entity.Beam{},
 				IsNewLine:     measure.NewLineIndex[notePos],

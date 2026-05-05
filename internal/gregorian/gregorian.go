@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -98,7 +99,11 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 		if breathpause.IsBreathMark(note) {
-			canv.TextUnescaped(float64(note.PositionX), float64(lines[2]), "&#x01D112;", `style="font-family:Noto Music;font-size:0.8em"`)
+			xPos := note.PositionX
+			if note.PositionX-notes[i-1].PositionX <= numbered.MIN_DISTANCE_BREATH {
+				xPos += (numbered.AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
+			}
+			canv.TextUnescaped(float64(xPos), float64(lines[0])-8, "&#xF0E2;", `style="font-size:1.3em"`)
 			continue
 		}
 		if note.IsRest {
@@ -125,6 +130,18 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		canv.TextUnescaped(float64(note.PositionX), yPos,
 			beanNoteHex[note.NoteLength],
 			fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
+
+		dottedHalf := i < len(notes)-1 && notes[i+1].IsDotted && len(notes[i+1].Beam) >= 1
+		singleNoteValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
+		dottedBeat := note.NoteValue > singleNoteValue && note.Tie == nil
+		if dottedHalf || dottedBeat {
+			dotPos := yPos
+
+			if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
+				dotPos -= 4
+			}
+			canv.TextUnescaped(float64(note.PositionX+15), dotPos, "&#xF060;")
+		}
 
 		if note.NoteLength == musicxml.NoteLengthWhole {
 			continue

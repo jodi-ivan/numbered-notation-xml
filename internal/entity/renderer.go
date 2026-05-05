@@ -55,6 +55,7 @@ type NoteRenderer struct {
 	PositionY      int
 	Note           int
 	AbsoluteNote   string
+	NoteValue      float64
 	Octave         int
 	AbsoluteOctave int
 	Strikethrough  bool

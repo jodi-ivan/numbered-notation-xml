@@ -134,9 +134,9 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		dottedHalf := i < len(notes)-1 && notes[i+1].IsDotted && len(notes[i+1].Beam) >= 1
 		singleNoteValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
 		dottedBeat := note.NoteValue > singleNoteValue && note.Tie == nil
-		if dottedHalf || dottedBeat {
+		merged := i < len(notes)-1 && note.NoteLength == musicxml.NoteLengthEighth && notes[i+1].NoteLength == note.NoteLength
+		if (dottedHalf || dottedBeat) && !merged {
 			dotPos := yPos
-
 			if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
 				dotPos -= 4
 			}
@@ -147,8 +147,16 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 			continue
 		}
 
-		if len(note.Beam) == 0 {
+		nextNoteIsDotted := i < len(notes)-1 && notes[i+1].IsDotted
+		nextNoteIsSameNoteLength := i < len(notes)-1 && notes[i+1].NoteLength == note.NoteLength
+
+		mergeNote := note.NoteLength == musicxml.NoteLengthEighth && nextNoteIsDotted && nextNoteIsSameNoteLength
+		if len(note.Beam) == 0 || mergeNote {
 			renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos), NoteLength: note.NoteLength})
+
+			if mergeNote {
+				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+			}
 			continue
 		}
 

@@ -1,10 +1,13 @@
 package gregorian
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"unicode"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
@@ -76,91 +79,94 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 	maxY := lines[4]
 
+	groupBeam := [][]CoordinateWithNoteLength{{}}
+
 	canv.Group(`class="notes"`, `style="font-size:2em"`)
+	currentMeasure := 0
+
 	for i, note := range notes {
+		if currentMeasure != note.MeasureNumber {
+			currentMeasure = note.MeasureNumber
+			if i != 0 {
+				canv.Gend()
+			}
+			canv.Group(`class="measure"`, fmt.Sprintf(`number="%d"`, currentMeasure))
+
+		}
 		if note.IsAdditional {
 			continue
 		}
 
-		if note.AbsoluteNote != "" {
-			bean := `&#xF064;`
-			if note.NoteLength == musicxml.NoteLengthHalf {
-				bean = `&#xF063;`
-			}
-			yPos := GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
-			if maxY < int(yPos) {
-				maxY = int(yPos)
-			}
-			if yPos-float64(lines[4]) >= STAFF_SPACE_WIDTH {
-				// ledger lines
-
-				for ledgerPos := lines[4]; ledgerPos <= int(yPos); ledgerPos += 8 {
-					x1 := note.PositionX - (constant.LOWERCASE_LENGTH / 2) + 3
-					x2 := note.PositionX + 6 + (constant.LOWERCASE_LENGTH / 2)
-					canv.Line(x1, ledgerPos, x2, ledgerPos, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
-
-				}
-			} else if float64(lines[0])-yPos >= STAFF_SPACE_WIDTH {
-				for ledgerPos := lines[0]; ledgerPos >= int(yPos); ledgerPos -= 8 {
-					x1 := note.PositionX - (constant.LOWERCASE_LENGTH / 2) + 3
-					x2 := note.PositionX + 6 + (constant.LOWERCASE_LENGTH / 2)
-					canv.Line(x1, ledgerPos, x2, ledgerPos, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
-
-				}
-			}
-			canv.TextUnescaped(float64(note.PositionX), yPos,
-				bean,
-				fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
+		if breathpause.IsBreathMark(note) {
+			canv.TextUnescaped(float64(note.PositionX), float64(lines[2]), "&#x01D112;", `style="font-family:Noto Music;font-size:0.8em"`)
+			continue
+		}
+		if note.IsRest {
+			canv.TextUnescaped(float64(note.PositionX), float64(lines[2]), restHex[note.NoteLength])
 			continue
 		}
 
 		if note.Barline != nil {
-			switch note.Barline.BarStyle {
-			case musicxml.BarLineStyleRegular:
-				pos := note.PositionX
-				if i == len(notes)-1 {
-					pos += 4
-				}
-				canv.Line(pos, lines[0], pos, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+			barline.RenderGregorian(canv, note.Barline, i == len(notes)-1, lines, entity.NewCoordinate(float64(note.PositionX), float64(lines[4])))
+			continue
+		}
 
-			case musicxml.BarLineStyleLightLight:
-				canv.Line(note.PositionX+1, lines[0], note.PositionX+1, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
-				canv.Line(note.PositionX+4, lines[0], note.PositionX+4, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+		if note.AbsoluteNote == "" {
+			continue
+		}
 
-			case musicxml.BarLineStyleLightHeavy:
-				canv.Line(note.PositionX+1, lines[0], note.PositionX+1, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
-				canv.Line(note.PositionX+6, lines[0]+2, note.PositionX+6, lines[4]-2, "fill:none;stroke:#000000;stroke-linecap:square;stroke-width:4.6")
+		yPos := GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
+		if maxY < int(yPos) {
+			maxY = int(yPos)
+		}
 
-				if note.Barline.Repeat != nil && note.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-					canv.Text(note.PositionX-6, lines[2]+5, ":", `style="font-family:Noto Music;font-size:0.6em"`)
-				}
+		RenderLedgerLine(canv, entity.NewCoordinate(float64(note.PositionX), yPos), lines)
 
-			case musicxml.BarLineStyleHeavyLight:
-				canv.Line(note.PositionX+2, lines[0]+2, note.PositionX+2, lines[4]-2, "fill:none;stroke:#000000;stroke-linecap:square;stroke-width:4.6")
-				canv.Line(note.PositionX+7, lines[0], note.PositionX+7, lines[4], "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9")
+		canv.TextUnescaped(float64(note.PositionX), yPos,
+			beanNoteHex[note.NoteLength],
+			fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
 
-				if note.Barline.Repeat != nil && note.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionForward {
-					canv.Text(note.PositionX+8, lines[2]+5, ":", `style="font-family:Noto Music;font-size:0.6em"`)
-				}
+		if note.NoteLength == musicxml.NoteLengthWhole {
+			continue
+		}
 
-			}
+		if len(note.Beam) == 0 {
+			renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos), NoteLength: note.NoteLength})
+			continue
+		}
+
+		groupBeam[len(groupBeam)-1] = append(groupBeam[len(groupBeam)-1], CoordinateWithNoteLength{
+			Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
+			NoteLength: note.NoteLength,
+		})
+		if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
+			groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 		}
 
 	}
+
+	for _, gr := range groupBeam {
+		if len(gr) == 0 {
+			continue
+		}
+		RenderGroupBeam(canv, gr, lines)
+	}
+	canv.Gend()
 	canv.Gend()
 
 	x := float64(constant.LAYOUT_INDENT_LENGTH)
 
+	canv.Group(`class="staff-markings"`)
 	// clef
 	key := keySignature.GetKeyOnMeasure(ctx, 1)
 	accidentalSet := key.GetAccidentals()
 
 	canv.Group(`class="keysig"`, `style="font-size:1.8em"`)
 	for x, acc := range accidentalSet {
-		accidental := `&#xF02B;`
+		accidental := `&#xF02B;` // sharp
 		width := 8.0
 		if key.Fifth < 0 {
-			accidental = `&#xF02D;`
+			accidental = `&#xF02D;` // flat
 		}
 		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+35)+(width*float64(x)),
 			GetYPosKeySig(lines, 8, acc, key.Fifth < 0),
@@ -177,7 +183,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	if staffPos == 0 {
 		timesig.RenderGregorian(ctx, canv, lines, timeSignature, x)
 	}
-
+	canv.Gend()
 	canv.Gend()
 	return maxY
 }

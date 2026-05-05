@@ -48,6 +48,7 @@ type Canvas interface {
 	Qbezier(sx int, sy int, cx int, cy int, ex int, ey int, tx int, ty int, s ...string)
 	Text(x int, y int, t string, s ...string)
 	TextUnescaped(x float64, y float64, t string, s ...string)
+	LineFloat64(x1, y1, x2, y2 float64, s ...string)
 	Writer() io.Writer
 
 	Delegator() Delegator
@@ -82,6 +83,7 @@ func (c *_canvas) Circle(x int, y int, r int, s ...string) {
 func (c *_canvas) Line(x1 int, y1 int, x2 int, y2 int, s ...string) {
 	c.s.Line(x1, y1, x2, y2, s...)
 }
+
 func (c *_canvas) Path(d string, s ...string) {
 	c.s.Path(d, s...)
 }
@@ -121,6 +123,12 @@ func (c *_canvas) TextUnescaped(x float64, y float64, t string, s ...string) {
 		t,
 	)
 
+}
+
+func (c *_canvas) LineFloat64(x1, y1, x2, y2 float64, s ...string) {
+	fmt.Fprintf(c.Writer(),
+		`<line x1="%.2f" y1="%.2f" x2="%.2f" y2="%.2f" %s ></line>`,
+		x1, y1, x2, y2, strings.Join(s, " "))
 }
 
 func NewCanvas(s *svg.SVG) Canvas {

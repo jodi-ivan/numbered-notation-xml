@@ -63,17 +63,18 @@ func GetYpos(lines [5]int, space int, octave int, pitch rune) float64 {
 func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
 	initialY := y - 70
 	lines := [5]int{}
-
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 	x2 := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8
 	canv.Group(`class="staff-line"`)
 	for i := 0; i <= 4; i++ {
 		lines[i] = y - 70
 		canv.Line(constant.LAYOUT_INDENT_LENGTH, y-70, x2, y-70, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
-		y += 8
+		y += STAFF_SPACE_WIDTH
 	}
-	canv.Line(constant.LAYOUT_INDENT_LENGTH, initialY, constant.LAYOUT_INDENT_LENGTH, y-70-8, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1")
+	canv.Line(constant.LAYOUT_INDENT_LENGTH, initialY, constant.LAYOUT_INDENT_LENGTH, y-70-STAFF_SPACE_WIDTH, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1")
 	canv.Gend()
+
+	maxY := lines[4]
 
 	canv.Group(`class="notes"`, `style="font-size:2em"`)
 	for i, note := range notes {
@@ -86,7 +87,28 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 			if note.NoteLength == musicxml.NoteLengthHalf {
 				bean = `&#xF063;`
 			}
-			canv.TextUnescaped(float64(note.PositionX), GetYpos(lines, 8, note.AbsoluteOctave, rune(note.AbsoluteNote[0])),
+			yPos := GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
+			if maxY < int(yPos) {
+				maxY = int(yPos)
+			}
+			if yPos-float64(lines[4]) >= STAFF_SPACE_WIDTH {
+				// ledger lines
+
+				for ledgerPos := lines[4]; ledgerPos <= int(yPos); ledgerPos += 8 {
+					x1 := note.PositionX - (constant.LOWERCASE_LENGTH / 2) + 3
+					x2 := note.PositionX + 6 + (constant.LOWERCASE_LENGTH / 2)
+					canv.Line(x1, ledgerPos, x2, ledgerPos, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
+
+				}
+			} else if float64(lines[0])-yPos >= STAFF_SPACE_WIDTH {
+				for ledgerPos := lines[0]; ledgerPos >= int(yPos); ledgerPos -= 8 {
+					x1 := note.PositionX - (constant.LOWERCASE_LENGTH / 2) + 3
+					x2 := note.PositionX + 6 + (constant.LOWERCASE_LENGTH / 2)
+					canv.Line(x1, ledgerPos, x2, ledgerPos, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
+
+				}
+			}
+			canv.TextUnescaped(float64(note.PositionX), yPos,
 				bean,
 				fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
 			continue
@@ -157,7 +179,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	}
 
 	canv.Gend()
-	return 0
+	return maxY
 }
 
 func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignature) int {

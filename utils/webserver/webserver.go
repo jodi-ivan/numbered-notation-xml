@@ -103,8 +103,10 @@ func (ws *WebServer) Register(method, path string, adapter HTTPAdapter) {
 }
 func (ws *WebServer) RegisterStatic(path, rootpath string) {
 	fileServer := http.FileServer(http.Dir(rootpath))
-
+	maxAge := 24 * time.Hour
 	ws.httpRouter.GET(path, commonMiddleware(ws.wg, func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%.0f, immutable", maxAge.Seconds()))
+		w.Header().Set("Expires", time.Now().Add(maxAge).UTC().Format(http.TimeFormat))
 		req.URL.Path = ps.ByName("filepath")
 		fileServer.ServeHTTP(w, req)
 	}))

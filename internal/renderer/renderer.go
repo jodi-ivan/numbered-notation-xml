@@ -79,25 +79,25 @@ func googlefont(f string) []byte {
          font-family: 'Caladea';
          font-style: normal;
          font-weight: 400;
-         src: url(https://fonts.gstatic.com/s/caladea/v8/kJEzBugZ7AAjhybUvRh9_w.ttf) format('truetype');
+         src: url(/assets/fonts/caladea.ttf) format('truetype');
        }
        @font-face {
          font-family: 'Figtree';
          font-style: normal;
          font-weight: 400;
-         src: url(https://fonts.gstatic.com/s/figtree/v9/_Xmz-HUzqDCFdgfMsYiV_F7wfS-Bs_d_QG5ZyEU.ttf) format('truetype');
+         src: url(/assets/fonts/figtree.ttf) format('truetype');
         }
        @font-face {
          font-family: 'Noto Music';
          font-style: normal;
          font-weight: 400;
-         src: url(https://fonts.gstatic.com/s/notomusic/v21/pe0rMIiSN5pO63htf1sxEtCaAw.ttf) format('truetype');
+         src: url(/assets/fonts/noto-music.ttf) format('truetype');
        }
        @font-face {
          font-family: 'Old Standard TT';
          font-style: normal;
          font-weight: 400;
-         src: url(https://fonts.gstatic.com/s/oldstandardtt/v22/MwQubh3o1vLImiwAVvYawgcf2eVeqlq9.ttf) format('truetype');
+         src: url(/assets/fonts/old-standard-tt.ttf) format('truetype');
        }
 	   @font-face {
          font-family: 'mozart11';

@@ -8,6 +8,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
@@ -20,7 +21,7 @@ import (
 )
 
 type Staff interface {
-	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
+	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
 	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool
 	Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int
@@ -48,7 +49,7 @@ func NewStaff() Staff {
 	}
 }
 
-func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
+func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 
@@ -57,7 +58,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	yOffset := false
 	align := [][]*entity.NoteRenderer{}
 	if len(prevNotes) > 0 {
-		align, staffInfo = ProcessPreviousLines(prevNotes, y)
+		align, staffInfo = ProcessPreviousLines(prevNotes, keySignature, y)
 	}
 	for mi, measure := range measures {
 		measure.Build()
@@ -115,17 +116,17 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				additionalNotes = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
 			}
 			renderer := &entity.NoteRenderer{
-				PositionX:     x,
-				PositionY:     int(y),
-				Note:          n,
-				NoteLength:    note.Type,
-				Octave:        octave,
-				Strikethrough: strikethrough,
-				IsRest:        (note.Rest != nil),
+				PositionX: x, PositionY: int(y),
+				Note: n, NoteLength: note.Type, Octave: octave, Strikethrough: strikethrough,
+				NoteValue: noteLength,
+				IsRest:    (note.Rest != nil),
+
 				Beam:          map[int]entity.Beam{},
 				IsNewLine:     measure.NewLineIndex[notePos],
 				MeasureNumber: measure.Number,
 
+				AbsoluteNote:      note.Pitch.Step,
+				AbsoluteOctave:    note.Pitch.Octave,
 				TimeModifications: note.TimeModification,
 
 				LeadingHeader: measure.PrefixHeader[notePos],
@@ -171,7 +172,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 		}
 
-		x, y = si.Rhythm.AdjustMultiDottedRenderer(notes, x, y)
+		x, y = si.Rhythm.AdjustMultiDottedRenderer(notes, x, y, keySignature)
 		var rightBarlineRenderer *entity.NoteRenderer
 		x, rightBarlineRenderer = si.Barline.GetRendererRightBarline(measure, x)
 
@@ -194,18 +195,21 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if staffInfo.Multiline {
 			// // -------
 			if len(staffInfo.NextLineRenderer) == 0 && len(align) > 0 && staffInfo.ForceNewLine {
-				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
-				si.Rhythm.AdjustMultiDottedRenderer(notes, constant.LAYOUT_INDENT_LENGTH, y)
+				key := keySignature.GetKeyOnMeasure(ctx, measure.Number)
+				indent := gregorian.GetLeftIndent(key)
+				staffInfo.MarginLeft = indent
+				si.Rhythm.AdjustMultiDottedRenderer(notes, indent, y, keySignature)
 				notes = append(notes, rightBarlineRenderer)
 				staffInfo.NextLineRenderer = notes
 			} else {
-				nextstaffInfo := PrepareNextLines(staffInfo, notes, rightBarlineRenderer)
+				nextstaffInfo := PrepareNextLines(staffInfo, keySignature, notes, rightBarlineRenderer)
 				staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, nextstaffInfo.NextLineRenderer...)
 				alignMeasures = append(alignMeasures, filteredNotes...)
 				staffInfo.MarginLeft = nextstaffInfo.MarginLeft
 				if staffInfo.MarginBottom < nextstaffInfo.MarginBottom {
 					staffInfo.MarginBottom = nextstaffInfo.MarginBottom
 				}
+
 			}
 		} else {
 			alignMeasures = append(alignMeasures, filteredNotes...)
@@ -245,7 +249,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 	}
 
-	si.RenderAlign.RenderWithAlign(ctx, canv, y, timeSignature, align)
+	si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, y, timeSignature, keySignature, align)
 
 	return
 }

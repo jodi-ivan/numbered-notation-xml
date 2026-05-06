@@ -10,6 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	entity "github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	keysig "github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	musicxml "github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	timesig "github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -39,30 +40,30 @@ func (m *MockRhythm) EXPECT() *MockRhythmMockRecorder {
 }
 
 // AdjustMultiDottedRenderer mocks base method.
-func (m *MockRhythm) AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x, y int) (int, int) {
+func (m *MockRhythm) AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x, y int, ks keysig.KeySignature) (int, int) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AdjustMultiDottedRenderer", notes, x, y)
+	ret := m.ctrl.Call(m, "AdjustMultiDottedRenderer", notes, x, y, ks)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(int)
 	return ret0, ret1
 }
 
 // AdjustMultiDottedRenderer indicates an expected call of AdjustMultiDottedRenderer.
-func (mr *MockRhythmMockRecorder) AdjustMultiDottedRenderer(notes, x, y interface{}) *gomock.Call {
+func (mr *MockRhythmMockRecorder) AdjustMultiDottedRenderer(notes, x, y, ks interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdjustMultiDottedRenderer", reflect.TypeOf((*MockRhythm)(nil).AdjustMultiDottedRenderer), notes, x, y)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdjustMultiDottedRenderer", reflect.TypeOf((*MockRhythm)(nil).AdjustMultiDottedRenderer), notes, x, y, ks)
 }
 
 // RenderBeam mocks base method.
-func (m *MockRhythm) RenderBeam(ctx context.Context, canv canvas.Canvas, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
+func (m *MockRhythm) RenderBeam(ctx context.Context, y int, canv canvas.Canvas, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderBeam", ctx, canv, ts, notes)
+	m.ctrl.Call(m, "RenderBeam", ctx, y, canv, ts, notes)
 }
 
 // RenderBeam indicates an expected call of RenderBeam.
-func (mr *MockRhythmMockRecorder) RenderBeam(ctx, canv, ts, notes interface{}) *gomock.Call {
+func (mr *MockRhythmMockRecorder) RenderBeam(ctx, y, canv, ts, notes interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderBeam", reflect.TypeOf((*MockRhythm)(nil).RenderBeam), ctx, canv, ts, notes)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderBeam", reflect.TypeOf((*MockRhythm)(nil).RenderBeam), ctx, y, canv, ts, notes)
 }
 
 // RenderBezier mocks base method.
@@ -78,15 +79,15 @@ func (mr *MockRhythmMockRecorder) RenderBezier(set, canv interface{}) *gomock.Ca
 }
 
 // RenderSlurTies mocks base method.
-func (m *MockRhythm) RenderSlurTies(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
+func (m *MockRhythm) RenderSlurTies(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderSlurTies", ctx, canv, notes, maxXPosition)
+	m.ctrl.Call(m, "RenderSlurTies", ctx, y, canv, notes, maxXPosition)
 }
 
 // RenderSlurTies indicates an expected call of RenderSlurTies.
-func (mr *MockRhythmMockRecorder) RenderSlurTies(ctx, canv, notes, maxXPosition interface{}) *gomock.Call {
+func (mr *MockRhythmMockRecorder) RenderSlurTies(ctx, y, canv, notes, maxXPosition interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderSlurTies", reflect.TypeOf((*MockRhythm)(nil).RenderSlurTies), ctx, canv, notes, maxXPosition)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderSlurTies", reflect.TypeOf((*MockRhythm)(nil).RenderSlurTies), ctx, y, canv, notes, maxXPosition)
 }
 
 // SetRhythmNotation mocks base method.

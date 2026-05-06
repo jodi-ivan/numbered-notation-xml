@@ -49,14 +49,17 @@ var (
 )
 
 type NoteRenderer struct {
-	IsDotted      bool
-	IsRest        bool
-	PositionX     int
-	PositionY     int
-	Note          int
-	Octave        int
-	Strikethrough bool
-	NoteLength    musicxml.NoteLength
+	IsDotted       bool
+	IsRest         bool
+	PositionX      int
+	PositionY      int
+	Note           int
+	AbsoluteNote   string
+	NoteValue      float64
+	Octave         int
+	AbsoluteOctave int
+	Strikethrough  bool
+	NoteLength     musicxml.NoteLength
 	// BarType      string
 	Width        int
 	Lyric        []Lyric
@@ -66,11 +69,13 @@ type NoteRenderer struct {
 	Articulation *Articulation
 	Barline      *musicxml.Barline
 	Fermata      *musicxml.Femata
+
 	// internal use
 	IsLengthTakenFromLyric bool
 	IndexPosition          int
 	IsNewLine              bool
 	MeasureNumber          int
+	IsAdditional           bool
 
 	MeasureText       []musicxml.MeasureText
 	MeasureDash       map[int]musicxml.DirectionDashesType

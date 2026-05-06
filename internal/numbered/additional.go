@@ -23,6 +23,7 @@ func (ni *numberedInteractor) RendererFromAdditional(note musicxml.Note, header 
 				Beam:          map[int]entity.Beam{},
 				MeasureNumber: header.MeasureNumber,
 				IsNewLine:     header.IsNewLine && (i == len(additionals)-1) && !note.IsBreathMark(),
+				IsAdditional:  true,
 			}
 			if additionalNote.IsNewLine {
 				header.IsNewLine = !additionalNote.IsNewLine

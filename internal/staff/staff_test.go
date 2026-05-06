@@ -170,7 +170,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
 				rm := rhythm.NewMockRhythm(c)
 				rm.EXPECT().SetRhythmNotation(gomock.Any(), gomock.Any(), 3)
-				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 95).Return(50, 95)
+				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 95, signatures["kj001"].ks).Return(50, 95)
 				return rm
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -191,7 +191,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			},
 			renderAlignMock: func(c *gomock.Controller) *MockRenderStaffWithAlign {
 				ra := NewMockRenderStaffWithAlign(c)
-				ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 110, signatures["kj001"].ts, gomock.Any())
+				ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 0, 110, signatures["kj001"].ts, signatures["kj001"].ks, gomock.Any())
 				return ra
 			},
 		},
@@ -234,7 +234,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
 				rm := rhythm.NewMockRhythm(c)
 				rm.EXPECT().SetRhythmNotation(gomock.Any(), gomock.Any(), 6)
-				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 95).Return(50, 95)
+				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 95, signatures["kj075"].ks).Return(50, 95)
 				return rm
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -255,7 +255,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			},
 			renderAlignMock: func(c *gomock.Controller) *MockRenderStaffWithAlign {
 				ra := NewMockRenderStaffWithAlign(c)
-				ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 95, signatures["kj075"].ts, gomock.Any())
+				ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 0, 95, signatures["kj075"].ts, signatures["kj075"].ks, gomock.Any())
 				return ra
 			},
 		},
@@ -270,7 +270,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			si.Barline = tt.barlineMock(ctrl)
 			si.RenderAlign = tt.renderAlignMock(ctrl)
 
-			got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, tt.isLastStaff, tt.keySignature, tt.timeSignature, tt.measures, tt.prevNotes...)
+			got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, 0, tt.isLastStaff, tt.keySignature, tt.timeSignature, tt.measures, tt.prevNotes...)
 
 			assert.Equal(t, tt.want, got, "StaffInfo assert")
 

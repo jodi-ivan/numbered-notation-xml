@@ -273,7 +273,7 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 			if tt.canv != nil {
 				canv = tt.canv(ctrl)
 			}
-			li.RenderLyrics(context.Background(), canv, tt.measure)
+			li.RenderLyrics(context.Background(), 100, canv, tt.measure)
 		})
 	}
 }

@@ -3,9 +3,6 @@ package renderer
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
@@ -78,18 +75,50 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 }
 
 func googlefont(f string) []byte {
-	empty := []byte{}
+	return []byte(`@font-face {
+         font-family: 'Caladea';
+         font-style: normal;
+         font-weight: 400;
+         src: url(/assets/fonts/caladea.ttf) format('truetype');
+       }
+       @font-face {
+         font-family: 'Figtree';
+         font-style: normal;
+         font-weight: 400;
+         src: url(/assets/fonts/figtree.ttf) format('truetype');
+        }
+       @font-face {
+         font-family: 'Noto Music';
+         font-style: normal;
+         font-weight: 400;
+         src: url(/assets/fonts/noto-music.ttf) format('truetype');
+       }
+       @font-face {
+         font-family: 'Old Standard TT';
+         font-style: normal;
+         font-weight: 400;
+         src: url(/assets/fonts/old-standard-tt.ttf) format('truetype');
+       }
+	   @font-face {
+         font-family: 'mozart11';
+         font-style: normal;
+         font-weight: 400;
+         src: url(/assets/fonts/mozart11.ttf) format('truetype');
+       }
+		
+	   `)
+	// empty := []byte{}
 
-	link := gwfURI + url.QueryEscape(f)
-	r, err := http.Get(link)
-	if err != nil {
-		return empty
-	}
-	defer r.Body.Close()
-	b, rerr := io.ReadAll(r.Body)
-	if rerr != nil || r.StatusCode != http.StatusOK {
-		return empty
-	}
+	// link := gwfURI + url.QueryEscape(f)
+	// r, err := http.Get(link)
+	// if err != nil {
+	// 	return empty
+	// }
+	// defer r.Body.Close()
+	// b, rerr := io.ReadAll(r.Body)
+	// if rerr != nil || r.StatusCode != http.StatusOK {
+	// 	return empty
+	// }
 
-	return b
+	// return b
 }

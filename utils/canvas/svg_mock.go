@@ -212,6 +212,23 @@ func (mr *MockCanvasMockRecorder) Line(x1, y1, x2, y2 interface{}, s ...interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Line", reflect.TypeOf((*MockCanvas)(nil).Line), varargs...)
 }
 
+// LineFloat64 mocks base method.
+func (m *MockCanvas) LineFloat64(x1, y1, x2, y2 float64, s ...string) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{x1, y1, x2, y2}
+	for _, a := range s {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "LineFloat64", varargs...)
+}
+
+// LineFloat64 indicates an expected call of LineFloat64.
+func (mr *MockCanvasMockRecorder) LineFloat64(x1, y1, x2, y2 interface{}, s ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{x1, y1, x2, y2}, s...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LineFloat64", reflect.TypeOf((*MockCanvas)(nil).LineFloat64), varargs...)
+}
+
 // Path mocks base method.
 func (m *MockCanvas) Path(d string, s ...string) {
 	m.ctrl.T.Helper()

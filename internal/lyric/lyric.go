@@ -34,12 +34,12 @@ type Lyric interface {
 	CalculateLyricWidth(string) float64
 	SetLyricRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
-	RenderHypen(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
+	RenderHypen(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer)
 	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate)
 	CalculateMarginLeft(txt string) float64
 	CalculateOverallWidth(ls []entity.Lyric) float64
-	SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition
-	RenderLyrics(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer)
+	SplitLyricPrefix(note *entity.NoteRenderer, y int, part int, leftBarline *entity.NoteRenderer) []LyricPosition
+	RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer)
 }
 
 type lyricInteractor struct{}
@@ -109,7 +109,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, n
 	}
 }
 
-func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	prefixes := map[string]LyricPosition{}
 
 	canv.Group("class='lyric'", "style='font-family:Caladea'")
@@ -117,17 +117,17 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 	minPrefix := float64(constant.LAYOUT_WIDTH)
 
 	for notePos, n := range measure {
-		yPos := float64(n.PositionY)
+		yPos := float64(y)
 		for i, l := range n.Lyric {
 			if len(l.Text) == 0 {
 				continue
 			}
 
 			xPos := n.PositionX
-			yPos = float64(n.PositionY + DISTANCE_NOTE_TO_LYRIC + (i * LINE_BETWEEN_LYRIC))
+			yPos = float64(y + DISTANCE_NOTE_TO_LYRIC + (i * LINE_BETWEEN_LYRIC))
 			text := l.Text
 
-			prefix := li.SplitLyricPrefix(n, i, prev)
+			prefix := li.SplitLyricPrefix(n, y, i, prev)
 			if len(prefix) == 1 {
 				text = prefix[0].Lyrics.Text
 				xPos, yPos = int(prefix[0].Coordinate.X), prefix[0].Coordinate.Y
@@ -151,7 +151,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, canv canvas.Canvas,
 				}
 				minPrefix = math.Min(minPrefix, float64(n.PositionX)-prefixWidth-constant.LOWERCASE_LENGTH)
 				prefixes[n.LeadingHeader] = LyricPosition{
-					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(n.PositionY)),
+					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
 					Lyrics:     entity.Lyric{Text: []entity.Text{{Value: n.LeadingHeader}}},
 				}
 			}

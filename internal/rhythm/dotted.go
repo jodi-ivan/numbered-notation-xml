@@ -1,16 +1,19 @@
 package rhythm
 
 import (
+	"context"
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
 // TODO: remove the dot positioning operation here, since it handled in the align justify.
-func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int) (int, int) {
+func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int, ks keysig.KeySignature) (int, int) {
 
 	xNotes := 0
 	continueDot := false
@@ -75,7 +78,8 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 			x += constant.LOWERCASE_LENGTH
 		}
 		if n.IsNewLine {
-			x = constant.LAYOUT_INDENT_LENGTH
+			key := ks.GetKeyOnMeasure(context.Background(), n.MeasureNumber)
+			x = gregorian.GetLeftIndent(key)
 			// y is not added up because it will handled by the staff (the function that call this function).
 		}
 	}

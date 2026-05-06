@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
@@ -196,6 +197,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 		},
 	}
 
+	ks := keysig.NewKeySignature(context.TODO(), measures)
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
@@ -244,9 +246,9 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
 				mock := rhythm.NewMockRhythm(c)
 				ts := timesig.NewTimeSignatures(context.Background(), measures)
-				mock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[1]})
-				mock.EXPECT().RenderBeam(gomock.Any(), gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[2]})
-				mock.EXPECT().RenderSlurTies(gomock.Any(), gomock.Any(),
+				mock.EXPECT().RenderBeam(gomock.Any(), 100, gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[1]})
+				mock.EXPECT().RenderBeam(gomock.Any(), 100, gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[2]})
+				mock.EXPECT().RenderSlurTies(gomock.Any(), 100, gomock.Any(),
 					testifyMatcher{expected: []*entity.NoteRenderer{}, t: t},
 					float64(670),
 				)
@@ -255,9 +257,9 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
 				mock := lyric.NewMockLyric(c)
-				mock.EXPECT().RenderLyrics(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[1]})
-				mock.EXPECT().RenderLyrics(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[2]})
-				mock.EXPECT().RenderHypen(gomock.Any(), gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
+				mock.EXPECT().RenderLyrics(gomock.Any(), 100, gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[1]})
+				mock.EXPECT().RenderLyrics(gomock.Any(), 100, gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[2]})
+				mock.EXPECT().RenderHypen(gomock.Any(), 100, gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
 				return mock
 			},
 		},
@@ -269,7 +271,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 			rsa.Numbered = tt.numberedMock(ctrl)
 			rsa.Rhythm = tt.rhythmMock(ctrl)
 			rsa.Lyric = tt.lyricMock(ctrl)
-			rsa.RenderWithAlign(context.Background(), tt.canv(ctrl), tt.y, tt.ts, tt.noteRenderer)
+			rsa.RenderWithAlign(context.Background(), tt.canv(ctrl), 0, tt.y, tt.ts, ks, tt.noteRenderer)
 		})
 	}
 }

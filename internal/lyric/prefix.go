@@ -20,11 +20,11 @@ func (li *lyricInteractor) CalculateMarginLeft(txt string) float64 {
 	return 0
 }
 
-func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
+func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, y int, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
 	lyricVal := entity.LyricVal(note.Lyric[part].Text).String()
 
 	xPos := float64(note.PositionX)
-	yPos := float64(note.PositionY + 25 + (part * LINE_BETWEEN_LYRIC))
+	yPos := float64(y + 25 + (part * LINE_BETWEEN_LYRIC))
 	parts := []string{}
 	needStylized := false
 	if baitPrefix.Match([]byte(lyricVal)) {

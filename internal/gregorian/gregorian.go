@@ -104,10 +104,16 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 				xPos += (numbered.AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
 			}
 			canv.TextUnescaped(float64(xPos), float64(lines[0])-8, "&#xF0E2;", `style="font-size:1.3em"`)
+			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
+				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+			}
 			continue
 		}
 		if note.IsRest {
 			canv.TextUnescaped(float64(note.PositionX), float64(lines[2]), restHex[note.NoteLength])
+			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
+				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+			}
 			continue
 		}
 
@@ -135,6 +141,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		singleNoteValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
 		dottedBeat := note.NoteValue > singleNoteValue && note.Tie == nil
 		merged := i < len(notes)-1 && note.NoteLength == musicxml.NoteLengthEighth && notes[i+1].NoteLength == note.NoteLength
+
 		if (dottedHalf || dottedBeat) && !merged {
 			dotPos := yPos
 			if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
@@ -152,7 +159,11 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 		mergeNote := note.NoteLength == musicxml.NoteLengthEighth && nextNoteIsDotted && nextNoteIsSameNoteLength
 		if len(note.Beam) == 0 || mergeNote {
-			renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos), NoteLength: note.NoteLength})
+			renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
+				Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
+				NoteLength: note.NoteLength,
+				Beam:       note.Beam,
+			})
 
 			if mergeNote {
 				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
@@ -163,6 +174,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		groupBeam[len(groupBeam)-1] = append(groupBeam[len(groupBeam)-1], CoordinateWithNoteLength{
 			Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
 			NoteLength: note.NoteLength,
+			Beam:       note.Beam,
 		})
 		if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 			groupBeam = append(groupBeam, []CoordinateWithNoteLength{})

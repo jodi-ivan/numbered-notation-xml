@@ -9,6 +9,7 @@ import (
 type CoordinateWithNoteLength struct {
 	entity.Coordinate
 	NoteLength musicxml.NoteLength
+	Beam       map[int]entity.Beam
 }
 
 var renderMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength){

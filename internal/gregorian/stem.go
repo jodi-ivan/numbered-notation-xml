@@ -42,7 +42,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 	x1, y1 := end[0].X, end[0].Y
 	x2, y2 := start[len(start)-1].X, end[len(end)-1].Y
 
-	maxRise := STAFF_SPACE_WIDTH * 1.6
+	maxRise := STAFF_SPACE_WIDTH * 2.0
 	minDistance := STAFF_SPACE_WIDTH * 2.5
 
 	diffY := y2 - y1
@@ -62,6 +62,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		y2 = end[len(end)-1].Y
 
 		diffY = y1 - y2
+
 		if math.Abs(diffY) > maxRise {
 			if diffY > 0 {
 				y1 = y2 + maxRise
@@ -71,24 +72,30 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 
 			clampY1 = diffY - maxRise
 		}
-
 	}
+
+	// canv.Circle(int(x1), int(y1), 2, `style="fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:1"`)
+	// canv.Circle(int(x2), int(y2), 2, `style="fill:none;stroke:#FF00FF;stroke-linecap:round;stroke-width:1"`)
 
 	for i := 0; i < len(start); i++ {
 		// calculate the Y for the stem reach the beam
 		x3 := start[i].X
 		y3 := end[i].Y
+
 		if len(start) > 1 {
 			y3 = y1 + (x3-x1)*((y2-y1)/(x2-x1))
 		}
 
 		if math.Abs(y3-start[i].Y) < minDistance {
-			additional = -1 * float64(direction) * (math.Abs(minDistance-math.Abs(y3-start[i].Y)) * (STAFF_SPACE_WIDTH / 2))
+			additional = -1 * float64(direction) * (math.Abs(minDistance - math.Abs(y3-start[i].Y)))
 		}
 	}
 
-	// offset the position when beam line is horizontal line AND layering staff line
-	intersect := slices.Index([]int{lines[0], lines[1], lines[2], lines[3], lines[4]}, int(y2))
+	// // offset the position when beam line is horizontal line AND layering staff line
+	linS := []int{lines[0], lines[1], lines[2], lines[3], lines[4]}
+	intersect := slices.IndexFunc(linS, func(n int) bool {
+		return math.Abs(float64(n)-y2) <= 3
+	})
 	if y1 == y2 && intersect >= 0 {
 		additional += (-1 * float64(direction)) + 3.5
 	}
@@ -133,9 +140,6 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	y2Pos := endPos.Y
 
 	stemOffset, clampY1, clampY2 := renderMap[compared](canv, lines, groupBeam...)
-	if compared == 0 {
-		compared = -1
-	}
 
 	y1Pos += -1 * float64(compared) * clampY1
 	y2Pos += -1 * float64(compared) * clampY2

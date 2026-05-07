@@ -99,11 +99,18 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 		if breathpause.IsBreathMark(note) {
+
 			xPos := note.PositionX
 			if note.PositionX-notes[i-1].PositionX <= numbered.MIN_DISTANCE_BREATH {
 				xPos += (numbered.AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
 			}
-			canv.TextUnescaped(float64(xPos), float64(lines[0])-8, "&#xF0E2;", `style="font-size:1.3em"`)
+
+			yPos := float64(lines[0]) - STAFF_SPACE_WIDTH
+			// FIXME: proper line beam detection, currently only check if the next note is B or not
+			if i < len(notes)-1 && notes[i+1].AbsoluteNote != "" && GetYpos(lines, STAFF_SPACE_WIDTH, notes[i+1].AbsoluteOctave, rune(notes[i+1].AbsoluteNote[0])) == float64(lines[2]) {
+				yPos -= (STAFF_SPACE_WIDTH / 2)
+			}
+			canv.TextUnescaped(float64(xPos), yPos, "&#xF0E2;", `style="font-size:1.3em"`)
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 			}

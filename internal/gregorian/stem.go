@@ -71,7 +71,8 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 	}
 
 	// offset the position when beam line is horizontal line AND layering staff line
-	if y1 == y2 && int(math.Abs(y1-float64(lines[2])))%STAFF_SPACE_WIDTH == 0 {
+	intersect := slices.Index([]int{lines[0], lines[1], lines[2], lines[3], lines[4]}, int(y2))
+	if y1 == y2 && intersect >= 0 {
 		additional += (-1 * float64(direction)) + 3.5
 	}
 
@@ -83,9 +84,9 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 			y3 = y1 + (x3-x1)*((y2-y1)/(x2-x1))
 		}
 
-		intersect := slices.Index([]int{lines[0], lines[1], lines[2], lines[3], lines[4]}, int(y2))
+		intersect := slices.Index([]int{lines[0], lines[1], lines[2], lines[3], lines[4]}, int(y3))
 		if intersect >= 0 && (start[i].NoteLength == musicxml.NoteLengthQuarter || start[i].NoteLength == musicxml.NoteLengthHalf) {
-			y3 += 2.5 * float64(direction)
+			y3 += 0.5 * float64(direction)
 		}
 		canv.LineFloat64(start[i].X, start[i].Y, end[i].X, y3+additional, `style="fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1"`)
 	}
@@ -111,7 +112,16 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	y2Pos := endPos.Y
 	stemOffset, clamp := renderMap[compared](canv, lines, groupBeam...)
 
-	y2Pos += -1 * float64(compared) * clamp
+	if y2Pos+(-1*float64(compared)*clamp) < startPos.Y && compared == 1 { // FIXME: y2 at min distance and stretch the y1 to satify slope
+		/*
+			### The Priority List (Top to Bottom)
+			1.  **Min Distance (Critical):** No stem can ever be shorter than $\approx 2.5$ spaces. If it is, the whole beam must move.
+			2.  **Max Slope (Limit):** The vertical difference between $y_1$ and $y_2$ should not exceed $2.0$ spaces.
+			3.  **Standard Length (Goal):** Stems should ideally be $3.0$ or $3.5$ spaces, but this is the first thing you sacrifice to satisfy the two rules above.
+
+		*/
+		y2Pos += -1 * float64(compared) * clamp
+	}
 
 	if len(groupBeam) == 1 {
 		offset := map[int]entity.Coordinate{

@@ -12,7 +12,7 @@ type CoordinateWithNoteLength struct {
 	Beam       map[int]entity.Beam
 }
 
-var renderMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength){
+var renderMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) float64{
 	-1: RenderStemDown,
 	0:  RenderStemDown,
 	1:  RenderStemUp,

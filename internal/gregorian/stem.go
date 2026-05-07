@@ -11,7 +11,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) (float64, float64) {
+func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) (float64, float64, float64) {
 	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 9
@@ -23,7 +23,7 @@ func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLen
 	return renderStem(canv, lines, 1, start, end)
 }
 
-func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) (float64, float64) {
+func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) (float64, float64, float64) {
 	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 0.5
@@ -36,14 +36,16 @@ func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteL
 
 }
 
-func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) (additional, clamp float64) {
+func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) (additional, clampY1, clampY2 float64) {
 
 	// end to end the grouping
 	x1, y1 := end[0].X, end[0].Y
 	x2, y2 := start[len(start)-1].X, end[len(end)-1].Y
 
+	maxRise := STAFF_SPACE_WIDTH * 1.6
+	minDistance := STAFF_SPACE_WIDTH * 2.5
+
 	diffY := y2 - y1
-	maxRise := STAFF_SPACE_WIDTH * 2.0 // Clamp the slope to 2 staff spaces
 
 	if math.Abs(diffY) > maxRise {
 		if diffY > 0 {
@@ -52,10 +54,25 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 			y2 = y1 - maxRise
 		}
 
-		clamp = diffY - maxRise
+		clampY2 = diffY - maxRise
 	}
 
-	minDistance := STAFF_SPACE_WIDTH * 2.5
+	if y2-minDistance < start[len(start)-1].Y {
+		clampY2 = 0
+		y2 = end[len(end)-1].Y
+
+		diffY = y1 - y2
+		if math.Abs(diffY) > maxRise {
+			if diffY > 0 {
+				y1 = y2 + maxRise
+			} else {
+				y1 = y2 - maxRise
+			}
+
+			clampY1 = diffY - maxRise
+		}
+
+	}
 
 	for i := 0; i < len(start); i++ {
 		// calculate the Y for the stem reach the beam
@@ -92,7 +109,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 	}
 	canv.Gend()
 
-	return additional, clamp
+	return additional, clampY1, clampY2
 
 }
 
@@ -108,20 +125,20 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	})
 	farthest := farthestRank[len(farthestRank)-1]
 	compared := cmp.Compare(farthest.Y, float64(lines[2]))
-
-	y2Pos := endPos.Y
-	stemOffset, clamp := renderMap[compared](canv, lines, groupBeam...)
-
-	if y2Pos+(-1*float64(compared)*clamp) < startPos.Y && compared == 1 { // FIXME: y2 at min distance and stretch the y1 to satify slope
-		/*
-			### The Priority List (Top to Bottom)
-			1.  **Min Distance (Critical):** No stem can ever be shorter than $\approx 2.5$ spaces. If it is, the whole beam must move.
-			2.  **Max Slope (Limit):** The vertical difference between $y_1$ and $y_2$ should not exceed $2.0$ spaces.
-			3.  **Standard Length (Goal):** Stems should ideally be $3.0$ or $3.5$ spaces, but this is the first thing you sacrifice to satisfy the two rules above.
-
-		*/
-		y2Pos += -1 * float64(compared) * clamp
+	if compared == 0 {
+		compared = -1
 	}
+
+	y1Pos := startPos.Y
+	y2Pos := endPos.Y
+
+	stemOffset, clampY1, clampY2 := renderMap[compared](canv, lines, groupBeam...)
+	if compared == 0 {
+		compared = -1
+	}
+
+	y1Pos += -1 * float64(compared) * clampY1
+	y2Pos += -1 * float64(compared) * clampY2
 
 	if len(groupBeam) == 1 {
 		offset := map[int]entity.Coordinate{
@@ -140,9 +157,9 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	// BIG BEAM FLAG
 	if compared <= 0 { // down.
-		canv.LineFloat64(startPos.X+0.5, startPos.Y+stemOffset+27, endPos.X+0.5, y2Pos+stemOffset+27, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
+		canv.LineFloat64(startPos.X+0.5, y1Pos+stemOffset+27, endPos.X+0.5, y2Pos+stemOffset+27, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
 	} else {
-		canv.LineFloat64(startPos.X+9, startPos.Y+stemOffset-23, endPos.X+9, y2Pos+stemOffset-23, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
+		canv.LineFloat64(startPos.X+9, y1Pos+stemOffset-23, endPos.X+9, y2Pos+stemOffset-23, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
 	}
 
 	offsets := map[int][2]float64{
@@ -178,7 +195,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	if total16 > 0 {
 
-		xOg1, yOg1 := startPos.X+offsets[compared][0], startPos.Y+stemOffset+offsets[compared][1]
+		xOg1, yOg1 := startPos.X+offsets[compared][0], y1Pos+stemOffset+offsets[compared][1]
 		xOg2, yOg2 := endPos.X+offsets[compared][0], y2Pos+stemOffset+offsets[compared][1]
 
 		for _, p := range pair {

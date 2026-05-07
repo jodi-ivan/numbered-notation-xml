@@ -57,6 +57,12 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		}
 	}
 
+	// offset the position when beam line is horizontal line AND layering staff line
+	if y1 == y2 && int(math.Abs(y1-float64(lines[2])))%STAFF_SPACE_WIDTH == 0 {
+		additional += (-1 * float64(direction)) + 3.5
+	}
+
+	canv.Group(`class="stem"`)
 	for i := 0; i < len(start); i++ {
 		x3 := start[i].X
 		y3 := end[i].Y
@@ -70,6 +76,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		}
 		canv.LineFloat64(start[i].X, start[i].Y, end[i].X, y3+additional, `style="fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1"`)
 	}
+	canv.Gend()
 
 	return additional
 
@@ -77,6 +84,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 
 func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int) {
 
+	canv.Group(`class="beam-group"`)
 	startPos, endPos := groupBeam[0], groupBeam[len(groupBeam)-1]
 
 	farthestRank := slices.Clone(groupBeam)
@@ -98,6 +106,8 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		canv.TextUnescaped(groupBeam[0].X+offset[compared].X,
 			groupBeam[0].Y+offset[compared].Y,
 			singleFlagHex[compared][groupBeam[0].NoteLength])
+
+		canv.Gend()
 		return
 	}
 
@@ -152,11 +162,13 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 			y1 := yOg1 + (x1-xOg1)*((yOg2-yOg1)/(xOg2-xOg1))
 			y2 := yOg1 + (x2-xOg1)*((yOg2-yOg1)/(xOg2-xOg1))
 
-			x3 := p[1].X - (constant.LOWERCASE_LENGTH / 2)
-			y3 := y1 + (x3-x1)*((y2-y1)/(x2-x1))
 			if p[0].IsEmpty() && !p[1].IsEmpty() {
+				x3 := p[1].X - (constant.LOWERCASE_LENGTH / 2) + offsets[compared][0]
+				y3 := y1 + (x3-x1)*((y2-y1)/(x2-x1))
 				x1, y1 = x3, y3
-			} else if !p[0].IsEmpty() && p[1].IsEmpty() { // need real life test cases.
+			} else if !p[0].IsEmpty() && p[1].IsEmpty() {
+				x3 := p[0].X + (constant.LOWERCASE_LENGTH / 2) + offsets[compared][0]
+				y3 := y1 + (x3-x1)*((y2-y1)/(x2-x1))
 				x2, y2 = x3, y3
 			}
 
@@ -165,5 +177,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		}
 
 	}
+
+	canv.Gend()
 
 }

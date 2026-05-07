@@ -147,7 +147,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 			if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
 				dotPos -= 4
 			}
-			canv.TextUnescaped(float64(note.PositionX+15), dotPos, "&#xF060;")
+			canv.TextUnescaped(float64(note.PositionX+12), dotPos, "&#xF060;")
 		}
 
 		if note.NoteLength == musicxml.NoteLengthWhole {
@@ -181,7 +181,9 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 	}
+	canv.Gend()
 
+	canv.Group()
 	for _, gr := range groupBeam {
 		if len(gr) == 0 {
 			continue
@@ -189,6 +191,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		RenderGroupBeam(canv, gr, lines)
 	}
 	canv.Gend()
+
 	canv.Gend()
 
 	x := float64(constant.LAYOUT_INDENT_LENGTH)

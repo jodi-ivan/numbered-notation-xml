@@ -5,6 +5,7 @@ import (
 	"math"
 	"slices"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -101,23 +102,8 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		1:  5,
 	}
 
-	if endPos.NoteLength == musicxml.NoteLength16th && groupBeam[len(groupBeam)-2].NoteLength != endPos.NoteLength {
-		// backward hook
-		// TODO: forward hook? middle of group? why only handle the end of the group
-		x1, y1 := startPos.X+offsets[compared][0], startPos.Y+offsets[compared][1]
-		x2, y2 := endPos.X+offsets[compared][0], endPos.Y+offsets[compared][1]
-
-		t := (1 - (0.7 * (1 / float64(len(groupBeam)))))
-
-		mx := x1 + t*(x2-x1)
-		my := y1 + t*(y2-y1)
-
-		canv.LineFloat64(mx, my+direction[compared], x2, y2+direction[compared], `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
-
-	}
-
 	total16 := 0
-	pair := [][2]CoordinateWithNoteLength{}
+	pair := [][2]CoordinateWithNoteLength{{}}
 	for _, v := range groupBeam {
 		if len(v.Beam) > 1 {
 			total16++
@@ -135,7 +121,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		}
 	}
 
-	if total16%2 == 0 {
+	if total16 > 0 {
 
 		xOg1, yOg1 := startPos.X+offsets[compared][0], startPos.Y+offsets[compared][1]
 		xOg2, yOg2 := endPos.X+offsets[compared][0], endPos.Y+offsets[compared][1]
@@ -147,6 +133,14 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 			y1 := yOg1 + (x1-xOg1)*((yOg2-yOg1)/(xOg2-xOg1))
 			y2 := yOg1 + (x2-xOg1)*((yOg2-yOg1)/(xOg2-xOg1))
+
+			x3 := p[1].X - (constant.LOWERCASE_LENGTH / 2)
+			y3 := y1 + (x3-x1)*((y2-y1)/(x2-x1))
+			if p[0].IsEmpty() && !p[1].IsEmpty() {
+				x1, y1 = x3, y3
+			} else if !p[0].IsEmpty() && p[1].IsEmpty() { // need real life test cases.
+				x2, y2 = x3, y3
+			}
 
 			canv.LineFloat64(x1, y1+direction[compared], x2, y2+direction[compared], `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
 

@@ -11,7 +11,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) {
+func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) float64 {
 	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 9
@@ -20,10 +20,10 @@ func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLen
 		end = append(end, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y2), NoteLength: v.NoteLength, Beam: v.Beam})
 	}
 
-	renderStem(canv, lines, 1, start, end)
+	return renderStem(canv, lines, 1, start, end)
 }
 
-func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) {
+func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) float64 {
 	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 0.5
@@ -32,14 +32,30 @@ func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteL
 		end = append(end, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y2), NoteLength: v.NoteLength, Beam: v.Beam})
 	}
 
-	renderStem(canv, lines, -1, start, end)
+	return renderStem(canv, lines, -1, start, end)
 
 }
 
-func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) {
+func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) float64 {
 
+	// end to end the grouping
 	x1, y1 := end[0].X, end[0].Y
 	x2, y2 := start[len(start)-1].X, end[len(end)-1].Y
+
+	minDistance := STAFF_SPACE_WIDTH * 2.5
+
+	additional := 0.0
+	for i := 0; i < len(start); i++ {
+		x3 := start[i].X
+		y3 := end[i].Y
+		if len(start) > 1 {
+			y3 = y1 + (x3-x1)*((y2-y1)/(x2-x1))
+		}
+
+		if math.Abs(y3-start[i].Y) < minDistance {
+			additional = -1 * float64(direction) * (math.Abs(minDistance-math.Abs(y3-start[i].Y)) * (STAFF_SPACE_WIDTH / 2))
+		}
+	}
 
 	for i := 0; i < len(start); i++ {
 		x3 := start[i].X
@@ -52,8 +68,10 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		if intersect >= 0 && (start[i].NoteLength == musicxml.NoteLengthQuarter || start[i].NoteLength == musicxml.NoteLengthHalf) {
 			y3 += 2.5 * float64(direction)
 		}
-		canv.LineFloat64(start[i].X, start[i].Y, end[i].X, y3, `style="fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1"`)
+		canv.LineFloat64(start[i].X, start[i].Y, end[i].X, y3+additional, `style="fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1"`)
 	}
+
+	return additional
 
 }
 
@@ -68,7 +86,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	})
 	farthest := farthestRank[len(farthestRank)-1]
 	compared := cmp.Compare(farthest.Y, float64(lines[2]))
-	renderMap[compared](canv, lines, groupBeam...)
+	stemOffset := renderMap[compared](canv, lines, groupBeam...)
 
 	if len(groupBeam) == 1 {
 		offset := map[int]entity.Coordinate{
@@ -85,9 +103,9 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	// BIG BEAM FLAG
 	if compared <= 0 { // down.
-		canv.LineFloat64(startPos.X+0.5, startPos.Y+27, endPos.X+0.5, endPos.Y+27, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
+		canv.LineFloat64(startPos.X+0.5, startPos.Y+stemOffset+27, endPos.X+0.5, endPos.Y+stemOffset+27, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
 	} else {
-		canv.LineFloat64(startPos.X+9, startPos.Y-23, endPos.X+9, endPos.Y-23, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
+		canv.LineFloat64(startPos.X+9, startPos.Y+stemOffset-23, endPos.X+9, endPos.Y+stemOffset-23, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
 	}
 
 	offsets := map[int][2]float64{
@@ -123,8 +141,8 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	if total16 > 0 {
 
-		xOg1, yOg1 := startPos.X+offsets[compared][0], startPos.Y+offsets[compared][1]
-		xOg2, yOg2 := endPos.X+offsets[compared][0], endPos.Y+offsets[compared][1]
+		xOg1, yOg1 := startPos.X+offsets[compared][0], startPos.Y+stemOffset+offsets[compared][1]
+		xOg2, yOg2 := endPos.X+offsets[compared][0], endPos.Y+stemOffset+offsets[compared][1]
 
 		for _, p := range pair {
 
@@ -148,5 +166,4 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	}
 
-	// y3 = y1 + (x3-x1) * ((y2-y1)/(x2-x1))
 }

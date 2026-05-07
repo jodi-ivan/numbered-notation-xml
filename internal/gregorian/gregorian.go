@@ -100,17 +100,12 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 		if breathpause.IsBreathMark(note) {
 
-			xPos := note.PositionX
+			xPos := float64(note.PositionX)
 			if note.PositionX-notes[i-1].PositionX <= numbered.MIN_DISTANCE_BREATH {
 				xPos += (numbered.AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
 			}
 
-			yPos := float64(lines[0]) - STAFF_SPACE_WIDTH
-			// FIXME: proper line beam detection, currently only check if the next note is B or not
-			if i < len(notes)-1 && notes[i+1].AbsoluteNote != "" && GetYpos(lines, STAFF_SPACE_WIDTH, notes[i+1].AbsoluteOctave, rune(notes[i+1].AbsoluteNote[0])) == float64(lines[2]) {
-				yPos -= (STAFF_SPACE_WIDTH / 2)
-			}
-			canv.TextUnescaped(float64(xPos), yPos, "&#xF0E2;", `style="font-size:1.3em"`)
+			canv.TextUnescaped(xPos, float64(lines[0])-STAFF_SPACE_WIDTH, "&#xF0E2;", `style="font-size:1.3em"`)
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 			}
@@ -149,6 +144,11 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		dottedBeat := note.NoteValue > singleNoteValue && note.Tie == nil
 		merged := i < len(notes)-1 && note.NoteLength == musicxml.NoteLengthEighth && notes[i+1].NoteLength == note.NoteLength
 
+		ts := timeSignature.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
+		quarterNoteInCompound := ts.IsCompoundTime() && note.NoteLength == musicxml.NoteLengthQuarter && dottedHalf
+
+		merged = merged || quarterNoteInCompound
+
 		if (dottedHalf || dottedBeat) && !merged {
 			dotPos := yPos
 			if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
@@ -165,6 +165,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		nextNoteIsSameNoteLength := i < len(notes)-1 && notes[i+1].NoteLength == note.NoteLength
 
 		mergeNote := note.NoteLength == musicxml.NoteLengthEighth && nextNoteIsDotted && nextNoteIsSameNoteLength
+		mergeNote = mergeNote || quarterNoteInCompound
 		if len(note.Beam) == 0 || mergeNote {
 			renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
 				Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),

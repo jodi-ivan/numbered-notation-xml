@@ -35,6 +35,10 @@ func (t *Time) IsCommonTime() bool {
 	return t.BeatType == 4 || t.BeatType == 2
 }
 
+func (t *Time) IsCompoundTime() bool {
+	return t.BeatType == 8
+}
+
 // calculateNoteLength in beat
 func (t *Time) calculateNoteLength(ctx context.Context, note musicxml.Note) float64 {
 	// cases

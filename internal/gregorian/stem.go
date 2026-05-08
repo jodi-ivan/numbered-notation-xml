@@ -75,6 +75,16 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 
 			clampY1 = diffY - maxRise
 		}
+
+		if (direction > 0 && y1 < start[0].Y) || (direction <= 0 && y1 > start[0].Y) {
+			// reset everything. I hate you all
+			// maybe flip?
+			clampY2 = 0
+			clampY1 = 0
+
+			x1, y1 = end[0].X, end[0].Y
+			x2, y2 = start[len(start)-1].X, end[len(end)-1].Y
+		}
 	}
 
 	// canv.Circle(int(x1), int(y1), 2, `style="fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:1"`)

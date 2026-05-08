@@ -60,7 +60,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		clampY2 = diffY - maxRise
 	}
 
-	if y2-minDistance < start[len(start)-1].Y {
+	if (direction > 0 && y2 < end[len(end)-1].Y) || (direction <= 0 && y2 > end[len(end)-1].Y) {
 		clampY2 = 0
 		y2 = end[len(end)-1].Y
 
@@ -161,6 +161,14 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	y2Pos := endPos.Y
 
 	stemInfo := renderMap[compared](canv, lines, groupBeam...)
+	if stemInfo.Flip {
+		if compared <= 0 {
+			compared = 1
+		} else {
+			compared = -1
+		}
+		stemInfo = renderMap[compared](canv, lines, groupBeam...)
+	}
 	stemOffset, clampY1, clampY2 := stemInfo.LengthCompensation, stemInfo.ClampY1, stemInfo.ClampY2
 
 	y1Pos += -1 * float64(compared) * clampY1

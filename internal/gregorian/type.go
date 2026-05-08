@@ -10,6 +10,7 @@ type StemInfo struct {
 	ClampY1            float64
 	ClampY2            float64
 	LowestYPosition    float64
+	Flip               bool
 }
 
 type CoordinateWithNoteLength struct {

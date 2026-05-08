@@ -11,7 +11,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) (float64, float64, float64) {
+func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo {
 	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 9
@@ -23,7 +23,7 @@ func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLen
 	return renderStem(canv, lines, 1, start, end)
 }
 
-func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) (float64, float64, float64) {
+func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo {
 	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 0.5
@@ -36,7 +36,10 @@ func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteL
 
 }
 
-func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) (additional, clampY1, clampY2 float64) {
+func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) StemInfo {
+
+	var additional, clampY1, clampY2 float64
+	lowestYPosition := float64(lines[4])
 
 	// end to end the grouping
 	x1, y1 := end[0].X, end[0].Y
@@ -113,14 +116,22 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 			y3 += 0.5 * float64(direction)
 		}
 		canv.LineFloat64(start[i].X, start[i].Y, end[i].X, y3+additional, `style="fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1"`)
+		if lowestYPosition < y3+additional {
+			lowestYPosition = y3 + additional
+		}
 	}
 	canv.Gend()
 
-	return additional, clampY1, clampY2
+	return StemInfo{
+		LengthCompensation: additional,
+		ClampY1:            clampY1,
+		ClampY2:            clampY2,
+		LowestYPosition:    lowestYPosition,
+	}
 
 }
 
-func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int) {
+func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int) int {
 
 	canv.Group(`class="beam-group"`)
 	startPos, endPos := groupBeam[0], groupBeam[len(groupBeam)-1]
@@ -139,7 +150,8 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	y1Pos := startPos.Y
 	y2Pos := endPos.Y
 
-	stemOffset, clampY1, clampY2 := renderMap[compared](canv, lines, groupBeam...)
+	stemInfo := renderMap[compared](canv, lines, groupBeam...)
+	stemOffset, clampY1, clampY2 := stemInfo.LengthCompensation, stemInfo.ClampY1, stemInfo.ClampY2
 
 	y1Pos += -1 * float64(compared) * clampY1
 	y2Pos += -1 * float64(compared) * clampY2
@@ -156,7 +168,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 			singleFlagHex[compared][groupBeam[0].NoteLength])
 
 		canv.Gend()
-		return
+		return int(stemInfo.LowestYPosition)
 	}
 
 	// BIG BEAM FLAG
@@ -227,5 +239,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	}
 
 	canv.Gend()
+
+	return int(stemInfo.LowestYPosition)
 
 }

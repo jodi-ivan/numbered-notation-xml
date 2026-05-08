@@ -17,6 +17,7 @@ type Rhythm interface {
 	RenderBezier(set []SlurBezier, canv canvas.Canvas)
 	RenderSlurTies(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64)
 	RenderBeam(ctx context.Context, y int, canv canvas.Canvas, ts timesig.TimeSignature, notes []*entity.NoteRenderer)
+	Split(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer)
 }
 
 type rhythmInteractor struct {

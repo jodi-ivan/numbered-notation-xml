@@ -27,7 +27,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	oldMarginButtom := 0
 	for i, st := range staffes {
 		info = si.RenderStaff(ctx, canv, x, relativeY, i, i == len(staffes)-1, keySignature, timeSignature, st, info.NextLineRenderer...)
-		relativeY = relativeY + 130 + info.MarginBottom
+		relativeY = relativeY + STAFF_LINE_DISTANCE + 70 + info.MarginBottom
 		if info.ForceNewLine {
 			relativeY += oldMarginButtom
 		}
@@ -57,7 +57,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			idx = 1
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, idx, true, keySignature, timeSignature, nil, info.NextLineRenderer...)
-		relativeY += info.MarginBottom + 130
+		relativeY += info.MarginBottom + STAFF_LINE_DISTANCE + 70
 	}
 
 	return relativeY

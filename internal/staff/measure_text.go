@@ -97,7 +97,7 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 
 }
 
-func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer) {
 	hasStaffText := false
 
 	dashSet := map[int][2]entity.Coordinate{}
@@ -135,9 +135,9 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 				}
 
 				origPos := (len(note.MeasureText) - 1) * 10
-				yPos := (note.PositionY - origPos) - offset - 25 - (i * -10)
+				yPos := (y - origPos) - offset - 25 - (i * -10)
 				if t.RelativeY < 0 {
-					yPos = note.PositionY + (i * 10) + (len(note.Lyric) * 25) + 20
+					yPos = y + (i * 10) + (len(note.Lyric) * 25) + 20
 					style = []string{"font-size:60%", "font-family:'Figtree'", "font-weight:600"}
 				}
 				canv.Text(xPos, yPos, t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
@@ -152,7 +152,7 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, canv canvas.
 
 			loc := entity.Coordinate{
 				X: float64(note.PositionX),
-				Y: float64(note.PositionY),
+				Y: float64(y),
 			}
 
 			if dashType == musicxml.DirectionDashesTypeStop {

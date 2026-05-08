@@ -65,17 +65,17 @@ func GetYpos(lines [5]int, space int, octave int, pitch rune) float64 {
 }
 
 func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
-	initialY := y - 70
+	initialY := y
 	lines := [5]int{}
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 	x2 := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8
 	canv.Group(`class="staff-line"`)
 	for i := 0; i <= 4; i++ {
-		lines[i] = y - 70
-		canv.Line(constant.LAYOUT_INDENT_LENGTH, y-70, x2, y-70, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
+		lines[i] = y
+		canv.Line(constant.LAYOUT_INDENT_LENGTH, y, x2, y, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
 		y += STAFF_SPACE_WIDTH
 	}
-	canv.Line(constant.LAYOUT_INDENT_LENGTH, initialY, constant.LAYOUT_INDENT_LENGTH, y-70-STAFF_SPACE_WIDTH, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1")
+	canv.Line(constant.LAYOUT_INDENT_LENGTH, initialY, constant.LAYOUT_INDENT_LENGTH, y-STAFF_SPACE_WIDTH, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1")
 	canv.Gend()
 
 	maxY := lines[4]
@@ -167,11 +167,16 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		mergeNote := note.NoteLength == musicxml.NoteLengthEighth && nextNoteIsDotted && nextNoteIsSameNoteLength
 		mergeNote = mergeNote || quarterNoteInCompound
 		if len(note.Beam) == 0 || mergeNote {
-			renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
+			stemInfo := renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
 				Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
 				NoteLength: note.NoteLength,
 				Beam:       note.Beam,
 			})
+
+			// since this is only vertical stem line. only bother to move if it really disruptive like will invade the numbered note space
+			if maxY+(STAFF_SPACE_WIDTH*3) < int(stemInfo.LowestYPosition) {
+				maxY = int(stemInfo.LowestYPosition)
+			}
 
 			if mergeNote {
 				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
@@ -196,7 +201,10 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		if len(gr) == 0 {
 			continue
 		}
-		RenderGroupBeam(canv, gr, lines)
+		groupMaxY := RenderGroupBeam(canv, gr, lines)
+		if maxY < groupMaxY {
+			maxY = groupMaxY
+		}
 	}
 	canv.Gend()
 
@@ -233,7 +241,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	}
 	canv.Gend()
 	canv.Gend()
-	return maxY
+	return maxY - lines[4]
 }
 
 func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignature) int {

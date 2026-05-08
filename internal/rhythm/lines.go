@@ -221,12 +221,16 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, y int, canv canv
 
 }
 
+func (ri *rhythmInteractor) Split(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
+	ri.BeamSplitter.Split(ctx, notes, ts, nil)
+
+}
+
 func (ri *rhythmInteractor) RenderBeam(ctx context.Context, y int, canv canvas.Canvas, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
 
 	beams := map[int]BeamLine{}
 	beamSets := []BeamLine{}
 
-	ri.BeamSplitter.Split(ctx, notes, ts, nil)
 	for _, note := range notes {
 
 		for _, b := range note.Beam {
@@ -285,6 +289,7 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, y int, canv canvas.C
 			m[[2]float64{b.Start.X, b.End.X}] = true
 		}
 
+		// FIXME: if end to end note, are doubles line (16 note) AND the notes beginning of the line, the 8th line needs to be adjusted
 		if b.Number == 1 && m[[2]float64{b.Start.X, b.End.X}] && b.Start.X == constant.LAYOUT_INDENT_LENGTH {
 			b.Start.X -= (constant.UPPERCASE_LENGTH / 2)
 		}

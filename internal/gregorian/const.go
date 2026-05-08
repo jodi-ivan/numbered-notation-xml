@@ -12,11 +12,11 @@ const (
 
 	ACCIDENTAL_KEY_SIGNATURE_WIDTH = 8
 
-	STAFF_OFFSET      = 60
+	STAFF_OFFSET      = 65
 	STAFF_SPACE_WIDTH = 8
 )
 
-var renderMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) (float64, float64, float64){
+var renderMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo{
 	-1: RenderStemDown,
 	0:  RenderStemDown,
 	1:  RenderStemUp,

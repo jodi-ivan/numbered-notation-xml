@@ -20,7 +20,7 @@ import (
 )
 
 type RenderStaffWithAlign interface {
-	RenderWithAlign(ctx context.Context, canv canvas.Canvas, staffPos, y int, ts timesig.TimeSignature, ks keysig.KeySignature, noteRenderer [][]*entity.NoteRenderer)
+	RenderWithAlign(ctx context.Context, canv canvas.Canvas, staffPos, y int, ts timesig.TimeSignature, ks keysig.KeySignature, noteRenderer [][]*entity.NoteRenderer) int
 }
 
 func NewRenderAlign() RenderStaffWithAlign {
@@ -100,10 +100,10 @@ func (rsa *renderStaffAlign) getAddedSpace(lastNote *entity.NoteRenderer, rightA
 	return remaining / float64(totalNotes), lastPos
 }
 
-func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, staffPos, y int, ts timesig.TimeSignature, ks keysig.KeySignature, noteRenderer [][]*entity.NoteRenderer) {
+func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, staffPos, y int, ts timesig.TimeSignature, ks keysig.KeySignature, noteRenderer [][]*entity.NoteRenderer) int {
 
 	if len(noteRenderer) == 0 {
-		return
+		return 0
 	}
 	flatten := []*entity.NoteRenderer{}
 
@@ -129,28 +129,35 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	canv.Group("class='staff'")
 
-	for mi, measure := range noteRenderer { // staff
+	for mi, measure := range noteRenderer { // preparation adn precalculate
 		alignJustify(measure, y, added, &count, mi, mi == len(noteRenderer)-1)
+		rsa.Rhythm.Split(ctx, ts, measure)
+	}
+
+	marginBottom := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
+
+	yPos := y + gregorian.STAFF_OFFSET + marginBottom
+	for _, measure := range noteRenderer {
 
 		canv.Group("class='measure-align'", fmt.Sprintf("number='%d'", measure[0].MeasureNumber))
-		rsa.Lyric.RenderLyrics(ctx, y+gregorian.STAFF_OFFSET, canv, measure)
+		rsa.Lyric.RenderLyrics(ctx, yPos, canv, measure)
 
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
-		rsa.Numbered.RenderNote(ctx, canv, measure, y+gregorian.STAFF_OFFSET, rightAlignOffset)
-		rsa.Rhythm.RenderBeam(ctx, y+gregorian.STAFF_OFFSET, canv, ts, measure)
-		rsa.RenderMeasureText(ctx, canv, measure)
-		RenderTuplet(ctx, y+gregorian.STAFF_OFFSET, canv, measure)
+		rsa.Numbered.RenderNote(ctx, canv, measure, yPos, rightAlignOffset)
+		rsa.Rhythm.RenderBeam(ctx, yPos, canv, ts, measure)
+		rsa.RenderMeasureText(ctx, y+marginBottom, canv, measure)
+		RenderTuplet(ctx, yPos, canv, measure)
 
 		canv.Gend()
 		canv.Gend()
 
 	}
 
-	gregorian.RenderStaffLine(ctx, staffPos, y+gregorian.STAFF_OFFSET, canv, flatten, ks, ts)
-
-	rsa.Lyric.RenderHypen(ctx, y+gregorian.STAFF_OFFSET, canv, flatten)
-	rsa.Rhythm.RenderSlurTies(ctx, y+gregorian.STAFF_OFFSET, canv, slurTiesNote, float64(lastPos))
-	RenderMeasureTopping(ctx, y+gregorian.STAFF_OFFSET, canv, flatten)
+	rsa.Lyric.RenderHypen(ctx, yPos, canv, flatten)
+	rsa.Rhythm.RenderSlurTies(ctx, yPos, canv, slurTiesNote, float64(lastPos))
+	RenderMeasureTopping(ctx, yPos, canv, flatten)
 	canv.Gend()
+
+	return marginBottom
 
 }

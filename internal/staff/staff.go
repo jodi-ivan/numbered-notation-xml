@@ -141,7 +141,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1
 			hasMeasureText := si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
-			if hasMeasureText || (len(note.MeasureText) > 0 && y == FIRST_STAFF_Y_POS) {
+			if hasMeasureText || (len(note.MeasureText) > 0 && staffPos == 0) {
 				yOffset = true
 			}
 
@@ -181,7 +181,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 		}
 
-		x += constant.LOWERCASE_LENGTH
+		x += 8
 
 		filteredNotes := []*entity.NoteRenderer{}
 		for _, note := range notes {
@@ -249,7 +249,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 	}
 
-	si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, y, timeSignature, keySignature, align)
+	staffInfo.MarginBottom += si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, y, timeSignature, keySignature, align)
 
 	return
 }

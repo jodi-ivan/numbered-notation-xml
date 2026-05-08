@@ -173,8 +173,8 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 				Beam:       note.Beam,
 			})
 
-			// since this is only vertical stem line. only bother to move if it really disruptive like will invade the numbered note space
-			if maxY+(STAFF_SPACE_WIDTH*3) < int(stemInfo.LowestYPosition) {
+			// since this is only vertical stem line. only bother to move if it really disruptive like will invade the numbered note space. except it has beam.
+			if maxY+(STAFF_SPACE_WIDTH*2) < int(stemInfo.LowestYPosition) || (maxY < int(stemInfo.LowestYPosition) && len(note.Beam) > 0) {
 				maxY = int(stemInfo.LowestYPosition)
 			}
 

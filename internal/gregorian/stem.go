@@ -60,7 +60,8 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		clampY2 = diffY - maxRise
 	}
 
-	if (direction > 0 && y2 < end[len(end)-1].Y) || (direction <= 0 && y2 > end[len(end)-1].Y) {
+	// if (direction > 0 && y2 < end[len(end)-1].Y) || (direction <= 0 && y2 > end[len(end)-1].Y) {
+	if y2-minDistance < start[len(start)-1].Y {
 		clampY2 = 0
 		y2 = end[len(end)-1].Y
 

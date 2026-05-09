@@ -104,7 +104,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 		beanNoteHex[beamType],
 		fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
 
-	if (dottedHalf || dottedBeat) && !merged {
+	if (dottedHalf || dottedBeat) && (!merged || (merged && quarterNoteInCompound && note.NoteValue-1 == 2)) {
 		dotPos := yPos
 		if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
 			dotPos -= 4

@@ -31,6 +31,8 @@ type Slur struct {
 	Number   int
 	Type     musicxml.NoteSlurType
 	LineType musicxml.NoteSlurLineType
+
+	GregorianOnly bool
 }
 
 type Beam struct {

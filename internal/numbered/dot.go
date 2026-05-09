@@ -36,6 +36,8 @@ func ReplaceDotWithNumbered(dot, number *entity.NoteRenderer) *entity.NoteRender
 	dot.Note = number.Note
 	dot.Octave = number.Octave
 	dot.Strikethrough = number.Strikethrough
+	dot.AbsoluteNote = number.AbsoluteNote
+	dot.AbsoluteOctave = number.AbsoluteOctave
 
 	number.Tie = &entity.Slur{
 		Number: 1,

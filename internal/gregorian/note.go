@@ -58,13 +58,13 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 				if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
 					dotPos -= 4
 				}
-				canv.TextUnescaped(float64(xPos+12), dotPos, "&#xF060;", `style="fill:#DD0000"`)
+				canv.TextUnescaped(float64(xPos+12), dotPos, "&#xF060;", `style="fill:#0000DD"`)
 			}
 		}
 
 		canv.TextUnescaped(float64(xPos), yPos,
 			beanNoteHex[noteType[remaining]],
-			fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave), `style="fill:#DD0000"`)
+			fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave), `style="fill:#0000DD"`)
 
 		renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
 			Coordinate: entity.NewCoordinate(float64(xPos), yPos),
@@ -100,9 +100,13 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 
 	RenderLedgerLine(canv, entity.NewCoordinate(float64(note.PositionX), yPos), lines)
 
+	marker := `style="fill:#DD0000"`
+	if note.NoteValue == nonDottedValue || note.NoteValue == dottedValue {
+		marker = ""
+	}
 	canv.TextUnescaped(float64(note.PositionX), yPos,
 		beanNoteHex[beamType],
-		fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
+		fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave), fmt.Sprintf(`value="%.f"`, note.NoteValue), marker)
 
 	if (dottedHalf || dottedBeat) && (!merged || (merged && quarterNoteInCompound && note.NoteValue-1 == 2)) {
 		dotPos := yPos

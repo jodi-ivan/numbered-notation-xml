@@ -1,7 +1,6 @@
 package gregorian
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"unicode"
@@ -86,6 +85,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	currentMeasure := 0
 
 	for i, note := range notes {
+
 		if currentMeasure != note.MeasureNumber {
 			currentMeasure = note.MeasureNumber
 			if i != 0 {
@@ -125,72 +125,14 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 		if note.AbsoluteNote == "" {
+
 			continue
 		}
 
-		yPos := GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
-		if maxY < int(yPos) {
-			maxY = int(yPos)
-		}
-
-		RenderLedgerLine(canv, entity.NewCoordinate(float64(note.PositionX), yPos), lines)
-
-		canv.TextUnescaped(float64(note.PositionX), yPos,
-			beanNoteHex[note.NoteLength],
-			fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave))
-
-		dottedHalf := i < len(notes)-1 && notes[i+1].IsDotted && len(notes[i+1].Beam) >= 1
-		singleNoteValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
-		dottedBeat := note.NoteValue > singleNoteValue && note.Tie == nil
-		merged := i < len(notes)-1 && note.NoteLength == musicxml.NoteLengthEighth && notes[i+1].NoteLength == note.NoteLength
-
-		ts := timeSignature.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
-		quarterNoteInCompound := ts.IsCompoundTime() && note.NoteLength == musicxml.NoteLengthQuarter && dottedHalf
-
-		merged = merged || quarterNoteInCompound
-
-		if (dottedHalf || dottedBeat) && !merged {
-			dotPos := yPos
-			if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
-				dotPos -= 4
-			}
-			canv.TextUnescaped(float64(note.PositionX+12), dotPos, "&#xF060;")
-		}
-
-		if note.NoteLength == musicxml.NoteLengthWhole {
-			continue
-		}
-
-		nextNoteIsDotted := i < len(notes)-1 && notes[i+1].IsDotted
-		nextNoteIsSameNoteLength := i < len(notes)-1 && notes[i+1].NoteLength == note.NoteLength
-
-		mergeNote := note.NoteLength == musicxml.NoteLengthEighth && nextNoteIsDotted && nextNoteIsSameNoteLength
-		mergeNote = mergeNote || quarterNoteInCompound
-		if len(note.Beam) == 0 || mergeNote {
-			stemInfo := renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
-				Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
-				NoteLength: note.NoteLength,
-				Beam:       note.Beam,
-			})
-
-			// since this is only vertical stem line. only bother to move if it really disruptive like will invade the numbered note space. except it has beam.
-			if maxY+(STAFF_SPACE_WIDTH*2) < int(stemInfo.LowestYPosition) || (maxY < int(stemInfo.LowestYPosition) && len(note.Beam) > 0) {
-				maxY = int(stemInfo.LowestYPosition)
-			}
-
-			if mergeNote {
-				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
-			}
-			continue
-		}
-
-		groupBeam[len(groupBeam)-1] = append(groupBeam[len(groupBeam)-1], CoordinateWithNoteLength{
-			Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
-			NoteLength: note.NoteLength,
-			Beam:       note.Beam,
-		})
-		if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
-			groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+		var noteMaxYPos int
+		noteMaxYPos, groupBeam = RenderNote(ctx, canv, lines, groupBeam, i, notes, timeSignature)
+		if maxY < noteMaxYPos {
+			maxY = noteMaxYPos
 		}
 
 	}

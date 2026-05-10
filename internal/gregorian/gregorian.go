@@ -160,34 +160,32 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	accidentalSet := key.GetAccidentals()
 
 	canv.Group(`class="clef"`, `style="font-size:2em"`)
-	canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH+5, float64(initialY+15), `&#xF026;`)
+	canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH+5, float64(initialY+15), TREBLE_CLEF_HEX)
 	canv.Gend()
 
 	canv.Group(`class="keysig"`, `style="font-size:1.75em"`)
 	offset := 0
-	// changed := slices.IndexFunc(keySignature.Signatures, func(k keysig.Key) bool {
-	// 	return k.Measure == notes[0].MeasureNumber
-	// })
-	// if changed >= 0 && notes[0].MeasureNumber != 1 {
-	// 	before := keySignature.GetKeyOnMeasure(ctx, notes[0].MeasureNumber-1)
-	// 	naturalSet := before.GetAccidentals()
 
-	// 	for x, acc := range naturalSet {
-	// 		accidental := accidentalHex[musicxml.NoteAccidentalNatural] // sharp
-	// 		width := ACCIDENTAL_KEY_SIGNATURE_WIDTH
+	// key signature changes
+	if key.Start && key.Prev != nil && notes[0].MeasureNumber != 1 {
+		naturalSet := key.Prev.GetAccidentals()
 
-	// 		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+CLEF_WIDTH-8)+float64(width*x),
-	// 			GetYPosKeySig(lines, STAFF_SPACE_WIDTH, acc, before.Fifth < 0),
-	// 			accidental)
-	// 	}
+		for x, acc := range naturalSet {
+			accidental := accidentalHex[musicxml.NoteAccidentalNatural]
+			width := ACCIDENTAL_KEY_SIGNATURE_WIDTH
 
-	// 	offset = (len(naturalSet) * 8) - 4
-	// }
+			canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+CLEF_WIDTH)+float64(width*x),
+				GetYPosKeySig(lines, STAFF_SPACE_WIDTH, acc, key.Prev.Fifth < 0),
+				accidental)
+		}
+
+		offset = (len(naturalSet) * ACCIDENTAL_KEY_SIGNATURE_WIDTH) + PADDING_WIDTH
+	}
 	for x, acc := range accidentalSet {
-		accidental := `&#xF02B;` // sharp
+		accidental := accidentalHex[musicxml.NoteAccidentalSharp]
 		width := ACCIDENTAL_KEY_SIGNATURE_WIDTH
 		if key.Fifth < 0 {
-			accidental = `&#xF02D;` // flat
+			accidental = accidentalHex[musicxml.NoteAccidentalFlat]
 		}
 		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+CLEF_WIDTH+offset)+float64(width*x),
 			GetYPosKeySig(lines, STAFF_SPACE_WIDTH, acc, key.Fifth < 0),
@@ -210,9 +208,13 @@ func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignatur
 	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(timeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(timeSig.UniqueSign)-1)) + keySigWith)
 }
 
-func GetLeftIndent(key keysig.Key, offset ...int) int {
+func GetLeftIndent(key keysig.Key) int {
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
-	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith
+	offset := 0
+	if key.Start && key.Prev != nil {
+		offset = (len(key.Prev.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH) + PADDING_WIDTH
+	}
+	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith + offset
 }
 
 func GetLeftMargin(key keysig.Key) int {

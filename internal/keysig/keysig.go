@@ -14,6 +14,8 @@ type Key struct {
 	Humanized string
 	Fifth     int
 	Measure   int
+	Start     bool
+	Prev      *Key
 }
 
 type KeySignature struct {
@@ -65,11 +67,16 @@ func (ks *KeySignature) GetKeyOnMeasure(ctx context.Context, measure int) Key {
 
 	}
 
+	result := prev
+	result.Prev = &currentTime
 	if !found {
-		return ks.Signatures[len(ks.Signatures)-1]
+		result = ks.Signatures[len(ks.Signatures)-1]
+		if len(ks.Signatures) > 1 {
+			result.Prev = &ks.Signatures[len(ks.Signatures)-2]
+		}
 	}
-
-	return prev
+	result.Start = result.Measure == measure
+	return result
 }
 
 func NewKey(key *musicxml.KeySignature) Key {

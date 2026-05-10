@@ -16,6 +16,10 @@ const (
 	STAFF_SPACE_WIDTH = 8
 )
 
+const (
+	TREBLE_CLEF_HEX = `&#xF026;`
+)
+
 var renderStemAndBeamMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo{
 	-1: RenderStemDown,
 	0:  RenderStemDown,

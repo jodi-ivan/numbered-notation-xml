@@ -43,6 +43,11 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 			continueDot = false
 			dotCount = 0
 		}
+
+		// TODO: config toggle here
+		if n.AbsoluteAccidental != "" {
+			x += 4
+		}
 		n.PositionX = x
 		n.PositionY = y
 		if n.IsLengthTakenFromLyric {

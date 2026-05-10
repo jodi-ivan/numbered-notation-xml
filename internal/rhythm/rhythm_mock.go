@@ -101,3 +101,15 @@ func (mr *MockRhythmMockRecorder) SetRhythmNotation(noteRenderer, note, numbered
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRhythmNotation", reflect.TypeOf((*MockRhythm)(nil).SetRhythmNotation), noteRenderer, note, numberedNote)
 }
+
+// Split mocks base method.
+func (m *MockRhythm) Split(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Split", ctx, ts, notes)
+}
+
+// Split indicates an expected call of Split.
+func (mr *MockRhythmMockRecorder) Split(ctx, ts, notes interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Split", reflect.TypeOf((*MockRhythm)(nil).Split), ctx, ts, notes)
+}

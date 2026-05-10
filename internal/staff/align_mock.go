@@ -39,9 +39,11 @@ func (m *MockRenderStaffWithAlign) EXPECT() *MockRenderStaffWithAlignMockRecorde
 }
 
 // RenderWithAlign mocks base method.
-func (m *MockRenderStaffWithAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, staffPos, y int, ts timesig.TimeSignature, ks keysig.KeySignature, noteRenderer [][]*entity.NoteRenderer) {
+func (m *MockRenderStaffWithAlign) RenderWithAlign(ctx context.Context, canv canvas.Canvas, staffPos, y int, ts timesig.TimeSignature, ks keysig.KeySignature, noteRenderer [][]*entity.NoteRenderer) int {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderWithAlign", ctx, canv, staffPos, y, ts, ks, noteRenderer)
+	ret := m.ctrl.Call(m, "RenderWithAlign", ctx, canv, staffPos, y, ts, ks, noteRenderer)
+	ret0, _ := ret[0].(int)
+	return ret0
 }
 
 // RenderWithAlign indicates an expected call of RenderWithAlign.

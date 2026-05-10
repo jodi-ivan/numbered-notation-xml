@@ -125,9 +125,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				IsNewLine:     measure.NewLineIndex[notePos],
 				MeasureNumber: measure.Number,
 
-				AbsoluteNote:      note.Pitch.Step,
-				AbsoluteOctave:    note.Pitch.Octave,
-				TimeModifications: note.TimeModification,
+				AbsoluteNote:       note.Pitch.Step,
+				AbsoluteOctave:     note.Pitch.Octave,
+				AbsoluteAccidental: note.Accidental,
+				TimeModifications:  note.TimeModification,
 
 				LeadingHeader: measure.PrefixHeader[notePos],
 			}

@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"math"
 	"unicode"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
@@ -17,33 +18,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func GetYPosKeySig(lines [5]int, space float64, pitch string, isFlat bool) float64 {
-	if isFlat {
-		// Flat order: B E A D G C F
-		pos := map[string]float64{
-			"B": float64(lines[2]),
-			"E": float64(lines[0]) + (space / 2),
-			"A": float64(lines[2]) + (space / 2),
-			"D": float64(lines[1]),
-			"G": float64(lines[3]),
-			"C": float64(lines[1]) + (space / 2),
-			"F": float64(lines[3]) - (space / 2),
-		}
-		return pos[pitch]
-	}
-	// Sharp order: F C G D A E B
-	pos := map[string]float64{
-		"F": float64(lines[0]),
-		"C": float64(lines[2]) - (space / 2),
-		"G": float64(lines[1]) - (space / 2),
-		"D": float64(lines[2]),
-		"A": float64(lines[3]) + (space / 2),
-		"E": float64(lines[0]) + (space / 2),
-		"B": float64(lines[2]) - (space),
-	}
-	return pos[pitch]
-}
-
+// DEPRECATED:
 func GetYpos(lines [5]int, space int, octave int, pitch rune) float64 {
 	noteOrder := []rune{'C', 'D', 'E', 'F', 'G', 'A', 'B'}
 
@@ -82,16 +57,25 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 		}
 
 		if note.Tie != nil {
-			if tiesTracking == nil && note.Tie.Type == musicxml.NoteSlurTypeStart {
+			if tiesTracking == nil && note.Tie.Type == musicxml.NoteSlurTypeStart && !note.Tie.NumberedOnly {
 				tiesTracking = &SlurTieGroup{
+					MaxY:       yPos,
+					MinY:       yPos,
 					Ties:       note.Tie,
-					NoteMember: []string{},
+					NoteMember: []string{note.UUID},
+					Start:      entity.NewCoordinate(float64(note.PositionX), yPos),
 				}
+				tiesTracking.NoteMember = append(tiesTracking.NoteMember, note.UUID)
+				tiesTracking.AccumulativeDirection += direction
 			}
-			tiesTracking.NoteMember = append(tiesTracking.NoteMember, note.UUID)
-			tiesTracking.AccumulativeDirection += direction
 
-			if note.Tie.Type == musicxml.NoteSlurTypeStop {
+			if tiesTracking != nil && note.Tie.Type == musicxml.NoteSlurTypeStop {
+				tiesTracking.NoteMember = append(tiesTracking.NoteMember, note.UUID)
+				tiesTracking.AccumulativeDirection += direction
+
+				tiesTracking.End = entity.NewCoordinate(float64(note.PositionX), yPos)
+				tiesTracking.NoteMember = append(tiesTracking.NoteMember, note.UUID)
+
 				groupBeamSlurTies = append(groupBeamSlurTies, *tiesTracking)
 				tiesTracking = nil
 			}
@@ -101,22 +85,37 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 			_, ok := slurTracking[sid]
 
 			if !ok {
-				slurTracking[sid] = SlurTieGroup{}
+				if yPos == 0 {
+					slurTracking[sid] = SlurTieGroup{
+						MaxY: float64(lines[0]),
+						MinY: float64(lines[4]),
+					}
+				} else {
+					slurTracking[sid] = SlurTieGroup{
+						MaxY: yPos,
+						MinY: yPos,
+					}
+				}
 			}
 
 			temp := slurTracking[sid]
 			pos := entity.NewCoordinate(float64(note.PositionX), yPos)
 
 			switch slur.Type {
-			case musicxml.NoteSlurTypeStop:
+			case musicxml.NoteSlurTypeStop, musicxml.NoteSlurTypeHop:
 				temp.End = pos
 			case musicxml.NoteSlurTypeStart:
 				temp.Start = pos
+				temp.Slur = &slur
 			}
 
-			temp.Slur = &slur
 			temp.NoteMember = append(temp.NoteMember, note.UUID)
 			temp.AccumulativeDirection += direction
+			if yPos != 0 {
+				temp.MaxY = math.Max(temp.MaxY, yPos)
+				temp.MinY = math.Min(temp.MinY, yPos)
+			}
+
 			slurTracking[sid] = temp
 
 			if slur.Type == musicxml.NoteSlurTypeStop || slur.Type == musicxml.NoteSlurTypeHop {
@@ -128,7 +127,16 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 				temp := SlurTieGroup{
 					NoteMember:            []string{note.UUID},
 					Start:                 entity.NewCoordinate(float64(note.PositionX), yPos),
-					AccumulativeDirection: direction,
+					AccumulativeDirection: temp.AccumulativeDirection,
+					Slur:                  &slur,
+				}
+
+				if yPos == 0 {
+					temp.MaxY = float64(lines[0])
+					temp.MinY = float64(lines[4])
+				} else {
+					temp.MaxY = yPos
+					temp.MinY = yPos
 				}
 				slurTracking[sid] = temp
 
@@ -141,8 +149,17 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 
 		for i, v := range slurTracking {
 			v.AccumulativeDirection += direction
+			if yPos != 0 {
+				v.MaxY = math.Max(v.MaxY, yPos)
+				v.MinY = math.Min(v.MinY, yPos)
+			}
 			v.NoteMember = append(v.NoteMember, note.UUID)
 			slurTracking[i] = v
+		}
+
+		if tiesTracking != nil && yPos != 0 {
+			tiesTracking.MaxY = math.Max(tiesTracking.MaxY, yPos)
+			tiesTracking.MinY = math.Min(tiesTracking.MinY, yPos)
 		}
 
 	}
@@ -158,19 +175,11 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 }
 
 func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
-	initialY := y
-	lines := [5]int{}
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
-	x2 := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8
-	canv.Group(`class="staff-line"`)
-	for i := 0; i <= 4; i++ {
-		lines[i] = y
-		canv.Line(constant.LAYOUT_INDENT_LENGTH, y, x2, y, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
-		y += STAFF_SPACE_WIDTH
-	}
-	canv.Line(constant.LAYOUT_INDENT_LENGTH, initialY, constant.LAYOUT_INDENT_LENGTH, y-STAFF_SPACE_WIDTH, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1")
-	canv.Gend()
 
+	lineStaff := NewLineStaff(timeSignature, keySignature)
+	lineStaff.Render(canv, y, notes[0].MeasureNumber, staffPos == 0)
+	lines := lineStaff.GetLines()
 	maxY := lines[4]
 
 	groupBeam := [][]CoordinateWithNoteLength{{}}
@@ -236,7 +245,6 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	}
 	canv.Gend()
 
-	canv.Group()
 	for _, gr := range groupBeam {
 		if len(gr) == 0 {
 			continue
@@ -246,58 +254,16 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 			maxY = groupMaxY
 		}
 	}
-	canv.Gend()
 
 	canv.Gend()
 
-	x := float64(constant.LAYOUT_INDENT_LENGTH)
-
-	canv.Group(`class="staff-markings"`)
-	// clef
-	key := keySignature.GetKeyOnMeasure(ctx, notes[0].MeasureNumber)
-	accidentalSet := key.GetAccidentals()
-
-	canv.Group(`class="clef"`, `style="font-size:2em"`)
-	canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH+5, float64(initialY+15), TREBLE_CLEF_HEX)
-	canv.Gend()
-
-	canv.Group(`class="keysig"`, `style="font-size:1.75em"`)
-	offset := 0
-
-	// key signature changes
-	if key.Start && key.Prev != nil && notes[0].MeasureNumber != 1 {
-		naturalSet := key.Prev.GetAccidentals()
-
-		for x, acc := range naturalSet {
-			accidental := accidentalHex[musicxml.NoteAccidentalNatural]
-			width := ACCIDENTAL_KEY_SIGNATURE_WIDTH
-
-			canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+CLEF_WIDTH)+float64(width*x),
-				GetYPosKeySig(lines, STAFF_SPACE_WIDTH, acc, key.Prev.Fifth < 0),
-				accidental)
-		}
-
-		offset = (len(naturalSet) * ACCIDENTAL_KEY_SIGNATURE_WIDTH) + PADDING_WIDTH
+	mb := RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
+	if maxY < mb {
+		maxY = mb - 10
 	}
-	for x, acc := range accidentalSet {
-		accidental := accidentalHex[musicxml.NoteAccidentalSharp]
-		width := ACCIDENTAL_KEY_SIGNATURE_WIDTH
-		if key.Fifth < 0 {
-			accidental = accidentalHex[musicxml.NoteAccidentalFlat]
-		}
-		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+CLEF_WIDTH+offset)+float64(width*x),
-			GetYPosKeySig(lines, STAFF_SPACE_WIDTH, acc, key.Fifth < 0),
-			accidental)
-	}
+
 	canv.Gend()
 
-	x += CLEF_WIDTH + (float64(len(accidentalSet)) * ACCIDENTAL_KEY_SIGNATURE_WIDTH) + PADDING_WIDTH + float64(offset)
-
-	if staffPos == 0 && len(timeSignature.Signatures) > 0 {
-		timesig.RenderGregorian(ctx, canv, lines, timeSignature, x)
-	}
-	canv.Gend()
-	canv.Gend()
 	return maxY - lines[4]
 }
 
@@ -306,6 +272,7 @@ func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignatur
 	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(timeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(timeSig.UniqueSign)-1)) + keySigWith)
 }
 
+// DEPRECATED: use the staffLine object instead
 func GetLeftIndent(key keysig.Key) int {
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
 	offset := 0

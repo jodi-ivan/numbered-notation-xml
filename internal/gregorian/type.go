@@ -36,4 +36,7 @@ type SlurTieGroup struct {
 	NoteMember []string
 	Ties       *entity.Slur
 	Slur       *entity.Slur
+
+	MaxY float64
+	MinY float64
 }

@@ -40,13 +40,15 @@ func ReplaceDotWithNumbered(dot, number *entity.NoteRenderer) *entity.NoteRender
 	dot.AbsoluteOctave = number.AbsoluteOctave
 
 	number.Tie = &entity.Slur{
-		Number: 1,
-		Type:   musicxml.NoteSlurTypeStart,
+		Number:       1,
+		Type:         musicxml.NoteSlurTypeStart,
+		NumberedOnly: true,
 	}
 
 	dot.Tie = &entity.Slur{
-		Number: 1,
-		Type:   musicxml.NoteSlurTypeStop,
+		Number:       1,
+		Type:         musicxml.NoteSlurTypeStop,
+		NumberedOnly: true,
 	}
 
 	return dot

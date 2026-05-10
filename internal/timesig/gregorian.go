@@ -25,6 +25,7 @@ func RenderGregorian(ctx context.Context, canv canvas.Canvas, lines [5]int, time
 
 	ts := timeSig.GetTimesignatureOnMeasure(ctx, 1)
 	if timeSig.IsMixed {
+		x -= 8
 		for i, t := range timeSig.UniqueSign {
 			canv.Group(`class="time"`)
 			canv.TextUnescaped(x+8+float64(16*i), float64(lines[0]+lines[2])/2, uniHex[t.Beat])

@@ -68,13 +68,18 @@ func (mr *MockBarlineMockRecorder) GetRendererRightBarline(measure, x interface{
 }
 
 // RenderBarline mocks base method.
-func (m *MockBarline) RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate) {
+func (m *MockBarline) RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate, s ...string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderBarline", ctx, canv, barline, coordinate)
+	varargs := []interface{}{ctx, canv, barline, coordinate}
+	for _, a := range s {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "RenderBarline", varargs...)
 }
 
 // RenderBarline indicates an expected call of RenderBarline.
-func (mr *MockBarlineMockRecorder) RenderBarline(ctx, canv, barline, coordinate interface{}) *gomock.Call {
+func (mr *MockBarlineMockRecorder) RenderBarline(ctx, canv, barline, coordinate interface{}, s ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderBarline", reflect.TypeOf((*MockBarline)(nil).RenderBarline), ctx, canv, barline, coordinate)
+	varargs := append([]interface{}{ctx, canv, barline, coordinate}, s...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderBarline", reflect.TypeOf((*MockBarline)(nil).RenderBarline), varargs...)
 }

@@ -6,12 +6,35 @@ import (
 	"fmt"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam [][]CoordinateWithNoteLength, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature) (int, [][]CoordinateWithNoteLength) {
+func getAccidental(key keysig.Key, note *entity.NoteRenderer, accidentalsBefore map[int]map[string]musicxml.NoteAccidental) string {
+	if note.AbsoluteAccidental == "" {
+		return ""
+	}
+	hexMap := accidentalHex
+	if accidentalsBefore[note.MeasureNumber][note.GetNonAccidentalAbsoluteNote()] == note.AbsoluteAccidental {
+		hexMap = accidentalHexWithParentheses
+	}
+
+	return hexMap[note.AbsoluteAccidental]
+}
+
+func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.NoteLength, note string, accidental string, octave int, attrs ...string) {
+	attrs = append(attrs, fmt.Sprintf(`pitch="%s"`, note), fmt.Sprintf(`octave="%d"`, octave))
+	if accidental != "" {
+		canv.TextUnescaped(pos.X-8, pos.Y, accidental, `style="font-size:0.8em"`)
+	}
+	canv.TextUnescaped(pos.X, pos.Y,
+		beanNoteHex[noteType],
+		attrs...)
+
+}
+func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam [][]CoordinateWithNoteLength, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (int, [][]CoordinateWithNoteLength) {
 	initialY := lines[0]
 	note := notes[notePos]
 	maxY := lines[4]
@@ -22,8 +45,10 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 
 	ts := timeSignature.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
 
+	nonDottedValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
 	dottedValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength, Dot: []*musicxml.Dot{{}}})
-	merged := notePos < len(notes)-1 && note.NoteLength == musicxml.NoteLengthEighth && notes[notePos+1].NoteLength == note.NoteLength
+
+	merged := note.NoteLength == musicxml.NoteLengthEighth && notePos < len(notes)-1 && notes[notePos+1].IsDotted && notes[notePos+1].NoteLength == note.NoteLength
 	dottedHalf := notePos < len(notes)-1 && notes[notePos+1].IsDotted && len(notes[notePos+1].Beam) >= 1
 	dottedBeat := note.NoteValue == dottedValue
 	quarterNoteInCompound := ts.IsCompoundTime() && note.NoteLength == musicxml.NoteLengthQuarter && dottedHalf
@@ -32,10 +57,14 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 
 	beamType := note.NoteLength
 
-	// currNoteLength := ts.GetNoteLength(ctx, musicxml.Note{Type: note.NoteLength})
+	hasRemainingNote := note.NoteValue != dottedValue && note.NoteValue != nonDottedValue
+	sameNextTwoDottedReplaced := notePos+2 < len(notes) && (notes[notePos+2].IsDotted || notes[notePos+2].AbsoluteNote == note.AbsoluteNote)
+	sameNextDotted := notePos+1 < len(notes) && (notes[notePos+1].IsDotted || notes[notePos+1].NoteLength == note.NoteLength)
+	sameNexTwoDotted := notePos+2 < len(notes) && (notes[notePos+2].IsDotted || notes[notePos+2].NoteLength == note.NoteLength)
 
-	nonDottedValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
-	if !merged && note.NoteValue != dottedValue && note.NoteValue != nonDottedValue && notePos+2 < len(notes) && (notes[notePos+2].IsDotted || notes[notePos+2].AbsoluteNote == note.AbsoluteNote) {
+	hasTiedNotes := sameNextTwoDottedReplaced || sameNextDotted || sameNexTwoDotted
+	accidental := getAccidental(keySignature.GetKeyOnMeasure(ctx, note.MeasureNumber), note, nil)
+	if !merged && hasRemainingNote && hasTiedNotes {
 		remaining := note.NoteValue - nonDottedValue
 		nextNotePos := 2
 		xPos := notes[notePos+2].PositionX
@@ -44,6 +73,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 			xPos = notes[notePos+1].PositionX
 			nextNotePos = 1
 		}
+
 		noteType := map[float64]musicxml.NoteLength{
 			0.25: musicxml.NoteLength16th,
 			0.5:  musicxml.NoteLengthEighth,
@@ -62,11 +92,13 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 			}
 		}
 
-		canv.TextUnescaped(float64(xPos), yPos,
-			beanNoteHex[noteType[remaining]],
-			fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave), `style="fill:#0000DD"`)
+		renderBean(
+			canv,
+			entity.NewCoordinate(float64(xPos), yPos), noteType[remaining],
+			note.AbsoluteNote, accidental, note.AbsoluteOctave,
+			fmt.Sprintf(`value="%.f"`, note.NoteValue), `style="fill:#0000DD"`)
 
-		renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
+		renderStemAndBeamMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
 			Coordinate: entity.NewCoordinate(float64(xPos), yPos),
 			NoteLength: note.NoteLength,
 			Beam:       note.Beam,
@@ -99,21 +131,23 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 	}
 
 	RenderLedgerLine(canv, entity.NewCoordinate(float64(note.PositionX), yPos), lines)
+	xPos := float64(note.PositionX)
 
 	marker := `style="fill:#DD0000"`
 	if note.NoteValue == nonDottedValue || note.NoteValue == dottedValue {
 		marker = ""
 	}
-	canv.TextUnescaped(float64(note.PositionX), yPos,
-		beanNoteHex[beamType],
-		fmt.Sprintf(`pitch="%s"`, note.AbsoluteNote), fmt.Sprintf(`octave="%d"`, note.AbsoluteOctave), fmt.Sprintf(`value="%.f"`, note.NoteValue), marker)
+	renderBean(canv,
+		entity.NewCoordinate(xPos, yPos),
+		beamType, note.AbsoluteNote, accidental, note.AbsoluteOctave,
+		fmt.Sprintf(`value="%.f"`, note.NoteValue), marker)
 
 	if (dottedHalf || dottedBeat) && (!merged || (merged && quarterNoteInCompound && note.NoteValue-1 == 2)) {
 		dotPos := yPos
 		if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
 			dotPos -= 4
 		}
-		canv.TextUnescaped(float64(note.PositionX+12), dotPos, "&#xF060;")
+		canv.TextUnescaped(xPos+12, dotPos, "&#xF060;")
 	}
 
 	if note.NoteLength == musicxml.NoteLengthWhole {
@@ -127,8 +161,8 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 	mergeNote := note.NoteLength == musicxml.NoteLengthEighth && nextNoteIsDotted && nextNoteIsSameNoteLength
 	mergeNote = mergeNote || quarterNoteInCompound
 	if len(note.Beam) == 0 || mergeNote {
-		stemInfo := renderMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
-			Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
+		stemInfo := renderStemAndBeamMap[cmp.Compare(yPos, float64(lines[2]))](canv, lines, CoordinateWithNoteLength{
+			Coordinate: entity.NewCoordinate(xPos, yPos),
 			NoteLength: note.NoteLength,
 			Beam:       note.Beam,
 		})
@@ -146,7 +180,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 	}
 
 	groupBeam[len(groupBeam)-1] = append(groupBeam[len(groupBeam)-1], CoordinateWithNoteLength{
-		Coordinate: entity.NewCoordinate(float64(note.PositionX), yPos),
+		Coordinate: entity.NewCoordinate(xPos, yPos),
 		NoteLength: note.NoteLength,
 		Beam:       note.Beam,
 	})

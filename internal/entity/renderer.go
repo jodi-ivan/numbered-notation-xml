@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"fmt"
+
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
@@ -51,39 +53,44 @@ var (
 )
 
 type NoteRenderer struct {
-	IsDotted       bool
-	IsRest         bool
-	PositionX      int
-	PositionY      int
-	Note           int
-	AbsoluteNote   string
-	NoteValue      float64
-	Octave         int
-	AbsoluteOctave int
-	Strikethrough  bool
-	NoteLength     musicxml.NoteLength
-	// BarType      string
-	Width        int
-	Lyric        []Lyric
-	Slur         map[int]Slur
-	Beam         map[int]Beam
-	Tie          *Slur
-	Articulation *Articulation
-	Barline      *musicxml.Barline
-	Fermata      *musicxml.Femata
+	AbsoluteNote       string
+	AbsoluteOctave     int
+	AbsoluteAccidental musicxml.NoteAccidental
+
+	Articulation  *Articulation
+	Barline       *musicxml.Barline
+	Beam          map[int]Beam
+	Fermata       *musicxml.Femata
+	IsDotted      bool
+	IsRest        bool
+	Lyric         []Lyric
+	Note          int
+	NoteLength    musicxml.NoteLength
+	NoteValue     float64
+	Octave        int
+	PositionX     int
+	PositionY     int
+	Slur          map[int]Slur
+	Strikethrough bool
+	Tie           *Slur
+	Width         int
 
 	// internal use
-	IsLengthTakenFromLyric bool
 	IndexPosition          int
+	IsAdditional           bool
+	IsLengthTakenFromLyric bool
 	IsNewLine              bool
 	MeasureNumber          int
-	IsAdditional           bool
 
-	MeasureText       []musicxml.MeasureText
-	MeasureDash       map[int]musicxml.DirectionDashesType
 	LeadingHeader     string
-	Tuplet            *musicxml.Tuplet
+	MeasureDash       map[int]musicxml.DirectionDashesType
+	MeasureText       []musicxml.MeasureText
 	TimeModifications *musicxml.TimeModification
+	Tuplet            *musicxml.Tuplet
+}
+
+func (nr *NoteRenderer) GetNonAccidentalAbsoluteNote() string {
+	return fmt.Sprintf("%s%d", nr.AbsoluteNote, nr.AbsoluteOctave)
 }
 
 func (nr *NoteRenderer) UpdateBeamWithLock(beamNum int, beamType musicxml.NoteBeamType) {

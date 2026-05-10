@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	CLEF_WIDTH    = 30
+	CLEF_WIDTH    = 35
 	PADDING_WIDTH = 8
 
 	ACCIDENTAL_KEY_SIGNATURE_WIDTH = 8
@@ -16,7 +16,7 @@ const (
 	STAFF_SPACE_WIDTH = 8
 )
 
-var renderMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo{
+var renderStemAndBeamMap = map[int]func(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo{
 	-1: RenderStemDown,
 	0:  RenderStemDown,
 	1:  RenderStemUp,
@@ -64,4 +64,20 @@ var stemPosOffset = map[int][2]entity.Coordinate{
 		entity.NewCoordinate(9, 0),
 		entity.NewCoordinate(9, -24),
 	},
+}
+
+var accidentalHex = map[musicxml.NoteAccidental]string{
+	musicxml.NoteAccidentalNatural:     "&#xF02E;",
+	musicxml.NoteAccidentalSharp:       "&#xF02B;",
+	musicxml.NoteAccidentalFlat:        "&#xF02D;",
+	musicxml.NoteAccidentalDoubleSharp: "&#xF02A;",
+	musicxml.NoteAccidentalDoubleFlat:  "&#xF02C;",
+}
+
+var accidentalHexWithParentheses = map[musicxml.NoteAccidental]string{
+	musicxml.NoteAccidentalNatural:     "&#xF0B2;",
+	musicxml.NoteAccidentalSharp:       "&#xF0B1;",
+	musicxml.NoteAccidentalFlat:        "&#xF0B3;",
+	musicxml.NoteAccidentalDoubleSharp: "&#xF0B0;",
+	musicxml.NoteAccidentalDoubleFlat:  "&#xF0B4;",
 }

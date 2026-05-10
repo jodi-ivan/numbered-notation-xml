@@ -161,14 +161,14 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	y1Pos := startPos.Y
 	y2Pos := endPos.Y
 
-	stemInfo := renderMap[compared](canv, lines, groupBeam...)
+	stemInfo := renderStemAndBeamMap[compared](canv, lines, groupBeam...)
 	if stemInfo.Flip {
 		if compared <= 0 {
 			compared = 1
 		} else {
 			compared = -1
 		}
-		stemInfo = renderMap[compared](canv, lines, groupBeam...)
+		stemInfo = renderStemAndBeamMap[compared](canv, lines, groupBeam...)
 	}
 	stemOffset, clampY1, clampY2 := stemInfo.LengthCompensation, stemInfo.ClampY1, stemInfo.ClampY2
 

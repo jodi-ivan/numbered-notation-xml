@@ -17,6 +17,7 @@ require (
 require (
 	github.com/JoshVarga/svgparser v0.0.0-20200804023048-5eaba627a7d1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	golang.org/x/text v0.3.3 // indirect

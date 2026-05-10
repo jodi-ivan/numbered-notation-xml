@@ -1,6 +1,7 @@
 package gregorian
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"unicode"
@@ -63,6 +64,99 @@ func GetYpos(lines [5]int, space int, octave int, pitch rune) float64 {
 	return float64(lines[0]) + float64(stepsBelow)*(float64(space)/2)
 }
 
+func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup {
+	groupBeamSlurTies := []SlurTieGroup{}
+
+	var tiesTracking *SlurTieGroup
+	slurTracking := map[int]SlurTieGroup{}
+
+	for _, note := range notes {
+		yPos := 0.0
+		direction := 0
+		if note.AbsoluteNote != "" && note.AbsoluteOctave > 0 {
+			yPos = GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
+			direction = cmp.Compare(int(yPos), lines[2])
+			if direction == 0 {
+				direction = -1
+			}
+		}
+
+		if note.Tie != nil {
+			if tiesTracking == nil && note.Tie.Type == musicxml.NoteSlurTypeStart {
+				tiesTracking = &SlurTieGroup{
+					Ties:       note.Tie,
+					NoteMember: []string{},
+				}
+			}
+			tiesTracking.NoteMember = append(tiesTracking.NoteMember, note.UUID)
+			tiesTracking.AccumulativeDirection += direction
+
+			if note.Tie.Type == musicxml.NoteSlurTypeStop {
+				groupBeamSlurTies = append(groupBeamSlurTies, *tiesTracking)
+				tiesTracking = nil
+			}
+		}
+
+		for sid, slur := range note.Slur {
+			_, ok := slurTracking[sid]
+
+			if !ok {
+				slurTracking[sid] = SlurTieGroup{}
+			}
+
+			temp := slurTracking[sid]
+			pos := entity.NewCoordinate(float64(note.PositionX), yPos)
+
+			switch slur.Type {
+			case musicxml.NoteSlurTypeStop:
+				temp.End = pos
+			case musicxml.NoteSlurTypeStart:
+				temp.Start = pos
+			}
+
+			temp.Slur = &slur
+			temp.NoteMember = append(temp.NoteMember, note.UUID)
+			temp.AccumulativeDirection += direction
+			slurTracking[sid] = temp
+
+			if slur.Type == musicxml.NoteSlurTypeStop || slur.Type == musicxml.NoteSlurTypeHop {
+				groupBeamSlurTies = append(groupBeamSlurTies, temp)
+				delete(slurTracking, sid)
+			}
+
+			if slur.Type == musicxml.NoteSlurTypeHop {
+				temp := SlurTieGroup{
+					NoteMember:            []string{note.UUID},
+					Start:                 entity.NewCoordinate(float64(note.PositionX), yPos),
+					AccumulativeDirection: direction,
+				}
+				slurTracking[sid] = temp
+
+			}
+		}
+
+		if len(note.Slur) > 0 {
+			continue
+		}
+
+		for i, v := range slurTracking {
+			v.AccumulativeDirection += direction
+			v.NoteMember = append(v.NoteMember, note.UUID)
+			slurTracking[i] = v
+		}
+
+	}
+
+	if tiesTracking != nil {
+		groupBeamSlurTies = append(groupBeamSlurTies, *tiesTracking)
+
+	}
+	for _, v := range slurTracking {
+		groupBeamSlurTies = append(groupBeamSlurTies, v)
+	}
+	return groupBeamSlurTies
+}
+
 func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
 	initialY := y
 	lines := [5]int{}
@@ -83,6 +177,8 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 	canv.Group(`class="notes"`, `style="font-size:2em"`)
 	currentMeasure := 0
+
+	groupBeamSlurTies := GetGroupSlueTies(notes, lines)
 
 	for i, note := range notes {
 
@@ -125,15 +221,17 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 		if note.AbsoluteNote == "" {
-
 			continue
 		}
 
 		var noteMaxYPos int
-		noteMaxYPos, groupBeam = RenderNote(ctx, canv, lines, groupBeam, i, notes, timeSignature, keySignature)
+		pairs := []SlurTieGroup{}
+		noteMaxYPos, groupBeam, pairs = RenderNote(ctx, canv, lines, groupBeam, groupBeamSlurTies, i, notes, timeSignature, keySignature)
 		if maxY < noteMaxYPos {
 			maxY = noteMaxYPos
 		}
+
+		groupBeamSlurTies = append(groupBeamSlurTies, pairs...)
 
 	}
 	canv.Gend()
@@ -143,7 +241,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		if len(gr) == 0 {
 			continue
 		}
-		groupMaxY := RenderGroupBeam(canv, gr, lines)
+		groupMaxY := RenderGroupBeam(canv, gr, lines, groupBeamSlurTies)
 		if maxY < groupMaxY {
 			maxY = groupMaxY
 		}

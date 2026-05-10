@@ -181,7 +181,7 @@ func (ni *numberedInteractor) GetLengthNote(ctx context.Context, ts timesig.Time
 func (ni *numberedInteractor) RenderNote(ctx context.Context, canv canvas.Canvas, measure []*entity.NoteRenderer, y, rightAlignOffset int) {
 	for notePos, n := range measure {
 		if n.IsDotted {
-			canv.Text(n.PositionX, y, ".")
+			canv.Text(n.PositionX, y, ".", fmt.Sprintf(`uuid="%s"`, n.UUID))
 		} else if breathpause.IsBreathMark(n) {
 			xPos := n.PositionX
 			if n.PositionX-measure[notePos-1].PositionX <= MIN_DISTANCE_BREATH {

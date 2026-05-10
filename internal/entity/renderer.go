@@ -53,6 +53,8 @@ var (
 )
 
 type NoteRenderer struct {
+	UUID string
+
 	AbsoluteNote       string
 	AbsoluteOctave     int
 	AbsoluteAccidental musicxml.NoteAccidental

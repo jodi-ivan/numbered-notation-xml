@@ -1,6 +1,7 @@
 package numbered
 
 import (
+	"github.com/google/uuid"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -16,6 +17,7 @@ func (ni *numberedInteractor) RendererFromAdditional(note musicxml.Note, header 
 			additionalNote = header
 		} else {
 			additionalNote = &entity.NoteRenderer{
+				UUID:          uuid.New().String(),
 				PositionY:     header.PositionY,
 				Width:         constant.LOWERCASE_LENGTH,
 				IsDotted:      additional.IsDotted,

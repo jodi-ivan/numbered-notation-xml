@@ -75,6 +75,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 		memberGroup++
 	}
 
+	// if the current does not belong in any group, dont apply group consensus
 	if memberGroup > 0 {
 		if accumulative >= 0 {
 			direction = 1
@@ -84,6 +85,15 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 	}
 
 	if !merged && hasRemainingNote && hasTiedNotes {
+		// since this is inserted additional notes, so the grouping as ties is guaranteed
+		// just use the the existing group consensus.
+		// this only enforce the stem, needs mechanism for the rendering slurties direction
+		if accumulative >= 0 {
+			direction = 1
+		} else {
+			direction = -1
+		}
+
 		remaining := note.NoteValue - nonDottedValue
 		nextNotePos := 2
 		xPos := notes[notePos+2].PositionX

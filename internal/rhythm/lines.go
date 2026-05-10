@@ -10,6 +10,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -83,7 +84,7 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 		lineType := "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1"
 		if slurResult.LineType == musicxml.NoteSlurLineTypeDashed {
 			// Calculate approximate curve length
-			curveLen := quadBezierLength(slurResult.Start.Coordinate, pull.Coordinate, slurResult.End.Coordinate, 30)
+			curveLen := utils.QuadBezierLength(slurResult.Start.Coordinate, pull.Coordinate, slurResult.End.Coordinate, 30)
 
 			dash := 3.5
 			patternCount := math.Floor(curveLen / (dash * 2))
@@ -104,31 +105,6 @@ func (ri *rhythmInteractor) RenderBezier(set []SlurBezier, canv canvas.Canvas) {
 
 	}
 	canv.Gend()
-}
-
-func quadBezierLength(p0, p1, p2 entity.Coordinate, steps int) float64 {
-	var length float64
-	prev := p0
-
-	for i := 1; i <= steps; i++ {
-		t := float64(i) / float64(steps)
-
-		x := math.Pow(1-t, 2)*p0.X +
-			2*(1-t)*t*p1.X +
-			math.Pow(t, 2)*p2.X
-
-		y := math.Pow(1-t, 2)*p0.Y +
-			2*(1-t)*t*p1.Y +
-			math.Pow(t, 2)*p2.Y
-
-		dx := x - prev.X
-		dy := y - prev.Y
-
-		length += math.Hypot(dx, dy)
-		prev = entity.Coordinate{X: x, Y: y}
-	}
-
-	return length
 }
 
 func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64) {
@@ -235,6 +211,8 @@ func (ri *rhythmInteractor) RenderBeam(ctx context.Context, y int, canv canvas.C
 
 		for _, b := range note.Beam {
 			positionY := float64(y - 22 + ((b.Number) * 3))
+
+			// canv.Text(note.PositionX, int(positionY)-5, string(b.Type), "font-size='20%'")
 
 			switch b.Type {
 			case musicxml.NoteBeamTypeBegin:

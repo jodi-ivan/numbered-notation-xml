@@ -4,6 +4,8 @@ import (
 	"context"
 	"math"
 
+	"github.com/google/uuid"
+
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -116,6 +118,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				additionalNotes = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
 			}
 			renderer := &entity.NoteRenderer{
+				UUID:      uuid.New().String(),
 				PositionX: x, PositionY: int(y),
 				Note: n, NoteLength: note.Type, Octave: octave, Strikethrough: strikethrough,
 				NoteValue: noteLength,

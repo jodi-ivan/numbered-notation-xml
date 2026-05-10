@@ -2,6 +2,7 @@ package gregorian
 
 import (
 	"cmp"
+	"fmt"
 	"math"
 	"slices"
 
@@ -142,7 +143,21 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 
 }
 
-func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int) int {
+func getDirectionAccumulative(slurties []SlurTieGroup, noteID string) (int, bool) {
+	accumulated := 0
+	foundCount := 0
+
+	for _, v := range slurties {
+		idx := slices.Index(v.NoteMember, noteID)
+		if idx >= 0 {
+			accumulated += v.AccumulativeDirection
+			foundCount++
+		}
+	}
+	return accumulated, foundCount > 0
+}
+
+func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int, slurties []SlurTieGroup) int {
 
 	canv.Group(`class="beam-group"`)
 	startPos, endPos := groupBeam[0], groupBeam[len(groupBeam)-1]
@@ -158,18 +173,29 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		compared = -1
 	}
 
-	y1Pos := startPos.Y
-	y2Pos := endPos.Y
+	accumulated := 0
+	foundCount := 0
+	for _, note := range groupBeam {
+		if currDirection, found := getDirectionAccumulative(slurties, note.NoteID); found {
+			accumulated += currDirection
+			foundCount++
+		}
+	}
 
-	stemInfo := renderStemAndBeamMap[compared](canv, lines, groupBeam...)
-	if stemInfo.Flip {
-		if compared <= 0 {
+	if foundCount > 0 {
+		if accumulated >= 0 {
 			compared = 1
 		} else {
 			compared = -1
 		}
-		stemInfo = renderStemAndBeamMap[compared](canv, lines, groupBeam...)
 	}
+
+	y1Pos := startPos.Y
+	y2Pos := endPos.Y
+
+	canv.Group(fmt.Sprintf(`follow-consensus="%v"`, foundCount > 0), fmt.Sprintf(`direction="%d"`, accumulated))
+	stemInfo := renderStemAndBeamMap[compared](canv, lines, groupBeam...)
+	canv.Gend()
 	stemOffset, clampY1, clampY2 := stemInfo.LengthCompensation, stemInfo.ClampY1, stemInfo.ClampY2
 
 	y1Pos += -1 * float64(compared) * clampY1

@@ -12,6 +12,8 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/text"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -97,7 +99,7 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 
 }
 
-func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, linestaff ...lines.LineStaff) {
 	hasStaffText := false
 
 	dashSet := map[int][2]entity.Coordinate{}
@@ -120,6 +122,10 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv 
 
 			if notes[0].Barline != nil && notes[0].Barline.Ending != nil {
 				offset += 8
+			}
+
+			if len(linestaff) > 0 {
+				offset += int(text.GetTextMarginBottom(linestaff[0], notes, notePos))
 			}
 
 			for i, t := range note.MeasureText {

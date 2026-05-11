@@ -162,7 +162,7 @@ func getDirectionAccumulative(slurties []SlurTieGroup, noteID string) (int, bool
 	return accumulated, foundCount > 0
 }
 
-func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int, slurties []SlurTieGroup) VMargin {
+func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int, slurties []SlurTieGroup) (VMargin, int) {
 
 	margin := VMargin{
 		Top:    entity.NewCoordinate(0, float64(lines[0])),
@@ -225,7 +225,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		canv.Gend()
 
 		margin.Set(groupBeam[0].Coordinate)
-		return margin
+		return margin, compared
 	}
 
 	margin.SetTop(stemInfo.HighestYPosition)
@@ -300,6 +300,6 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	canv.Gend()
 
-	return margin
+	return margin, compared
 
 }

@@ -87,6 +87,8 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 		}
 	}
 
+	note.StemDirection = direction
+
 	if !merged && hasRemainingNote && hasTiedNotes {
 		// since this is inserted additional notes, so the grouping as ties is guaranteed
 		// just use the the existing group consensus.
@@ -96,6 +98,8 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 		} else {
 			direction = -1
 		}
+
+		note.StemDirection = direction
 
 		remaining := note.NoteValue - nonDottedValue
 		nextNotePos := 2

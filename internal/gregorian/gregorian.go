@@ -14,6 +14,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -177,7 +178,7 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) VMargin {
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 
-	lineStaff := NewLineStaff(timeSignature, keySignature)
+	lineStaff := lines.NewLineStaff(timeSignature, keySignature)
 	lineStaff.Render(canv, y, notes[0].MeasureNumber, staffPos == 0)
 	lines := lineStaff.GetLines()
 	margin := VMargin{
@@ -248,12 +249,28 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	}
 	canv.Gend()
 
-	for _, gr := range groupBeam {
+	directions := map[int][]CoordinateWithNoteLength{
+		1: {}, -1: {},
+	}
+
+	for i, gr := range groupBeam {
 		if len(gr) == 0 {
 			continue
 		}
-		gMargin := RenderGroupBeam(canv, gr, lines, groupBeamSlurTies)
+		gMargin, direction := RenderGroupBeam(canv, gr, lines, groupBeamSlurTies)
 		margin.Merge(gMargin)
+		directions[direction] = append(directions[i], gr...)
+	}
+
+	for dir, locs := range directions {
+		for _, loc := range locs {
+			for _, note := range notes {
+				if note.UUID == loc.NoteID {
+					note.StemDirection = dir
+				}
+			}
+		}
+
 	}
 
 	canv.Gend()

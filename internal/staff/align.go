@@ -15,6 +15,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -148,6 +149,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	margin := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
 
+	stafflines := lines.NewLineStaffWithLines(ts, ks, y)
+
 	yPos := y + gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom)
 	for _, measure := range noteRenderer {
 
@@ -157,7 +160,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		rsa.Numbered.RenderNote(ctx, canv, measure, yPos, rightAlignOffset)
 		rsa.Rhythm.RenderBeam(ctx, yPos, canv, ts, measure)
-		rsa.RenderMeasureText(ctx, y+10, canv, measure)
+		rsa.RenderMeasureText(ctx, y+10, canv, measure, stafflines)
 		RenderTuplet(ctx, yPos, canv, measure)
 
 		canv.Gend()
@@ -170,8 +173,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	RenderMeasureTopping(ctx, yPos, canv, flatten)
 	canv.Gend()
 
-	canv.Circle(int(margin.Top.X), int(margin.Top.Y), 2, "stroke-width:1;fill:none;stroke:#FF0000")
-	canv.Circle(int(margin.Bottom.X), int(margin.Bottom.Y), 2, "stroke-width:1;fill:none;stroke:#FF0000")
+	// canv.Circle(int(margin.Top.X), int(margin.Top.Y), 2, "stroke-width:1;fill:none;stroke:#FF0000")
+	// canv.Circle(int(margin.Bottom.X), int(margin.Bottom.Y), 2, "stroke-width:1;fill:none;stroke:#FF0000")
 
 	return int(margin.Bottom.Y) - margin.DefaultBottom
 

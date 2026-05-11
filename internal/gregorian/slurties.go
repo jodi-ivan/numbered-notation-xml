@@ -10,6 +10,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -28,7 +29,7 @@ func GetYPosGroup(group []CoordinateWithNoteLength, lines [5]int) int {
 	return compared
 }
 
-func RenderSlurTies(canv canvas.Canvas, lineStaff LineStaff, groupBeam [][]CoordinateWithNoteLength, slurties []SlurTieGroup) VMargin {
+func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][]CoordinateWithNoteLength, slurties []SlurTieGroup) VMargin {
 	canv.Group(`class="slurties"`)
 
 	lines := lineStaff.GetLines()

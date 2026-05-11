@@ -1,4 +1,4 @@
-package gregorian
+package lines
 
 import (
 	"context"
@@ -27,8 +27,31 @@ func NewLineStaff(ts timesig.TimeSignature, ks keysig.KeySignature) LineStaff {
 		MarginRight: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8,
 	}
 }
+
+func NewLineStaffWithLines(ts timesig.TimeSignature, ks keysig.KeySignature, y int) LineStaff {
+
+	result := LineStaff{
+		Keysig:      ks,
+		TimeSig:     ts,
+		MarginRight: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8,
+	}
+	for i := 0; i <= 4; i++ {
+		result.Lines[i] = y
+		y += STAFF_SPACE_WIDTH
+	}
+
+	return result
+}
 func (ls *LineStaff) GetLines() [5]int {
 	return ls.Lines
+}
+
+func (ls *LineStaff) GetMiddleLine() int {
+	return ls.Lines[2]
+}
+
+func (ls *LineStaff) GetTopLine() int {
+	return ls.Lines[0]
 }
 
 func (ls *LineStaff) GetYPosKeySig(pitch string, isFlat bool) float64 {

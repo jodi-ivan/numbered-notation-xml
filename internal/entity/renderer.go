@@ -58,6 +58,7 @@ type NoteRenderer struct {
 	AbsoluteNote       string
 	AbsoluteOctave     int
 	AbsoluteAccidental musicxml.NoteAccidental
+	StemDirection      int
 
 	Articulation  *Articulation
 	Barline       *musicxml.Barline

@@ -28,11 +28,14 @@ func GetYPosGroup(group []CoordinateWithNoteLength, lines [5]int) int {
 	return compared
 }
 
-func RenderSlurTies(canv canvas.Canvas, lineStaff LineStaff, groupBeam [][]CoordinateWithNoteLength, slurties []SlurTieGroup) int {
+func RenderSlurTies(canv canvas.Canvas, lineStaff LineStaff, groupBeam [][]CoordinateWithNoteLength, slurties []SlurTieGroup) VMargin {
 	canv.Group(`class="slurties"`)
 
 	lines := lineStaff.GetLines()
-	marginButtom := lines[4]
+	margin := VMargin{
+		Top:    entity.NewCoordinate(0, float64(lines[0])),
+		Bottom: entity.NewCoordinate(0, float64(lines[4])),
+	}
 
 	tiesEndOffset := map[int][2]entity.Coordinate{
 		-1: {
@@ -185,20 +188,10 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff LineStaff, groupBeam [][]Coord
 				), direction)
 		}
 
-		if marginButtom < int(math.Ceil(pull.Y+pullY)) {
-			marginButtom = int(math.Ceil(pull.Y + pullY))
-		}
-
-		// canv.Circle(
-		// 	int(math.Round(pull.X))+3+int(tiesEndOffset[direction][0].X)/2,
-		// 	int(math.Ceil(pull.Y+pullY)), 2, "fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:0.4")
-		// canv.Text(
-		// 	(int(math.Round(pull.X))+int(tiesEndOffset[direction][0].X)/2)+3,
-		// 	int(math.Ceil(pull.Y+pullY)),
-		// 	fmt.Sprintf("Block: %.2f", block), "font-size:0.5em;font-family:Caladea")
+		margin.Set(entity.NewCoordinate(math.Round(pull.X)+3+(tiesEndOffset[direction][0].X/2), pull.Y+pullY))
 	}
 	canv.Gend()
-	return marginButtom
+	return margin
 
 }
 

@@ -174,13 +174,18 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 	return groupBeamSlurTies
 }
 
-func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) int {
+func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) VMargin {
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 
 	lineStaff := NewLineStaff(timeSignature, keySignature)
 	lineStaff.Render(canv, y, notes[0].MeasureNumber, staffPos == 0)
 	lines := lineStaff.GetLines()
-	maxY := lines[4]
+	margin := VMargin{
+		Top:           entity.NewCoordinate(0, float64(lines[0])),
+		Bottom:        entity.NewCoordinate(0, float64(lines[4])),
+		DefaultTop:    lines[0],
+		DefaultBottom: lines[4],
+	}
 
 	groupBeam := [][]CoordinateWithNoteLength{{}}
 
@@ -233,12 +238,10 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 			continue
 		}
 
-		var noteMaxYPos int
+		var noteMargin VMargin
 		pairs := []SlurTieGroup{}
-		noteMaxYPos, groupBeam, pairs = RenderNote(ctx, canv, lines, groupBeam, groupBeamSlurTies, i, notes, timeSignature, keySignature)
-		if maxY < noteMaxYPos {
-			maxY = noteMaxYPos
-		}
+		noteMargin, groupBeam, pairs = RenderNote(ctx, canv, lines, groupBeam, groupBeamSlurTies, i, notes, timeSignature, keySignature)
+		margin.Merge(noteMargin)
 
 		groupBeamSlurTies = append(groupBeamSlurTies, pairs...)
 
@@ -249,22 +252,18 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		if len(gr) == 0 {
 			continue
 		}
-		groupMaxY := RenderGroupBeam(canv, gr, lines, groupBeamSlurTies)
-		if maxY < groupMaxY {
-			maxY = groupMaxY
-		}
+		gMargin := RenderGroupBeam(canv, gr, lines, groupBeamSlurTies)
+		margin.Merge(gMargin)
 	}
 
 	canv.Gend()
 
-	mb := RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
-	if maxY < mb {
-		maxY = mb - 10
-	}
+	st := RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
+	margin.Merge(st)
 
 	canv.Gend()
 
-	return maxY - lines[4]
+	return margin
 }
 
 func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignature) int {

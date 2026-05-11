@@ -40,7 +40,8 @@ func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteL
 func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) StemInfo {
 
 	var additional, clampY1, clampY2 float64
-	lowestYPosition := float64(lines[4])
+	lowestYPosition := entity.NewCoordinate(0, float64(lines[4]))
+	highestYPosition := entity.NewCoordinate(0, float64(lines[0]))
 
 	// end to end the grouping
 	x1, y1 := end[0].X, end[0].Y
@@ -128,8 +129,11 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 			y3 += 0.5 * float64(direction)
 		}
 		canv.LineFloat64(start[i].X, start[i].Y, end[i].X, y3+additional, `style="fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1"`)
-		if lowestYPosition < y3+additional {
-			lowestYPosition = y3 + additional
+		if lowestYPosition.Y < y3+additional {
+			lowestYPosition = entity.NewCoordinate(start[i].X, y3+additional)
+		} else if highestYPosition.Y > y3+additional {
+			highestYPosition = entity.NewCoordinate(start[i].X, y3+additional)
+
 		}
 	}
 	canv.Gend()
@@ -139,6 +143,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		ClampY1:            clampY1,
 		ClampY2:            clampY2,
 		LowestYPosition:    lowestYPosition,
+		HighestYPosition:   highestYPosition,
 	}
 
 }
@@ -157,7 +162,12 @@ func getDirectionAccumulative(slurties []SlurTieGroup, noteID string) (int, bool
 	return accumulated, foundCount > 0
 }
 
-func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int, slurties []SlurTieGroup) int {
+func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int, slurties []SlurTieGroup) VMargin {
+
+	margin := VMargin{
+		Top:    entity.NewCoordinate(0, float64(lines[0])),
+		Bottom: entity.NewCoordinate(0, float64(lines[4])),
+	}
 
 	canv.Group(`class="beam-group"`)
 	startPos, endPos := groupBeam[0], groupBeam[len(groupBeam)-1]
@@ -213,8 +223,13 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 			singleFlagHex[compared][groupBeam[0].NoteLength])
 
 		canv.Gend()
-		return int(stemInfo.LowestYPosition)
+
+		margin.Set(groupBeam[0].Coordinate)
+		return margin
 	}
+
+	margin.SetTop(stemInfo.HighestYPosition)
+	margin.SetBottom(stemInfo.LowestYPosition)
 
 	// BIG BEAM FLAG
 	if compared <= 0 { // down.
@@ -285,6 +300,6 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	canv.Gend()
 
-	return int(stemInfo.LowestYPosition)
+	return margin
 
 }

@@ -34,15 +34,18 @@ func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.Not
 		attrs...)
 
 }
-func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam [][]CoordinateWithNoteLength, slursties []SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (int, [][]CoordinateWithNoteLength, []SlurTieGroup) {
+func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam [][]CoordinateWithNoteLength, slursties []SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]CoordinateWithNoteLength, []SlurTieGroup) {
 	initialY := lines[0]
 	note := notes[notePos]
-	maxY := lines[4]
+	// maxY := lines[4]
+	margin := VMargin{
+		Top:    entity.NewCoordinate(0, float64(lines[0])),
+		Bottom: entity.NewCoordinate(0, float64(lines[4])),
+	}
+
 	pairs := []SlurTieGroup{}
 	yPos := GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
-	if maxY < int(yPos) {
-		maxY = int(yPos)
-	}
+	margin.Set(entity.NewCoordinate(float64(note.PositionX), yPos))
 
 	ts := timeSignature.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
 
@@ -127,12 +130,15 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 			note.AbsoluteNote, accidental, note.AbsoluteOctave,
 			fmt.Sprintf(`value="%.f"`, note.NoteValue), `style="fill:#0000DD"`)
 
-		renderStemAndBeamMap[direction](canv, lines, CoordinateWithNoteLength{
+		info := renderStemAndBeamMap[direction](canv, lines, CoordinateWithNoteLength{
 			Coordinate: entity.NewCoordinate(float64(xPos), yPos),
 			NoteLength: note.NoteLength,
 			Beam:       note.Beam,
 			NoteID:     note.UUID,
 		})
+
+		margin.SetBottom(info.LowestYPosition)
+		margin.SetTop(info.HighestYPosition)
 
 		pair := SlurTieGroup{
 			AccumulativeDirection: direction,
@@ -182,7 +188,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 
 	if note.NoteLength == musicxml.NoteLengthWhole {
 
-		return maxY, groupBeam, pairs
+		return margin, groupBeam, pairs
 	}
 
 	nextNoteIsDotted := notePos < len(notes)-1 && notes[notePos+1].IsDotted
@@ -201,15 +207,17 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 		canv.Gend()
 
 		// since this is only vertical stem line. only bother to move if it really disruptive like will invade the numbered note space. except it has beam.
-		if maxY+(STAFF_SPACE_WIDTH*2) < int(stemInfo.LowestYPosition) || (maxY < int(stemInfo.LowestYPosition) && len(note.Beam) > 0) {
-			maxY = int(stemInfo.LowestYPosition)
+		if margin.Bottom.Y+(STAFF_SPACE_WIDTH) < stemInfo.LowestYPosition.Y || (margin.Bottom.Y < stemInfo.LowestYPosition.Y && len(note.Beam) > 0) {
+			margin.SetBottom(entity.NewCoordinate(float64(note.PositionX), stemInfo.LowestYPosition.Y))
 		}
+
+		margin.SetTop(stemInfo.HighestYPosition)
 
 		if mergeNote {
 			groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 		}
 
-		return maxY, groupBeam, pairs
+		return margin, groupBeam, pairs
 	}
 
 	groupBeam[len(groupBeam)-1] = append(groupBeam[len(groupBeam)-1], CoordinateWithNoteLength{
@@ -221,6 +229,6 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 	if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 		groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 	}
-	return maxY, groupBeam, pairs
+	return margin, groupBeam, pairs
 
 }

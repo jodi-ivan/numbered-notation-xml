@@ -146,9 +146,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		}
 	}
 
-	marginBottom := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
+	margin := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
 
-	yPos := y + gregorian.STAFF_OFFSET + marginBottom
+	yPos := y + gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom)
 	for _, measure := range noteRenderer {
 
 		canv.Group("class='measure-align'", fmt.Sprintf("number='%d'", measure[0].MeasureNumber))
@@ -157,7 +157,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		rsa.Numbered.RenderNote(ctx, canv, measure, yPos, rightAlignOffset)
 		rsa.Rhythm.RenderBeam(ctx, yPos, canv, ts, measure)
-		rsa.RenderMeasureText(ctx, y+marginBottom, canv, measure)
+		rsa.RenderMeasureText(ctx, y+10, canv, measure)
 		RenderTuplet(ctx, yPos, canv, measure)
 
 		canv.Gend()
@@ -170,6 +170,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	RenderMeasureTopping(ctx, yPos, canv, flatten)
 	canv.Gend()
 
-	return marginBottom
+	canv.Circle(int(margin.Top.X), int(margin.Top.Y), 2, "stroke-width:1;fill:none;stroke:#FF0000")
+	canv.Circle(int(margin.Bottom.X), int(margin.Bottom.Y), 2, "stroke-width:1;fill:none;stroke:#FF0000")
+
+	return int(margin.Bottom.Y) - margin.DefaultBottom
 
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
@@ -18,6 +17,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -54,6 +54,7 @@ func NewStaff() Staff {
 func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, isLastStaff bool, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, measures []musicxml.Measure, prevNotes ...*entity.NoteRenderer) (staffInfo StaffInfo) {
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
+	linestaff := lines.NewLineStaff(timeSignature, keySignature)
 
 	var lastRightBarlinePosition *barline.CoordinateWithBarline
 	yOffsetRepeat := false
@@ -70,8 +71,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		currTimesig := timeSignature.GetTimesignatureOnMeasure(ctx, measure.Number)
 		currKeySig := keySignature.GetKeyOnMeasure(ctx, measure.Number)
 
-		rctx := context.WithValue(ctx, constant.CtxKeyMeasureNum, measure.Number)
-		rctx = context.WithValue(rctx, constant.CtxKeyTimeSignature, currTimesig)
 		alignMeasures := []*entity.NoteRenderer{}
 
 		// barline
@@ -96,7 +95,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			}
 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(currKeySig, note)
-			noteLength := timeSignature.GetNoteLength(rctx, measure.Number, note)
+			noteLength := timeSignature.GetNoteLength(ctx, measure.Number, note)
 
 			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) && currTimesig.IsCommonTime() {
 				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength && mergedLength < 3 {
@@ -108,7 +107,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			// additionalRenderer is all the new notes that needs represented in numbered when the original musicxml doesnot
 			// for example a half note C have to be represented by following . next to number
-			additionalNotes := si.Numbered.GetLengthNote(rctx, timeSignature, measure.Number, noteLength)
+			additionalNotes := si.Numbered.GetLengthNote(ctx, timeSignature, measure.Number, noteLength)
 			if skipNote[notePos+1] {
 				// split notes by the beam. currently only happen when there is ties
 				next := measure.Notes[notePos+1]
@@ -199,8 +198,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if staffInfo.Multiline {
 			// // -------
 			if len(staffInfo.NextLineRenderer) == 0 && len(align) > 0 && staffInfo.ForceNewLine {
-				key := keySignature.GetKeyOnMeasure(ctx, measure.Number)
-				indent := gregorian.GetLeftIndent(key)
+				indent := linestaff.GetLeftIndent(measure.Number)
 				staffInfo.MarginLeft = indent
 				si.Rhythm.AdjustMultiDottedRenderer(notes, indent, y, keySignature)
 				notes = append(notes, rightBarlineRenderer)

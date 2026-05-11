@@ -6,10 +6,10 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/header"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -19,8 +19,11 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	relativeY := constant.TITLE_Y_POS + header.HEADER_OFFSET
 
 	staffes := si.SplitLines(ctx, part)
-	key := keySignature.GetKeyOnMeasure(ctx, 1)
-	x := gregorian.GetLeftIndentWithTimeSignature(key, timeSignature)
+
+	staffLines := lines.NewLineStaff(timeSignature, keySignature)
+
+	// TODO: config toggle here
+	x := staffLines.GetLeftIndentWithTimeSignature()
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 	}
@@ -28,6 +31,16 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	for i, st := range staffes {
 		info = si.RenderStaff(ctx, canv, x, relativeY, i, i == len(staffes)-1, keySignature, timeSignature, st, info.NextLineRenderer...)
 		relativeY = relativeY + STAFF_LINE_DISTANCE + 70 + info.MarginBottom
+
+		nextMeasureNumber := 1 + len(st)
+		if len(st) > 0 {
+			measure := st[0]
+			if i+1 < len(staffes) && len(staffes[i+1]) > 0 {
+				measure = staffes[i+1][0]
+			}
+			nextMeasureNumber = measure.Number
+		}
+
 		if info.ForceNewLine {
 			relativeY += oldMarginButtom
 		}
@@ -35,25 +48,15 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			x = info.MarginLeft + barline.BARLINE_AFTER_SPACE
 			info.Multiline = false
 		} else {
-			if len(st) == 0 {
-				key = keySignature.GetKeyOnMeasure(ctx, 1)
-			} else {
-				measure := st[0]
-				if i < len(staffes)-1 {
-					measure = staffes[i+1][0]
-				}
-				key = keySignature.GetKeyOnMeasure(ctx, measure.Number)
-			}
-			x = gregorian.GetLeftIndent(key)
+			x = staffLines.GetLeftIndent(nextMeasureNumber)
 		}
 		oldMarginButtom = info.MarginBottom
 	}
 
 	for len(info.NextLineRenderer) > 0 {
-		key = keySignature.GetKeyOnMeasure(ctx, info.NextLineRenderer[0].MeasureNumber)
-		x = gregorian.GetLeftIndent(key)
+		x = staffLines.GetLeftIndent(info.NextLineRenderer[0].MeasureNumber)
 		idx := len(staffes) - 1
-		if idx == 0 {
+		if idx <= 0 {
 			idx = 1
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, idx, true, keySignature, timeSignature, nil, info.NextLineRenderer...)

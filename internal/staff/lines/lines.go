@@ -20,6 +20,13 @@ type LineStaff struct {
 	MeasureStart int
 }
 
+func NewMiddleNonFirstLineStaff(ks keysig.KeySignature) LineStaff {
+	return LineStaff{
+		Keysig:      ks,
+		MarginRight: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8,
+	}
+}
+
 func NewLineStaff(ts timesig.TimeSignature, ks keysig.KeySignature) LineStaff {
 	return LineStaff{
 		Keysig:      ks,
@@ -162,11 +169,13 @@ func (ls *LineStaff) GetYPos(pitch rune, octave int) float64 {
 	return float64(ls.Lines[0]) + float64(stepsBelow)*(float64(STAFF_SPACE_WIDTH)/2)
 }
 
-func (ls *LineStaff) GetLeftIndent() int {
-	if ls.LeftIndent != 0 {
-		return ls.LeftIndent
+func (ls *LineStaff) GetLeftIndent(measure ...int) int {
+	measureNum := ls.MeasureStart
+	if len(measure) > 0 {
+		measureNum = measure[0]
 	}
-	key := ls.Keysig.GetKeyOnMeasure(context.Background(), ls.MeasureStart)
+
+	key := ls.Keysig.GetKeyOnMeasure(context.Background(), measureNum)
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
 	offset := 0
 	if key.Start && key.Prev != nil {
@@ -177,4 +186,10 @@ func (ls *LineStaff) GetLeftIndent() int {
 
 func (ls *LineStaff) GetMarginRight() int {
 	return ls.MarginRight
+}
+
+func (ls *LineStaff) GetLeftIndentWithTimeSignature() int {
+	key := ls.Keysig.GetKeyOnMeasure(context.Background(), 1)
+	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
+	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(ls.TimeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(ls.TimeSig.UniqueSign)-1)) + keySigWith)
 }

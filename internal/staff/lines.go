@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 )
 
 // SplitLines split the measure in the lines manner
@@ -41,22 +41,18 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignatu
 	result := [][]*entity.NoteRenderer{}
 	staffInfo := StaffInfo{}
 	pos := -1
-	// maxTotalLyric := 1
+
+	staffLines := lines.NewMiddleNonFirstLineStaff(ks)
 
 	// last line with no staff measure remaining
 	for i, note := range prevNotes {
 		note.PositionY = yPos
-		// if maxTotalLyric < len(note.Lyric) {
-		// 	maxTotalLyric = len(note.Lyric)
-		// }
 		if note.IsNewLine {
 			pos = i
 			break
 		}
 	}
 
-	// FIXED: previous line already their own margin bottom
-	// staffInfo.MarginBottom = (maxTotalLyric - 1) * 25
 	if pos != -1 {
 		result = append(result, prevNotes[:pos+1])
 		offset := 1
@@ -68,8 +64,8 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignatu
 			result[0] = append(result[0], barlineNote)
 
 			offset = 2
-			key := ks.GetKeyOnMeasure(context.Background(), prevNotes[0].MeasureNumber) // TEST: need to be tested
-			staffInfo.MarginLeft = gregorian.GetLeftIndent(key)
+			// TEST: need to be tested
+			staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
 			prevNotes[pos].IsNewLine = false
 			staffInfo.ForceNewLine = true
 		}
@@ -78,9 +74,7 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignatu
 		staffInfo.Multiline = true
 	} else {
 		result = append(result, prevNotes)
-
-		key := ks.GetKeyOnMeasure(context.Background(), prevNotes[0].MeasureNumber)
-		staffInfo.MarginLeft = gregorian.GetLeftIndent(key)
+		staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
 	}
 
 	return result, staffInfo
@@ -90,9 +84,9 @@ func PrepareNextLines(staffInfo StaffInfo, ks keysig.KeySignature, notes []*enti
 	proceed := false
 	maxTotalLyric := 1
 
-	key := ks.GetKeyOnMeasure(context.Background(), notes[0].MeasureNumber)
+	staffLines := lines.NewMiddleNonFirstLineStaff(ks)
 
-	indent := gregorian.GetLeftIndent(key)
+	indent := staffLines.GetLeftIndent(notes[0].MeasureNumber)
 	for _, note := range notes {
 		if !proceed {
 			if note.IsNewLine {

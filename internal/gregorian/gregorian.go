@@ -307,23 +307,3 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 	return margin
 }
-
-func GetLeftIndentWithTimeSignature(key keysig.Key, timeSig timesig.TimeSignature) int {
-	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
-	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(timeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(timeSig.UniqueSign)-1)) + keySigWith)
-}
-
-// DEPRECATED: use the staffLine object instead
-func GetLeftIndent(key keysig.Key) int {
-	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
-	offset := 0
-	if key.Start && key.Prev != nil {
-		offset = (len(key.Prev.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH) + PADDING_WIDTH
-	}
-	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith + offset
-}
-
-func GetLeftMargin(key keysig.Key) int {
-	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
-	return CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith
-}

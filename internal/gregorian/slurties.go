@@ -189,9 +189,9 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff LineStaff, groupBeam [][]Coord
 			marginButtom = int(math.Ceil(pull.Y + pullY))
 		}
 
-		canv.Circle(
-			int(math.Round(pull.X))+3+int(tiesEndOffset[direction][0].X)/2,
-			int(math.Ceil(pull.Y+pullY)), 2, "fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:0.4")
+		// canv.Circle(
+		// 	int(math.Round(pull.X))+3+int(tiesEndOffset[direction][0].X)/2,
+		// 	int(math.Ceil(pull.Y+pullY)), 2, "fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:0.4")
 		// canv.Text(
 		// 	(int(math.Round(pull.X))+int(tiesEndOffset[direction][0].X)/2)+3,
 		// 	int(math.Ceil(pull.Y+pullY)),

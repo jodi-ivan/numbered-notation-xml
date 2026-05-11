@@ -39,7 +39,7 @@ func (bi *barlineInteractor) GetRendererLeftBarline(measure musicxml.Measure, x 
 		if lastRightBarlinePosition != nil {
 			pos = int(lastRightBarlinePosition.X)
 			if lastBarlineRepeat {
-				pos += LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT
+				pos += LEFT_BARLINE_RIGHT_AND_LEFT_REPEAT - 4
 			}
 		}
 		result := &entity.NoteRenderer{

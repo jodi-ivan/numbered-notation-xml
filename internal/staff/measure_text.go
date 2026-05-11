@@ -17,7 +17,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, std ...bool) {
 	pairs := [][2]entity.Coordinate{}
 	pairsData := []string{}
 	pairsBar := [][2]musicxml.BarLineStyle{}
@@ -66,6 +66,11 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 			}
 		}
 	}
+
+	y1Offset := 25
+	if len(std) > 0 {
+		y1Offset = 15
+	}
 	if len(pairs) > 0 {
 		canv.Group("class='staff-topping'")
 
@@ -75,7 +80,7 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:60%"`)
 			// vertical line at start
 			canv.Line(
-				x1, int(math.Round(pair[0].Y))-25,
+				x1, int(math.Round(pair[0].Y))-y1Offset,
 				x1, int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)
@@ -89,7 +94,7 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 			}
 			// vertical line at end
 			canv.Line(
-				x2, int(math.Round(pair[0].Y))-25,
+				x2, int(math.Round(pair[0].Y))-y1Offset,
 				x2, int(math.Round(pair[1].Y))-30,
 				"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1",
 			)

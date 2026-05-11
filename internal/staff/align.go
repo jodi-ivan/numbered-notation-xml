@@ -170,6 +170,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	rsa.Lyric.RenderHypen(ctx, yPos, canv, flatten)
 	rsa.Rhythm.RenderSlurTies(ctx, yPos, canv, slurTiesNote, float64(lastPos))
+	RenderMeasureTopping(ctx, y+10, canv, flatten, true)
 	RenderMeasureTopping(ctx, yPos, canv, flatten)
 	canv.Gend()
 

@@ -14,7 +14,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
+	sline "github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -178,7 +178,7 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) VMargin {
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 
-	lineStaff := lines.NewLineStaff(timeSignature, keySignature)
+	lineStaff := sline.NewLineStaff(timeSignature, keySignature)
 	lineStaff.Render(canv, y, notes[0].MeasureNumber, staffPos == 0)
 	lines := lineStaff.GetLines()
 	margin := VMargin{
@@ -279,6 +279,31 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	margin.Merge(st)
 
 	canv.Gend()
+
+	for _, note := range notes {
+		if note.Note == 0 {
+			continue
+		}
+		beanPos := lineStaff.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
+		maxY := beanPos
+
+		if note.StemDirection == 1 {
+			maxY = beanPos + math.Floor(float64(note.StemDirection)*(2.5*sline.STAFF_SPACE_WIDTH))
+		}
+
+		if maxY < float64(lineStaff.GetTopLine()) {
+			note.MarginTopFromStaff = lineStaff.GetTopLine() - int(maxY)
+		}
+
+		// REFACTOR THIS
+		if note.Fermata != nil {
+			breathpause.RenderFermata(ctx,
+				canv, note.Fermata,
+				entity.NewCoordinate(float64(note.PositionX), float64(y+10-note.MarginTopFromStaff)))
+
+		}
+
+	}
 
 	return margin
 }

@@ -63,30 +63,19 @@ func GetTextMarginBottom(stafflines lines.LineStaff, notes []*entity.NoteRendere
 		}
 	}
 
-	result := stafflines.GetMiddleLine()
+	result := 0
 
 	for pos := i; pos < len(notes); pos++ {
 		note := notes[pos]
-		if note.Note == 0 {
-			continue
-		}
 
 		if notes[pos].PositionX >= right {
 			break
 		}
 
-		beanPos := stafflines.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
-		maxY := beanPos
-
-		if note.StemDirection == 1 {
-			maxY = beanPos + (float64(note.StemDirection) * (2.5 * lines.STAFF_SPACE_WIDTH))
-		}
-
-		if maxY < float64(stafflines.GetTopLine()) {
-			result = int(maxY)
+		if result < note.MarginTopFromStaff {
+			result = note.MarginTopFromStaff
 		}
 	}
-	result = stafflines.GetTopLine() - result
 	if result <= TEXT_STAFF_TOP_LINE_GAP_WIDTH {
 		return 0
 	}

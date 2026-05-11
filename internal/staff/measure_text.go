@@ -243,7 +243,7 @@ func RenderTuplet(ctx context.Context, y int, canv canvas.Canvas, notes []*entit
 				)
 				canv.CenterRect(int(x)+4, int(start.Y)-26, 10, 12, "fill:white;stroke:none;")
 			}
-			canv.Text(int(x), int(start.Y)-22, fmt.Sprintf("%d", pairData[i]))
+			canv.Text(int(x), int(start.Y)-22, fmt.Sprintf("%d", pairData[i]), "font-style:italic")
 
 		}
 		canv.Gend()

@@ -65,6 +65,7 @@ type CoordinateWithNoteLength struct {
 	Beam       map[int]entity.Beam
 	Direction  *int
 	NoteID     string
+	Tuplet     *musicxml.Tuplet
 }
 
 type SlurTieGroup struct {

@@ -238,6 +238,36 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		canv.LineFloat64(startPos.X+9, y1Pos+stemOffset-23, endPos.X+9, y2Pos+stemOffset-23, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
 	}
 
+	tupletPair := [][2]CoordinateWithNoteLength{}
+	for _, v := range groupBeam {
+		if v.Tuplet == nil {
+			continue
+		}
+
+		switch v.Tuplet.Type {
+		case musicxml.TupletTypeStart:
+			tupletPair = append(tupletPair, [2]CoordinateWithNoteLength{v})
+
+		case musicxml.TupletTypeStop:
+			pair := tupletPair[len(tupletPair)-1]
+			pair[1] = v
+			tupletPair[len(tupletPair)-1] = pair
+		}
+	}
+
+	for _, pair := range tupletPair {
+		x1, y1, x2, y2 := pair[0].X+0.5, pair[0].Y+stemOffset+27, pair[1].X+0.5, pair[1].Y+stemOffset+27
+		if compared > 0 {
+			x1, y1, x2, y2 = pair[0].X+9, pair[0].Y+stemOffset-23, pair[1].X+9, pair[1].Y+stemOffset-23
+		}
+
+		x3 := ((x1 + x2) / 2) - 6
+		y3 := ((y1 + y2) / 2) + 4 + (-1 * float64(compared) * 10)
+
+		canv.Text(int(math.Round(x3)), int(math.Round(y3)), "3", "font-family:Old Standard TT;font-size: 0.45em;font-style:italic")
+		margin.SetBottom(entity.NewCoordinate(x3, y3-(float64(compared)*5)))
+	}
+
 	offsets := map[int][2]float64{
 		-1: {0.5, 27},
 		0:  {0.5, 27},

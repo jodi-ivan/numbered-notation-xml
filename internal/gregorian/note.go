@@ -139,6 +139,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 			NoteLength: note.NoteLength,
 			Beam:       note.Beam,
 			NoteID:     note.UUID,
+			Tuplet:     note.Tuplet,
 		})
 
 		margin.SetBottom(info.LowestYPosition)
@@ -207,6 +208,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 			Coordinate: entity.NewCoordinate(xPos, yPos),
 			NoteLength: note.NoteLength,
 			Beam:       note.Beam,
+			Tuplet:     note.Tuplet,
 		})
 		canv.Gend()
 
@@ -229,6 +231,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 		NoteLength: note.NoteLength,
 		Beam:       note.Beam,
 		NoteID:     note.UUID,
+		Tuplet:     note.Tuplet,
 	})
 	if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 		groupBeam = append(groupBeam, []CoordinateWithNoteLength{})

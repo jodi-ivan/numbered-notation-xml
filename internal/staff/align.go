@@ -132,6 +132,18 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	for mi, measure := range noteRenderer { // preparation adn precalculate
 		alignJustify(measure, y, added, &count, mi, mi == len(noteRenderer)-1)
 		rsa.Rhythm.Split(ctx, ts, measure)
+
+		for notePos, note := range measure {
+			if (len(note.Lyric) > 0 || note.Note > 0 || note.IsRest) && notePos == len(measure)-1 {
+				xPos := note.PositionX
+				noteStr := fmt.Sprintf("%d", note.Note)
+
+				noteWidth := rsa.Lyric.CalculateLyricWidth(noteStr)
+				xPos = xPos + rightAlignOffset - int(math.Round(noteWidth))
+
+				note.PositionX = xPos
+			}
+		}
 	}
 
 	marginBottom := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)

@@ -196,19 +196,13 @@ func (ni *numberedInteractor) RenderNote(ctx context.Context, canv canvas.Canvas
 				canv.Circle(n.PositionX+REHERSHAL_CIRCLE_X_OFFSET, n.PositionY-REHERSHAL_CIRCLE_Y_OFFSET, REHERSHAL_CIRCLE_RADIUS, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
 				canv.Text(n.PositionX+REHERSHAL_TEXT_X_OFFSET, n.PositionY-REHERSHAL_TEXT_Y_OFFSET, n.LeadingHeader, `font-weight="600"`, `style="font-size:60%"`)
 			}
-			xPos := n.PositionX
 			noteStr := fmt.Sprintf("%d", n.Note)
-			noteWidth := ni.Lyric.CalculateLyricWidth(noteStr)
-			if notePos == len(measure)-1 {
-				xPos = xPos + rightAlignOffset - int(math.Round(noteWidth))
-			}
-			canv.Text(xPos, y, noteStr)
+			canv.Text(n.PositionX, y, noteStr)
 
-			coordinate := entity.Coordinate{X: float64(xPos), Y: float64(y)}
+			coordinate := entity.Coordinate{X: float64(n.PositionX), Y: float64(y)}
 			ni.RenderStrikethrough(ctx, canv, n.Strikethrough, coordinate)
 			breathpause.RenderFermata(ctx, canv, n.Fermata, coordinate)
 			ni.RenderOctave(ctx, canv, n.Octave, coordinate)
-			n.PositionX = xPos
 		}
 
 	}

@@ -1,13 +1,13 @@
 package gregorian
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	stfline "github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -34,18 +34,21 @@ func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.Not
 		attrs...)
 
 }
-func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam [][]CoordinateWithNoteLength, slursties []SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]CoordinateWithNoteLength, []SlurTieGroup) {
-	initialY := lines[0]
+func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]CoordinateWithNoteLength, slursties []SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]CoordinateWithNoteLength, []SlurTieGroup) {
+	lines := staffLines.GetLines()
+	initialY := staffLines.GetTopLine()
+
 	note := notes[notePos]
-	// maxY := lines[4]
+
 	margin := VMargin{
-		Top:    entity.NewCoordinate(0, float64(lines[0])),
-		Bottom: entity.NewCoordinate(0, float64(lines[4])),
+		Top:    entity.NewCoordinate(0, float64(initialY)),
+		Bottom: entity.NewCoordinate(0, float64(staffLines.GetBottomLine())),
 	}
 
 	pairs := []SlurTieGroup{}
-	yPos := GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
-	margin.Set(entity.NewCoordinate(float64(note.PositionX), yPos))
+	yPos := staffLines.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
+	currentPos := entity.NewCoordinate(float64(note.PositionX), yPos)
+	margin.Set(currentPos)
 
 	ts := timeSignature.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
 
@@ -69,7 +72,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 	hasTiedNotes := sameNextTwoDottedReplaced || sameNextDotted || sameNexTwoDotted
 	accidental := getAccidental(keySignature.GetKeyOnMeasure(ctx, note.MeasureNumber), note, nil)
 
-	direction := cmp.Compare(yPos, float64(lines[2]))
+	direction := staffLines.GetStemDirectionCompare(yPos)
 
 	accumulative := 0
 	memberGroup := 0
@@ -151,7 +154,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 				note.UUID,
 				notes[notePos+nextNotePos].UUID,
 			},
-			Start: entity.NewCoordinate(float64(note.PositionX), yPos),
+			Start: currentPos,
 			End:   entity.NewCoordinate(float64(notes[notePos+nextNotePos].PositionX), yPos),
 			Ties: &entity.Slur{
 				Number: 1,
@@ -171,7 +174,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, lines [5]int, groupBeam
 		}
 	}
 
-	RenderLedgerLine(canv, entity.NewCoordinate(float64(note.PositionX), yPos), lines)
+	RenderLedgerLine(canv, currentPos, staffLines.GetTopLine(), staffLines.GetBottomLine())
 	xPos := float64(note.PositionX)
 
 	marker := `style="fill:#DD0000"`

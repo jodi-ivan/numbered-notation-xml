@@ -1,11 +1,9 @@
 package gregorian
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"math"
-	"unicode"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -14,33 +12,13 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	sline "github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-// DEPRECATED:
-func GetYpos(lines [5]int, space int, octave int, pitch rune) float64 {
-	noteOrder := []rune{'C', 'D', 'E', 'F', 'G', 'A', 'B'}
-
-	diatonicIndex := func(p rune, oct int) int {
-		for i, n := range noteOrder {
-			if n == unicode.ToUpper(p) {
-				return oct*7 + i
-			}
-		}
-		return -1
-	}
-
-	refIndex := diatonicIndex('F', 5) // lines[0] = F5
-	noteIndex := diatonicIndex(pitch, octave)
-
-	stepsBelow := refIndex - noteIndex
-
-	return float64(lines[0]) + float64(stepsBelow)*(float64(space)/2)
-}
-
-func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup {
+func GetGroupSlueTies(notes []*entity.NoteRenderer, staffLine lines.LineStaff) []SlurTieGroup {
 	groupBeamSlurTies := []SlurTieGroup{}
 
 	var tiesTracking *SlurTieGroup
@@ -50,18 +28,14 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 		yPos := 0.0
 		direction := 0
 		if note.AbsoluteNote != "" && note.AbsoluteOctave > 0 {
-			yPos = GetYpos(lines, STAFF_SPACE_WIDTH, note.AbsoluteOctave, rune(note.AbsoluteNote[0]))
-			direction = cmp.Compare(int(yPos), lines[2])
-			if direction == 0 {
-				direction = -1
-			}
+			yPos = staffLine.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
+			direction = staffLine.GetStemDirection(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
 		}
 
 		if note.Tie != nil {
 			if tiesTracking == nil && note.Tie.Type == musicxml.NoteSlurTypeStart && !note.Tie.NumberedOnly {
 				tiesTracking = &SlurTieGroup{
-					MaxY:       yPos,
-					MinY:       yPos,
+					MaxY: yPos, MinY: yPos,
 					Ties:       note.Tie,
 					NoteMember: []string{note.UUID},
 					Start:      entity.NewCoordinate(float64(note.PositionX), yPos),
@@ -71,7 +45,6 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 			}
 
 			if tiesTracking != nil && note.Tie.Type == musicxml.NoteSlurTypeStop {
-				tiesTracking.NoteMember = append(tiesTracking.NoteMember, note.UUID)
 				tiesTracking.AccumulativeDirection += direction
 
 				tiesTracking.End = entity.NewCoordinate(float64(note.PositionX), yPos)
@@ -88,8 +61,8 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 			if !ok {
 				if yPos == 0 {
 					slurTracking[sid] = SlurTieGroup{
-						MaxY: float64(lines[0]),
-						MinY: float64(lines[4]),
+						MaxY: float64(staffLine.GetTopLine()),
+						MinY: float64(staffLine.GetBottomLine()),
 					}
 				} else {
 					slurTracking[sid] = SlurTieGroup{
@@ -133,8 +106,8 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, lines [5]int) []SlurTieGroup
 				}
 
 				if yPos == 0 {
-					temp.MaxY = float64(lines[0])
-					temp.MinY = float64(lines[4])
+					temp.MaxY = float64(staffLine.GetTopLine())
+					temp.MinY = float64(staffLine.GetBottomLine())
 				} else {
 					temp.MaxY = yPos
 					temp.MinY = yPos
@@ -180,12 +153,11 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 	lineStaff := sline.NewLineStaff(timeSignature, keySignature)
 	lineStaff.Render(canv, y, notes[0].MeasureNumber, staffPos == 0)
-	lines := lineStaff.GetLines()
 	margin := VMargin{
-		Top:           entity.NewCoordinate(0, float64(lines[0])),
-		Bottom:        entity.NewCoordinate(0, float64(lines[4])),
-		DefaultTop:    lines[0],
-		DefaultBottom: lines[4],
+		Top:           entity.NewCoordinate(0, float64(lineStaff.GetTopLine())),
+		Bottom:        entity.NewCoordinate(0, float64(lineStaff.GetBottomLine())),
+		DefaultTop:    lineStaff.GetTopLine(),
+		DefaultBottom: lineStaff.GetBottomLine(),
 	}
 
 	groupBeam := [][]CoordinateWithNoteLength{{}}
@@ -193,7 +165,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	canv.Group(`class="notes"`, `style="font-size:2em"`)
 	currentMeasure := 0
 
-	groupBeamSlurTies := GetGroupSlueTies(notes, lines)
+	groupBeamSlurTies := GetGroupSlueTies(notes, lineStaff)
 
 	for i, note := range notes {
 
@@ -216,14 +188,14 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 				xPos += (numbered.AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
 			}
 
-			canv.TextUnescaped(xPos, float64(lines[0])-STAFF_SPACE_WIDTH, "&#xF0E2;", `style="font-size:1.3em"`)
+			canv.TextUnescaped(xPos, float64(lineStaff.GetTopLine())-STAFF_SPACE_WIDTH, "&#xF0E2;", `style="font-size:1.3em"`)
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 			}
 			continue
 		}
 		if note.IsRest {
-			canv.TextUnescaped(float64(note.PositionX), float64(lines[2]), restHex[note.NoteLength])
+			canv.TextUnescaped(float64(note.PositionX), float64(lineStaff.GetMiddleLine()), restHex[note.NoteLength])
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 			}
@@ -231,7 +203,8 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 		if note.Barline != nil {
-			barline.RenderGregorian(canv, note.Barline, i == len(notes)-1, lines, entity.NewCoordinate(float64(note.PositionX), float64(lines[4])))
+			barlinePos := entity.NewCoordinate(float64(note.PositionX), float64(lineStaff.GetBottomLine()))
+			barline.RenderGregorian(canv, note.Barline, i == len(notes)-1, lineStaff, barlinePos)
 			continue
 		}
 
@@ -241,7 +214,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 		var noteMargin VMargin
 		pairs := []SlurTieGroup{}
-		noteMargin, groupBeam, pairs = RenderNote(ctx, canv, lines, groupBeam, groupBeamSlurTies, i, notes, timeSignature, keySignature)
+		noteMargin, groupBeam, pairs = RenderNote(ctx, canv, lineStaff, groupBeam, groupBeamSlurTies, i, notes, timeSignature, keySignature)
 		margin.Merge(noteMargin)
 
 		groupBeamSlurTies = append(groupBeamSlurTies, pairs...)
@@ -257,7 +230,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		if len(gr) == 0 {
 			continue
 		}
-		gMargin, direction := RenderGroupBeam(canv, gr, lines, groupBeamSlurTies)
+		gMargin, direction := RenderGroupBeam(canv, gr, lineStaff, groupBeamSlurTies)
 		margin.Merge(gMargin)
 		directions[direction] = append(directions[i], gr...)
 	}

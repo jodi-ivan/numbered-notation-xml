@@ -114,7 +114,6 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		additional += (-1 * float64(direction)) + 3.5
 	}
 
-	canv.Group(`class="stem"`)
 	for i := 0; i < len(start); i++ {
 		x3 := start[i].X
 		y3 := end[i].Y
@@ -134,7 +133,6 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 
 		}
 	}
-	canv.Gend()
 
 	return StemInfo{
 		LengthCompensation: additional,
@@ -171,7 +169,6 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		Bottom: entity.NewCoordinate(0, float64(bottomStaffLine)),
 	}
 
-	canv.Group(`class="beam-group"`)
 	startPos, endPos := groupBeam[0], groupBeam[len(groupBeam)-1]
 
 	farthestRank := slices.Clone(groupBeam)
@@ -202,9 +199,9 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	y1Pos := startPos.Y
 	y2Pos := endPos.Y
 
-	canv.Group(fmt.Sprintf(`follow-consensus="%v"`, foundCount > 0), fmt.Sprintf(`direction="%d"`, accumulated))
+	canv.Group(`class="note beam-group"`, fmt.Sprintf(`follow-consensus="%v"`, foundCount > 0), fmt.Sprintf(`direction="%d"`, accumulated))
+
 	stemInfo := renderStemAndBeamMap[compared](canv, lineStaff.GetLines(), groupBeam...)
-	canv.Gend()
 	stemOffset, clampY1, clampY2 := stemInfo.LengthCompensation, stemInfo.ClampY1, stemInfo.ClampY2
 
 	y1Pos += -1 * float64(compared) * clampY1

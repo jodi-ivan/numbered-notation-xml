@@ -8,6 +8,10 @@ import (
 )
 
 func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, staffLine lines.LineStaff, pos entity.Coordinate) {
+	canv.Group(`class="barline"`)
+	defer func() {
+		canv.Gend()
+	}()
 	topLine := staffLine.GetTopLine()
 	bottomLine := staffLine.GetBottomLine()
 	middleLine := staffLine.GetMiddleLine()

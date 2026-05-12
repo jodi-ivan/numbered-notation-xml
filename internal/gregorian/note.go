@@ -35,6 +35,11 @@ func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.Not
 
 }
 func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]CoordinateWithNoteLength, slursties []SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]CoordinateWithNoteLength, []SlurTieGroup) {
+
+	canv.Group(`class="note"`)
+	defer func() {
+		canv.Gend()
+	}()
 	lines := staffLines.GetLines()
 	initialY := staffLines.GetTopLine()
 

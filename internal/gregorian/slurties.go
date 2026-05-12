@@ -15,27 +15,23 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func GetYPosGroup(group []CoordinateWithNoteLength, lines [5]int) int {
+func GetYPosGroup(group []CoordinateWithNoteLength, staffLine lines.LineStaff) int {
+	staffMiddleLine := staffLine.GetMiddleLine()
 
 	slices.SortFunc(group, func(a, b CoordinateWithNoteLength) int {
-		return cmp.Compare(math.Abs(a.Y-float64(lines[2])), math.Abs(b.Y-float64(lines[2])))
+		return cmp.Compare(math.Abs(a.Y-float64(staffMiddleLine)), math.Abs(b.Y-float64(staffMiddleLine)))
 	})
 	farthest := group[len(group)-1]
-	compared := cmp.Compare(farthest.Y, float64(lines[2]))
-	if compared == 0 {
-		compared = -1
-	}
 
-	return compared
+	return staffLine.GetStemDirectionCompare(farthest.Y)
 }
 
 func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][]CoordinateWithNoteLength, slurties []SlurTieGroup) VMargin {
 	canv.Group(`class="slurties"`)
 
-	lines := lineStaff.GetLines()
 	margin := VMargin{
-		Top:    entity.NewCoordinate(0, float64(lines[0])),
-		Bottom: entity.NewCoordinate(0, float64(lines[4])),
+		Top:    entity.NewCoordinate(0, float64(lineStaff.GetTopLine())),
+		Bottom: entity.NewCoordinate(0, float64(lineStaff.GetBottomLine())),
 	}
 
 	tiesEndOffset := map[int][2]entity.Coordinate{
@@ -83,7 +79,7 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][
 		if len(group) > 0 && group[0].NoteID != st.NoteMember[0] {
 			// you part of member, but not the root.
 			// we just follow the group rules instead of consensus
-			direction = GetYPosGroup(group, lines)
+			direction = GetYPosGroup(group, lineStaff)
 		}
 		isTies := false
 		var sluLineType musicxml.NoteSlurLineType
@@ -99,7 +95,7 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][
 		start := st.Start
 		end := st.End
 
-		placeholderY := float64(lines[2])
+		placeholderY := float64(lineStaff.GetMiddleLine())
 		if start.Y != 0 {
 			placeholderY = start.Y
 		} else if end.Y != 0 {

@@ -9,6 +9,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -90,9 +91,6 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 		}
 	}
 
-	// canv.Circle(int(x1), int(y1), 2, `style="fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:1"`)
-	// canv.Circle(int(x2), int(y2), 2, `style="fill:none;stroke:#FF00FF;stroke-linecap:round;stroke-width:1"`)
-
 	for i := 0; i < len(start); i++ {
 		// calculate the Y for the stem reach the beam
 		x3 := start[i].X
@@ -108,7 +106,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 	}
 
 	// // offset the position when beam line is horizontal line AND layering staff line
-	linS := []int{lines[0], lines[1], lines[2], lines[3], lines[4]}
+	linS := []int(lines[:])
 	intersect := slices.IndexFunc(linS, func(n int) bool {
 		return math.Abs(float64(n)-y2) <= 3
 	})
@@ -124,7 +122,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 			y3 = y1 + (x3-x1)*((y2-y1)/(x2-x1))
 		}
 
-		intersect := slices.Index([]int{lines[0], lines[1], lines[2], lines[3], lines[4]}, int(y3))
+		intersect := slices.Index([]int(lines[:]), int(y3))
 		if intersect >= 0 && (start[i].NoteLength == musicxml.NoteLengthQuarter || start[i].NoteLength == musicxml.NoteLengthHalf) {
 			y3 += 0.5 * float64(direction)
 		}
@@ -162,11 +160,15 @@ func getDirectionAccumulative(slurties []SlurTieGroup, noteID string) (int, bool
 	return accumulated, foundCount > 0
 }
 
-func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lines [5]int, slurties []SlurTieGroup) (VMargin, int) {
+func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lineStaff lines.LineStaff, slurties []SlurTieGroup) (VMargin, int) {
+
+	topStaffLine := lineStaff.GetTopLine()
+	bottomStaffLine := lineStaff.GetBottomLine()
+	middleStaffLine := lineStaff.GetMiddleLine()
 
 	margin := VMargin{
-		Top:    entity.NewCoordinate(0, float64(lines[0])),
-		Bottom: entity.NewCoordinate(0, float64(lines[4])),
+		Top:    entity.NewCoordinate(0, float64(topStaffLine)),
+		Bottom: entity.NewCoordinate(0, float64(bottomStaffLine)),
 	}
 
 	canv.Group(`class="beam-group"`)
@@ -175,13 +177,10 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	farthestRank := slices.Clone(groupBeam)
 
 	slices.SortFunc(farthestRank, func(a, b CoordinateWithNoteLength) int {
-		return cmp.Compare(math.Abs(a.Y-float64(lines[2])), math.Abs(b.Y-float64(lines[2])))
+		return cmp.Compare(math.Abs(a.Y-float64(middleStaffLine)), math.Abs(b.Y-float64(middleStaffLine)))
 	})
 	farthest := farthestRank[len(farthestRank)-1]
-	compared := cmp.Compare(farthest.Y, float64(lines[2]))
-	if compared == 0 {
-		compared = -1
-	}
+	compared := lineStaff.GetStemDirectionCompare(farthest.Y)
 
 	accumulated := 0
 	foundCount := 0
@@ -204,7 +203,7 @@ func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	y2Pos := endPos.Y
 
 	canv.Group(fmt.Sprintf(`follow-consensus="%v"`, foundCount > 0), fmt.Sprintf(`direction="%d"`, accumulated))
-	stemInfo := renderStemAndBeamMap[compared](canv, lines, groupBeam...)
+	stemInfo := renderStemAndBeamMap[compared](canv, lineStaff.GetLines(), groupBeam...)
 	canv.Gend()
 	stemOffset, clampY1, clampY2 := stemInfo.LengthCompensation, stemInfo.ClampY1, stemInfo.ClampY2
 

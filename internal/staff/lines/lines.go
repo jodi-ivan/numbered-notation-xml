@@ -1,6 +1,7 @@
 package lines
 
 import (
+	"cmp"
 	"context"
 	"unicode"
 
@@ -59,6 +60,30 @@ func (ls *LineStaff) GetMiddleLine() int {
 
 func (ls *LineStaff) GetTopLine() int {
 	return ls.Lines[0]
+}
+
+func (ls *LineStaff) GetBottomLine() int {
+	return ls.Lines[4]
+}
+
+func (ls *LineStaff) GetStemDirection(pitch rune, octave int) int {
+	yPos := ls.GetYPos(pitch, octave)
+	direction := cmp.Compare(yPos, float64(ls.GetMiddleLine()))
+	if direction == 0 {
+		direction = -1
+	}
+
+	return direction
+}
+
+func (ls *LineStaff) GetStemDirectionCompare(yPos float64) int {
+	direction := cmp.Compare(yPos, float64(ls.GetMiddleLine()))
+	if direction == 0 {
+		direction = -1
+	}
+
+	return direction
+
 }
 
 func (ls *LineStaff) GetYPosKeySig(pitch string, isFlat bool) float64 {

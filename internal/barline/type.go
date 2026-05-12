@@ -27,6 +27,11 @@ var (
 	}
 )
 
+var (
+	lineStyleRegular string = "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.9"
+	lineStyleHeavy   string = "fill:none;stroke:#000000;stroke-linecap:square;stroke-width:4.6"
+)
+
 type BarlineInfo struct {
 	XIncrement int
 }

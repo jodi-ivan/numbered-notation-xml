@@ -147,7 +147,6 @@ func GetGroupSlueTies(notes []*entity.NoteRenderer, staffLine lines.LineStaff) [
 }
 
 func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) VMargin {
-	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 
 	lineStaff := sline.NewLineStaff(timeSignature, keySignature)
 	lineStaff.Render(canv, y, notes[0].MeasureNumber, staffPos == 0)
@@ -226,6 +225,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		1: {}, -1: {},
 	}
 
+	canv.Group(`class="beam-groups"`)
 	for i, gr := range groupBeam {
 		if len(gr) == 0 {
 			continue
@@ -234,6 +234,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		margin.Merge(gMargin)
 		directions[direction] = append(directions[i], gr...)
 	}
+	canv.Gend()
 
 	for dir, locs := range directions {
 		for _, loc := range locs {
@@ -245,13 +246,12 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 	}
-
 	canv.Gend()
 
-	st := RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
-	margin.Merge(st)
-
-	canv.Gend()
+	if len(groupBeamSlurTies) > 0 {
+		st := RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
+		margin.Merge(st)
+	}
 
 	for _, note := range notes {
 		if note.Note == 0 {

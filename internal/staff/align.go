@@ -147,11 +147,17 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		}
 	}
 
+	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 	margin := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
+	RenderMeasureTopping(ctx, y+10, canv, flatten, true)
+	canv.Gend()
 
 	stafflines := lines.NewLineStaffWithLines(ts, ks, y)
 
 	yPos := y + gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom)
+
+	canv.Group(`class="numbered"`)
+
 	for _, measure := range noteRenderer {
 
 		canv.Group("class='measure-align'", fmt.Sprintf("number='%d'", measure[0].MeasureNumber))
@@ -170,8 +176,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	rsa.Lyric.RenderHypen(ctx, yPos, canv, flatten)
 	rsa.Rhythm.RenderSlurTies(ctx, yPos, canv, slurTiesNote, float64(lastPos))
-	RenderMeasureTopping(ctx, y+10, canv, flatten, true)
 	RenderMeasureTopping(ctx, yPos, canv, flatten)
+	canv.Gend()
 	canv.Gend()
 
 	// canv.Circle(int(margin.Top.X), int(margin.Top.Y), 2, "stroke-width:1;fill:none;stroke:#FF0000")

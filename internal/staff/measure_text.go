@@ -77,7 +77,7 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 		for i, pair := range pairs {
 			x1 := int(math.Round(pair[0].X)) + offsetStart[pairsBar[i][0]]
 			x2 := int(math.Round(pair[1].X)) - offsetEnd[pairsBar[i][1]] - 5
-			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:60%"`)
+			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:60%;font-family:Old Standard TT;"`)
 			// vertical line at start
 			canv.Line(
 				x1, int(math.Round(pair[0].Y))-y1Offset,
@@ -110,6 +110,8 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv 
 	dashSet := map[int][2]entity.Coordinate{}
 
 	for notePos, note := range notes {
+
+		noteMarginTop := 0.0
 		if !hasStaffText && len(note.MeasureText) > 0 {
 			canv.Group("class='staff-text'")
 		}
@@ -130,7 +132,8 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv 
 			}
 
 			if len(linestaff) > 0 {
-				offset += int(text.GetTextMarginBottom(linestaff[0], notes, notePos))
+				noteMarginTop = text.GetTextMarginBottom(linestaff[0], notes, notePos)
+				offset += int(noteMarginTop)
 			}
 
 			for i, t := range note.MeasureText {
@@ -166,6 +169,10 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv 
 				Y: float64(y),
 			}
 
+			if len(linestaff) > 0 {
+				loc.Y -= noteMarginTop
+			}
+
 			if dashType == musicxml.DirectionDashesTypeStop {
 				loc.X = float64(notes[notePos-1].PositionX) + constant.LOWERCASE_LENGTH
 			}
@@ -174,7 +181,9 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv 
 			case musicxml.DirectionDashesTypeStart:
 				pair[0] = loc
 			case musicxml.DirectionDashesTypeStop:
+				loc.Y = pair[0].Y
 				pair[1] = loc
+
 			}
 			dashSet[num] = pair
 		}

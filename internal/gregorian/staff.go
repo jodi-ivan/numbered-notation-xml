@@ -9,6 +9,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -25,12 +26,12 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		DefaultBottom: lineStaff.GetBottomLine(),
 	}
 
-	groupBeam := [][]CoordinateWithNoteLength{{}}
+	groupBeam := [][]entity.CoordinateWithNoteLength{{}}
 
 	canv.Group(`class="notes"`, `style="font-size:2em"`)
 	currentMeasure := 0
 
-	groupBeamSlurTies := GetGroupSlueTies(notes, lineStaff)
+	groupBeamSlurTies := rhythm.GetGroupSlueTies(notes, lineStaff)
 
 	for i, note := range notes {
 
@@ -57,14 +58,14 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 				"&#xF0E2;", `style="font-size:1.3em"`)
 
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
-				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+				groupBeam = append(groupBeam, []entity.CoordinateWithNoteLength{})
 			}
 			continue
 		}
 		if note.IsRest {
 			canv.TextUnescaped(float64(note.PositionX), float64(lineStaff.GetMiddleLine()), restHex[note.NoteLength])
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
-				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+				groupBeam = append(groupBeam, []entity.CoordinateWithNoteLength{})
 			}
 			continue
 		}
@@ -80,7 +81,7 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 		}
 
 		var noteMargin VMargin
-		pairs := []SlurTieGroup{}
+		pairs := []rhythm.SlurTieGroup{}
 		noteMargin, groupBeam, pairs = RenderNote(ctx, canv, lineStaff, groupBeam, groupBeamSlurTies, i, notes, timeSignature, keySignature)
 		margin.Merge(noteMargin)
 
@@ -96,8 +97,8 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 	assignStemDirection(directions, notes)
 
 	if len(groupBeamSlurTies) > 0 {
-		st := RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
-		margin.Merge(st)
+		st := rhythm.RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
+		margin.Set(st[:]...)
 	}
 	setMarginTop(notes, lineStaff)
 

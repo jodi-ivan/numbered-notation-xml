@@ -4,7 +4,6 @@ import (
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
 type VMargin struct {
@@ -26,9 +25,12 @@ func (m *VMargin) SetBottom(margin entity.Coordinate) {
 	}
 }
 
-func (m *VMargin) Set(margin entity.Coordinate) {
-	m.SetTop(margin)
-	m.SetBottom(margin)
+func (m *VMargin) Set(margin ...entity.Coordinate) {
+	for _, v := range margin {
+		m.SetTop(v)
+		m.SetBottom(v)
+
+	}
 }
 
 func (m *VMargin) Merge(margin VMargin) {
@@ -57,15 +59,6 @@ type StemInfo struct {
 	HighestYPosition   entity.Coordinate
 	LowestYPosition    entity.Coordinate
 	Flip               bool
-}
-
-type CoordinateWithNoteLength struct {
-	entity.Coordinate
-	NoteLength musicxml.NoteLength
-	Beam       map[int]entity.Beam
-	Direction  *int
-	NoteID     string
-	Tuplet     *musicxml.Tuplet
 }
 
 type SlurTieGroup struct {

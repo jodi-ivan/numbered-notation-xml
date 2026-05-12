@@ -2,12 +2,13 @@ package gregorian
 
 import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderGroupBeam(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][]CoordinateWithNoteLength, groupBeamSlurTies []SlurTieGroup) (map[int][]CoordinateWithNoteLength, VMargin) {
-	directions := map[int][]CoordinateWithNoteLength{
+func RenderGroupBeam(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, groupBeamSlurTies []rhythm.SlurTieGroup) (map[int][]entity.CoordinateWithNoteLength, VMargin) {
+	directions := map[int][]entity.CoordinateWithNoteLength{
 		1: {}, -1: {},
 	}
 

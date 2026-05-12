@@ -9,36 +9,37 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo {
-	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
+func RenderStemUp(canv canvas.Canvas, lines [5]int, pos ...entity.CoordinateWithNoteLength) StemInfo {
+	start, end := []entity.CoordinateWithNoteLength{}, []entity.CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 9
 		y1, y2 := v.Y, v.Y-24
-		start = append(start, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y1), NoteLength: v.NoteLength, Beam: v.Beam})
-		end = append(end, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y2), NoteLength: v.NoteLength, Beam: v.Beam})
+		start = append(start, entity.CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y1), NoteLength: v.NoteLength, Beam: v.Beam})
+		end = append(end, entity.CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y2), NoteLength: v.NoteLength, Beam: v.Beam})
 	}
 
 	return renderStem(canv, lines, 1, start, end)
 }
 
-func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...CoordinateWithNoteLength) StemInfo {
-	start, end := []CoordinateWithNoteLength{}, []CoordinateWithNoteLength{}
+func RenderStemDown(canv canvas.Canvas, lines [5]int, pos ...entity.CoordinateWithNoteLength) StemInfo {
+	start, end := []entity.CoordinateWithNoteLength{}, []entity.CoordinateWithNoteLength{}
 	for _, v := range pos {
 		x := float64(v.X) + 0.5
 		y1, y2 := (v.Y + 2), (v.Y + 28)
-		start = append(start, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y1), NoteLength: v.NoteLength, Beam: v.Beam})
-		end = append(end, CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y2), NoteLength: v.NoteLength, Beam: v.Beam})
+		start = append(start, entity.CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y1), NoteLength: v.NoteLength, Beam: v.Beam})
+		end = append(end, entity.CoordinateWithNoteLength{Coordinate: entity.NewCoordinate(x, y2), NoteLength: v.NoteLength, Beam: v.Beam})
 	}
 
 	return renderStem(canv, lines, -1, start, end)
 
 }
 
-func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []CoordinateWithNoteLength) StemInfo {
+func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []entity.CoordinateWithNoteLength) StemInfo {
 
 	var additional, clampY1, clampY2 float64
 	lowestYPosition := entity.NewCoordinate(0, float64(lines[4]))
@@ -144,7 +145,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []Co
 
 }
 
-func getDirectionAccumulative(slurties []SlurTieGroup, noteID string) (int, bool) {
+func getDirectionAccumulative(slurties []rhythm.SlurTieGroup, noteID string) (int, bool) {
 	accumulated := 0
 	foundCount := 0
 
@@ -158,7 +159,7 @@ func getDirectionAccumulative(slurties []SlurTieGroup, noteID string) (int, bool
 	return accumulated, foundCount > 0
 }
 
-func renderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lineStaff lines.LineStaff, slurties []SlurTieGroup) (VMargin, int) {
+func renderGroupBeam(canv canvas.Canvas, groupBeam []entity.CoordinateWithNoteLength, lineStaff lines.LineStaff, slurties []rhythm.SlurTieGroup) (VMargin, int) {
 
 	topStaffLine := lineStaff.GetTopLine()
 	bottomStaffLine := lineStaff.GetBottomLine()
@@ -173,7 +174,7 @@ func renderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 	farthestRank := slices.Clone(groupBeam)
 
-	slices.SortFunc(farthestRank, func(a, b CoordinateWithNoteLength) int {
+	slices.SortFunc(farthestRank, func(a, b entity.CoordinateWithNoteLength) int {
 		return cmp.Compare(math.Abs(a.Y-float64(middleStaffLine)), math.Abs(b.Y-float64(middleStaffLine)))
 	})
 	farthest := farthestRank[len(farthestRank)-1]
@@ -234,7 +235,7 @@ func renderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 		canv.LineFloat64(startPos.X+9, y1Pos+stemOffset-23, endPos.X+9, y2Pos+stemOffset-23, `style="fill:none;stroke:#000000;stroke-linecap:butt;stroke-width:3"`)
 	}
 
-	tupletPair := [][2]CoordinateWithNoteLength{}
+	tupletPair := [][2]entity.CoordinateWithNoteLength{}
 	for _, v := range groupBeam {
 		if v.Tuplet == nil {
 			continue
@@ -242,7 +243,7 @@ func renderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 		switch v.Tuplet.Type {
 		case musicxml.TupletTypeStart:
-			tupletPair = append(tupletPair, [2]CoordinateWithNoteLength{v})
+			tupletPair = append(tupletPair, [2]entity.CoordinateWithNoteLength{v})
 
 		case musicxml.TupletTypeStop:
 			pair := tupletPair[len(tupletPair)-1]
@@ -277,7 +278,7 @@ func renderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 	}
 
 	total16 := 0
-	pair := [][2]CoordinateWithNoteLength{{}}
+	pair := [][2]entity.CoordinateWithNoteLength{{}}
 	for _, v := range groupBeam {
 		if len(v.Beam) > 1 {
 			total16++
@@ -286,7 +287,7 @@ func renderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, l
 
 		switch b.Type {
 		case musicxml.NoteBeamTypeBegin:
-			pair = append(pair, [2]CoordinateWithNoteLength{v})
+			pair = append(pair, [2]entity.CoordinateWithNoteLength{v})
 			continue
 		case musicxml.NoteBeamTypeEnd:
 			currPair := pair[len(pair)-1]

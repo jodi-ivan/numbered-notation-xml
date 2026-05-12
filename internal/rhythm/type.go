@@ -32,3 +32,17 @@ type BeamLine struct {
 	End    entity.Coordinate
 	Number int
 }
+
+type SlurTieGroup struct {
+	AccumulativeDirection int
+
+	Start entity.Coordinate
+	End   entity.Coordinate
+
+	NoteMember []string
+	Ties       *entity.Slur
+	Slur       *entity.Slur
+
+	MaxY float64
+	MinY float64
+}

@@ -8,6 +8,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	stfline "github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
@@ -37,7 +38,7 @@ func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.Not
 
 }
 
-func assignStemDirection(directions map[int][]CoordinateWithNoteLength, notes []*entity.NoteRenderer) {
+func assignStemDirection(directions map[int][]entity.CoordinateWithNoteLength, notes []*entity.NoteRenderer) {
 	notesMap := map[string]*entity.NoteRenderer{}
 
 	for _, note := range notes {
@@ -72,7 +73,7 @@ func setMarginTop(notes []*entity.NoteRenderer, lineStaff lines.LineStaff) {
 
 	}
 }
-func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]CoordinateWithNoteLength, slursties []SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]CoordinateWithNoteLength, []SlurTieGroup) {
+func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, slursties []rhythm.SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]entity.CoordinateWithNoteLength, []rhythm.SlurTieGroup) {
 
 	canv.Group(`class="note"`)
 	defer func() {
@@ -88,7 +89,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 		Bottom: entity.NewCoordinate(0, float64(staffLines.GetBottomLine())),
 	}
 
-	pairs := []SlurTieGroup{}
+	pairs := []rhythm.SlurTieGroup{}
 	yPos := staffLines.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
 	currentPos := entity.NewCoordinate(float64(note.PositionX), yPos)
 	margin.Set(currentPos)
@@ -180,7 +181,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 			note.AbsoluteNote, accidental, note.AbsoluteOctave,
 			fmt.Sprintf(`value="%.f"`, note.NoteValue), `style="fill:#0000DD"`)
 
-		info := renderStemAndBeamMap[direction](canv, lines, CoordinateWithNoteLength{
+		info := renderStemAndBeamMap[direction](canv, lines, entity.CoordinateWithNoteLength{
 			Coordinate: entity.NewCoordinate(float64(xPos), yPos),
 			NoteLength: note.NoteLength,
 			Beam:       note.Beam,
@@ -191,7 +192,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 		margin.SetBottom(info.LowestYPosition)
 		margin.SetTop(info.HighestYPosition)
 
-		pair := SlurTieGroup{
+		pair := rhythm.SlurTieGroup{
 			AccumulativeDirection: direction,
 			NoteMember: []string{
 				note.UUID,
@@ -207,7 +208,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 		pairs = append(pairs, pair)
 
 		if remaining < 1 {
-			groupBeam = append(groupBeam, []CoordinateWithNoteLength{
+			groupBeam = append(groupBeam, []entity.CoordinateWithNoteLength{
 				{
 					Coordinate: entity.NewCoordinate(float64(xPos), yPos),
 					NoteLength: noteType[remaining],
@@ -250,7 +251,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 	if len(note.Beam) == 0 || mergeNote {
 		canv.Group(`group="false"`, fmt.Sprintf(`follow-consensus="%v"`, memberGroup > 0), fmt.Sprintf(`direction="%d"`, accumulative))
 
-		stemInfo := renderStemAndBeamMap[direction](canv, lines, CoordinateWithNoteLength{
+		stemInfo := renderStemAndBeamMap[direction](canv, lines, entity.CoordinateWithNoteLength{
 			Coordinate: entity.NewCoordinate(xPos, yPos),
 			NoteLength: note.NoteLength,
 			Beam:       note.Beam,
@@ -266,13 +267,13 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 		margin.SetTop(stemInfo.HighestYPosition)
 
 		if mergeNote {
-			groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+			groupBeam = append(groupBeam, []entity.CoordinateWithNoteLength{})
 		}
 
 		return margin, groupBeam, pairs
 	}
 
-	groupBeam[len(groupBeam)-1] = append(groupBeam[len(groupBeam)-1], CoordinateWithNoteLength{
+	groupBeam[len(groupBeam)-1] = append(groupBeam[len(groupBeam)-1], entity.CoordinateWithNoteLength{
 		Coordinate: entity.NewCoordinate(xPos, yPos),
 		NoteLength: note.NoteLength,
 		Beam:       note.Beam,
@@ -280,7 +281,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 		Tuplet:     note.Tuplet,
 	})
 	if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
-		groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
+		groupBeam = append(groupBeam, []entity.CoordinateWithNoteLength{})
 	}
 	return margin, groupBeam, pairs
 

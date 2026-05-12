@@ -9,7 +9,6 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -184,10 +183,11 @@ func (ni *numberedInteractor) RenderNote(ctx context.Context, canv canvas.Canvas
 			canv.Text(n.PositionX, y, ".", fmt.Sprintf(`uuid="%s"`, n.UUID))
 		} else if breathpause.IsBreathMark(n) {
 			xPos := n.PositionX
-			if n.PositionX-measure[notePos-1].PositionX <= MIN_DISTANCE_BREATH {
-				xPos += (AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
-			}
-			canv.Text(xPos, y-Y_OFFSET_BREATH, ",")
+			prevNoteXPos := measure[notePos-1].PositionX
+
+			canv.TextUnescaped(
+				breathpause.AdjustPosition(xPos, prevNoteXPos),
+				float64(y)-Y_OFFSET_BREATH, ",")
 		} else if n.Barline != nil {
 			ni.Barline.RenderBarline(ctx, canv, *n.Barline,
 				entity.NewCoordinate(float64(n.PositionX), float64(y)))

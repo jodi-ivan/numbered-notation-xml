@@ -27,14 +27,19 @@ func getAccidental(key keysig.Key, note *entity.NoteRenderer, accidentalsBefore 
 	return hexMap[note.AbsoluteAccidental]
 }
 
-func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.NoteLength, note string, accidental string, octave int, attrs ...string) {
-	attrs = append(attrs, fmt.Sprintf(`pitch="%s"`, note), fmt.Sprintf(`octave="%d"`, octave))
+func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.NoteLength, note string, accidental string, octave, topLineStaff int, dotted bool) {
 	if accidental != "" {
 		canv.TextUnescaped(pos.X-8, pos.Y, accidental, `style="font-size:0.8em"`)
 	}
-	canv.TextUnescaped(pos.X, pos.Y,
-		beanNoteHex[noteType],
-		attrs...)
+	canv.TextUnescaped(pos.X, pos.Y, beanNoteHex[noteType])
+
+	if dotted {
+		dotPos := pos.Y
+		if (int(dotPos)-topLineStaff)%STAFF_SPACE_WIDTH == 0 {
+			dotPos -= 4
+		}
+		canv.TextUnescaped(pos.X+12, dotPos, "&#xF060;")
+	}
 
 }
 
@@ -73,6 +78,114 @@ func setMarginTop(notes []*entity.NoteRenderer, lineStaff lines.LineStaff) {
 
 	}
 }
+
+// getAdditionalNotes when a whole note length cant be represented as one note
+// we need to add additional notes and register both of them in ties.
+func getAdditionalNotes(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer, staffLines lines.LineStaff, notePos, accumulativeDirection int, groupBeam *[][]entity.CoordinateWithNoteLength) *entity.NoteRenderer {
+	note := notes[notePos]
+
+	yPos := staffLines.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
+
+	// check it can represent by a note
+	nonDottedValue := ts.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
+	dottedValue := ts.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength, Dot: []*musicxml.Dot{{}}})
+	hasRemainingNote := note.NoteValue != dottedValue && note.NoteValue != nonDottedValue
+	if !hasRemainingNote {
+		return nil
+	}
+
+	// check the dots the next and next two notes.
+	sameNextTwoDottedReplaced := notePos+2 < len(notes) && (notes[notePos+2].AbsoluteNote == note.AbsoluteNote) && notes[notePos+2].Tie != nil
+	sameNextDotted := notePos+1 < len(notes) && (notes[notePos+1].IsDotted || notes[notePos+1].NoteLength == note.NoteLength)
+	sameNexTwoDotted := notePos+2 < len(notes) && (notes[notePos+2].IsDotted || notes[notePos+2].NoteLength == note.NoteLength)
+
+	hasTiedNotes := sameNextTwoDottedReplaced || sameNextDotted || sameNexTwoDotted
+	if !hasTiedNotes {
+		return nil
+	}
+
+	// merged that dotted in the next note numbered can be represented as one note in standard notation
+	// half notes that represented as numbered and dotted. --> represented as a quarter note in standard notation
+	merged := note.NoteLength == musicxml.NoteLengthEighth && notePos < len(notes)-1 && notes[notePos+1].IsDotted && notes[notePos+1].NoteLength == note.NoteLength
+
+	currentKeysig := ts.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
+	dottedHalf := notePos < len(notes)-1 && notes[notePos+1].IsDotted && len(notes[notePos+1].Beam) >= 1
+	quarterNoteInCompound := currentKeysig.IsCompoundTime() && note.NoteLength == musicxml.NoteLengthQuarter && dottedHalf
+
+	merged = merged || quarterNoteInCompound
+
+	if merged {
+		return nil
+	}
+
+	// since this is inserted additional notes, so the grouping as ties is guaranteed
+	// just use the the existing group consensus.
+	// this only enforce the stem, needs mechanism for the rendering slurties direction
+	direction := -1
+	if accumulativeDirection >= 0 {
+		direction = 1
+	}
+
+	note.StemDirection = direction
+
+	remaining := note.NoteValue - nonDottedValue
+	nextNotePos := 2
+	xPos := notes[notePos+2].PositionX
+
+	if note.NoteLength == musicxml.NoteLengthEighth {
+		xPos = notes[notePos+1].PositionX
+		nextNotePos = 1
+	}
+
+	result := &entity.NoteRenderer{
+		AbsoluteNote:       note.AbsoluteNote,
+		AbsoluteAccidental: note.AbsoluteAccidental,
+		AbsoluteOctave:     note.AbsoluteOctave,
+		PositionX:          xPos,
+		UUID:               notes[notePos+nextNotePos].UUID,
+		NoteLength:         noteType[remaining],
+	}
+
+	if _, ok := noteType[remaining]; !ok {
+		if remaining == 1.5 {
+			remaining = 1
+			result.IsDotted = true
+		}
+	}
+
+	result.NoteLength = noteType[remaining]
+
+	if remaining < 1 {
+		*groupBeam = append(*groupBeam, []entity.CoordinateWithNoteLength{
+			{
+				Coordinate: entity.NewCoordinate(float64(xPos), yPos),
+				NoteLength: noteType[remaining],
+				NoteID:     notes[notePos+nextNotePos].UUID,
+			},
+		})
+	}
+
+	return result
+}
+
+func isDottedNote(notes []*entity.NoteRenderer, notePos int, ts timesig.TimeSignature) bool {
+
+	note := notes[notePos]
+	dottedValue := ts.GetNoteLength(context.Background(), note.MeasureNumber, musicxml.Note{Type: note.NoteLength, Dot: []*musicxml.Dot{{}}})
+
+	dottedHalf := notePos < len(notes)-1 && notes[notePos+1].IsDotted && len(notes[notePos+1].Beam) >= 1
+	dottedBeat := note.NoteValue == dottedValue
+
+	merged := note.NoteLength == musicxml.NoteLengthEighth && notePos < len(notes)-1 && notes[notePos+1].IsDotted && notes[notePos+1].NoteLength == note.NoteLength
+
+	currentKeysig := ts.GetTimesignatureOnMeasure(context.Background(), note.MeasureNumber)
+	quarterNoteInCompound := currentKeysig.IsCompoundTime() && note.NoteLength == musicxml.NoteLengthQuarter && dottedHalf
+
+	merged = merged || quarterNoteInCompound
+
+	return (dottedHalf || dottedBeat) && (!merged || (merged && quarterNoteInCompound && note.NoteValue-1 == 2))
+}
+
 func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, slursties []rhythm.SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]entity.CoordinateWithNoteLength, []rhythm.SlurTieGroup) {
 
 	canv.Group(`class="note"`)
@@ -94,28 +207,9 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 	currentPos := entity.NewCoordinate(float64(note.PositionX), yPos)
 	margin.Set(currentPos)
 
-	ts := timeSignature.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
-
-	nonDottedValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength})
-	dottedValue := timeSignature.GetNoteLength(ctx, note.MeasureNumber, musicxml.Note{Type: note.NoteLength, Dot: []*musicxml.Dot{{}}})
-
-	merged := note.NoteLength == musicxml.NoteLengthEighth && notePos < len(notes)-1 && notes[notePos+1].IsDotted && notes[notePos+1].NoteLength == note.NoteLength
-	dottedHalf := notePos < len(notes)-1 && notes[notePos+1].IsDotted && len(notes[notePos+1].Beam) >= 1
-	dottedBeat := note.NoteValue == dottedValue
-	quarterNoteInCompound := ts.IsCompoundTime() && note.NoteLength == musicxml.NoteLengthQuarter && dottedHalf
-
-	merged = merged || quarterNoteInCompound
-
-	beamType := note.NoteLength
-
-	hasRemainingNote := note.NoteValue != dottedValue && note.NoteValue != nonDottedValue
-	sameNextTwoDottedReplaced := notePos+2 < len(notes) && (notes[notePos+2].IsDotted || notes[notePos+2].AbsoluteNote == note.AbsoluteNote)
-	sameNextDotted := notePos+1 < len(notes) && (notes[notePos+1].IsDotted || notes[notePos+1].NoteLength == note.NoteLength)
-	sameNexTwoDotted := notePos+2 < len(notes) && (notes[notePos+2].IsDotted || notes[notePos+2].NoteLength == note.NoteLength)
-
-	hasTiedNotes := sameNextTwoDottedReplaced || sameNextDotted || sameNexTwoDotted
 	accidental := getAccidental(keySignature.GetKeyOnMeasure(ctx, note.MeasureNumber), note, nil)
 
+	beamType := note.NoteLength
 	direction := staffLines.GetStemDirectionCompare(yPos)
 
 	accumulative := 0
@@ -136,7 +230,8 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 
 	note.StemDirection = direction
 
-	if !merged && hasRemainingNote && hasTiedNotes {
+	additionalNotes := getAdditionalNotes(ctx, timeSignature, notes, staffLines, notePos, accumulative, &groupBeam)
+	if additionalNotes != nil {
 		// since this is inserted additional notes, so the grouping as ties is guaranteed
 		// just use the the existing group consensus.
 		// this only enforce the stem, needs mechanism for the rendering slurties direction
@@ -145,61 +240,15 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 		} else {
 			direction = -1
 		}
-
-		note.StemDirection = direction
-
-		remaining := note.NoteValue - nonDottedValue
-		nextNotePos := 2
-		xPos := notes[notePos+2].PositionX
-
-		if note.NoteLength == musicxml.NoteLengthEighth {
-			xPos = notes[notePos+1].PositionX
-			nextNotePos = 1
-		}
-
-		noteType := map[float64]musicxml.NoteLength{
-			0.25: musicxml.NoteLength16th,
-			0.5:  musicxml.NoteLengthEighth,
-			1:    musicxml.NoteLengthQuarter,
-			2:    musicxml.NoteLengthHalf,
-		}
-
-		if _, ok := noteType[remaining]; !ok {
-			if remaining == 1.5 {
-				remaining = 1
-				dotPos := yPos
-				if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
-					dotPos -= 4
-				}
-				canv.TextUnescaped(float64(xPos+12), dotPos, "&#xF060;", `style="fill:#0000DD"`)
-			}
-		}
-
-		renderBean(
-			canv,
-			entity.NewCoordinate(float64(xPos), yPos), noteType[remaining],
-			note.AbsoluteNote, accidental, note.AbsoluteOctave,
-			fmt.Sprintf(`value="%.f"`, note.NoteValue), `style="fill:#0000DD"`)
-
-		info := renderStemAndBeamMap[direction](canv, lines, entity.CoordinateWithNoteLength{
-			Coordinate: entity.NewCoordinate(float64(xPos), yPos),
-			NoteLength: note.NoteLength,
-			Beam:       note.Beam,
-			NoteID:     note.UUID,
-			Tuplet:     note.Tuplet,
-		})
-
-		margin.SetBottom(info.LowestYPosition)
-		margin.SetTop(info.HighestYPosition)
-
+		addtnlPos := entity.NewCoordinate(float64(additionalNotes.PositionX), yPos)
 		pair := rhythm.SlurTieGroup{
 			AccumulativeDirection: direction,
 			NoteMember: []string{
 				note.UUID,
-				notes[notePos+nextNotePos].UUID,
+				additionalNotes.UUID,
 			},
-			Start: currentPos,
-			End:   entity.NewCoordinate(float64(notes[notePos+nextNotePos].PositionX), yPos),
+			Start: entity.NewCoordinate(float64(note.PositionX), yPos),
+			End:   addtnlPos,
 			Ties: &entity.Slur{
 				Number: 1,
 			},
@@ -207,36 +256,29 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 
 		pairs = append(pairs, pair)
 
-		if remaining < 1 {
-			groupBeam = append(groupBeam, []entity.CoordinateWithNoteLength{
-				{
-					Coordinate: entity.NewCoordinate(float64(xPos), yPos),
-					NoteLength: noteType[remaining],
-					NoteID:     notes[notePos+nextNotePos].UUID,
-				},
-			})
-		}
+		renderBean(canv,
+			addtnlPos,
+			additionalNotes.NoteLength, note.AbsoluteNote, accidental, note.AbsoluteOctave, staffLines.GetTopLine(), additionalNotes.IsDotted)
+
+		renderStemAndBeamMap[direction](canv, lines, entity.CoordinateWithNoteLength{
+			Coordinate: addtnlPos,
+			NoteLength: note.NoteLength,
+			Beam:       note.Beam,
+			NoteID:     note.UUID,
+			Tuplet:     note.Tuplet,
+		})
+
+		RenderLedgerLine(canv, addtnlPos, staffLines.GetTopLine(), staffLines.GetBottomLine())
+
 	}
 
-	RenderLedgerLine(canv, currentPos, staffLines.GetTopLine(), staffLines.GetBottomLine())
 	xPos := float64(note.PositionX)
 
-	marker := `style="fill:#DD0000"`
-	if note.NoteValue == nonDottedValue || note.NoteValue == dottedValue {
-		marker = ""
-	}
+	isDotted := isDottedNote(notes, notePos, timeSignature)
 	renderBean(canv,
 		entity.NewCoordinate(xPos, yPos),
-		beamType, note.AbsoluteNote, accidental, note.AbsoluteOctave,
-		fmt.Sprintf(`value="%.f"`, note.NoteValue), fmt.Sprintf(`uuid="%s"`, note.UUID), marker)
-
-	if (dottedHalf || dottedBeat) && (!merged || (merged && quarterNoteInCompound && note.NoteValue-1 == 2)) {
-		dotPos := yPos
-		if (int(yPos)-initialY)%STAFF_SPACE_WIDTH == 0 {
-			dotPos -= 4
-		}
-		canv.TextUnescaped(xPos+12, dotPos, "&#xF060;")
-	}
+		beamType, note.AbsoluteNote, accidental, note.AbsoluteOctave, staffLines.GetTopLine(), isDotted)
+	RenderLedgerLine(canv, currentPos, staffLines.GetTopLine(), staffLines.GetBottomLine())
 
 	if note.NoteLength == musicxml.NoteLengthWhole {
 
@@ -246,10 +288,14 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 	nextNoteIsDotted := notePos < len(notes)-1 && notes[notePos+1].IsDotted
 	nextNoteIsSameNoteLength := notePos < len(notes)-1 && notes[notePos+1].NoteLength == note.NoteLength
 
+	dottedHalf := notePos < len(notes)-1 && notes[notePos+1].IsDotted && len(notes[notePos+1].Beam) >= 1
+	ts := timeSignature.GetTimesignatureOnMeasure(ctx, note.MeasureNumber)
+	quarterNoteInCompound := ts.IsCompoundTime() && note.NoteLength == musicxml.NoteLengthQuarter && dottedHalf
+
 	mergeNote := note.NoteLength == musicxml.NoteLengthEighth && nextNoteIsDotted && nextNoteIsSameNoteLength
 	mergeNote = mergeNote || quarterNoteInCompound
 	if len(note.Beam) == 0 || mergeNote {
-		canv.Group(`group="false"`, fmt.Sprintf(`follow-consensus="%v"`, memberGroup > 0), fmt.Sprintf(`direction="%d"`, accumulative))
+		canv.Group(fmt.Sprintf(`follow-consensus="%v"`, memberGroup > 0), fmt.Sprintf(`direction="%d"`, accumulative))
 
 		stemInfo := renderStemAndBeamMap[direction](canv, lines, entity.CoordinateWithNoteLength{
 			Coordinate: entity.NewCoordinate(xPos, yPos),

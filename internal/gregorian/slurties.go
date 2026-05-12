@@ -116,12 +116,7 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][
 			-1: st.MinY,
 			1:  st.MaxY,
 		}
-		// direction := st.AccumulativeDirection
-		// if direction < 0 {
-		// 	direction = -1
-		// } else {
-		// 	direction = 1
-		// }
+
 		pull := entity.NewCoordinate(
 			start.X+((end.X-start.X)/2),
 			getYVal[direction])

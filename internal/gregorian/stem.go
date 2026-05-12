@@ -158,7 +158,7 @@ func getDirectionAccumulative(slurties []SlurTieGroup, noteID string) (int, bool
 	return accumulated, foundCount > 0
 }
 
-func RenderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lineStaff lines.LineStaff, slurties []SlurTieGroup) (VMargin, int) {
+func renderGroupBeam(canv canvas.Canvas, groupBeam []CoordinateWithNoteLength, lineStaff lines.LineStaff, slurties []SlurTieGroup) (VMargin, int) {
 
 	topStaffLine := lineStaff.GetTopLine()
 	bottomStaffLine := lineStaff.GetBottomLine()

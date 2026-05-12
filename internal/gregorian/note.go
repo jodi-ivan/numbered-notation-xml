@@ -3,10 +3,12 @@ package gregorian
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	stfline "github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -33,6 +35,42 @@ func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.Not
 		beanNoteHex[noteType],
 		attrs...)
 
+}
+
+func assignStemDirection(directions map[int][]CoordinateWithNoteLength, notes []*entity.NoteRenderer) {
+	notesMap := map[string]*entity.NoteRenderer{}
+
+	for _, note := range notes {
+		notesMap[note.UUID] = note
+	}
+
+	// assign direction
+	for dir, locs := range directions {
+		for _, loc := range locs {
+			notesMap[loc.NoteID].StemDirection = dir
+		}
+	}
+}
+
+// calculate margin top
+func setMarginTop(notes []*entity.NoteRenderer, lineStaff lines.LineStaff) {
+
+	for _, note := range notes {
+		if note.Note == 0 {
+			continue
+		}
+		beanPos := lineStaff.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
+		maxY := beanPos
+
+		if note.StemDirection == 1 {
+			maxY = beanPos + math.Floor(float64(note.StemDirection)*(2.5*lines.STAFF_SPACE_WIDTH))
+		}
+
+		if maxY < float64(lineStaff.GetTopLine()) {
+			note.MarginTopFromStaff = lineStaff.GetTopLine() - int(maxY)
+		}
+
+	}
 }
 func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]CoordinateWithNoteLength, slursties []SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]CoordinateWithNoteLength, []SlurTieGroup) {
 

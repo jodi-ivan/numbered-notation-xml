@@ -40,8 +40,8 @@ func GetTextMarginBottom(stafflines lines.LineStaff, notes []*entity.NoteRendere
 			}
 		}
 
-		if maxTextWidth < def {
-			maxTextWidth = def
+		if maxTextWidth < textWidth {
+			maxTextWidth = textWidth
 		}
 	}
 
@@ -64,11 +64,10 @@ func GetTextMarginBottom(stafflines lines.LineStaff, notes []*entity.NoteRendere
 	}
 
 	result := 0
-
 	for pos := i; pos < len(notes); pos++ {
 		note := notes[pos]
 
-		if notes[pos].PositionX >= right {
+		if note.PositionX >= right && len(note.MeasureDash) == 0 {
 			break
 		}
 

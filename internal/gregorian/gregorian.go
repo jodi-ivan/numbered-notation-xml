@@ -7,11 +7,9 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	sline "github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
@@ -183,12 +181,14 @@ func RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, n
 
 		if breathpause.IsBreathMark(note) {
 
-			xPos := float64(note.PositionX)
-			if note.PositionX-notes[i-1].PositionX <= numbered.MIN_DISTANCE_BREATH {
-				xPos += (numbered.AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
-			}
+			posX := note.PositionX
+			prevNotePosX := notes[i-1].PositionX
 
-			canv.TextUnescaped(xPos, float64(lineStaff.GetTopLine())-STAFF_SPACE_WIDTH, "&#xF0E2;", `style="font-size:1.3em"`)
+			canv.TextUnescaped(
+				breathpause.AdjustPosition(posX, prevNotePosX),
+				float64(lineStaff.GetTopLine())-STAFF_SPACE_WIDTH,
+				"&#xF0E2;", `style="font-size:1.3em"`)
+
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 				groupBeam = append(groupBeam, []CoordinateWithNoteLength{})
 			}

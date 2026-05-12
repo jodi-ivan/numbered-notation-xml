@@ -18,6 +18,15 @@ func New() BreathPause {
 	return &breathPauseInteractor{}
 }
 
+func AdjustPosition(posX, prevNotePosX int) float64 {
+	result := float64(posX)
+	if posX-prevNotePosX <= MIN_DISTANCE_BREATH {
+		result += (constant.AVERAGE_CHARACTER_WIDTH + constant.LOWERCASE_LENGTH) / 3
+	}
+
+	return result
+}
+
 func (bpi *breathPauseInteractor) SetAndGetBreathPauseRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note) *entity.NoteRenderer {
 	hasBreathMark := note.Notations != nil &&
 		note.Notations.Articulation != nil &&

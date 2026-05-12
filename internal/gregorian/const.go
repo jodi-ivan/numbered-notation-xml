@@ -85,3 +85,10 @@ var accidentalHexWithParentheses = map[musicxml.NoteAccidental]string{
 	musicxml.NoteAccidentalDoubleSharp: "&#xF0B0;",
 	musicxml.NoteAccidentalDoubleFlat:  "&#xF0B4;",
 }
+
+var noteType = map[float64]musicxml.NoteLength{
+	0.25: musicxml.NoteLength16th,
+	0.5:  musicxml.NoteLengthEighth,
+	1:    musicxml.NoteLengthQuarter,
+	2:    musicxml.NoteLengthHalf,
+}

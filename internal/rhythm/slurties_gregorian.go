@@ -263,7 +263,14 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][
 		if len(group) > 0 && group[0].NoteID != st.NoteMember[0] {
 			// you part of member, but not the root.
 			// we just follow the group rules instead of consensus
-			direction = GetYPosGroup(group, lineStaff)
+
+			// TODO: remove duplicate. that overalap between the group and the slur ties
+			direction = GetYPosGroup(group, lineStaff) + st.AccumulativeDirection
+			if direction < 0 {
+				direction = -1
+			} else {
+				direction = 1
+			}
 		}
 		isTies := false
 		var sluLineType musicxml.NoteSlurLineType
@@ -301,7 +308,7 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][
 			)
 		} else {
 			w := canv.Writer()
-			fmt.Fprintf(w, `<path d="%s" style="stroke-width: 0.5;stroke: #000000;" direction="%d"></path>`,
+			fmt.Fprintf(w, `<path d="%s" style="stroke-width: 0.4;stroke: #000000;" direction="%d"></path>`,
 				GenerateTaperedSlur(start.X, start.Y, pull.X, pull.Y, end.X, end.Y),
 				direction)
 		}

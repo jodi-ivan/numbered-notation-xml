@@ -42,7 +42,7 @@ func getFirstPos(notes []*entity.NoteRenderer) int {
 	return 0
 }
 
-func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int, repeatInfo *musicxml.RepeatInfo) int {
+func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
 
 	verse, ok := metadata.Verse[2] // for know hardcoded two for testing visual
 	if !ok {
@@ -71,12 +71,14 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 
 	syll := startPos
 
-	if syll >= 15 {
-		log.Println("adding", syll)
-		syll = 30 + (syll - 15)
-		log.Println("added", syll)
-		log.Println("")
+	lastOffset := 0
+	if len(prevRepeatInfos) > 0 {
+		lastOffset = prevRepeatInfos[len(prevRepeatInfos)-1].OffsetStart
+		if syll >= lastOffset {
+			syll = lastOffset*2 + (syll - lastOffset)
+		}
 	}
+
 	marginBottom := 0
 
 	li := lyric.NewLyric()
@@ -89,7 +91,6 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 
 		appendedLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
 
-		log.Println(syll, flattenSyll[syll].Text)
 		newLyric := []musicxml.Lyric{
 			{
 				Text: []musicxml.LyricText{
@@ -100,17 +101,19 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 			},
 		}
 
-		if repeatInfo != nil && syll <= repeatInfo.SyllCntEnd*2 {
-
+		if len(prevRepeatInfos) > 0 && syll < lastOffset*2 {
+			repeatInfo := prevRepeatInfos[len(prevRepeatInfos)-1]
 			syllRepeat := repeatInfo.OffsetStart + (syll % repeatInfo.OffsetStart)
-			newLyric = append(newLyric, musicxml.Lyric{
-				Verse: 2,
-				Text: []musicxml.LyricText{
-					{Value: flattenSyll[syllRepeat].Text}, // add the lyric to them
-				},
-				Syllabic: flattenSyll[syllRepeat].Type,
-				Number:   len(appendedLyric) + 2,
-			})
+			if syllRepeat < len(flattenSyll) {
+				newLyric = append(newLyric, musicxml.Lyric{
+					Verse: 2,
+					Text: []musicxml.LyricText{
+						{Value: flattenSyll[syllRepeat].Text}, // add the lyric to them
+					},
+					Syllabic: flattenSyll[syllRepeat].Type,
+					Number:   len(appendedLyric) + 2,
+				})
+			}
 
 		}
 		appendedLyric = append(appendedLyric, newLyric...)
@@ -119,11 +122,8 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 			marginBottom = info.MarginBottom
 		}
 
-		if syll == 14 {
-			log.Println("adding", syll)
-			syll = 30 + (syll - 15)
-			log.Println("added", syll)
-			log.Println("")
+		if syll == lastOffset-1 {
+			syll = lastOffset*2 + (syll - lastOffset)
 		}
 		syll++
 

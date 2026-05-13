@@ -163,7 +163,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					staffInfo.StartRenderOtherNotes = false
 				}
 
-				refreinStartNote = isRefrein
+				refreinStartNote = refreinStartNote || isRefrein
 			}
 
 			si.Rhythm.SetRhythmNotation(renderer, note, n)
@@ -207,7 +207,16 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if (data.ReffAtStart || staffInfo.StartRenderOtherNotes) || (measures[0].Number == 1 && !refreinStartNote) {
 			start := startSyllable
 
-			marginBottom := verse.LoadOtherVerse(notes, metadata, start, measure.RepeatInfo)
+			repeatInfo := data.RepeatInfo
+			if measure.RepeatInfo != nil {
+				if staffInfo.RepeatInfo == nil {
+					staffInfo.RepeatInfo = []*musicxml.RepeatInfo{}
+				}
+
+				staffInfo.RepeatInfo = append(staffInfo.RepeatInfo, measure.RepeatInfo)
+				repeatInfo = staffInfo.RepeatInfo
+			}
+			marginBottom := verse.LoadOtherVerse(notes, metadata, start, repeatInfo)
 			if staffInfo.MarginBottom < marginBottom {
 				staffInfo.MarginBottom = marginBottom
 			}

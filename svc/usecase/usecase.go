@@ -108,25 +108,16 @@ func ProcessRepeats(music *musicxml.MusicXML) {
 				repeatType = musicxml.RepeatInfoTypeClosing
 			}
 			measureMap[start].RepeatInfo = &musicxml.RepeatInfo{
-				Type:         repeatType,
-				SyllCntStart: syllCountMeasure[start][0],
-				SyllCntEnd:   syllCountMeasure[start][1],
-				OffsetStart:  syllCountMeasure[repeat[1]][1],
+				Type:          repeatType,
+				SyllCntStart:  syllCountMeasure[start][0],
+				SyllCntEnd:    syllCountMeasure[start][1],
+				OffsetStart:   syllCountMeasure[repeat[1]][1],
+				MeasureNumber: start,
 			}
 
 		}
 	}
 
-}
-
-func getRepeatType(idx, start, end int) musicxml.RepeatInfoType {
-	if idx == start {
-		return musicxml.RepeatInfoTypeOpening
-	}
-	if idx == end {
-		return musicxml.RepeatInfoTypeClosing
-	}
-	return musicxml.RepeatInfoTypeMiddle
 }
 
 func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum int, variant ...string) error {

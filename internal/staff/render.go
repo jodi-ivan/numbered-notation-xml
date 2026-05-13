@@ -32,9 +32,11 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			SyllableCount: info.SyllableCount,
 			IndexStart:    info.EndIndex,
 			ReffAtStart:   info.StartRenderOtherNotes,
+			RepeatInfo:    info.RepeatInfo,
 		}
 
 		info = si.RenderStaff(ctx, canv, x, relativeY, metadata, st, data)
+		info.RepeatInfo = append(data.RepeatInfo, info.RepeatInfo...)
 		relativeY = relativeY + 70 + info.MarginBottom
 		if info.ForceNewLine {
 			relativeY += oldMarginButtom
@@ -56,6 +58,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			SyllableCount: info.SyllableCount,
 			IndexStart:    info.EndIndex,
 			ReffAtStart:   info.StartRenderOtherNotes,
+			RepeatInfo:    info.RepeatInfo,
 		}
 		x = constant.LAYOUT_INDENT_LENGTH
 		info = si.RenderStaff(ctx, canv, x, relativeY, metadata, nil, data)

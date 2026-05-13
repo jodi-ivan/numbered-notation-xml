@@ -20,7 +20,8 @@ type RepeatInfo struct {
 	SyllCntStart int
 	SyllCntEnd   int
 
-	OffsetStart int
+	OffsetStart   int
+	MeasureNumber int
 }
 
 type Measure struct {

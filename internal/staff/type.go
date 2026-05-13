@@ -17,6 +17,7 @@ type StaffInfo struct {
 	StartRenderOtherNotes bool
 	ForceNewLine          bool
 	SyllableCount         int
+	RepeatInfo            []*musicxml.RepeatInfo
 }
 
 type StaffData struct {
@@ -26,6 +27,7 @@ type StaffData struct {
 	KeySig        keysig.KeySignature
 	IndexStart    int
 	ReffAtStart   bool
+	RepeatInfo    []*musicxml.RepeatInfo
 }
 type CoordinateWithTuplet struct {
 	entity.Coordinate

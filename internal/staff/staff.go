@@ -2,8 +2,6 @@ package staff
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 	"math"
 	"slices"
 
@@ -68,9 +66,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		pos = data.PrevNotes[len(data.PrevNotes)-1].IndexPosition + 1
 	}
 	for mi, measure := range measures {
-
-		raw, _ := json.MarshalIndent(measure.RepeatInfo, "", "    ")
-		log.Println(measure.Number, string(raw))
 
 		mSyllcount := 0
 		measure.Build()
@@ -212,7 +207,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if (data.ReffAtStart || staffInfo.StartRenderOtherNotes) || (measures[0].Number == 1 && !refreinStartNote) {
 			start := startSyllable
 
-			marginBottom := verse.LoadOtherVerse(notes, metadata, start)
+			marginBottom := verse.LoadOtherVerse(notes, metadata, start, measure.RepeatInfo)
 			if staffInfo.MarginBottom < marginBottom {
 				staffInfo.MarginBottom = marginBottom
 			}

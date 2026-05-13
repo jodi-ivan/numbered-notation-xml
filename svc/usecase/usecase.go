@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -49,108 +48,75 @@ type RepeatInfo struct {
 	OffsetSyllable int                     `json:"offsetSyllable"` // NEW
 }
 
-func ProcessRepeats(music *musicxml.MusicXML) {
-	bi := barline.NewBarline()
-	measures := music.Part.Measures
+func collectRepeat(measures []musicxml.Measure) [][2]int {
 
-	// First pass: calculate cumulative syllables from the beginning of the song
-	cumulativeSyllables := make([]int, len(measures)+1) // cumulativeSyllables[i] = syllables before measure i
-
+	result := [][2]int{}
+	// check if there is any repeat at all
 	for i := 0; i < len(measures); i++ {
+		for _, b := range measures[i].Barline {
+			if b.Repeat != nil {
+				switch b.Repeat.Direction {
+				case musicxml.BarLineRepeatDirectionForward:
+					result = append(result, [2]int{measures[i].Number})
+				case musicxml.BarLineRepeatDirectionBackward:
+					// closing
+					if len(result) == 0 {
+						result = append(result, [2]int{1}) // beginning of the measure
+					}
+					lastKnown := result[len(result)-1]
+					lastKnown[1] = measures[i].Number
+					result[len(result)-1] = lastKnown
+				}
+			}
+		}
+	}
+	return result
+}
+
+func ProcessRepeats(music *musicxml.MusicXML) {
+
+	repeats := collectRepeat(music.Part.Measures)
+
+	if len(repeats) == 0 {
+		return
+	}
+	measureMap := map[int]*musicxml.Measure{}
+	syllCountMeasure := map[int][2]int{}
+
+	for i, measure := range music.Part.Measures {
+		measureMap[measure.Number] = &music.Part.Measures[i]
 		count := 0
-		for _, a := range measures[i].Appendix {
-			if n, err := a.ParseAsNote(); err == nil {
-				count += len(n.Lyric)
+		for _, a := range measure.Appendix {
+			if n, err := a.ParseAsNote(); err == nil && len(n.Lyric) > 0 {
+				count++
 			}
 		}
-		cumulativeSyllables[i+1] = cumulativeSyllables[i] + count
+		lastMeasureCount := 1
+		if len(syllCountMeasure) > 0 {
+			lastMeasureCount = syllCountMeasure[measure.Number-1][1] + 1
+		}
+		syllCountMeasure[measure.Number] = [2]int{lastMeasureCount, lastMeasureCount + count - 1}
 	}
 
-	// Now detect repeat sections and assign info
-	i := 0
-	for i < len(measures) {
-		measure := &measures[i]
-
-		lb, _ := bi.GetRendererLeftBarline(*measure, 0, nil)
-		_, rb := bi.GetRendererRightBarline(*measure, 0)
-
-		isOpening := lb != nil && lb.Barline != nil &&
-			lb.Barline.Repeat != nil &&
-			lb.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionForward
-
-		isClosing := rb != nil && rb.Barline != nil &&
-			rb.Barline.Repeat != nil &&
-			rb.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward
-
-		// Default: no repeat
-		if !isOpening && !isClosing {
-			// Still set basic info
-			measure.RepeatInfo = &musicxml.RepeatInfo{
-				Type:                 musicxml.RepeatInfoTypeMiddle, // or Middle if you prefer
-				OffsetSyllable:       0,
-				SectionSyllableCount: 0,
-				StartIndex:           cumulativeSyllables[i],
+	for _, repeat := range repeats {
+		for start := repeat[0]; start <= repeat[1]; start++ {
+			repeatType := musicxml.RepeatInfoTypeMiddle
+			switch start {
+			case repeat[0]:
+				repeatType = musicxml.RepeatInfoTypeOpening
+			case repeat[1]:
+				repeatType = musicxml.RepeatInfoTypeClosing
 			}
-			i++
-			continue
+			measureMap[start].RepeatInfo = &musicxml.RepeatInfo{
+				Type:         repeatType,
+				SyllCntStart: syllCountMeasure[start][0],
+				SyllCntEnd:   syllCountMeasure[start][1],
+				OffsetStart:  syllCountMeasure[repeat[1]][1],
+			}
+
 		}
-
-		// Found a new repeat section starting here
-		if isOpening || i == 0 {
-			startMeasure := i
-			startIndex := cumulativeSyllables[i] // absolute start in flattenSyllable
-
-			// Find the closing repeat
-			repeatSyllableCount := 0
-			j := i
-			for j < len(measures) {
-				m := &measures[j]
-
-				// Count syllables in this measure
-				measSyl := 0
-				for _, a := range m.Appendix {
-					if n, err := a.ParseAsNote(); err == nil {
-						measSyl += len(n.Lyric)
-					}
-				}
-				repeatSyllableCount += measSyl
-
-				_, rbj := bi.GetRendererRightBarline(*m, 0)
-				isEnd := rbj != nil && rbj.Barline != nil &&
-					rbj.Barline.Repeat != nil &&
-					rbj.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward
-
-				if isEnd {
-					// Found the end of this repeat section
-					sectionLength := repeatSyllableCount
-
-					// Now assign to all measures in this section
-					for k := startMeasure; k <= j; k++ {
-						mk := &measures[k]
-						offsetInSection := cumulativeSyllables[k] - cumulativeSyllables[startMeasure]
-
-						mk.RepeatInfo = &musicxml.RepeatInfo{
-							Type:                 getRepeatType(k, startMeasure, j),
-							OffsetSyllable:       offsetInSection,
-							SectionSyllableCount: sectionLength,
-							StartIndex:           startIndex,
-						}
-					}
-					i = j + 1
-					break
-				}
-				j++
-			}
-
-			if j == len(measures) {
-				// No closing found - treat as open-ended (rare)
-				i++
-			}
-			continue
-		}
-
-		i++
 	}
+
 }
 
 func getRepeatType(idx, start, end int) musicxml.RepeatInfoType {
@@ -178,132 +144,6 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 
 	ProcessRepeats(&music)
 
-	// bi := barline.NewBarline()
-	// repeatInfo := map[int]musicxml.RepeatInfo{}
-	// hasRepeat := false
-	// lastMeasureRepeat := 0
-	// currentStartIndex := 0
-	// // --- Pass 1: detect repeats and syllable counts (backward) ---
-	// for i := len(music.Part.Measures) - 1; i >= 0; i-- {
-	// 	measure := music.Part.Measures[i]
-	// 	_, rb := bi.GetRendererRightBarline(measure, 0)
-
-	// 	if rb.Barline != nil && rb.Barline.Repeat != nil && rb.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
-	// 		hasRepeat = true
-	// 		repeatInfo[measure.Number] = musicxml.RepeatInfo{
-	// 			Type: musicxml.RepeatInfoTypeClosing,
-	// 		}
-	// 		lastMeasureRepeat = measure.Number
-	// 	}
-	// 	measureSyllableCount := 0
-	// 	if hasRepeat {
-	// 		info := repeatInfo[lastMeasureRepeat]
-	// 		for _, a := range measure.Appendix {
-	// 			n, err := a.ParseAsNote()
-	// 			if err != nil {
-	// 				continue
-	// 			}
-	// 			if len(n.Lyric) > 0 {
-	// 				info.SyllableCount++
-	// 				measureSyllableCount++
-	// 			}
-
-	// 			log.Println("current start index", currentStartIndex)
-	// 		}
-	// 		info.StartIndex = currentStartIndex
-	// 		repeatInfo[lastMeasureRepeat] = info
-	// 	}
-
-	// 	lb, _ := bi.GetRendererLeftBarline(measure, 0, nil)
-	// 	openingRepeat := lb != nil && lb.Barline != nil && lb.Barline.Repeat != nil && lb.Barline.Repeat.Direction == musicxml.BarLineRepeatDirectionForward
-
-	// 	if openingRepeat || measure.Number == 1 {
-	// 		info := repeatInfo[lastMeasureRepeat]
-
-	// 		// Handle the rare case where opening == closing (single measure repeat)
-	// 		if lb != nil && lastMeasureRepeat == lb.MeasureNumber {
-	// 			measure.RepeatInfo = &musicxml.RepeatInfo{
-	// 				Type:          musicxml.RepeatInfoTypeBoth,
-	// 				SyllableCount: info.SyllableCount,
-	// 			}
-	// 		} else {
-	// 			measure.RepeatInfo = &musicxml.RepeatInfo{
-	// 				Type:          musicxml.RepeatInfoTypeOpening,
-	// 				SyllableCount: info.SyllableCount,
-	// 			}
-	// 		}
-	// 		music.Part.Measures[i] = measure
-
-	// 		// Mark middle and closing measures
-	// 		for idx := i + 1; idx < len(music.Part.Measures); idx++ {
-	// 			m := music.Part.Measures[idx]
-	// 			repeatType := musicxml.RepeatInfoTypeMiddle
-	// 			if m.Number == lastMeasureRepeat {
-	// 				repeatType = musicxml.RepeatInfoTypeClosing
-	// 			}
-	// 			m.RepeatInfo = &musicxml.RepeatInfo{
-	// 				Type:          repeatType,
-	// 				SyllableCount: info.SyllableCount,
-	// 			}
-	// 			music.Part.Measures[idx] = m
-	// 			if m.Number == lastMeasureRepeat {
-	// 				break
-	// 			}
-	// 		}
-
-	// 		repeatInfo = map[int]musicxml.RepeatInfo{}
-	// 		lastMeasureRepeat = 0
-	// 		hasRepeat = false // ← important reset for sequential repeats
-	// 	}
-
-	// 	currentStartIndex += measureSyllableCount
-	// }
-
-	// // --- Pass 2: assign OffsetSyllable (forward) ---
-	// cumulativeSyllables := 0
-	// // track which repeat block we last finished, to avoid double-counting
-	// lastRepeatClosingMeasure := -1
-
-	// for i := 0; i < len(music.Part.Measures); i++ {
-	// 	m := music.Part.Measures[i]
-
-	// 	if m.RepeatInfo != nil {
-	// 		m.RepeatInfo.OffsetSyllable = cumulativeSyllables
-	// 		music.Part.Measures[i] = m
-
-	// 		// Accumulate syllables measure by measure
-	// 		measureSyllables := 0
-	// 		for _, a := range m.Appendix {
-	// 			n, err := a.ParseAsNote()
-	// 			if err != nil {
-	// 				continue
-	// 			}
-	// 			if len(n.Lyric) > 0 {
-	// 				measureSyllables++
-	// 			}
-	// 		}
-	// 		cumulativeSyllables += measureSyllables
-
-	// 		// After the closing barline of a repeat block, the next block
-	// 		// continues from where this one ended (no double-count)
-	// 		_ = lastRepeatClosingMeasure // used for future nested repeat support
-	// 		if m.RepeatInfo.Type == musicxml.RepeatInfoTypeClosing || m.RepeatInfo.Type == musicxml.RepeatInfoTypeBoth {
-	// 			lastRepeatClosingMeasure = m.Number
-	// 		}
-
-	// 	} else {
-	// 		// Non-repeat measure: still accumulate
-	// 		for _, a := range m.Appendix {
-	// 			n, err := a.ParseAsNote()
-	// 			if err != nil {
-	// 				continue
-	// 			}
-	// 			if len(n.Lyric) > 0 {
-	// 				cumulativeSyllables++
-	// 			}
-	// 		}
-	// 	}
-	// }
 	metaData, err := i.repo.GetHymnMetaData(ctx, hymnNum, variant...)
 	if err != nil {
 		flow := canv.Delegator().OnError(err)

@@ -15,12 +15,12 @@ const (
 )
 
 type RepeatInfo struct {
-	Type                 RepeatInfoType
-	SyllableCount        int
-	StartPosition        int
-	OffsetSyllable       int
-	StartIndex           int
-	SectionSyllableCount int
+	Type RepeatInfoType
+
+	SyllCntStart int
+	SyllCntEnd   int
+
+	OffsetStart int
 }
 
 type Measure struct {

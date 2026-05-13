@@ -51,4 +51,5 @@ type Lyric struct {
 	Number   int           `xml:"number,attr"`
 	Text     []LyricText   `xml:"text"`
 	Syllabic LyricSyllabic `xml:"syllabic"`
+	Verse    int
 }

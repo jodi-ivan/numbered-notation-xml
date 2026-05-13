@@ -42,7 +42,7 @@ func getFirstPos(notes []*entity.NoteRenderer) int {
 	return 0
 }
 
-func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int) int {
+func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int, repeatInfo *musicxml.RepeatInfo) int {
 
 	verse, ok := metadata.Verse[2] // for know hardcoded two for testing visual
 	if !ok {
@@ -71,33 +71,60 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 
 	syll := startPos
 
+	if syll >= 15 {
+		log.Println("adding", syll)
+		syll = 30 + (syll - 15)
+		log.Println("added", syll)
+		log.Println("")
+	}
 	marginBottom := 0
 
 	li := lyric.NewLyric()
 	for i := 0; i < len(notes) && syll < len(flattenSyll); i++ {
+
 		note := notes[i]
 		if len(note.Lyric) == 0 {
 			continue
 		}
 
-		newLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
-		txt := flattenSyll[syll].Text
-		if lyric.HasPrefix(note) {
-			txt = "2." + txt // for now, hardcoded. if the lyric has prefix.
-		}
-		newLyric = append(newLyric, musicxml.Lyric{
-			Text: []musicxml.LyricText{
-				{Value: txt}, // add the lyric to them
-			},
-			Syllabic: flattenSyll[syll].Type,
-			Number:   len(newLyric) + 1,
-		})
+		appendedLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
 
-		info := li.SetLyricRenderer(note, newLyric) // the one that calculate the margin, padding and width of the notes.
+		log.Println(syll, flattenSyll[syll].Text)
+		newLyric := []musicxml.Lyric{
+			{
+				Text: []musicxml.LyricText{
+					{Value: flattenSyll[syll].Text}, // add the lyric to them
+				},
+				Syllabic: flattenSyll[syll].Type,
+				Number:   len(appendedLyric) + 1,
+			},
+		}
+
+		if repeatInfo != nil && syll <= repeatInfo.SyllCntEnd*2 {
+
+			syllRepeat := repeatInfo.OffsetStart + (syll % repeatInfo.OffsetStart)
+			newLyric = append(newLyric, musicxml.Lyric{
+				Verse: 2,
+				Text: []musicxml.LyricText{
+					{Value: flattenSyll[syllRepeat].Text}, // add the lyric to them
+				},
+				Syllabic: flattenSyll[syllRepeat].Type,
+				Number:   len(appendedLyric) + 2,
+			})
+
+		}
+		appendedLyric = append(appendedLyric, newLyric...)
+		info := li.SetLyricRenderer(note, appendedLyric) // the one that calculate the margin, padding and width of the notes.
 		if marginBottom < info.MarginBottom {
 			marginBottom = info.MarginBottom
 		}
 
+		if syll == 14 {
+			log.Println("adding", syll)
+			syll = 30 + (syll - 15)
+			log.Println("added", syll)
+			log.Println("")
+		}
 		syll++
 
 	}

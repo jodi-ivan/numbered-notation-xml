@@ -265,7 +265,7 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][
 			// we just follow the group rules instead of consensus
 
 			// TODO: remove duplicate. that overalap between the group and the slur ties
-			direction = GetYPosGroup(group, lineStaff) + st.AccumulativeDirection
+			direction = GetYPosGroup(group, lineStaff) //+ st.AccumulativeDirection
 			if direction < 0 {
 				direction = -1
 			} else {

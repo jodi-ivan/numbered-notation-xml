@@ -177,6 +177,15 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			if verseInfo.HasLyric {
 				mSyllcount++
 				staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || lyric.HasPrefix(renderer)
+				if notePos == 0 && mi > 0 && len(measures[mi-1].Notes) > 0 {
+					lastMeasure := measures[mi-1]
+					hasFine := slices.ContainsFunc(lastMeasure.Notes[len(lastMeasure.Notes)-1].MeasureText, func(t musicxml.MeasureText) bool {
+						return t.Text == "Fine"
+					})
+
+					staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || hasFine || (lastMeasure.RightMeasureText != nil && lastMeasure.RightMeasureText.Text == "Fine")
+
+				}
 			}
 
 			additonalRenderer := si.Numbered.RendererFromAdditional(note, renderer, additionalNotes)
@@ -226,6 +235,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			mSyllcount = 0
 			startSyllable = 0
 			staffInfo.SyllableCount = 0
+
+			if !data.ReffAtStart && measure.RightMeasureText != nil && measure.RightMeasureText.Text == "Fine" {
+				staffInfo.StartRenderOtherNotes = true
+			}
 		}
 
 		// data || staffinfo

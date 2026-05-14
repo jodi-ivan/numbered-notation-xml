@@ -130,6 +130,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	canv.Group("class='staff'")
 
+	additionalMarginBottom := 0
+
 	for mi, measure := range noteRenderer { // preparation adn precalculate
 		alignJustify(measure, y, added, &count, mi, mi == len(noteRenderer)-1)
 		rsa.Rhythm.Split(ctx, ts, measure)
@@ -144,6 +146,10 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 				note.PositionX = xPos
 			}
+
+			if (note.Barline != nil && note.Barline.Ending != nil) || note.Fermata != nil {
+				additionalMarginBottom = 6
+			}
 		}
 	}
 
@@ -154,7 +160,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	stafflines := lines.NewLineStaffWithLines(ts, ks, y)
 
-	yPos := y + gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom)
+	yPos := y + gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom) + additionalMarginBottom
 
 	canv.Group(`class="numbered"`)
 

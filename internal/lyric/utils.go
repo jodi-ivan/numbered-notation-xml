@@ -2,8 +2,10 @@ package lyric
 
 import (
 	"math"
+	"slices"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
 // Only for Caladea font
@@ -54,4 +56,40 @@ func (li *lyricInteractor) CalculateLyricWidth(txt string) float64 {
 	}
 
 	return res
+}
+
+func GetMusicxmlLyric(note *entity.NoteRenderer) []musicxml.Lyric {
+	result := []musicxml.Lyric{}
+	for i, l := range note.Lyric {
+		// result = append(result, )
+		text := []musicxml.LyricText{}
+
+		for _, t := range l.Text {
+			text = append(text, musicxml.LyricText{
+				Underline: t.Underline,
+				Value:     t.Value,
+			})
+		}
+
+		result = append(result, musicxml.Lyric{
+			Number:   i + 1,
+			Text:     text,
+			Syllabic: l.Syllabic,
+		})
+	}
+	return result
+}
+
+func HasPrefix(note *entity.NoteRenderer) bool {
+	if len(note.Lyric) == 0 {
+		return false
+	}
+
+	return slices.ContainsFunc(note.Lyric, func(l entity.Lyric) bool {
+		if len(l.Text) == 0 {
+			return false
+		}
+		return numberedLyric.Match([]byte(l.Text[0].Value))
+	})
+
 }

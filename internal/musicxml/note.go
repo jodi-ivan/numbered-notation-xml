@@ -15,7 +15,8 @@ type Note struct {
 
 	TimeModification *TimeModification `xml:"time-modification"`
 
-	MeasureText []MeasureText `xml:"-"`
+	MeasureText   []MeasureText `xml:"-"`
+	IndexPosition int           `xml:"-"`
 }
 
 func (n Note) IsBreathMark() bool {
@@ -50,4 +51,5 @@ type Lyric struct {
 	Number   int           `xml:"number,attr"`
 	Text     []LyricText   `xml:"text"`
 	Syllabic LyricSyllabic `xml:"syllabic"`
+	Verse    int
 }

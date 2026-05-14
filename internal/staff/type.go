@@ -2,7 +2,9 @@ package staff
 
 import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 )
 
 type StaffInfo struct {
@@ -10,10 +12,23 @@ type StaffInfo struct {
 	MarginBottom     int
 	MarginLeft       int
 	NextLineRenderer []*entity.NoteRenderer
+	EndIndex         int // for staff level numbering index
 
-	ForceNewLine bool
+	StartRenderOtherNotes bool
+	ForceNewLine          bool
+	SyllableCount         int
+	RepeatInfo            []*musicxml.RepeatInfo
 }
 
+type StaffData struct {
+	PrevNotes     []*entity.NoteRenderer
+	SyllableCount int
+	TimeSig       timesig.TimeSignature
+	KeySig        keysig.KeySignature
+	IndexStart    int
+	ReffAtStart   bool
+	RepeatInfo    []*musicxml.RepeatInfo
+}
 type CoordinateWithTuplet struct {
 	entity.Coordinate
 	Tuplet musicxml.Tuplet

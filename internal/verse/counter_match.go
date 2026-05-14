@@ -67,10 +67,15 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 			lyricNum = len(appendedLyric) + 1
 		}
 
+		txt := flattenSyll[syll].Text
+		if lyric.HasPrefix(note) {
+			txt = "2." + txt // for now, hardcoded. if the lyric has prefix.
+		}
+
 		newLyric := []musicxml.Lyric{
 			{
 				Text: []musicxml.LyricText{
-					{Value: flattenSyll[syll].Text}, // add the lyric to them
+					{Value: txt}, // add the lyric to them
 				},
 				Syllabic: flattenSyll[syll].Type,
 				Number:   lyricNum,

@@ -184,7 +184,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 					})
 
 					staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || hasFine || (lastMeasure.RightMeasureText != nil && lastMeasure.RightMeasureText.Text == "Fine")
-
 				}
 			}
 
@@ -236,7 +235,11 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			startSyllable = 0
 			staffInfo.SyllableCount = 0
 
-			if !data.ReffAtStart && measure.RightMeasureText != nil && measure.RightMeasureText.Text == "Fine" {
+			noteFine := slices.ContainsFunc(measure.Notes[len(measure.Notes)-1].MeasureText, func(t musicxml.MeasureText) bool {
+				return t.Text == "Fine"
+			})
+
+			if !data.ReffAtStart && (noteFine || (measure.RightMeasureText != nil && measure.RightMeasureText.Text == "Fine")) {
 				staffInfo.StartRenderOtherNotes = true
 			}
 		}

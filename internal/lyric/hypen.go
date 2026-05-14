@@ -53,7 +53,7 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 		totalContainer := math.Ceil((distance - (2 * hypenWidth)) / float64(container))
 		totalHypen := (totalContainer * 2)
 		if lyricText == "" {
-			result = append(result, entity.NewCoordinate(constant.LAYOUT_INDENT_LENGTH, currentLyric.Coordinate.Y))
+			result = append(result, entity.NewCoordinate(HYPHEN_LEFT_INDENT, currentLyric.Coordinate.Y))
 			totalHypen += 1
 		}
 		startPosition += (distance / totalHypen)
@@ -103,12 +103,14 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 			case musicxml.LyricSyllabicTypeBegin:
 				// prev
 				pair[0] = &LyricPosition{
+					TotalLyric: len(n.Lyric),
 					Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
 					Lyrics:     l,
 				}
 			case musicxml.LyricSyllabicTypeEnd:
 				// curr
 				pair[1] = &LyricPosition{
+					TotalLyric: len(n.Lyric),
 					Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
 					Lyrics:     l,
 				}
@@ -116,6 +118,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				start := pair[0]
 				if start == nil {
 					start = &LyricPosition{
+						TotalLyric: len(n.Lyric),
 						Coordinate: entity.NewCoordinate(float64(measure[0].PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
 					}
 				}
@@ -125,6 +128,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 			case musicxml.LyricSyllabicTypeMiddle:
 				if pair[0] == nil {
 					pair[0] = &LyricPosition{
+						TotalLyric: len(n.Lyric),
 						Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
 						Lyrics:     l,
 					}
@@ -137,7 +141,8 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 						continue
 					} else {
 						empty := &LyricPosition{
-							Coordinate: entity.NewCoordinate(float64(constant.LAYOUT_INDENT_LENGTH), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
+							TotalLyric: len(n.Lyric),
+							Coordinate: entity.NewCoordinate(HYPHEN_LEFT_INDENT, spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
 						}
 
 						hypenLocation = append(li.CalculateHypen(ctx, empty, pair[0]), hypenLocation...)
@@ -146,6 +151,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				}
 				if pair[1] == nil {
 					pair[1] = &LyricPosition{
+						TotalLyric: len(n.Lyric),
 						Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
 						Lyrics:     l,
 					}

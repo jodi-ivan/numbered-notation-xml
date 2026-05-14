@@ -7,6 +7,7 @@ import (
 type LyricPosition struct {
 	Coordinate entity.Coordinate
 	Lyrics     entity.Lyric
+	TotalLyric int
 }
 
 type VerseInfo struct {

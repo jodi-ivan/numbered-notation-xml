@@ -42,17 +42,23 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignatu
 	staffInfo := StaffInfo{}
 	pos := -1
 
+	maxTotalLyric := 1
+
 	staffLines := lines.NewMiddleNonFirstLineStaff(ks)
 
 	// last line with no staff measure remaining
 	for i, note := range prevNotes {
 		note.PositionY = yPos
+
+		if maxTotalLyric < len(note.Lyric) {
+			maxTotalLyric = len(note.Lyric)
+		}
 		if note.IsNewLine {
 			pos = i
 			break
 		}
 	}
-
+	staffInfo.MarginBottom = (maxTotalLyric - 1) * 25
 	if pos != -1 {
 		result = append(result, prevNotes[:pos+1])
 		offset := 1

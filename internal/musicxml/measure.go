@@ -22,6 +22,7 @@ type RepeatInfo struct {
 
 	OffsetStart   int
 	MeasureNumber int
+	BarlineEnding *BarlineEnding
 }
 
 type Measure struct {

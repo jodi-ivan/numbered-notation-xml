@@ -3,7 +3,10 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -27,25 +30,6 @@ func New(config config.Config, repo repository.Repository, renderer renderer.Ren
 		repo:     repo,
 		renderer: renderer,
 	}
-}
-
-// Helper
-func getSyllablesBefore(start int, measures []musicxml.Measure) int {
-	count := 0
-	for i := 0; i < start; i++ {
-		for _, a := range measures[i].Appendix {
-			if n, err := a.ParseAsNote(); err == nil {
-				count += len(n.Lyric)
-			}
-		}
-	}
-	return count
-}
-
-type RepeatInfo struct {
-	Type           musicxml.RepeatInfoType `json:"type"`
-	SyllableCount  int                     `json:"syllableCount"`
-	OffsetSyllable int                     `json:"offsetSyllable"` // NEW
 }
 
 func collectRepeat(measures []musicxml.Measure) [][2]int {
@@ -80,9 +64,13 @@ func ProcessRepeats(music *musicxml.MusicXML) {
 	if len(repeats) == 0 {
 		return
 	}
+	bli := barline.NewBarline()
+
 	measureMap := map[int]*musicxml.Measure{}
 	syllCountMeasure := map[int][2]int{}
 
+	// lastSyllBefore := 0
+	// lastMeasure := 0
 	for i, measure := range music.Part.Measures {
 		measureMap[measure.Number] = &music.Part.Measures[i]
 		count := 0
@@ -91,15 +79,32 @@ func ProcessRepeats(music *musicxml.MusicXML) {
 				count++
 			}
 		}
+
 		lastMeasureCount := 1
 		if len(syllCountMeasure) > 0 {
 			lastMeasureCount = syllCountMeasure[measure.Number-1][1] + 1
 		}
-		syllCountMeasure[measure.Number] = [2]int{lastMeasureCount, lastMeasureCount + count - 1}
-	}
 
+		bl, _ := bli.GetRendererLeftBarline(measure, constant.LAYOUT_INDENT_LENGTH, nil)
+		if bl == nil {
+			_, bl = bli.GetRendererRightBarline(measure, constant.LAYOUT_INDENT_LENGTH)
+		}
+
+		syllCountMeasure[measure.Number] = [2]int{lastMeasureCount, lastMeasureCount + count - 1}
+
+	}
 	for _, repeat := range repeats {
 		for start := repeat[0]; start <= repeat[1]; start++ {
+			var barlineEnding *musicxml.BarlineEnding
+
+			bl, _ := bli.GetRendererLeftBarline(*measureMap[start], constant.LAYOUT_INDENT_LENGTH, nil)
+			if bl == nil {
+				_, bl = bli.GetRendererRightBarline(*measureMap[start], constant.LAYOUT_INDENT_LENGTH)
+			}
+
+			if bl != nil {
+				barlineEnding = bl.Barline.Ending
+			}
 			repeatType := musicxml.RepeatInfoTypeMiddle
 			switch start {
 			case repeat[0]:
@@ -107,14 +112,35 @@ func ProcessRepeats(music *musicxml.MusicXML) {
 			case repeat[1]:
 				repeatType = musicxml.RepeatInfoTypeClosing
 			}
+			idx := start
+			if barlineEnding != nil {
+				measureOffset, _ := strconv.Atoi(barlineEnding.Number)
+				idx -= measureOffset
+			}
 			measureMap[start].RepeatInfo = &musicxml.RepeatInfo{
 				Type:          repeatType,
-				SyllCntStart:  syllCountMeasure[start][0],
-				SyllCntEnd:    syllCountMeasure[start][1],
+				SyllCntStart:  syllCountMeasure[idx][0],
+				SyllCntEnd:    syllCountMeasure[idx][1],
 				OffsetStart:   syllCountMeasure[repeat[1]][1],
 				MeasureNumber: start,
+				BarlineEnding: barlineEnding,
 			}
 
+		}
+
+		if measureMap[repeat[1]].RepeatInfo.BarlineEnding != nil {
+			nextMeasure := repeat[1] + 1
+
+			measureMap[nextMeasure].RepeatInfo = &musicxml.RepeatInfo{
+				Type:          musicxml.RepeatInfoTypeClosing,
+				SyllCntStart:  syllCountMeasure[nextMeasure][0],
+				SyllCntEnd:    syllCountMeasure[nextMeasure][1],
+				OffsetStart:   syllCountMeasure[nextMeasure][1],
+				MeasureNumber: nextMeasure,
+				BarlineEnding: &musicxml.BarlineEnding{
+					Number: "2",
+				},
+			}
 		}
 	}
 

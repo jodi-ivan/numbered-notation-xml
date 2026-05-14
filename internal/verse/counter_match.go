@@ -3,8 +3,6 @@ package verse
 import (
 	"encoding/json"
 	"log"
-	"slices"
-	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
@@ -12,39 +10,9 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 )
 
-// start position
-// check if the lyric ever has prefix 1.
-// if it does go we start whenever the 1. location.
-// else it starts from start
-
-func getFirstPos(notes []*entity.NoteRenderer) int {
-	firstNoteRefrein := slices.ContainsFunc(notes[0].MeasureText, func(mt musicxml.MeasureText) bool {
-		return mt.Text == "Refrein"
-	})
-
-	verseNumPos := -1
-
-	for i, v := range notes {
-		hasVerseNum := slices.ContainsFunc(v.Lyric, func(l entity.Lyric) bool {
-			return l.Syllabic == musicxml.LyricSyllabicTypeBegin && strings.HasPrefix(l.Text[0].Value, "1.")
-		})
-
-		if hasVerseNum {
-			verseNumPos = i
-			break
-		}
-	}
-
-	if verseNumPos >= 0 && firstNoteRefrein {
-		return verseNumPos
-	}
-
-	return 0
-}
-
 func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
 
-	verse, ok := metadata.Verse[2] // for know hardcoded two for testing visual
+	verse, ok := metadata.Verse[2] // for now hardcoded two for testing visual
 	if !ok {
 		return 0
 	}
@@ -70,16 +38,21 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 	}
 
 	syll := startPos
+	var repeatInfo *musicxml.RepeatInfo
 
 	lastOffset := 0
 	if len(prevRepeatInfos) > 0 {
-		lastOffset = prevRepeatInfos[len(prevRepeatInfos)-1].OffsetStart
+		repeatInfo = prevRepeatInfos[len(prevRepeatInfos)-1]
+		lastOffset = repeatInfo.OffsetStart
 		if syll >= lastOffset {
 			syll = lastOffset*2 + (syll - lastOffset)
 		}
 	}
 
 	marginBottom := 0
+	insert := true
+	lyricNum := 0
+	firstNote := false
 
 	li := lyric.NewLyric()
 	for i := 0; i < len(notes) && syll < len(flattenSyll); i++ {
@@ -90,6 +63,9 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 		}
 
 		appendedLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
+		if lyricNum == 0 {
+			lyricNum = len(appendedLyric) + 1
+		}
 
 		newLyric := []musicxml.Lyric{
 			{
@@ -97,12 +73,58 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 					{Value: flattenSyll[syll].Text}, // add the lyric to them
 				},
 				Syllabic: flattenSyll[syll].Type,
-				Number:   len(appendedLyric) + 1,
+				Number:   lyricNum,
 			},
 		}
+		insertLastMeasure := syll < lastOffset*2
+		if repeatInfo != nil && repeatInfo.BarlineEnding != nil {
+			switch repeatInfo.BarlineEnding.Number {
+			case "1":
+				decendnewLyric := newLyric[0]
+				decendnewLyric.Number++
+				newLyric[0] = decendnewLyric
+				insert = false
 
-		if len(prevRepeatInfos) > 0 && syll < lastOffset*2 {
-			repeatInfo := prevRepeatInfos[len(prevRepeatInfos)-1]
+			case "2":
+
+				if note.MeasureNumber == repeatInfo.MeasureNumber {
+
+					newLyric = []musicxml.Lyric{{
+						Verse: 2,
+						Text: []musicxml.LyricText{
+							{}, // add the lyric to them
+						},
+						Syllabic: musicxml.LyricSyllabicTypeSingle,
+						Number:   lyricNum,
+					}}
+					insertLastMeasure = syll < lastOffset*2
+					syll = prevRepeatInfos[len(prevRepeatInfos)-2].SyllCntEnd - 1
+					insert = true
+				} else if note.MeasureNumber > repeatInfo.MeasureNumber && len(prevRepeatInfos) > 1 && prevRepeatInfos[len(prevRepeatInfos)-2].BarlineEnding != nil {
+					if !firstNote {
+						syll -= ((repeatInfo.OffsetStart - repeatInfo.SyllCntStart) + (prevRepeatInfos[len(prevRepeatInfos)-2].OffsetStart - prevRepeatInfos[len(prevRepeatInfos)-2].SyllCntEnd)) + 1
+						firstNote = true
+					}
+
+					newLyric = []musicxml.Lyric{
+						{
+							Text: []musicxml.LyricText{
+								{Value: flattenSyll[syll].Text}, // add the lyric to them
+							},
+							Syllabic: flattenSyll[syll].Type,
+							Number:   lyricNum,
+						},
+					}
+					insert = false
+
+				}
+
+			}
+
+		}
+
+		if insert && repeatInfo != nil && insertLastMeasure {
+
 			syllRepeat := repeatInfo.OffsetStart + (syll % repeatInfo.OffsetStart)
 			if syllRepeat < len(flattenSyll) {
 				newLyric = append(newLyric, musicxml.Lyric{
@@ -111,7 +133,7 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 						{Value: flattenSyll[syllRepeat].Text}, // add the lyric to them
 					},
 					Syllabic: flattenSyll[syllRepeat].Type,
-					Number:   len(appendedLyric) + 2,
+					Number:   newLyric[0].Number + 1,
 				})
 			}
 

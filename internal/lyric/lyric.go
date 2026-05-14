@@ -64,6 +64,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 			lyricText := ""
 			l := entity.Lyric{
 				Syllabic: currLyric.Syllabic,
+				Verse:    currLyric.Verse,
 			}
 
 			texts := []entity.Text{}
@@ -82,6 +83,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 					noteRenderer.Lyric = append(noteRenderer.Lyric, entity.Lyric{
 						Syllabic: musicxml.LyricSyllabicTypeMiddle,
 						Text:     []entity.Text{{}},
+						Verse:    currLyric.Verse,
 					})
 				}
 			}

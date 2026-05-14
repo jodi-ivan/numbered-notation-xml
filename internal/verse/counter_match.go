@@ -129,6 +129,7 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 				Text:     ApplyElision(txt, flattenCombine[syll]),
 				Syllabic: flattenSyll[syll].Type,
 				Number:   lyricNum,
+				Verse:    2,
 			},
 		}
 		insertLastMeasure := syll < lastOffset*2
@@ -145,12 +146,9 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 				if note.MeasureNumber == repeatInfo.MeasureNumber {
 
 					newLyric = []musicxml.Lyric{{
-						Verse: 2,
-						Text: []musicxml.LyricText{
-							{}, // add the lyric to them
-						},
+						Number: lyricNum, Verse: 2,
+						Text:     []musicxml.LyricText{{}},
 						Syllabic: musicxml.LyricSyllabicTypeSingle,
-						Number:   lyricNum,
 					}}
 					insertLastMeasure = syll < lastOffset*2
 					syll = prevRepeatInfos[len(prevRepeatInfos)-2].SyllCntEnd - 1
@@ -163,9 +161,9 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 
 					newLyric = []musicxml.Lyric{
 						{
+							Number: lyricNum, Verse: 2,
 							Text:     ApplyElision(flattenSyll[syll].Text, flattenCombine[syll]),
 							Syllabic: flattenSyll[syll].Type,
-							Number:   lyricNum,
 						},
 					}
 					insert = false
@@ -181,12 +179,9 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 			syllRepeat := repeatInfo.OffsetStart + (syll % repeatInfo.OffsetStart)
 			if syllRepeat < len(flattenSyll) {
 				newLyric = append(newLyric, musicxml.Lyric{
-					Verse: 2,
-					Text: []musicxml.LyricText{
-						{Value: flattenSyll[syllRepeat].Text}, // add the lyric to them
-					},
+					Number: newLyric[0].Number + 1, Verse: 2,
+					Text:     ApplyElision(flattenSyll[syllRepeat].Text, flattenCombine[syllRepeat]),
 					Syllabic: flattenSyll[syllRepeat].Type,
-					Number:   newLyric[0].Number + 1,
 				})
 			}
 

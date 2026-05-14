@@ -22,6 +22,10 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 
 	startPosition := prevLyric.Coordinate.X + li.CalculateLyricWidth(lyricText)
 	endPostion := currentLyric.Coordinate.X
+
+	if currentLyric.Lyrics.Verse > 0 {
+		// currentLyric.Coordinate.Y += float64(5 * currentLyric.Lyrics.Verse)
+	}
 	distance := endPostion - startPosition
 	if distance < 4 {
 
@@ -42,10 +46,7 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 			offset = 0
 		}
 		return []entity.Coordinate{
-			entity.Coordinate{
-				X: startPosition + offset,
-				Y: currentLyric.Coordinate.Y,
-			},
+			entity.NewCoordinate(startPosition+offset, currentLyric.Coordinate.Y),
 		}
 	} else {
 		result := []entity.Coordinate{}

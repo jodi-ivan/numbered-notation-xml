@@ -26,6 +26,7 @@ type Text struct {
 type Lyric struct {
 	Text     []Text
 	Syllabic musicxml.LyricSyllabic
+	Verse    int
 }
 
 type Slur struct {

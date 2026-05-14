@@ -3,12 +3,61 @@ package verse
 import (
 	"encoding/json"
 	"log"
+	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 )
+
+func IsVowel(char rune) bool {
+	return utils.Contains([]string{"a", "i", "u", "e", "o"}, strings.ToLower(string(char))) >= 0
+}
+
+func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
+	start, end := -1, -1
+
+	if !combine {
+		return []musicxml.LyricText{
+			{Value: syllText},
+		}
+	}
+
+	for ir, r := range syllText {
+		if IsVowel(r) || (r == 'h' && start != -1) {
+			if start == -1 {
+				start = ir
+			} else {
+				end = ir
+			}
+		}
+	}
+
+	partBreakdown := []musicxml.LyricText{}
+	if start == 0 {
+		partBreakdown = []musicxml.LyricText{
+			{Underline: 1, Value: syllText[start : end+1]},
+			{Underline: 0, Value: syllText[end+1:]},
+		}
+	} else if end == len(syllText)-1 {
+		partBreakdown = []musicxml.LyricText{
+			{Underline: 0, Value: syllText[0:start]},
+			{Underline: 1, Value: syllText[start:]},
+		}
+	} else {
+		partBreakdown = []musicxml.LyricText{
+			{Underline: 0, Value: syllText[0:start]},
+			{Underline: 1, Value: syllText[start : end+1]},
+			{Underline: 0, Value: syllText[end+1:]},
+		}
+
+	}
+
+	return partBreakdown
+
+}
 
 func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
 
@@ -29,11 +78,14 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 	totalSyllable := 0
 
 	flattenSyll := []LyricPartVerse{}
-
+	flattenCombine := map[int]bool{}
 	for _, line := range whole {
 		for _, syll := range line {
-			totalSyllable += len(syll.Breakdown)
 			flattenSyll = append(flattenSyll, syll.Breakdown...)
+			for i, comb := range syll.Breakdown {
+				flattenCombine[totalSyllable+i] = comb.Combine
+			}
+			totalSyllable += len(syll.Breakdown)
 		}
 	}
 
@@ -74,9 +126,7 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 
 		newLyric := []musicxml.Lyric{
 			{
-				Text: []musicxml.LyricText{
-					{Value: txt}, // add the lyric to them
-				},
+				Text:     ApplyElision(txt, flattenCombine[syll]),
 				Syllabic: flattenSyll[syll].Type,
 				Number:   lyricNum,
 			},
@@ -113,9 +163,7 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetad
 
 					newLyric = []musicxml.Lyric{
 						{
-							Text: []musicxml.LyricText{
-								{Value: flattenSyll[syll].Text}, // add the lyric to them
-							},
+							Text:     ApplyElision(flattenSyll[syll].Text, flattenCombine[syll]),
 							Syllabic: flattenSyll[syll].Type,
 							Number:   lyricNum,
 						},

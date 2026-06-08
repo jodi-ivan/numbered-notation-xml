@@ -163,11 +163,32 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	yPos := y + gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom) + additionalMarginBottom
 
 	canv.Group(`class="numbered"`)
-
-	for _, measure := range noteRenderer {
+	offsetLyric := 0
+	for mi, measure := range noteRenderer {
 
 		canv.Group("class='measure-align'", fmt.Sprintf("number='%d'", measure[0].MeasureNumber))
-		rsa.Lyric.RenderLyrics(ctx, yPos, canv, measure)
+
+		prev := []*entity.NoteRenderer{}
+		if mi > 0 {
+			prevMeasure := noteRenderer[mi-1]
+
+			idx := -1
+			for i := len(prevMeasure) - 1; i >= 0; i-- {
+				if len(prevMeasure[i].Lyric) > 0 {
+					idx = i
+					break
+				}
+			}
+
+			if idx >= 0 {
+				prev = append(prev, prevMeasure[idx])
+
+			}
+		}
+		newOffsetLyric := rsa.Lyric.RenderLyrics(ctx, yPos+offsetLyric, canv, measure, prev...)
+		if newOffsetLyric > 0 && offsetLyric == 0 {
+			offsetLyric = newOffsetLyric
+		}
 
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		rsa.Numbered.RenderNote(ctx, canv, measure, yPos, rightAlignOffset)
@@ -180,7 +201,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	}
 
-	rsa.Lyric.RenderHypen(ctx, yPos, canv, flatten)
+	rsa.Lyric.RenderHypen(ctx, yPos, offsetLyric, canv, flatten)
 	rsa.Rhythm.RenderSlurTies(ctx, yPos, canv, slurTiesNote, float64(lastPos))
 	RenderMeasureTopping(ctx, yPos, canv, flatten)
 	canv.Gend()

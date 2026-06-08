@@ -23,9 +23,6 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 	startPosition := prevLyric.Coordinate.X + li.CalculateLyricWidth(lyricText)
 	endPostion := currentLyric.Coordinate.X
 
-	if currentLyric.Lyrics.Verse > 0 {
-		// currentLyric.Coordinate.Y += float64(5 * currentLyric.Lyrics.Verse)
-	}
 	distance := endPostion - startPosition
 	if distance < 4 {
 
@@ -68,16 +65,24 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 
 // RenderHypen writes the hypen
 // @measure :is the notes for the whole staff (flatten across measures)
-func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	pos := map[int][2]*LyricPosition{}
 
 	// for tracking the pair of begin to end
 	hs := NewHypenStack()
-	baseYPos := float64(0)
+	baseYPos := map[int]float64{}
 	var lastLyric []entity.Lyric
 	hypenLocation := []entity.Coordinate{}
 	hasLyricBefore := false
+	// filter notes that has lyric only
+	notes := []*entity.NoteRenderer{}
+	centerOffset := -1
 	for _, n := range measure {
+		if len(n.Lyric) > 0 {
+			notes = append(notes, n)
+		}
+	}
+	for notePos, n := range notes {
 
 		if len(n.Lyric) == 0 {
 			continue
@@ -90,6 +95,24 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				y = y + (math.Trunc(float64(i)/MAX_LINE_PER_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC)
 			}
 
+			currentLyric := n.Lyric[i]
+			if currentLyric.Verse > 0 {
+				y += float64(5 * currentLyric.Verse)
+			}
+
+			if notePos == 0 {
+				return y
+			}
+
+			if centerOffset == -1 && len(notes[notePos-1].Lyric) > len(n.Lyric) {
+				// centerOffset = true
+				centerOffset = notePos
+			}
+
+			if centerOffset != -1 && notePos >= centerOffset {
+				y += 10
+			}
+
 			return y
 		}
 		lastLyric = n.Lyric
@@ -99,19 +122,20 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				pos[i] = [2]*LyricPosition{}
 			}
 			pair := pos[i]
+			hyphenYPos := spacing(yPos, i) + float64(i*LINE_BETWEEN_LYRIC)
 			switch l.Syllabic {
 			case musicxml.LyricSyllabicTypeBegin:
 				// prev
 				pair[0] = &LyricPosition{
 					TotalLyric: len(n.Lyric),
-					Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
+					Coordinate: entity.NewCoordinate(float64(n.PositionX), hyphenYPos),
 					Lyrics:     l,
 				}
 			case musicxml.LyricSyllabicTypeEnd:
 				// curr
 				pair[1] = &LyricPosition{
 					TotalLyric: len(n.Lyric),
-					Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
+					Coordinate: entity.NewCoordinate(float64(n.PositionX), hyphenYPos),
 					Lyrics:     l,
 				}
 				// do the calculation here
@@ -119,7 +143,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				if start == nil {
 					start = &LyricPosition{
 						TotalLyric: len(n.Lyric),
-						Coordinate: entity.NewCoordinate(float64(measure[0].PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
+						Coordinate: entity.NewCoordinate(float64(measure[0].PositionX), hyphenYPos),
 					}
 				}
 				hypenLocation = append(li.CalculateHypen(ctx, start, pair[1]), hypenLocation...)
@@ -129,7 +153,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				if pair[0] == nil {
 					pair[0] = &LyricPosition{
 						TotalLyric: len(n.Lyric),
-						Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
+						Coordinate: entity.NewCoordinate(float64(n.PositionX), hyphenYPos),
 						Lyrics:     l,
 					}
 
@@ -142,7 +166,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 					} else {
 						empty := &LyricPosition{
 							TotalLyric: len(n.Lyric),
-							Coordinate: entity.NewCoordinate(HYPHEN_LEFT_INDENT, spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
+							Coordinate: entity.NewCoordinate(HYPHEN_LEFT_INDENT, hyphenYPos),
 						}
 
 						hypenLocation = append(li.CalculateHypen(ctx, empty, pair[0]), hypenLocation...)
@@ -152,7 +176,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				if pair[1] == nil {
 					pair[1] = &LyricPosition{
 						TotalLyric: len(n.Lyric),
-						Coordinate: entity.NewCoordinate(float64(n.PositionX), spacing(yPos, i)+float64(i*LINE_BETWEEN_LYRIC)),
+						Coordinate: entity.NewCoordinate(float64(n.PositionX), pair[0].Coordinate.Y),
 						Lyrics:     l,
 					}
 					hypenLocation = append(li.CalculateHypen(ctx, pair[0], pair[1]), hypenLocation...)
@@ -163,7 +187,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				}
 			}
 			pos[i] = pair
-			baseYPos = yPos
+			baseYPos[i] = hyphenYPos
 		}
 		hasLyricBefore = hasLyricBefore || len(n.Lyric) > 0
 
@@ -175,7 +199,8 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y int, canv canvas.C
 				lastXHypen := float64(constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH)
 
 				pEnd := LyricPosition{
-					Coordinate: entity.NewCoordinate(lastXHypen, baseYPos+float64(i*LINE_BETWEEN_LYRIC)),
+					// just use last calculated YPos
+					Coordinate: entity.NewCoordinate(lastXHypen, baseYPos[i]),
 					Lyrics:     lastLyric[i],
 				}
 				hypenLocation = append(li.CalculateHypen(ctx, p[0], &pEnd), hypenLocation...)

@@ -259,7 +259,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 				mock := lyric.NewMockLyric(c)
 				mock.EXPECT().RenderLyrics(gomock.Any(), 100, gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[1]})
 				mock.EXPECT().RenderLyrics(gomock.Any(), 100, gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[2]})
-				mock.EXPECT().RenderHypen(gomock.Any(), 100, gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
+				mock.EXPECT().RenderHypen(gomock.Any(), 100, 0, gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
 				return mock
 			},
 		},

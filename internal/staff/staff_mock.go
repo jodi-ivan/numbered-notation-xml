@@ -13,7 +13,6 @@ import (
 	keysig "github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	musicxml "github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	timesig "github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
-	repository "github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -41,7 +40,7 @@ func (m *MockStaff) EXPECT() *MockStaffMockRecorder {
 }
 
 // Render mocks base method.
-func (m *MockStaff) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *repository.HymnMetadata) int {
+func (m *MockStaff) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Render", ctx, canv, part, keySignature, timeSignature, metadata)
 	ret0, _ := ret[0].(int)
@@ -55,7 +54,7 @@ func (mr *MockStaffMockRecorder) Render(ctx, canv, part, keySignature, timeSigna
 }
 
 // RenderStaff mocks base method.
-func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *repository.HymnMetadata, measures []musicxml.Measure, data StaffData) StaffInfo {
+func (m *MockStaff) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) StaffInfo {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RenderStaff", ctx, canv, x, y, staffPos, metadata, measures, data)
 	ret0, _ := ret[0].(StaffInfo)

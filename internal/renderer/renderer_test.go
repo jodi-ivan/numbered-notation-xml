@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/jarcoal/httpmock"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/header"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
@@ -97,15 +98,18 @@ func Test_rendererInteractor_Render(t *testing.T) {
 	keySignature := keysig.NewKeySignature(context.Background(), measures)
 	timeSignature := timesig.NewTimeSignatures(context.Background(), measures)
 
-	metadata := &repository.HymnMetadata{
-		HymnData: repository.HymnData{
-			HymnIndicator: repository.HymnIndicator{
-				Number: 1,
+	metadata := &entity.HymnMetaData{
+		HymnMetadata: &repository.HymnMetadata{
+			HymnData: repository.HymnData{
+				HymnIndicator: repository.HymnIndicator{
+					Number: 1,
+				},
+				Title: "Unittest",
 			},
-			Title: "Unittest",
+			Verse: map[int]repository.HymnVerse{},
 		},
-		Verse: map[int]repository.HymnVerse{},
 	}
+
 	/*
 		httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Caladea%7COld+Standard+TT%7CNoto+Music%7CFigtree",
 					httpmock.NewStringResponder(200, googleFont))
@@ -230,7 +234,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 
 			verseMock: func(c *gomock.Controller) *verse.MockVerse {
 				vm := verse.NewMockVerse(c)
-				vm.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), 100, metadata.Verse, metadata.VerseFootNotes).Return(verse.VerseInfo{MarginBottom: 150})
+				vm.EXPECT().RenderVerse(gomock.Any(), gomock.Any(), 100, metadata).Return(verse.VerseInfo{MarginBottom: 150})
 				return vm
 
 			},

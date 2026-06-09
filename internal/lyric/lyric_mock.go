@@ -106,27 +106,34 @@ func (mr *MockLyricMockRecorder) RenderElision(ctx, canv, text, lyricPart, pos i
 }
 
 // RenderHypen mocks base method.
-func (m *MockLyric) RenderHypen(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (m *MockLyric) RenderHypen(ctx context.Context, y, offsetCenter int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderHypen", ctx, y, canv, measure)
+	m.ctrl.Call(m, "RenderHypen", ctx, y, offsetCenter, canv, measure)
 }
 
 // RenderHypen indicates an expected call of RenderHypen.
-func (mr *MockLyricMockRecorder) RenderHypen(ctx, y, canv, measure interface{}) *gomock.Call {
+func (mr *MockLyricMockRecorder) RenderHypen(ctx, y, offsetCenter, canv, measure interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderHypen", reflect.TypeOf((*MockLyric)(nil).RenderHypen), ctx, y, canv, measure)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderHypen", reflect.TypeOf((*MockLyric)(nil).RenderHypen), ctx, y, offsetCenter, canv, measure)
 }
 
 // RenderLyrics mocks base method.
-func (m *MockLyric) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer) {
+func (m *MockLyric) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer, prevNote ...*entity.NoteRenderer) int {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderLyrics", ctx, y, canv, measure)
+	varargs := []interface{}{ctx, y, canv, measure}
+	for _, a := range prevNote {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RenderLyrics", varargs...)
+	ret0, _ := ret[0].(int)
+	return ret0
 }
 
 // RenderLyrics indicates an expected call of RenderLyrics.
-func (mr *MockLyricMockRecorder) RenderLyrics(ctx, y, canv, measure interface{}) *gomock.Call {
+func (mr *MockLyricMockRecorder) RenderLyrics(ctx, y, canv, measure interface{}, prevNote ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderLyrics", reflect.TypeOf((*MockLyric)(nil).RenderLyrics), ctx, y, canv, measure)
+	varargs := append([]interface{}{ctx, y, canv, measure}, prevNote...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderLyrics", reflect.TypeOf((*MockLyric)(nil).RenderLyrics), varargs...)
 }
 
 // SetLyricRenderer mocks base method.

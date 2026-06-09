@@ -20,7 +20,7 @@ func Test_verseInteractor_elisionPosition(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
-		p                     LyricPartVerse
+		p                     entity.LyricPartVerse
 		y                     int
 		lineBeforeWord        string
 		syllableBeforeElision string
@@ -29,8 +29,8 @@ func Test_verseInteractor_elisionPosition(t *testing.T) {
 	}{
 		{
 			name: "with underline",
-			p: LyricPartVerse{
-				Breakdown: []LyricStylePart{
+			p: entity.LyricPartVerse{
+				Breakdown: []entity.LyricStylePart{
 					{
 						Text: "t",
 					},

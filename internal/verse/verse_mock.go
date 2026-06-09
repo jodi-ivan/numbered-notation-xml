@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	repository "github.com/jodi-ivan/numbered-notation-xml/svc/repository"
+	entity "github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -37,15 +37,15 @@ func (m *MockVerse) EXPECT() *MockVerseMockRecorder {
 }
 
 // RenderVerse mocks base method.
-func (m *MockVerse) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
+func (m *MockVerse) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, metadata *entity.HymnMetaData) VerseInfo {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RenderVerse", ctx, canv, y, verses, verseFootnote)
+	ret := m.ctrl.Call(m, "RenderVerse", ctx, canv, y, metadata)
 	ret0, _ := ret[0].(VerseInfo)
 	return ret0
 }
 
 // RenderVerse indicates an expected call of RenderVerse.
-func (mr *MockVerseMockRecorder) RenderVerse(ctx, canv, y, verses, verseFootnote interface{}) *gomock.Call {
+func (mr *MockVerseMockRecorder) RenderVerse(ctx, canv, y, metadata interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderVerse", reflect.TypeOf((*MockVerse)(nil).RenderVerse), ctx, canv, y, verses, verseFootnote)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderVerse", reflect.TypeOf((*MockVerse)(nil).RenderVerse), ctx, canv, y, metadata)
 }

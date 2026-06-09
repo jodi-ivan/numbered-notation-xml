@@ -2,9 +2,7 @@ package verse
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 
@@ -12,12 +10,11 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
-	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 type Verse interface {
-	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo
+	RenderVerse(ctx context.Context, canv canvas.Canvas, y int, metadata *entity.HymnMetaData) VerseInfo
 }
 
 type verseInteractor struct {
@@ -32,7 +29,7 @@ func New(f footnote.Footnote, l lyric.Lyric) Verse {
 	}
 }
 
-func (v *verseInteractor) elisionPosition(p LyricPartVerse, y int, lineBeforeWord, syllableBeforeElision string) [2]entity.Coordinate {
+func (v *verseInteractor) elisionPosition(p entity.LyricPartVerse, y int, lineBeforeWord, syllableBeforeElision string) [2]entity.Coordinate {
 	x1 := float64(0)
 	x2 := float64(0)
 	for _, b := range p.Breakdown {
@@ -56,7 +53,7 @@ func (v *verseInteractor) elisionPosition(p LyricPartVerse, y int, lineBeforeWor
 	}
 }
 
-func (v *verseInteractor) parse(y int, verses map[int]repository.HymnVerse) ParsedVerseWithInfo {
+func (v *verseInteractor) parse(y int, metadata *entity.HymnMetaData) ParsedVerseWithInfo {
 
 	result := ParsedVerseWithInfo{
 		Verses:        map[int]ParsedVerse{},
@@ -64,15 +61,9 @@ func (v *verseInteractor) parse(y int, verses map[int]repository.HymnVerse) Pars
 		RowPositionY:  map[int]int{},
 	}
 
-	for i := 2; i <= len(verses)+1; i++ {
-		verse := verses[i]
-		whole := [][]LyricWordVerse{}
-
-		err := json.Unmarshal([]byte(verse.Content.String), &whole)
-		if err != nil {
-			log.Printf("[RenderVerse] failed to unmarshal for verse %d, err %s\n", i, err.Error())
-			return result
-		}
+	for i := 2; i <= len(metadata.Verse)+1; i++ {
+		verse := metadata.Verse[i]
+		whole := metadata.ParsedVerse[i]
 
 		if _, ok := result.RowPositionY[int(verse.Row.Int16)]; !ok {
 			result.RowPositionY[int(verse.Row.Int16)] = y + (LINE_DISTANCE * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * VERSE_SEPARATOR)
@@ -119,10 +110,10 @@ func (v *verseInteractor) parse(y int, verses map[int]repository.HymnVerse) Pars
 	return result
 }
 
-func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, verses map[int]repository.HymnVerse, verseFootnote map[int]map[int]repository.VerseFootNotes) VerseInfo {
+func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, metadata *entity.HymnMetaData) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
-	parsedVerse := v.parse(y, verses)
+	parsedVerse := v.parse(y, metadata)
 
 	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (parsedVerse.MaxLineWidth / 2)))
 	x := defaultX
@@ -187,7 +178,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 				Leftmargin: margin + int(offset),
 				LineText:   liveVerse,
 			}
-			v.Footnote.AssignFootnotesMarker(canv, entity.NewCoordinate(float64(x), float64(y)), defaultX, cursor, verseFootnote)
+			v.Footnote.AssignFootnotesMarker(canv, entity.NewCoordinate(float64(x), float64(y)), defaultX, cursor, metadata.VerseFootNotes)
 			y += LINE_DISTANCE
 		}
 

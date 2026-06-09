@@ -1,15 +1,12 @@
 package verse
 
 import (
-	"encoding/json"
-	"log"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
-	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 )
 
 func IsVowel(char rune) bool {
@@ -59,27 +56,18 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 
 }
 
-func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *repository.HymnMetadata, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
+func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
 
-	verse, ok := metadata.Verse[2] // for now hardcoded two for testing visual
+	verse, ok := metadata.ParsedVerse[2] // for now hardcoded two for testing visual
 	if !ok {
-		return 0
-	}
-
-	// TODO: double parsing on the verse.go
-	whole := [][]LyricWordVerse{}
-
-	err := json.Unmarshal([]byte(verse.Content.String), &whole)
-	if err != nil {
-		log.Printf("[LoadOtherVerse] failed to unmarshal for verse, err %s\n", err.Error())
 		return 0
 	}
 
 	totalSyllable := 0
 
-	flattenSyll := []LyricPartVerse{}
+	flattenSyll := []entity.LyricPartVerse{}
 	flattenCombine := map[int]bool{}
-	for _, line := range whole {
+	for _, line := range verse {
 		for _, syll := range line {
 			flattenSyll = append(flattenSyll, syll.Breakdown...)
 			for i, comb := range syll.Breakdown {

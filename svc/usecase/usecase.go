@@ -2,11 +2,14 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -169,9 +172,27 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}
 	}
 
+	metaWithParsedVerse := &entity.HymnMetaData{
+		HymnMetadata: metaData,
+		ParsedVerse:  map[int][][]entity.LyricWordVerse{},
+	}
+
+	for i, v := range metaData.Verse {
+		whole := [][]entity.LyricWordVerse{}
+
+		err := json.Unmarshal([]byte(v.Content.String), &whole)
+		if err != nil {
+			log.Printf("[RenderHymn] failed to unmarshal for verse, err %s\n", err.Error())
+			return err
+		}
+
+		metaWithParsedVerse.ParsedVerse[i] = whole
+
+	}
+
 	canv.Delegator().OnBeforeStartWrite()
 
-	i.renderer.Render(ctx, music, canv, metaData)
+	i.renderer.Render(ctx, music, canv, metaWithParsedVerse)
 
 	return nil
 }

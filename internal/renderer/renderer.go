@@ -6,6 +6,7 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/header"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
@@ -14,12 +15,11 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
-	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 type Renderer interface {
-	Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnMetadata)
+	Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *entity.HymnMetaData)
 }
 
 type rendererInteractor struct {
@@ -44,7 +44,7 @@ func NewRenderer() Renderer {
 	}
 }
 
-func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *repository.HymnMetadata) {
+func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *entity.HymnMetaData) {
 	canv.Start(constant.LAYOUT_WIDTH, 3000)
 	canv.Def()
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music|Figtree")))
@@ -53,14 +53,14 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	keySignature := keysig.NewKeySignature(ctx, music.Part.Measures)
 	timeSignature := timesig.NewTimeSignatures(ctx, music.Part.Measures)
 
-	ir.Header.RenderSheetHeader(ctx, canv, music.Credit, metadata)
+	ir.Header.RenderSheetHeader(ctx, canv, music.Credit, metadata.HymnMetadata)
 	ir.Header.RenderKeyandTimeSignatures(ctx, canv, keySignature, timeSignature)
 
 	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature, metadata)
 
 	if metadata != nil {
-		ir.Footnote.RenderMusicFootnotes(ctx, canv, metadata, relativeY)
-		verseInfo := ir.Verse.RenderVerse(ctx, canv, relativeY, metadata.Verse, metadata.VerseFootNotes)
+		ir.Footnote.RenderMusicFootnotes(ctx, canv, metadata.HymnMetadata, relativeY)
+		verseInfo := ir.Verse.RenderVerse(ctx, canv, relativeY, metadata)
 
 		if verseInfo.MarginBottom != 0 {
 			relativeY = verseInfo.MarginBottom

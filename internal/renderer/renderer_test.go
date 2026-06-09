@@ -169,7 +169,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 			},
 			staffMock: func(c *gomock.Controller) *staff.MockStaff {
 				mockStaff := staff.NewMockStaff(c)
-				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature)
+				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature, nil)
 				return mockStaff
 			},
 		},
@@ -219,7 +219,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 			},
 			staffMock: func(c *gomock.Controller) *staff.MockStaff {
 				mockStaff := staff.NewMockStaff(c)
-				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature).Return(100)
+				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature, nil).Return(100)
 				return mockStaff
 			},
 
@@ -266,7 +266,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				ir.Verse = tt.verseMock(ctrl)
 			}
 
-			ir.Render(context.Background(), tt.args.music, tt.canvasMock(ctrl), tt.args.metadata)
+			ir.Render(context.Background(), tt.args.music, tt.canvasMock(ctrl), &entity.HymnMetaData{HymnMetadata: tt.args.metadata})
 		})
 	}
 }

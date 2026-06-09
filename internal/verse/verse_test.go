@@ -136,7 +136,7 @@ func Test_verseInteractor_parse(t *testing.T) {
 
 			var v verseInteractor
 			v.Lyric = tt.lyricMock(ctrl)
-			got := v.parse(tt.y, tt.verses)
+			got := v.parse(tt.y, &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses}})
 
 			assert.Equal(t, tt.want, got, "parse()")
 		})
@@ -214,7 +214,11 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 			var v verseInteractor
 			v.Lyric = tt.lyricMock(ctrl)
 			v.Footnote = tt.footnoteMock(ctrl)
-			got := v.RenderVerse(context.Background(), tt.canv(ctrl), tt.y, tt.verses, tt.verseFootnote)
+			got := v.RenderVerse(context.Background(), tt.canv(ctrl), tt.y, &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{
+				Verse:          tt.verses,
+				VerseFootNotes: tt.verseFootnote,
+				// tt.verseFootnote
+			}})
 
 			assert.Equal(t, tt.want, got)
 		})

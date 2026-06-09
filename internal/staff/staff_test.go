@@ -270,7 +270,11 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			si.Barline = tt.barlineMock(ctrl)
 			si.RenderAlign = tt.renderAlignMock(ctrl)
 
-			got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, 0, tt.isLastStaff, tt.keySignature, tt.timeSignature, tt.measures, tt.prevNotes...)
+			got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, 0, nil, tt.measures, StaffData{
+				PrevNotes: tt.prevNotes,
+				KeySig:    tt.keySignature,
+				TimeSig:   tt.timeSignature,
+			})
 
 			assert.Equal(t, tt.want, got, "StaffInfo assert")
 

@@ -10,6 +10,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
@@ -63,6 +64,7 @@ func (v *verseInteractor) parse(y int, metadata *entity.HymnMetaData) ParsedVers
 	}
 
 	for i := 2; i <= len(metadata.Verse)+1; i++ {
+
 		verse := metadata.Verse[i]
 		whole := metadata.ParsedVerse[i]
 
@@ -114,6 +116,8 @@ func (v *verseInteractor) parse(y int, metadata *entity.HymnMetaData) ParsedVers
 func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, metadata *entity.HymnMetaData) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea'")
 
+	prm, _ := params.GetParamFromContext(ctx)
+
 	parsedVerse := v.parse(y, metadata)
 
 	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (parsedVerse.MaxLineWidth / 2)))
@@ -122,31 +126,39 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		x = constant.LAYOUT_INDENT_LENGTH * 2
 	}
 	totalVerse := len(parsedVerse.Verses)
+	if prm.Verse != 0 {
+		totalVerse -= 2
+	}
 
 	offset := 0.0
 
-	prm, _ := params.GetParamFromContext(ctx)
-
 	maxY := float64(0)
-	for i := 1; i < totalVerse+1; i++ {
+	versesNo := utils.GetMapSortedKeys(parsedVerse.Verses)
+	for _, i := range versesNo {
 
-		if prm.Verse > 1 && (i == prm.Verse-2 || i == prm.Verse-1) {
-			continue
-		}
-
-		canv.Group("class='verse'", fmt.Sprintf("number='%d'", i+1))
+		canv.Group("class='verse'", fmt.Sprintf("number='%d'", i))
 		yVerse := y
 
-		currentVerse := parsedVerse.Verses[i+1]
+		currentVerse := parsedVerse.Verses[i]
+
+		row := currentVerse.Position.Row
+		col := currentVerse.Position.Col
+		style := currentVerse.Position.Style
+
+		// if prm.Verse != 0 && i > prm.Verse+1 {
+		// 	row = parsedVerse.Verses[i-1].Position.Row
+		// 	col = parsedVerse.Verses[i-1].Position.Col
+		// 	style = parsedVerse.Verses[i-1].Position.Style
+		// }
 
 		// number verse
 		margin := 0
 		if parsedVerse.IsMultiColumn {
-			if currentVerse.Position.Col == 2 {
+			if col == 2 {
 				margin = constant.LAYOUT_WIDTH - (constant.LAYOUT_INDENT_LENGTH * 3.5) - int(parsedVerse.MaxRightPos)
-				yVerse = parsedVerse.RowPositionY[currentVerse.Position.Row]
+				yVerse = parsedVerse.RowPositionY[row]
 				y = yVerse
-			} else if currentVerse.Position.Style == VerseRowStyleSingleColumn {
+			} else if style == VerseRowStyleSingleColumn {
 				margin = -1 * (constant.LAYOUT_INDENT_LENGTH / 4)
 			}
 		}
@@ -156,23 +168,31 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 				offset = parsedVerse.MaxLineWidth / 2
 			}
 
-			if currentVerse.Position.Col == 1 {
+			if col == 1 {
 				offset = math.Abs(offset)
 			} else {
 				offset = math.Abs(offset) * -1
 			}
 
-			if currentVerse.Position.Style == VerseRowStyleSingleColumn {
+			if style == VerseRowStyleSingleColumn {
 				offset = (constant.LAYOUT_INDENT_LENGTH / 4)
 			}
 		}
 
-		if currentVerse.Position.Style == VerseRowStyleSingleColumn {
+		if style == VerseRowStyleSingleColumn {
 			x = defaultX + int(constant.LAYOUT_INDENT_LENGTH/2)
 		}
 		xPos := x + margin + int(offset)
 
-		prefixNum := fmt.Sprintf("%d. ", i+1)
+		if prm.Verse > 1 && (i == prm.Verse || i == prm.Verse-1) {
+			maxY = math.Max(maxY, float64(y))
+			y += VERSE_SEPARATOR
+			canv.Gend()
+
+			continue
+		}
+
+		prefixNum := fmt.Sprintf("%d. ", i)
 		canv.Text(xPos-5-int(v.Lyric.CalculateLyricWidth(prefixNum)), y, prefixNum)
 		for line, liveVerse := range currentVerse.Verse {
 			if strings.HasPrefix(liveVerse, "    ") {
@@ -180,7 +200,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 			}
 			canv.TextUnescaped(float64(xPos), float64(y), liveVerse)
 			cursor := footnote.VerseLineCursor{
-				VerseNo:    i + 1,
+				VerseNo:    i,
 				LinePos:    line + 1,
 				Leftmargin: margin + int(offset),
 				LineText:   liveVerse,

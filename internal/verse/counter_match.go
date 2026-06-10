@@ -1,12 +1,15 @@
 package verse
 
 import (
+	"context"
+	"fmt"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 func IsVowel(char rune) bool {
@@ -56,9 +59,16 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 
 }
 
-func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
+func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
 
-	verse, ok := metadata.ParsedVerse[2] // for now hardcoded two for testing visual
+	prm, _ := params.GetParamFromContext(ctx)
+
+	targetVerse := 2
+	if prm.Verse > 1 {
+		targetVerse = prm.Verse
+	}
+
+	verse, ok := metadata.ParsedVerse[targetVerse]
 	if !ok {
 		return 0
 	}
@@ -108,8 +118,14 @@ func LoadOtherVerse(notes []*entity.NoteRenderer, metadata *entity.HymnMetaData,
 		}
 
 		txt := flattenSyll[syll].Text
-		if lyric.HasPrefix(note) {
-			txt = "2." + txt // for now, hardcoded. if the lyric has prefix.
+		hasPrefix := lyric.HasPrefix(note)
+		if hasPrefix || syll == 0 {
+			txt = fmt.Sprintf("%d. %s", targetVerse, txt)
+			// if !hasPrefix {
+			// 	lastLyric := appendedLyric[len(appendedLyric)-1]
+			// 	lastLyric.Text[0].Value = fmt.Sprintf("%d. %s", targetVerse-1, lastLyric.Text[0].Value)
+			// 	appendedLyric[len(appendedLyric)-1] = lastLyric
+			// }
 		}
 
 		newLyric := []musicxml.Lyric{

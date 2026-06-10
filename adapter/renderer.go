@@ -10,6 +10,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -60,14 +61,14 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 	num, err := strconv.Atoi(raw)
 	if err != nil {
 		if len(raw) == 0 {
-			log.Printf("invalid number: %v", err.Error())
+			log.Printf("[ServeHTTP] invalid number: %v", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Invalid URL"))
 			return
 		}
 		num, err = strconv.Atoi(raw[0 : len(raw)-1])
 		if err != nil {
-			log.Printf("invalid number: %v", err.Error())
+			log.Printf("[ServeHTTP] invalid number: %v", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Invalid URL"))
 			return
@@ -75,7 +76,21 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 		variant = []string{string(raw[len(raw)-1])}
 	}
 
-	err = rh.usecase.RenderHymn(r.Context(), canv, num, variant...)
+	verseRaw := r.FormValue("verse")
+
+	verseNo, err := strconv.Atoi(verseRaw)
+	if verseRaw != "" && err != nil {
+		log.Printf("[ServeHTTP] invalid verse: %v", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid URL"))
+		return
+	}
+
+	prm := params.Param{
+		Verse: verseNo,
+	}
+
+	err = rh.usecase.RenderHymn(params.NewParamContext(r.Context(), prm), canv, num, variant...)
 	if err != nil {
 		delegator.OnError(err)
 	}

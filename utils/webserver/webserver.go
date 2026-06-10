@@ -53,7 +53,7 @@ type HTTPAdapter interface {
 
 func commonMiddleware(wg *sync.WaitGroup, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		path := r.URL.Path
+		path := r.RequestURI
 		defer func() {
 			err := recover()
 			if err != nil {
@@ -72,7 +72,11 @@ func commonMiddleware(wg *sync.WaitGroup, next httprouter.Handle) httprouter.Han
 
 		next(responseWriter, r, ps)
 
-		log.Printf("[Webserver][%d ms][%d bytes] %s %s -> Status code: %d\n", time.Since(t).Milliseconds(), responseWriter.size, strings.ToUpper(r.Method), path, responseWriter.status)
+		log.Printf("[Webserver][Status: %d][%d ms][%d bytes] %s %s\n",
+			responseWriter.status,
+			time.Since(t).Milliseconds(),
+			responseWriter.size,
+			strings.ToUpper(r.Method), path)
 	}
 }
 

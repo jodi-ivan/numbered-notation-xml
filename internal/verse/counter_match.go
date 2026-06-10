@@ -35,7 +35,14 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 		}
 	}
 
+	if end < start {
+		return []musicxml.LyricText{
+			{Value: syllText},
+		}
+	}
+
 	partBreakdown := []musicxml.LyricText{}
+
 	if start == 0 {
 		partBreakdown = []musicxml.LyricText{
 			{Underline: 1, Value: syllText[start : end+1]},
@@ -58,15 +65,29 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 	return partBreakdown
 
 }
-
 func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
-
 	prm, _ := params.GetParamFromContext(ctx)
 
+	if prm.Verse == 0 {
+		return 0
+	}
 	targetVerse := 2
 	if prm.Verse > 1 {
 		targetVerse = prm.Verse
 	}
+
+	if targetVerse > 2 {
+		// load previous verse
+		LoadVerse(ctx, targetVerse-1, true, notes, metadata, startPos, prevRepeatInfos)
+	}
+
+	return LoadVerse(ctx, targetVerse, false, notes, metadata, startPos, prevRepeatInfos)
+
+}
+
+func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
+
+	prm, _ := params.GetParamFromContext(ctx)
 
 	verse, ok := metadata.ParsedVerse[targetVerse]
 	if !ok {
@@ -112,7 +133,10 @@ func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata 
 			continue
 		}
 
-		appendedLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
+		appendedLyric := []musicxml.Lyric{}
+		if !clear {
+			appendedLyric = lyric.GetMusicxmlLyric(note) // load the lyric on the current music
+		}
 		if lyricNum == 0 {
 			lyricNum = len(appendedLyric) + 1
 		}
@@ -121,11 +145,17 @@ func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata 
 		hasPrefix := lyric.HasPrefix(note)
 		if hasPrefix || syll == 0 {
 			txt = fmt.Sprintf("%d. %s", targetVerse, txt)
-			// if !hasPrefix {
-			// 	lastLyric := appendedLyric[len(appendedLyric)-1]
-			// 	lastLyric.Text[0].Value = fmt.Sprintf("%d. %s", targetVerse-1, lastLyric.Text[0].Value)
-			// 	appendedLyric[len(appendedLyric)-1] = lastLyric
-			// }
+			if len(appendedLyric) > 0 && !hasPrefix {
+				lastLyric := appendedLyric[0]
+				lastLyric.Text[0].Value = fmt.Sprintf("%d. %s", targetVerse-1, lastLyric.Text[0].Value)
+				appendedLyric[0] = lastLyric
+			}
+		}
+
+		verseIndicator := 2
+		if targetVerse != 2 && prm.Verse == verseIndicator-1 {
+			verseIndicator = 0
+
 		}
 
 		newLyric := []musicxml.Lyric{
@@ -133,7 +163,7 @@ func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata 
 				Text:     ApplyElision(txt, flattenCombine[syll]),
 				Syllabic: flattenSyll[syll].Type,
 				Number:   lyricNum,
-				Verse:    2,
+				Verse:    verseIndicator,
 			},
 		}
 		insertLastMeasure := syll < lastOffset*2

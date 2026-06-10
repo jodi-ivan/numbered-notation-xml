@@ -145,11 +145,11 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		col := currentVerse.Position.Col
 		style := currentVerse.Position.Style
 
-		// if prm.Verse != 0 && i > prm.Verse+1 {
-		// 	row = parsedVerse.Verses[i-1].Position.Row
-		// 	col = parsedVerse.Verses[i-1].Position.Col
-		// 	style = parsedVerse.Verses[i-1].Position.Style
-		// }
+		if prm.Verse != 0 && i > prm.Verse {
+			row = parsedVerse.Verses[i-1].Position.Row
+			col = parsedVerse.Verses[i-1].Position.Col
+			style = parsedVerse.Verses[i-1].Position.Style
+		}
 
 		// number verse
 		margin := 0

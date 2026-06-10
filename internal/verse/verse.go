@@ -11,6 +11,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 type Verse interface {
@@ -124,8 +125,14 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 
 	offset := 0.0
 
+	prm, _ := params.GetParamFromContext(ctx)
+
 	maxY := float64(0)
 	for i := 1; i < totalVerse+1; i++ {
+
+		if prm.Verse > 1 && (i == prm.Verse-2 || i == prm.Verse-1) {
+			continue
+		}
 
 		canv.Group("class='verse'", fmt.Sprintf("number='%d'", i+1))
 		yVerse := y

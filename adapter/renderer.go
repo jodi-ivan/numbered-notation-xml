@@ -31,8 +31,8 @@ func (cdh *CanvasDelegatorHTTP) OnError(err error) canvas.DelegatorErrorFlowCont
 
 	} else if errors.Is(err, repository.ErrHymnHasMoreThanOneVariant) {
 		// Perform the redirect
-		http.Redirect(cdh.w, cdh.r, cdh.r.URL.Path+"a", http.StatusSeeOther)
-
+		cdh.r.URL.Path += "a"
+		http.Redirect(cdh.w, cdh.r, cdh.r.URL.RequestURI(), http.StatusSeeOther)
 		return canvas.DelegatorErrorFlowControlStop
 
 	}

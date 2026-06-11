@@ -10,6 +10,12 @@ type LyricPosition struct {
 	TotalLyric int
 }
 
+type HyphenPosition struct {
+	Coordinate entity.Coordinate
+	Verse      int
+	TotalLyric int
+}
+
 type VerseInfo struct {
 	MarginBottom int
 	HasLyric     bool

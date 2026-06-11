@@ -8,9 +8,10 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
-func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate) {
+func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []HyphenPosition) {
 
 	if prevLyric.Lyrics.Syllabic == musicxml.LyricSyllabicTypeEnd || prevLyric.Lyrics.Syllabic == musicxml.LyricSyllabicTypeSingle {
 		return nil
@@ -28,8 +29,12 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 
 		// force add hyphen at the end if the lyric near the end margin
 		if endPostion == float64(constant.LAYOUT_WIDTH-constant.LAYOUT_INDENT_LENGTH) {
-			return []entity.Coordinate{
-				entity.NewCoordinate(startPosition+2, currentLyric.Coordinate.Y),
+			return []HyphenPosition{
+				{
+					Coordinate: entity.NewCoordinate(startPosition+2, currentLyric.Coordinate.Y),
+					Verse:      currentLyric.Lyrics.Verse,
+					TotalLyric: currentLyric.TotalLyric,
+				},
 			}
 		}
 		return nil
@@ -42,21 +47,36 @@ func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, curren
 		if offset < 0 {
 			offset = 0
 		}
-		return []entity.Coordinate{
-			entity.NewCoordinate(startPosition+offset, currentLyric.Coordinate.Y),
+		return []HyphenPosition{
+			{
+				Coordinate: entity.NewCoordinate(startPosition+offset, currentLyric.Coordinate.Y),
+				Verse:      currentLyric.Lyrics.Verse,
+				TotalLyric: currentLyric.TotalLyric,
+			},
 		}
 	} else {
-		result := []entity.Coordinate{}
+		result := []HyphenPosition{}
 		totalContainer := math.Ceil((distance - (2 * hypenWidth)) / float64(container))
 		totalHypen := (totalContainer * 2)
 		if lyricText == "" {
-			result = append(result, entity.NewCoordinate(HYPHEN_LEFT_INDENT, currentLyric.Coordinate.Y))
+			result = append(result,
+				HyphenPosition{
+					Coordinate: entity.NewCoordinate(HYPHEN_LEFT_INDENT, currentLyric.Coordinate.Y),
+					Verse:      currentLyric.Lyrics.Verse,
+					TotalLyric: currentLyric.TotalLyric,
+				},
+			)
 			totalHypen += 1
 		}
 		startPosition += (distance / totalHypen)
 		for i := float64(0); i < totalHypen-1; i++ {
 			result = append(result,
-				entity.NewCoordinate(startPosition+(i*(distance/totalHypen)), currentLyric.Coordinate.Y))
+				HyphenPosition{
+					Coordinate: entity.NewCoordinate(startPosition+(i*(distance/totalHypen)), currentLyric.Coordinate.Y),
+					Verse:      currentLyric.Lyrics.Verse,
+					TotalLyric: currentLyric.TotalLyric,
+				})
+
 		}
 
 		return result
@@ -72,7 +92,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int,
 	hs := NewHypenStack()
 	baseYPos := map[int]float64{}
 	var lastLyric []entity.Lyric
-	hypenLocation := []entity.Coordinate{}
+	hypenLocation := []HyphenPosition{}
 	hasLyricBefore := false
 	// filter notes that has lyric only
 	notes := []*entity.NoteRenderer{}
@@ -208,9 +228,16 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int,
 			}
 		}
 	}
+
+	prm, _ := params.GetParamFromContext(ctx)
+
 	canv.Group("hyphens")
 	for _, hl := range hypenLocation {
-		canv.TextUnescaped(hl.X, hl.Y, "-") // use the Unescaped because of the floating number
+		sty := getColoringStyle(hl.Verse, hl.TotalLyric)
+		if prm.Verse < 2 {
+			sty = ""
+		}
+		canv.TextUnescaped(hl.Coordinate.X, hl.Coordinate.Y, "-", sty) // use the Unescaped because of the floating number
 	}
 	canv.Gend()
 }

@@ -68,7 +68,7 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
 	prm, _ := params.GetParamFromContext(ctx)
 
-	if prm.Verse == 0 {
+	if prm.Verse < 2 {
 		return 0
 	}
 	targetVerse := 2

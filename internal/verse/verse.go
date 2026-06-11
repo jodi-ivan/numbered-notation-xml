@@ -151,7 +151,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		col := currentVerse.Position.Col
 		style := currentVerse.Position.Style
 
-		if prm.Verse != 0 {
+		if prm.Verse != 0 && prm.Verse != 1 {
 			if i == 1 {
 				row = parsedVerse.Verses[2].Position.Row
 				col = parsedVerse.Verses[2].Position.Col

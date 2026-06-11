@@ -15,6 +15,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
+	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -59,6 +60,9 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature, metadata)
 
 	if metadata != nil {
+		firstVerse := verse.BuildContent(music, metadata)
+		metadata.ParsedVerse[1] = firstVerse
+		metadata.Verse[1] = repository.HymnVerse{}
 		ir.Footnote.RenderMusicFootnotes(ctx, canv, metadata.HymnMetadata, relativeY)
 		verseInfo := ir.Verse.RenderVerse(ctx, canv, relativeY, metadata)
 

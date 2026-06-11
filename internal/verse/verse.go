@@ -55,7 +55,9 @@ func (v *verseInteractor) elisionPosition(p entity.LyricPartVerse, y int, lineBe
 	}
 }
 
-func (v *verseInteractor) parse(y int, metadata *entity.HymnMetaData) ParsedVerseWithInfo {
+func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.HymnMetaData) ParsedVerseWithInfo {
+
+	prm, _ := params.GetParamFromContext(ctx)
 
 	result := ParsedVerseWithInfo{
 		Verses:        map[int]ParsedVerse{},
@@ -63,7 +65,11 @@ func (v *verseInteractor) parse(y int, metadata *entity.HymnMetaData) ParsedVers
 		RowPositionY:  map[int]int{},
 	}
 
-	for i := 2; i <= len(metadata.Verse)+1; i++ {
+	startVerse := 2
+	if _, ok := metadata.Verse[1]; ok && prm.Verse > 2 {
+		startVerse = 1
+	}
+	for i := startVerse; i <= len(metadata.Verse); i++ {
 
 		verse := metadata.Verse[i]
 		whole := metadata.ParsedVerse[i]
@@ -107,7 +113,7 @@ func (v *verseInteractor) parse(y int, metadata *entity.HymnMetaData) ParsedVers
 			}
 			parsedVerse.Verse = append(parsedVerse.Verse, lineText)
 		}
-		result.Verses[int(verse.VerseNum.Int32)] = parsedVerse
+		result.Verses[i] = parsedVerse
 	}
 
 	return result
@@ -118,7 +124,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 
 	prm, _ := params.GetParamFromContext(ctx)
 
-	parsedVerse := v.parse(y, metadata)
+	parsedVerse := v.parse(ctx, y, metadata)
 
 	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (parsedVerse.MaxLineWidth / 2)))
 	x := defaultX
@@ -145,10 +151,16 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		col := currentVerse.Position.Col
 		style := currentVerse.Position.Style
 
-		if prm.Verse != 0 && i > prm.Verse {
-			row = parsedVerse.Verses[i-1].Position.Row
-			col = parsedVerse.Verses[i-1].Position.Col
-			style = parsedVerse.Verses[i-1].Position.Style
+		if prm.Verse != 0 {
+			if i == 1 {
+				row = parsedVerse.Verses[2].Position.Row
+				col = parsedVerse.Verses[2].Position.Col
+				style = parsedVerse.Verses[2].Position.Style
+			} else if i > prm.Verse {
+				row = parsedVerse.Verses[i-1].Position.Row
+				col = parsedVerse.Verses[i-1].Position.Col
+				style = parsedVerse.Verses[i-1].Position.Style
+			}
 		}
 
 		// number verse

@@ -136,7 +136,7 @@ func Test_verseInteractor_parse(t *testing.T) {
 
 			var v verseInteractor
 			v.Lyric = tt.lyricMock(ctrl)
-			got := v.parse(tt.y, &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses}})
+			got := v.parse(context.Background(), tt.y, &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses}})
 
 			assert.Equal(t, tt.want, got, "parse()")
 		})

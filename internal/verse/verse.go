@@ -55,6 +55,33 @@ func (v *verseInteractor) elisionPosition(p entity.LyricPartVerse, y int, lineBe
 	}
 }
 
+func getPos(idx, style, totalVerse int) (row, col, newStyle int) {
+	if (idx == 0 && totalVerse == 1) || style == 0 || style == 12 {
+		return idx + 1, 1, 12
+	}
+
+	half := totalVerse / 2
+	col = 1
+	if (idx+1)%2 == 1 && idx+1 == totalVerse {
+		col = 1
+		row = half + 1 // Placed at the bottom across both columns
+		style = 12
+	} else {
+		// 2. Vertical Column Logic
+		if idx < half {
+			// First Column (Vertical flow)
+			col = 1
+			row = idx + 1
+		} else {
+			// Second Column (Starts at Verse 4 if count is 5)
+			col = 2
+			row = (idx - half) + 1
+		}
+	}
+
+	return row, col, style
+}
+
 func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.HymnMetaData) ParsedVerseWithInfo {
 
 	prm, _ := params.GetParamFromContext(ctx)
@@ -65,31 +92,48 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 		RowPositionY:  map[int]int{},
 	}
 
-	startVerse := 2
-	if _, ok := metadata.Verse[1]; ok && prm.Verse > 2 {
-		startVerse = 1
+	if prm.Verse > 1 {
+		delete(metadata.Verse, prm.Verse)
+		delete(metadata.ParsedVerse, prm.Verse)
+
+		delete(metadata.Verse, prm.Verse-1)
+		delete(metadata.ParsedVerse, prm.Verse-1)
+
 	}
-	for i := startVerse; i <= len(metadata.Verse); i++ {
+
+	if len(metadata.Verse) == 0 {
+		return result
+	}
+	versesNo := utils.GetMapSortedKeys(metadata.Verse)
+
+	for idx, i := range versesNo {
 
 		verse := metadata.Verse[i]
 		whole := metadata.ParsedVerse[i]
 
-		if _, ok := result.RowPositionY[int(verse.Row.Int16)]; !ok {
-			result.RowPositionY[int(verse.Row.Int16)] = y + (LINE_DISTANCE * len(whole) * (int(verse.Row.Int16) - 1)) + ((int(verse.Row.Int16) - 1) * VERSE_SEPARATOR)
+		row := int(verse.Row.Int16)
+		col := int(verse.Col.Int16)
+		style := int(verse.StyleRow.Int32)
+
+		if prm.Verse > 1 {
+			// get the 1st style instead, since there is cases when the verse is last verse
+			// style can be modified.
+			style = int(metadata.Verse[versesNo[0]].StyleRow.Int32)
+			if style == 0 {
+				style = int(VerseRowStyleSingleColumn)
+			}
+			row, col, style = getPos(idx, style, len(versesNo))
 		}
 
-		style := VerseRowStyle(verse.StyleRow.Int32)
-
-		if int(style) == 0 {
-			style = VerseRowStyleSingleColumn
+		if _, ok := result.RowPositionY[row]; !ok {
+			result.RowPositionY[row] = y + (LINE_DISTANCE * len(whole) * (row - 1)) + ((row - 1) * VERSE_SEPARATOR)
 		}
+
 		parsedVerse := ParsedVerse{
 			ElisionMarks: [][2]entity.Coordinate{},
 			Position: versePosition{
-				Col:      int(verse.Col.Int16),
-				RowWidth: int(verse.StyleRow.Int32),
-				Row:      int(verse.Row.Int16),
-				Style:    style,
+				Col: col, Row: row,
+				Style: VerseRowStyle(style),
 			},
 		}
 
@@ -107,7 +151,7 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 				lineText = lineText + " " + word.Word
 			}
 			result.MaxLineWidth = math.Max(result.MaxLineWidth, v.Lyric.CalculateLyricWidth(lineText))
-			if verse.Col.Int16 == 2 {
+			if col == 2 {
 				result.MaxRightPos = math.Max(result.MaxRightPos, result.MaxLineWidth)
 				result.IsMultiColumn = result.IsMultiColumn || true
 			}
@@ -151,18 +195,6 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		col := currentVerse.Position.Col
 		style := currentVerse.Position.Style
 
-		if prm.Verse != 0 && prm.Verse != 1 {
-			if i == 1 {
-				row = parsedVerse.Verses[2].Position.Row
-				col = parsedVerse.Verses[2].Position.Col
-				style = parsedVerse.Verses[2].Position.Style
-			} else if i > prm.Verse {
-				row = parsedVerse.Verses[i-1].Position.Row
-				col = parsedVerse.Verses[i-1].Position.Col
-				style = parsedVerse.Verses[i-1].Position.Style
-			}
-		}
-
 		// number verse
 		margin := 0
 		if parsedVerse.IsMultiColumn {
@@ -195,14 +227,6 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 			x = defaultX + int(constant.LAYOUT_INDENT_LENGTH/2)
 		}
 		xPos := x + margin + int(offset)
-
-		if prm.Verse > 1 && (i == prm.Verse || i == prm.Verse-1) {
-			maxY = math.Max(maxY, float64(y))
-			y += VERSE_SEPARATOR
-			canv.Gend()
-
-			continue
-		}
 
 		prefixNum := fmt.Sprintf("%d. ", i)
 		canv.Text(xPos-5-int(v.Lyric.CalculateLyricWidth(prefixNum)), y, prefixNum)

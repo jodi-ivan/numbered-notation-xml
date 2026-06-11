@@ -20,7 +20,8 @@ func (li *lyricInteractor) CalculateMarginLeft(txt string) float64 {
 	return 0
 }
 
-func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, y int, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
+func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, y, part int, leftBarline *entity.NoteRenderer) []LyricPosition {
+	verse := note.Lyric[part].Verse
 	lyricVal := entity.LyricVal(note.Lyric[part].Text).String()
 
 	xPos := float64(note.PositionX)
@@ -54,6 +55,7 @@ func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, y int, pa
 			Lyrics: entity.Lyric{
 				Syllabic: musicxml.LyricSyllabicTypeSingle,
 				Text:     []entity.Text{text},
+				Verse:    verse,
 			},
 		}
 
@@ -62,6 +64,7 @@ func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, y int, pa
 			Lyrics: entity.Lyric{
 				Syllabic: musicxml.LyricSyllabicTypeBegin,
 				Text:     []entity.Text{{Value: parts[1]}},
+				Verse:    verse,
 			},
 		}
 		mainLyric.Lyrics.Text[0] = entity.Text{Value: strings.ReplaceAll(mainLyric.Lyrics.Text[0].Value, parts[0]+".", "")}

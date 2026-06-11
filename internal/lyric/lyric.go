@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 var (
@@ -33,9 +34,9 @@ func init() {
 type Lyric interface {
 	CalculateLyricWidth(string) float64
 	SetLyricRenderer(noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo
-	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []entity.Coordinate)
+	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []HyphenPosition)
 	RenderHypen(ctx context.Context, y, offsetCenter int, canv canvas.Canvas, measure []*entity.NoteRenderer)
-	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate)
+	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate, sty ...string)
 	CalculateMarginLeft(txt string) float64
 	CalculateOverallWidth(ls []entity.Lyric) float64
 	SplitLyricPrefix(note *entity.NoteRenderer, y int, part int, leftBarline *entity.NoteRenderer) []LyricPosition
@@ -113,6 +114,9 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 }
 
 func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer, prevNote ...*entity.NoteRenderer) int {
+
+	prm, _ := params.GetParamFromContext(ctx)
+
 	prefixes := map[string]LyricPosition{}
 
 	offsetCenterVal := 0
@@ -171,7 +175,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 				minPrefix = math.Min(minPrefix, float64(n.PositionX)-prefixWidth-constant.LOWERCASE_LENGTH)
 				prefixes[n.LeadingHeader] = LyricPosition{
 					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
-					Lyrics:     entity.Lyric{Text: []entity.Text{{Value: n.LeadingHeader}}},
+					Lyrics:     entity.Lyric{Text: []entity.Text{{Value: n.LeadingHeader}}, Verse: l.Verse},
 				}
 			}
 
@@ -182,9 +186,16 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 			if strings.HasPrefix(lyricVal, "*") {
 				xPos -= int(li.CalculateLyricWidth("*"))
 			}
-
-			canv.Text(xPos, int(yPos), lyricVal)
-			li.RenderElision(ctx, canv, text, i, entity.Coordinate{X: float64(xPos), Y: yPos})
+			sty := getColoringStyle(l.Verse, len(n.Lyric))
+			if prm.Verse < 2 {
+				sty = ""
+			}
+			canv.Text(xPos, int(yPos), lyricVal, sty)
+			elisionOpacity := "stroke-opacity:0.6"
+			if sty == "" {
+				elisionOpacity = ""
+			}
+			li.RenderElision(ctx, canv, text, i, entity.Coordinate{X: float64(xPos), Y: yPos}, elisionOpacity)
 			n.Lyric[i] = l
 		}
 
@@ -200,6 +211,11 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 					}
 					minPrefix += li.CalculateLyricWidth(prefixVal) * 0.1
 				}
+				sty := getColoringStyle(p.Lyrics.Verse, p.TotalLyric)
+				if prm.Verse < 2 {
+					sty = ""
+				}
+				style = append(style, sty)
 				canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal, style...)
 			}
 			prefixes = map[string]LyricPosition{}

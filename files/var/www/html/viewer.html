@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SVG Local Viewer</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        #viewer-container { margin: 20px auto; max-width: 800px; }
+        img { max-width: 100%; height: auto; border: 1px solid #ccc; }
+        .controls { margin-top: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        #file-name { margin-bottom: 10px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <h1>Local SVG Navigator</h1>
+    <div id="file-name">Current: file-001.svg</div>
+
+    <div class="controls">
+        <button onclick="changeImage(-1)">❮ Previous</button>
+        <button onclick="changeImage(1)">Next ❯</button>
+    </div>
+    <div style="margin-top: 10px;">
+        <Label>
+            Verse: 
+            <input type="number" step="1" name="verse" id="verse" value="1" style="padding: 5px;" onchange="onVerseChange(this.value)">
+        </Label>
+
+    </div>
+
+    <div id="viewer-container" style="background-color: white;">
+        <!-- The img tag handles local SVG files effectively -->
+        <!-- <img  src="/kidung-jemaat/render/1" alt="SVG Image"> -->
+        <object id="svg-display" type="image/svg+xml" data="/kidung-jemaat/render/1"></object>
+    </div>
+
+
+    <script>
+       let currentIndex = 1;
+
+
+       function onVerseChange(val) {
+            changeImage(0, val)
+       }
+
+// Function to handle image changes
+function changeImage(step, verse) {
+    currentIndex += step;
+    if (currentIndex < 1) currentIndex = 1; 
+
+    const paddedIndex = String(currentIndex).padStart(3, '0');
+    var newFileName = `/kidung-jemaat/render/${currentIndex}`;
+    if (verse) {
+        console.log("before", newFileName)
+        newFileName += (`?verse=` + verse)
+    }
+
+    const imgElement = document.getElementById('svg-display');
+    const nameDisplay = document.getElementById('file-name');
+
+    imgElement.data = newFileName;
+    nameDisplay.textContent = `Current: ${newFileName}`;
+
+    imgElement.onerror = function() {
+        nameDisplay.textContent = `Error: ${newFileName} not found.`;
+        imgElement.alt = "File not found";
+    };
+}
+
+// Keyboard Listener for Arrow Keys
+document.addEventListener('keydown', (event) => {
+    const verseInput = document.getElementById('verse');
+    if (event.key === 'ArrowLeft') {
+        verseInput.value = 1
+        changeImage(-1);
+    } else if (event.key === 'ArrowRight') {
+        changeImage(1);
+        verseInput.value = 1
+    } else if (event.key === 'ArrowUp') {
+        verseInput.value++
+        changeImage(0, verseInput.value);
+    } else if (event.key === 'ArrowDown') {
+        verseInput.value--
+        changeImage(0, verseInput.value);
+    }
+});
+    </script>
+</body>
+</html>

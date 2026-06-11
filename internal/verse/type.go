@@ -11,10 +11,9 @@ type VerseInfo struct {
 type VerseRowStyle int
 
 type versePosition struct {
-	Col      int
-	Row      int
-	RowWidth int
-	Style    VerseRowStyle
+	Col   int
+	Row   int
+	Style VerseRowStyle
 }
 
 type ParsedVerse struct {

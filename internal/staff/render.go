@@ -26,6 +26,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	x := staffLines.GetLeftIndentWithTimeSignature()
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
+		SyllableOffset:   map[int]int{},
 	}
 	oldMarginButtom := 0
 	for i, st := range staffes {
@@ -37,6 +38,8 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			IndexStart:    info.EndIndex,
 			ReffAtStart:   info.StartRenderOtherNotes,
 			RepeatInfo:    info.RepeatInfo,
+
+			SyllableOffset: info.SyllableOffset,
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, i, metadata, st, data)
 		info.RepeatInfo = append(data.RepeatInfo, info.RepeatInfo...)
@@ -72,6 +75,8 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			IndexStart:    info.EndIndex,
 			ReffAtStart:   info.StartRenderOtherNotes,
 			RepeatInfo:    info.RepeatInfo,
+
+			SyllableOffset: info.SyllableOffset,
 		}
 		x = staffLines.GetLeftIndent(info.NextLineRenderer[0].MeasureNumber)
 		idx := len(staffes) - 1

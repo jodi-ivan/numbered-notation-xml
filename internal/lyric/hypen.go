@@ -194,6 +194,9 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int,
 					}
 				}
 				if pair[1] == nil {
+					if len(l.Text) == 0 || (len(l.Text) == 1 && l.Text[0].Value == "") {
+						continue
+					}
 					pair[1] = &LyricPosition{
 						TotalLyric: len(n.Lyric),
 						Coordinate: entity.NewCoordinate(float64(n.PositionX), pair[0].Coordinate.Y),

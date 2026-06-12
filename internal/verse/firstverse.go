@@ -62,6 +62,7 @@ func BuildContent(music musicxml.MusicXML, metadata *entity.HymnMetaData) [][]en
 				}
 				for _, s := range l.Text {
 					syl += s.Value
+					part.Text += s.Value
 
 					part.Breakdown = append(part.Breakdown, entity.LyricStylePart{
 						Text:      s.Value,

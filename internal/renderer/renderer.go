@@ -62,7 +62,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 
 	if metadata != nil {
 		prm, _ := params.GetParamFromContext(ctx)
-		if prm.Verse > 2 {
+		if prm.Verse > 2 || (prm.Verse > 1 && prm.SingleVerseMode) {
 			firstVerse := verse.BuildContent(music, metadata)
 			metadata.ParsedVerse[1] = firstVerse
 			verseInfo := repository.HymnVerse{}

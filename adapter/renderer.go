@@ -86,8 +86,19 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
+	mode := r.FormValue("focus")
+
+	focusMode, err := strconv.ParseBool(mode)
+	if mode != "" && err != nil {
+		log.Printf("[ServeHTTP] invalid mode: %v", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid URL"))
+		return
+	}
+
 	prm := params.Param{
-		Verse: verseNo,
+		Verse:           verseNo,
+		SingleVerseMode: focusMode,
 	}
 
 	err = rh.usecase.RenderHymn(params.NewParamContext(r.Context(), prm), canv, num, variant...)

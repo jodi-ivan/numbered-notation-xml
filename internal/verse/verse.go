@@ -96,9 +96,10 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 		delete(metadata.Verse, prm.Verse)
 		delete(metadata.ParsedVerse, prm.Verse)
 
-		delete(metadata.Verse, prm.Verse-1)
-		delete(metadata.ParsedVerse, prm.Verse-1)
-
+		if !prm.SingleVerseMode {
+			delete(metadata.Verse, prm.Verse-1)
+			delete(metadata.ParsedVerse, prm.Verse-1)
+		}
 	}
 
 	if len(metadata.Verse) == 0 {

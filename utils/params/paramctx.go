@@ -10,6 +10,7 @@ const PARAM_CTX_KEY = "param"
 type Param struct {
 	DisableGregorian bool
 	Verse            int
+	SingleVerseMode  bool
 }
 
 type paramCtx struct {

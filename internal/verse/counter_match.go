@@ -85,13 +85,13 @@ func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata 
 		targetVerse = prm.Verse
 	}
 
-	if targetVerse > 2 {
+	if targetVerse > 2 && !prm.SingleVerseMode {
 		// load previous verse
 		prvOffset, _ := LoadVerse(ctx, targetVerse-1, true, notes, metadata, startPos+offset[targetVerse-1], prevRepeatInfos)
 		offset[targetVerse-1] += prvOffset
 	}
 
-	targetVerseOffset, margin := LoadVerse(ctx, targetVerse, false, notes, metadata, startPos+offset[targetVerse], prevRepeatInfos)
+	targetVerseOffset, margin := LoadVerse(ctx, targetVerse, prm.SingleVerseMode, notes, metadata, startPos+offset[targetVerse], prevRepeatInfos)
 	offset[targetVerse] += targetVerseOffset
 
 	return offset, margin
@@ -99,7 +99,7 @@ func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata 
 }
 
 func fillableByLyric(n *entity.NoteRenderer) bool {
-	return n.Barline != nil && !breathpause.IsBreathMark(n) && !n.IsDotted
+	return !(n.Barline != nil || breathpause.IsBreathMark(n) || n.IsDotted)
 }
 
 func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) (int, int) {
@@ -147,6 +147,10 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 	for i := 0; i < len(notes) && syll < len(flattenSyll); i++ {
 
 		note := notes[i]
+
+		if !fillableByLyric(note) {
+			continue
+		}
 		if len(note.Lyric) == 0 {
 			if flattenSyll[syll].Offset == 1 {
 				// fill up the empty notes with current syllable (shift left)

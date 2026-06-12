@@ -18,6 +18,7 @@ type StaffInfo struct {
 	ForceNewLine          bool
 	SyllableCount         int
 	RepeatInfo            []*musicxml.RepeatInfo
+	SyllableOffset        map[int]int
 }
 
 type StaffData struct {
@@ -28,6 +29,8 @@ type StaffData struct {
 	IndexStart    int
 	ReffAtStart   bool
 	RepeatInfo    []*musicxml.RepeatInfo
+
+	SyllableOffset map[int]int
 }
 type CoordinateWithTuplet struct {
 	entity.Coordinate

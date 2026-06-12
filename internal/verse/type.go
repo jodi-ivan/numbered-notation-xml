@@ -29,3 +29,7 @@ type ParsedVerseWithInfo struct {
 	MaxRightPos   float64
 	RowPositionY  map[int]int
 }
+
+var defaultElision = map[string][2]int{
+	"rasy": [2]int{0, 3},
+}

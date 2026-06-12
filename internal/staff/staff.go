@@ -228,7 +228,8 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				staffInfo.RepeatInfo = append(staffInfo.RepeatInfo, measure.RepeatInfo)
 				repeatInfo = staffInfo.RepeatInfo
 			}
-			marginBottom := verse.LoadOtherVerse(ctx, notes, metadata, start, repeatInfo)
+			var marginBottom int
+			staffInfo.SyllableOffset, marginBottom = verse.LoadOtherVerse(ctx, notes, metadata, start, data.SyllableOffset, repeatInfo)
 			if staffInfo.MarginBottom < marginBottom {
 				staffInfo.MarginBottom = marginBottom
 			}

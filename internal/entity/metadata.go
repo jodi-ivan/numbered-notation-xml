@@ -15,6 +15,7 @@ type LyricPartVerse struct {
 	Type      musicxml.LyricSyllabic `json:"type"`
 	Combine   bool                   `json:"combine"`
 	Breakdown []LyricStylePart       `json:"breakdown"`
+	Offset    int                    `json:"offset"`
 }
 
 type LyricWordVerse struct {

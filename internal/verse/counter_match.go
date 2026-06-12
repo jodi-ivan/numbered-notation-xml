@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -25,14 +26,19 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 		}
 	}
 
-	for ir, r := range syllText {
-		if IsVowel(r) || (r == 'h' && start != -1) {
-			if start == -1 {
-				start = ir
-			} else {
-				end = ir
+	if defElistion, ok := defaultElision[syllText]; ok {
+		start, end = defElistion[0], defElistion[1]
+	} else {
+		for ir, r := range syllText {
+			if IsVowel(r) || (r == 'h' && start != -1) {
+				if start == -1 {
+					start = ir
+				} else {
+					end = ir
+				}
 			}
 		}
+
 	}
 
 	if end < start {
@@ -65,11 +71,11 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 	return partBreakdown
 
 }
-func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
+func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, offset map[int]int, prevRepeatInfos []*musicxml.RepeatInfo) (map[int]int, int) {
 	prm, _ := params.GetParamFromContext(ctx)
 
 	if prm.Verse < 2 {
-		return 0
+		return offset, 0
 	}
 	targetVerse := 2
 	if prm.Verse > 1 {
@@ -78,21 +84,31 @@ func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata 
 
 	if targetVerse > 2 {
 		// load previous verse
-		LoadVerse(ctx, targetVerse-1, true, notes, metadata, startPos, prevRepeatInfos)
+		prvOffset, _ := LoadVerse(ctx, targetVerse-1, true, notes, metadata, startPos+offset[targetVerse-1], prevRepeatInfos)
+		offset[targetVerse-1] += prvOffset
 	}
 
-	return LoadVerse(ctx, targetVerse, false, notes, metadata, startPos, prevRepeatInfos)
+	targetVerseOffset, margin := LoadVerse(ctx, targetVerse, false, notes, metadata, startPos+offset[targetVerse], prevRepeatInfos)
+	offset[targetVerse] += targetVerseOffset
+
+	return offset, margin
 
 }
 
-func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) int {
+func fillableByLyric(n *entity.NoteRenderer) bool {
+	return n.Barline != nil && !breathpause.IsBreathMark(n) && !n.IsDotted
+}
+
+func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) (int, int) {
 
 	prm, _ := params.GetParamFromContext(ctx)
 
 	verse, ok := metadata.ParsedVerse[targetVerse]
 	if !ok {
-		return 0
+		return 0, 0
 	}
+
+	offset := 0
 
 	totalSyllable := 0
 
@@ -124,13 +140,41 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 	insert := true
 	lyricNum := 0
 	firstNote := false
-
 	li := lyric.NewLyric()
 	for i := 0; i < len(notes) && syll < len(flattenSyll); i++ {
 
 		note := notes[i]
 		if len(note.Lyric) == 0 {
+			if flattenSyll[syll].Offset == 1 {
+				offset++
+			} else {
+				continue
+
+			}
+		} else if flattenSyll[syll].Offset == 1 {
+			offset++
+		}
+		if flattenSyll[syll].Offset == -1 {
+			flattenSyll[syll].Offset = 0
+			// syll--
+			offset--
+			appendedLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
+			if clear {
+				appendedLyric = []musicxml.Lyric{}
+			}
+			lyricVerse := 0
+			if len(appendedLyric) > 0 {
+				lyricVerse = 2
+			}
+			appendedLyric = append(appendedLyric, musicxml.Lyric{
+				Number:   len(appendedLyric) + 1,
+				Syllabic: musicxml.LyricSyllabicTypeMiddle,
+				Verse:    lyricVerse,
+			})
+
+			li.SetLyricRenderer(note, appendedLyric)
 			continue
+
 		}
 
 		appendedLyric := []musicxml.Lyric{}
@@ -166,6 +210,7 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 				Verse:    verseIndicator,
 			},
 		}
+
 		insertLastMeasure := syll < lastOffset*2
 		if repeatInfo != nil && repeatInfo.BarlineEnding != nil {
 			switch repeatInfo.BarlineEnding.Number {
@@ -233,6 +278,6 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 
 	}
 
-	return marginBottom
+	return offset, marginBottom
 
 }

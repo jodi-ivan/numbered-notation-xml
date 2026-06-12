@@ -74,6 +74,9 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, offset map[int]int, prevRepeatInfos []*musicxml.RepeatInfo) (map[int]int, int) {
 	prm, _ := params.GetParamFromContext(ctx)
 
+	if offset == nil {
+		offset = map[int]int{}
+	}
 	if prm.Verse < 2 {
 		return offset, 0
 	}
@@ -146,6 +149,7 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 		note := notes[i]
 		if len(note.Lyric) == 0 {
 			if flattenSyll[syll].Offset == 1 {
+				// fill up the empty notes with current syllable (shift left)
 				offset++
 			} else {
 				continue
@@ -154,11 +158,11 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 		} else if flattenSyll[syll].Offset == 1 {
 			offset++
 		}
-		if flattenSyll[syll].Offset == -1 {
+		if flattenSyll[syll].Offset == -1 { // fill the current notes with empty syllable. shift right
 			flattenSyll[syll].Offset = 0
 			// syll--
 			offset--
-			appendedLyric := lyric.GetMusicxmlLyric(note) // load the lyric on the current music
+			appendedLyric := lyric.GetMusicxmlLyric(note)
 			if clear {
 				appendedLyric = []musicxml.Lyric{}
 			}
@@ -174,7 +178,6 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 
 			li.SetLyricRenderer(note, appendedLyric)
 			continue
-
 		}
 
 		appendedLyric := []musicxml.Lyric{}
@@ -210,7 +213,6 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 				Verse:    verseIndicator,
 			},
 		}
-
 		insertLastMeasure := syll < lastOffset*2
 		if repeatInfo != nil && repeatInfo.BarlineEnding != nil {
 			switch repeatInfo.BarlineEnding.Number {

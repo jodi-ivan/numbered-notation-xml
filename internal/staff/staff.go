@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/jodi-ivan/numbered-notation-xml/diagnostics"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -22,6 +23,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 type Staff interface {
@@ -32,24 +34,26 @@ type Staff interface {
 }
 
 type staffInteractor struct {
-	Barline     barline.Barline
-	Lyric       lyric.Lyric
-	Numbered    numbered.Numbered
-	BreathPause breathpause.BreathPause
-	Rhythm      rhythm.Rhythm
-	RenderAlign RenderStaffWithAlign
+	Barline       barline.Barline
+	Lyric         lyric.Lyric
+	Numbered      numbered.Numbered
+	BreathPause   breathpause.BreathPause
+	Rhythm        rhythm.Rhythm
+	RenderAlign   RenderStaffWithAlign
+	SyllableMatch verse.SyllableMatch
 }
 
 func NewStaff() Staff {
 	barlineInteractor := barline.NewBarline()
 	lyricInteractor := lyric.NewLyric()
 	return &staffInteractor{
-		Barline:     barlineInteractor,
-		Lyric:       lyricInteractor,
-		Numbered:    numbered.New(lyricInteractor, barlineInteractor),
-		BreathPause: breathpause.New(),
-		Rhythm:      rhythm.New(splitter.New()),
-		RenderAlign: NewRenderAlign(),
+		Barline:       barlineInteractor,
+		Lyric:         lyricInteractor,
+		Numbered:      numbered.New(lyricInteractor, barlineInteractor),
+		BreathPause:   breathpause.New(),
+		Rhythm:        rhythm.New(splitter.New()),
+		RenderAlign:   NewRenderAlign(),
+		SyllableMatch: verse.NewSyllableMatcher(),
 	}
 }
 
@@ -127,16 +131,15 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			renderer := &entity.NoteRenderer{
 				UUID:      uuid.New().String(),
 				PositionX: x, PositionY: int(y),
-				Note: n, NoteLength: note.Type, Octave: octave, Strikethrough: strikethrough,
-				NoteValue: noteLength,
-				IsRest:    (note.Rest != nil),
+				Note: n, NoteLength: note.Type, Octave: octave,
+				Strikethrough: strikethrough, NoteValue: noteLength,
+				IsRest: (note.Rest != nil),
 
 				Beam:          map[int]entity.Beam{},
 				IsNewLine:     measure.NewLineIndex[notePos],
 				MeasureNumber: measure.Number,
 
-				AbsoluteNote:       note.Pitch.Step,
-				AbsoluteOctave:     note.Pitch.Octave,
+				AbsoluteNote: note.Pitch.Step, AbsoluteOctave: note.Pitch.Octave,
 				AbsoluteAccidental: note.Accidental,
 				TimeModifications:  note.TimeModification,
 
@@ -228,8 +231,13 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				staffInfo.RepeatInfo = append(staffInfo.RepeatInfo, measure.RepeatInfo)
 				repeatInfo = staffInfo.RepeatInfo
 			}
+
+			matcher := si.SyllableMatch
+			if p, ok := params.GetParamFromContext(ctx); ok && p.Diagnostic != nil {
+				matcher = diagnostics.GetVerseDiagnostic(matcher)
+			}
 			var marginBottom int
-			staffInfo.SyllableOffset, marginBottom = verse.LoadOtherVerse(ctx, notes, metadata, start, data.SyllableOffset, repeatInfo)
+			staffInfo.SyllableOffset, marginBottom = matcher.LoadOtherVerse(ctx, notes, metadata, start, data.SyllableOffset, repeatInfo)
 			if staffInfo.MarginBottom < marginBottom {
 				staffInfo.MarginBottom = marginBottom
 			}

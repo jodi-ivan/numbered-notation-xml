@@ -13,11 +13,25 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
-func IsVowel(char rune) bool {
+type SyllableMatch interface {
+	IsVowel(char rune) bool
+	ApplyElision(syllText string, combine bool) []musicxml.LyricText
+	LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, offset map[int]int, prevRepeatInfos []*musicxml.RepeatInfo) (map[int]int, int)
+	LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) (int, int)
+}
+
+func NewSyllableMatcher() SyllableMatch {
+	return &matcher{}
+}
+
+type matcher struct {
+}
+
+func (m *matcher) IsVowel(char rune) bool {
 	return utils.Contains([]string{"a", "i", "u", "e", "o"}, strings.ToLower(string(char))) >= 0
 }
 
-func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
+func (m *matcher) ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 	start, end := -1, -1
 
 	if !combine {
@@ -30,7 +44,7 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 		start, end = defElistion[0], defElistion[1]
 	} else {
 		for ir, r := range syllText {
-			if IsVowel(r) || (r == 'h' && start != -1) {
+			if m.IsVowel(r) || (r == 'h' && start != -1) {
 				if start == -1 {
 					start = ir
 				} else {
@@ -71,12 +85,13 @@ func ApplyElision(syllText string, combine bool) []musicxml.LyricText {
 	return partBreakdown
 
 }
-func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, offset map[int]int, prevRepeatInfos []*musicxml.RepeatInfo) (map[int]int, int) {
+func (m *matcher) LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, offset map[int]int, prevRepeatInfos []*musicxml.RepeatInfo) (map[int]int, int) {
 	prm, _ := params.GetParamFromContext(ctx)
 
 	if offset == nil {
 		offset = map[int]int{}
 	}
+
 	if prm.Verse < 2 {
 		return offset, 0
 	}
@@ -87,22 +102,21 @@ func LoadOtherVerse(ctx context.Context, notes []*entity.NoteRenderer, metadata 
 
 	if targetVerse > 2 && !prm.SingleVerseMode {
 		// load previous verse
-		prvOffset, _ := LoadVerse(ctx, targetVerse-1, true, notes, metadata, startPos+offset[targetVerse-1], prevRepeatInfos)
+		prvOffset, _ := m.LoadVerse(ctx, targetVerse-1, true, notes, metadata, startPos+offset[targetVerse-1], prevRepeatInfos)
 		offset[targetVerse-1] += prvOffset
 	}
 
-	targetVerseOffset, margin := LoadVerse(ctx, targetVerse, prm.SingleVerseMode, notes, metadata, startPos+offset[targetVerse], prevRepeatInfos)
+	targetVerseOffset, margin := m.LoadVerse(ctx, targetVerse, prm.SingleVerseMode, notes, metadata, startPos+offset[targetVerse], prevRepeatInfos)
 	offset[targetVerse] += targetVerseOffset
-
 	return offset, margin
 
 }
 
-func fillableByLyric(n *entity.NoteRenderer) bool {
+func (m *matcher) fillableByLyric(n *entity.NoteRenderer) bool {
 	return !(n.Barline != nil || breathpause.IsBreathMark(n) || n.IsDotted)
 }
 
-func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) (int, int) {
+func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) (int, int) {
 
 	prm, _ := params.GetParamFromContext(ctx)
 
@@ -148,7 +162,7 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 
 		note := notes[i]
 
-		if !fillableByLyric(note) {
+		if !m.fillableByLyric(note) {
 			continue
 		}
 		if len(note.Lyric) == 0 {
@@ -211,7 +225,7 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 
 		newLyric := []musicxml.Lyric{
 			{
-				Text:     ApplyElision(txt, flattenCombine[syll]),
+				Text:     m.ApplyElision(txt, flattenCombine[syll]),
 				Syllabic: flattenSyll[syll].Type,
 				Number:   lyricNum,
 				Verse:    verseIndicator,
@@ -246,9 +260,8 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 
 					newLyric = []musicxml.Lyric{
 						{
-							Number: lyricNum, Verse: 2,
-							Text:     ApplyElision(flattenSyll[syll].Text, flattenCombine[syll]),
-							Syllabic: flattenSyll[syll].Type,
+							Number: lyricNum, Verse: 2, Syllabic: flattenSyll[syll].Type,
+							Text: m.ApplyElision(flattenSyll[syll].Text, flattenCombine[syll]),
 						},
 					}
 					insert = false
@@ -265,7 +278,7 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 			if syllRepeat < len(flattenSyll) {
 				newLyric = append(newLyric, musicxml.Lyric{
 					Number: newLyric[0].Number + 1, Verse: 2,
-					Text:     ApplyElision(flattenSyll[syllRepeat].Text, flattenCombine[syllRepeat]),
+					Text:     m.ApplyElision(flattenSyll[syllRepeat].Text, flattenCombine[syllRepeat]),
 					Syllabic: flattenSyll[syllRepeat].Type,
 				})
 			}
@@ -281,6 +294,12 @@ func LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity
 			syll = lastOffset*2 + (syll - lastOffset)
 		}
 		syll++
+
+	}
+
+	if prm.Diagnostic != nil {
+		res := map[int]bool{targetVerse: syll == len(flattenSyll)}
+		prm.Diagnostic.VerseSyllMatch <- res
 
 	}
 

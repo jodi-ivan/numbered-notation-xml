@@ -11,11 +11,13 @@ type Param struct {
 	DisableGregorian bool
 	Verse            int
 	SingleVerseMode  bool
+
+	Diagnostic *DiagParam
 }
 
 type paramCtx struct {
 	ctx   context.Context
-	Param Param
+	Param *Param
 }
 
 func (pc *paramCtx) Deadline() (deadline time.Time, ok bool) {
@@ -36,14 +38,14 @@ func (pc *paramCtx) Value(key any) any {
 	return pc.ctx.Value(key)
 }
 
-func NewParamContext(ctx context.Context, param Param) context.Context {
+func NewParamContext(ctx context.Context, param *Param) context.Context {
 	ctx = context.WithValue(ctx, PARAM_CTX_KEY, param)
 	return &paramCtx{
 		ctx:   ctx,
 		Param: param,
 	}
 }
-func GetParamFromContext(ctx context.Context) (Param, bool) {
+func GetParamFromContext(ctx context.Context) (*Param, bool) {
 	pCtx, ok := ctx.(*paramCtx)
 	if ok && pCtx != nil {
 		return pCtx.Param, true
@@ -51,9 +53,9 @@ func GetParamFromContext(ctx context.Context) (Param, bool) {
 
 	param, ok := ctx.Value(PARAM_CTX_KEY).(*Param)
 	if !ok {
-		return Param{}, false
+		return &Param{}, false
 	}
 
-	return *param, true
+	return param, true
 
 }

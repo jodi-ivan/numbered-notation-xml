@@ -96,7 +96,7 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	prm := params.Param{
+	prm := &params.Param{
 		Verse:           verseNo,
 		SingleVerseMode: focusMode,
 	}

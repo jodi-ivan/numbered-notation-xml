@@ -63,6 +63,14 @@ func main() {
 		Db:        db,
 	})
 
+	sigs := make(chan os.Signal, 1)
+
+	ws.Register("GET", "/internal/diagnostic/verse/:scope", &adapter.DiagnosticHTTP{
+		Usecase:   usecaseMod,
+		Interrupt: sigs,
+		Repo:      repo,
+	})
+
 	err = ws.Serve(cfg.Webserver.Port)
 	if err != nil {
 		log.Printf("Failed to start the server. Err: %s", err.Error())
@@ -70,7 +78,6 @@ func main() {
 		return
 	}
 
-	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	log.Println(<-sigs)
 

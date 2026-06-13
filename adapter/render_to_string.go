@@ -9,12 +9,12 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-type RenderStringCanvasDelegator struct{}
+type CanvasDelegator struct{}
 
-func (rscd *RenderStringCanvasDelegator) OnBeforeStartWrite() {
+func (rscd *CanvasDelegator) OnBeforeStartWrite() {
 	// no pre operation needed for string operation
 }
-func (rscd *RenderStringCanvasDelegator) OnError(err error) canvas.DelegatorErrorFlowControl {
+func (rscd *CanvasDelegator) OnError(err error) canvas.DelegatorErrorFlowControl {
 	return canvas.DelegatorErrorFlowControlStop
 }
 
@@ -30,7 +30,7 @@ func NewRenderString(u usecase.Usecase) *RenderString {
 }
 
 func (rs *RenderString) RenderHymn(ctx context.Context, buf *bytes.Buffer, number int, variant ...string) (string, error) {
-	canv := canvas.NewCanvasWithDelegator(svg.New(buf), &RenderStringCanvasDelegator{})
+	canv := canvas.NewCanvasWithDelegator(svg.New(buf), &CanvasDelegator{})
 	err := rs.usecase.RenderHymn(ctx, canv, number, variant...)
 	if err != nil {
 		return "", err

@@ -182,7 +182,6 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 		}
 		if flattenSyll[syll].Offset == -1 { // fill the current notes with empty syllable. shift right
 			flattenSyll[syll].Offset = 0
-			// syll--
 			offset--
 			appendedLyric := lyric.GetMusicxmlLyric(note)
 			if clear {
@@ -212,6 +211,14 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 		appendedLyric := []musicxml.Lyric{}
 		if !clear || load1stVerse {
 			appendedLyric = lyric.GetMusicxmlLyric(note) // load the lyric on the current music
+			if load1stVerse {
+				for i, al := range appendedLyric {
+					al.Verse = 2
+					appendedLyric[i] = al
+				}
+				li.SetLyricRenderer(note, appendedLyric)
+				continue
+			}
 		}
 		if lyricNum == 0 {
 			lyricNum = len(appendedLyric) + 1

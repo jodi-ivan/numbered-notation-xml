@@ -119,7 +119,6 @@ func (m *matcher) fillableByLyric(n *entity.NoteRenderer) bool {
 func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, notes []*entity.NoteRenderer, metadata *entity.HymnMetaData, startPos int, prevRepeatInfos []*musicxml.RepeatInfo) (int, int) {
 
 	prm, _ := params.GetParamFromContext(ctx)
-
 	verse, ok := metadata.ParsedVerse[targetVerse]
 	if !ok {
 		return 0, 0
@@ -133,10 +132,15 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 	flattenCombine := map[int]bool{}
 	for _, line := range verse {
 		for _, syll := range line {
-			flattenSyll = append(flattenSyll, syll.Breakdown...)
+			if syll.VerseOnly {
+				continue
+			}
+			bd := syll.Breakdown
 			for i, comb := range syll.Breakdown {
+				bd[i].Load1stVerse = syll.Load1stVerse
 				flattenCombine[totalSyllable+i] = comb.Combine
 			}
+			flattenSyll = append(flattenSyll, bd...)
 			totalSyllable += len(syll.Breakdown)
 		}
 	}
@@ -197,9 +201,16 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 			li.SetLyricRenderer(note, appendedLyric)
 			continue
 		}
+		load1stVerse := false
+		if clear && flattenSyll[syll].Load1stVerse {
+			if prm.Verse > 2 && prm.Verse-1 == targetVerse {
+				continue
+			}
 
+			load1stVerse = prm.Verse > 1
+		}
 		appendedLyric := []musicxml.Lyric{}
-		if !clear {
+		if !clear || load1stVerse {
 			appendedLyric = lyric.GetMusicxmlLyric(note) // load the lyric on the current music
 		}
 		if lyricNum == 0 {
@@ -208,7 +219,8 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 
 		txt := flattenSyll[syll].Text
 		hasPrefix := lyric.HasPrefix(note)
-		if hasPrefix || syll == 0 {
+		start1stVerse := !flattenSyll[syll].Load1stVerse && (syll > 0 && flattenSyll[syll-1].Load1stVerse)
+		if ((hasPrefix || syll == 0) || start1stVerse) && txt != "" {
 			txt = fmt.Sprintf("%d. %s", targetVerse, txt)
 			if len(appendedLyric) > 0 && !hasPrefix {
 				lastLyric := appendedLyric[0]
@@ -218,7 +230,7 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 		}
 
 		verseIndicator := 2
-		if targetVerse != 2 && prm.Verse == verseIndicator-1 {
+		if (targetVerse != 2 && prm.Verse == verseIndicator-1) || prm.SingleVerseMode {
 			verseIndicator = 0
 
 		}

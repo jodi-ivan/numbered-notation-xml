@@ -53,12 +53,9 @@ func NewLyric() Lyric {
 func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo {
 	// lyric
 	var lyricWidth, noteWidth, marginBottom int
+	countedLyric := 0
 
 	if len(rawLyric) > 0 {
-		marginBottom = ((len(rawLyric) - 1) * 25)
-		if len(rawLyric) > MAX_VERSE_IN_MUSIC {
-			marginBottom += int(len(rawLyric)/MAX_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC
-		}
 
 		noteRenderer.Lyric = make([]entity.Lyric, len(rawLyric))
 		for _, currLyric := range rawLyric {
@@ -78,6 +75,10 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 			}
 
 			l.Text = texts
+			if lyricText != "" {
+				countedLyric++
+			}
+
 			if currLyric.Number > len(rawLyric) {
 
 				for i := len(rawLyric); i < currLyric.Number; i++ {
@@ -94,6 +95,11 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 			lyricWidth = int(math.Max(float64(lyricWidth), float64(currWidth)))
 		}
 
+	}
+
+	marginBottom = ((countedLyric - 1) * 25)
+	if countedLyric > MAX_VERSE_IN_MUSIC {
+		marginBottom += int(countedLyric/MAX_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC
 	}
 
 	noteWidth = constant.LOWERCASE_LENGTH
@@ -137,7 +143,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 			if notePos == 0 && len(prevNote) > 0 {
 				prevNoteLen = len(prevNote[0].Lyric)
 			} else if notePos > 0 && len(measure[notePos-1].Lyric) > 0 {
-				prevNoteLen = len(n.Lyric)
+				prevNoteLen = len(measure[notePos-1].Lyric)
 			}
 
 			if !offsetCenter && prevNoteLen > len(n.Lyric) {

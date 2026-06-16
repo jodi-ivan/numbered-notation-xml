@@ -12,7 +12,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
-	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 var (
@@ -121,8 +120,6 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 
 func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer, prevNote ...*entity.NoteRenderer) int {
 
-	prm, _ := params.GetParamFromContext(ctx)
-
 	prefixes := map[string]LyricPosition{}
 
 	offsetCenterVal := 0
@@ -138,7 +135,11 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 			}
 
 			xPos := n.PositionX
-			yPos = float64(y+DISTANCE_NOTE_TO_LYRIC+(i*LINE_BETWEEN_LYRIC)) + (float64(l.Verse) * 5)
+			v := float64(l.Verse)
+			if len(n.Lyric) == 1 {
+				v = 0
+			}
+			yPos = float64(y+DISTANCE_NOTE_TO_LYRIC+(i*LINE_BETWEEN_LYRIC)) + (v * 5)
 			prevNoteLen := len(n.Lyric)
 			if notePos == 0 && len(prevNote) > 0 {
 				prevNoteLen = len(prevNote[0].Lyric)
@@ -192,9 +193,11 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 			if strings.HasPrefix(lyricVal, "*") {
 				xPos -= int(li.CalculateLyricWidth("*"))
 			}
-			sty := getColoringStyle(l.Verse, len(n.Lyric))
-			if prm.Verse < 2 {
-				sty = ""
+			sty := getColoringStyle(ctx, l.Verse, len(n.Lyric))
+			if lyricVal == "" {
+				n.Lyric[i] = l
+				continue
+
 			}
 			canv.Text(xPos, int(yPos), lyricVal, sty)
 			elisionOpacity := "stroke-opacity:0.6"
@@ -217,10 +220,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 					}
 					minPrefix += li.CalculateLyricWidth(prefixVal) * 0.1
 				}
-				sty := getColoringStyle(p.Lyrics.Verse, p.TotalLyric)
-				if prm.Verse < 2 {
-					sty = ""
-				}
+				sty := getColoringStyle(ctx, p.Lyrics.Verse, p.TotalLyric)
 				style = append(style, sty)
 				canv.Text(int(minPrefix), int(p.Coordinate.Y), prefixVal, style...)
 			}

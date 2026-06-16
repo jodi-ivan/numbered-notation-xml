@@ -8,7 +8,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
-	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 func (li *lyricInteractor) CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []HyphenPosition) {
@@ -116,7 +115,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int,
 			}
 
 			currentLyric := n.Lyric[i]
-			if currentLyric.Verse > 0 {
+			if currentLyric.Verse > 0 && len(n.Lyric) != 1 {
 				y += float64(5 * currentLyric.Verse)
 			}
 
@@ -232,14 +231,9 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int,
 		}
 	}
 
-	prm, _ := params.GetParamFromContext(ctx)
-
 	canv.Group("hyphens")
 	for _, hl := range hypenLocation {
-		sty := getColoringStyle(hl.Verse, hl.TotalLyric)
-		if prm.Verse < 2 {
-			sty = ""
-		}
+		sty := getColoringStyle(ctx, hl.Verse, hl.TotalLyric)
 		canv.TextUnescaped(hl.Coordinate.X, hl.Coordinate.Y, "-", sty) // use the Unescaped because of the floating number
 	}
 	canv.Gend()

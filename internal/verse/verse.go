@@ -105,6 +105,7 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 	if len(metadata.Verse) == 0 {
 		return result
 	}
+
 	versesNo := utils.GetMapSortedKeys(metadata.Verse)
 
 	for idx, i := range versesNo {
@@ -126,10 +127,6 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 			row, col, style = getPos(idx, style, len(versesNo))
 		}
 
-		if _, ok := result.RowPositionY[row]; !ok {
-			result.RowPositionY[row] = y + (LINE_DISTANCE * len(whole) * (row - 1)) + ((row - 1) * VERSE_SEPARATOR)
-		}
-
 		parsedVerse := ParsedVerse{
 			ElisionMarks: [][2]entity.Coordinate{},
 			Position: versePosition{
@@ -138,9 +135,14 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 			},
 		}
 
+		totalLine := 0
+
 		for iLine, line := range whole {
 			lineText := ""
 			for _, word := range line {
+				if word.ScoreOnly {
+					continue
+				}
 				wordPart := ""
 				for _, p := range word.Breakdown {
 					if p.Combine {
@@ -151,12 +153,20 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 				}
 				lineText = lineText + " " + word.Word
 			}
+			if lineText == "" {
+				continue
+			}
+			totalLine++
 			result.MaxLineWidth = math.Max(result.MaxLineWidth, v.Lyric.CalculateLyricWidth(lineText))
 			if col == 2 {
 				result.MaxRightPos = math.Max(result.MaxRightPos, result.MaxLineWidth)
 				result.IsMultiColumn = result.IsMultiColumn || true
 			}
 			parsedVerse.Verse = append(parsedVerse.Verse, lineText)
+		}
+
+		if _, ok := result.RowPositionY[row]; !ok {
+			result.RowPositionY[row] = y + (LINE_DISTANCE * totalLine * (row - 1)) + ((row - 1) * VERSE_SEPARATOR)
 		}
 		result.Verses[i] = parsedVerse
 	}

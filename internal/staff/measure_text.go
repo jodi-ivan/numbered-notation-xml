@@ -15,6 +15,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/text"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, std ...bool) {
@@ -259,12 +260,17 @@ func RenderTuplet(ctx context.Context, y int, canv canvas.Canvas, notes []*entit
 	}
 }
 
-func (si *staffInteractor) SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool {
+func (si *staffInteractor) SetMeasureTextRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool {
 	var affectMarginbottom = []string{"Refrein", "Fine"}
+	prm, _ := params.GetParamFromContext(ctx)
 	count := 0
 	for _, mt := range note.MeasureText {
 		if noteRenderer.MeasureText == nil {
 			noteRenderer.MeasureText = []musicxml.MeasureText{}
+		}
+
+		if prm.Verse != 0 && strings.Contains(strings.ToLower(mt.Text), fmt.Sprintf("bait %d", prm.Verse)) {
+			continue
 		}
 		alignment := musicxml.TextAlignmentLeft
 		if isLastNote {

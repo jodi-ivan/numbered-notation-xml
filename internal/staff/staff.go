@@ -29,7 +29,7 @@ import (
 type Staff interface {
 	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
-	SetMeasureTextRenderer(noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool
+	SetMeasureTextRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool
 	Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int
 }
 
@@ -158,7 +158,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1
-			hasMeasureText := si.SetMeasureTextRenderer(renderer, note, measure.DirectionDashes[notePos], isLastNote)
+			hasMeasureText := si.SetMeasureTextRenderer(ctx, renderer, note, measure.DirectionDashes[notePos], isLastNote)
 			if hasMeasureText || (len(note.MeasureText) > 0 && staffPos == 0) {
 				yOffset = true
 

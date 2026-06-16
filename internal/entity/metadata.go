@@ -16,12 +16,17 @@ type LyricPartVerse struct {
 	Combine   bool                   `json:"combine"`
 	Breakdown []LyricStylePart       `json:"breakdown"`
 	Offset    int                    `json:"offset"`
+
+	Load1stVerse bool `json:"_"`
 }
 
 type LyricWordVerse struct {
-	Word      string           `json:"word"`
-	Breakdown []LyricPartVerse `json:"breakdown"`
-	Dash      bool             `json:"dash"`
+	Word         string           `json:"word"`
+	Breakdown    []LyricPartVerse `json:"breakdown"`
+	Dash         bool             `json:"dash"`
+	ScoreOnly    bool             `json:"score_only"`
+	VerseOnly    bool             `json:"verse_only"`
+	Load1stVerse bool             `json:"first_verse"`
 }
 
 type HymnMetaData struct {

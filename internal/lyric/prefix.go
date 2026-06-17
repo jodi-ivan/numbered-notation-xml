@@ -59,11 +59,15 @@ func (li *lyricInteractor) SplitLyricPrefix(note *entity.NoteRenderer, y, part i
 			},
 		}
 
+		texts := note.Lyric[part].Text
+		part0 := strings.TrimPrefix(texts[0].Value, parts[0])
+		texts[0].Value = strings.TrimSpace(part0)
+
 		mainLyric := LyricPosition{
 			Coordinate: entity.NewCoordinate(xPos, yPos),
 			Lyrics: entity.Lyric{
 				Syllabic: musicxml.LyricSyllabicTypeBegin,
-				Text:     []entity.Text{{Value: parts[1]}},
+				Text:     texts,
 				Verse:    verse,
 			},
 		}

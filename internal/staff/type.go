@@ -32,10 +32,6 @@ type StaffData struct {
 
 	SyllableOffset map[int]int
 }
-type CoordinateWithTuplet struct {
-	entity.Coordinate
-	Tuplet musicxml.Tuplet
-}
 
 const (
 	MEASURE_TEXT_REFREIN = "Refrein"

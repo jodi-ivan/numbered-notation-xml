@@ -20,6 +20,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/toping"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -41,6 +42,7 @@ type staffInteractor struct {
 	RenderAlign   RenderStaffWithAlign
 	SyllableMatch verse.SyllableMatch
 	StaffText     text.Text
+	Toping        toping.Toping
 }
 
 func NewStaff() Staff {
@@ -55,6 +57,7 @@ func NewStaff() Staff {
 		RenderAlign:   NewRenderAlign(),
 		SyllableMatch: verse.NewSyllableMatcher(),
 		StaffText:     text.NewText(lyricInteractor),
+		Toping:        toping.NewToping(),
 	}
 }
 
@@ -172,7 +175,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				refreinStartNote = refreinStartNote || isRefrein
 			}
 
-			SetStaffLineDashRenderer(renderer, measure.DirectionDashes[notePos])
+			si.Toping.SetStaffLineDashRenderer(renderer, measure.DirectionDashes[notePos])
 			si.Rhythm.SetRhythmNotation(renderer, note, n)
 
 			// lyric

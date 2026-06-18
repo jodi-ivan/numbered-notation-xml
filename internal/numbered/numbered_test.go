@@ -353,7 +353,7 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
-		canv        func(*gomock.Controller) *canvas.MockCanvas
+		canv        func(*gomock.Controller) *canvas.MockCanvasTestify
 		lyricMock   func(*gomock.Controller) *lyric.MockLyric
 		barlineMock func(*gomock.Controller) *barline.MockBarline
 
@@ -362,16 +362,16 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 		rightAlignOffset int
 	}{
 		{
-			name: "everuthing went fine",
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(c)
+			name: "everything went fine",
+			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
+				canv := canvas.NewMockCanvasTestify(t)
 				canv.EXPECT().Text(55, 100, "2")
 				canv.EXPECT().Text(60, 100, ".")
-				canv.EXPECT().Text(72, 90, ",")
-				canv.EXPECT().Text(62, 100, "1")
+				canv.EXPECT().TextUnescaped(72.0, 90.0, ",")
+				canv.EXPECT().Text(70, 100, "1")
 
-				canv.EXPECT().Circle(59, 72, 6, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
-				canv.EXPECT().Text(56, 75, "1", `font-weight="600"`, `style="font-size:60%"`)
+				canv.EXPECT().Circle(59, 72, 6, []string{`stroke="black"`, `fill="none"`, `stroke-width="1.3"`})
+				canv.EXPECT().Text(56, 75, "1", []string{`font-weight="600"`, `style="font-size:60%"`})
 
 				return canv
 			},
@@ -379,13 +379,6 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 				b := barline.NewMockBarline(c)
 				b.EXPECT().RenderBarline(gomock.Any(), gomock.Any(), gomock.Any(), entity.NewCoordinate(50, 100))
 				return b
-			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
-				li := lyric.NewMockLyric(c)
-				li.EXPECT().CalculateLyricWidth("2").Return(8.0)
-				li.EXPECT().CalculateLyricWidth("1").Return(8.0)
-
-				return li
 			},
 			measure: []*entity.NoteRenderer{
 				{
@@ -432,6 +425,10 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 				canv = tt.canv(ctrl)
 			}
 			ni.RenderNote(context.Background(), canv, tt.measure, tt.y, tt.rightAlignOffset)
+			if tt.canv != nil {
+				canv1 := canv.(*canvas.MockCanvasTestify)
+				canv1.AssertExpectations(t)
+			}
 		})
 	}
 }

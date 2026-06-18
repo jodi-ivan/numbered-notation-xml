@@ -10,7 +10,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/text"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 

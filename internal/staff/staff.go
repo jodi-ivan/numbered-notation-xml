@@ -19,7 +19,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/text"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"

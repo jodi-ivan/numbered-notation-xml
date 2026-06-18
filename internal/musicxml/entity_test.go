@@ -40,23 +40,15 @@ func TestMeasure_Build(t *testing.T) {
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: pitch,
-						},
-						Element{
-							Content: direction,
-						},
+						{Content: pitch},
+						{Content: direction},
 					},
 				}
 			},
 			wantMeasure: &Measure{
 				Appendix: []Element{
-					Element{
-						Content: pitch,
-					},
-					Element{
-						Content: direction,
-					},
+					{Content: pitch},
+					{Content: direction},
 				},
 				Notes: []Note{
 					Note{
@@ -66,13 +58,11 @@ func TestMeasure_Build(t *testing.T) {
 						}{Step: "G", Octave: 4},
 						Type: NoteLengthHalf,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
@@ -89,9 +79,7 @@ func TestMeasure_Build(t *testing.T) {
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: "<pitch>Nope",
-						},
+						{Content: "<pitch>Nope"},
 					},
 				}
 			},
@@ -102,71 +90,52 @@ func TestMeasure_Build(t *testing.T) {
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: pitch,
-						},
-						Element{
-							Content: direction,
-						},
-						Element{
-							Content: pitch,
-						},
+						{Content: pitch},
+						{Content: direction},
+						{Content: pitch},
 					},
 				}
 			},
 			wantMeasure: &Measure{
 				Appendix: []Element{
-					Element{
-						Content: pitch,
-					},
-					Element{
-						Content: direction,
-					},
-					Element{
-						Content: pitch,
-					},
+					{Content: pitch},
+					{Content: direction},
+					{Content: pitch},
 				},
 				Notes: []Note{
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
 						Type: NoteLengthHalf,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
-								Text: []LyricText{
-									{
-										Value: "rap",
-									},
-								},
+								Text:     []LyricText{{Value: "rap"}},
 							},
 						},
 					},
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
 						Type: NoteLengthHalf,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
 						MeasureText: []MeasureText{
-							MeasureText{
-								Text: "Refrein",
-							},
+							{Text: "Refrein"},
 						},
+						IndexPosition: 2,
 					},
 				},
 				NewLineIndex: map[int]bool{},
@@ -177,77 +146,61 @@ func TestMeasure_Build(t *testing.T) {
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: "<direction-type>Nope",
-						},
+						{Content: "<direction-type>Nope"},
 					},
 				}
 			},
 			wantErr: true,
 		},
+
 		{
 			name: "New Line bartext",
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: pitch,
-						},
-						Element{
-							Content: `<direction-type><words>__layout=br</words></direction-type>`,
-						},
-						Element{
-							Content: pitch,
-						},
+						{Content: pitch},
+						{Content: `<direction-type><words>__layout=br</words></direction-type>`},
+						{Content: pitch},
 					},
 				}
 			},
 			wantMeasure: &Measure{
 				NewLineIndex: map[int]bool{1: true},
 				Appendix: []Element{
-					Element{
-						Content: pitch,
-					},
-					Element{
-						Content: `<direction-type><words>__layout=br</words></direction-type>`,
-					},
-					Element{
-						Content: pitch,
-					},
+					{Content: pitch},
+					{Content: `<direction-type><words>__layout=br</words></direction-type>`},
+					{Content: pitch},
 				},
 				Notes: []Note{
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
 						Type: NoteLengthHalf,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
 					},
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
-						Type: NoteLengthHalf,
+						Type:          NoteLengthHalf,
+						IndexPosition: 2,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
@@ -260,63 +213,48 @@ func TestMeasure_Build(t *testing.T) {
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: pitch,
-						},
-						Element{
-							Content: `<direction-type><words>D.C. al Fine</words></direction-type>`,
-						},
-						Element{
-							Content: pitch,
-						},
+						{Content: pitch},
+						{Content: `<direction-type><words>D.C. al Fine</words></direction-type>`},
+						{Content: pitch},
 					},
 				}
 			},
 			wantMeasure: &Measure{
 				Appendix: []Element{
-					Element{
-						Content: pitch,
-					},
-					Element{
-						Content: `<direction-type><words>D.C. al Fine</words></direction-type>`,
-					},
-					Element{
-						Content: pitch,
-					},
+					{Content: pitch},
+					{Content: `<direction-type><words>D.C. al Fine</words></direction-type>`},
+					{Content: pitch},
 				},
 				Notes: []Note{
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
 						Type: NoteLengthHalf,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
 					},
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
-						Type: NoteLengthHalf,
+						Type:          NoteLengthHalf,
+						IndexPosition: 2,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
@@ -330,74 +268,53 @@ func TestMeasure_Build(t *testing.T) {
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: pitch,
-						},
-						Element{
-							Content: `<direction-type><words>Rit.</words></direction-type><direction-type><dashes type="start" number="1" /> </direction-type>`,
-						},
-						Element{
-							Content: pitch,
-						},
-						Element{
-							Content: `<direction-type><dashes type="stop" number="1" /> </direction-type>`,
-						},
+						{Content: pitch},
+						{Content: `<direction-type><words>Rit.</words></direction-type><direction-type><dashes type="start" number="1" /> </direction-type>`},
+						{Content: pitch},
+						{Content: `<direction-type><dashes type="stop" number="1" /> </direction-type>`},
 					},
 				}
 			},
 			wantMeasure: &Measure{
 				Appendix: []Element{
-					Element{
-						Content: pitch,
-					},
-					Element{
-						Content: `<direction-type><words>Rit.</words></direction-type><direction-type><dashes type="start" number="1" /> </direction-type>`,
-					},
-					Element{
-						Content: pitch,
-					},
-					Element{
-						Content: `<direction-type><dashes type="stop" number="1" /> </direction-type>`,
-					},
+					{Content: pitch},
+					{Content: `<direction-type><words>Rit.</words></direction-type><direction-type><dashes type="start" number="1" /> </direction-type>`},
+					{Content: pitch},
+					{Content: `<direction-type><dashes type="stop" number="1" /> </direction-type>`},
 				},
 				Notes: []Note{
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
 						Type: NoteLengthHalf,
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
 					},
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
-						Type: NoteLengthHalf,
+						Type:          NoteLengthHalf,
+						IndexPosition: 2,
 						MeasureText: []MeasureText{
-							{
-								Text: "Rit.",
-							},
+							{Text: "Rit."},
 						},
 						Lyric: []Lyric{
-							Lyric{
+							{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
@@ -420,64 +337,50 @@ func TestMeasure_Build(t *testing.T) {
 			m: func() *Measure {
 				return &Measure{
 					Appendix: []Element{
-						Element{
-							Content: `<direction-type><rehearsal>1</rehearsal></direction-type>`,
-						},
-						Element{
-							Content: pitch,
-						},
-						Element{
-							Content: pitch,
-						},
+						{Content: `<direction-type><rehearsal>1</rehearsal></direction-type>`},
+						{Content: pitch},
+						{Content: pitch},
 					},
 				}
 			},
 			wantMeasure: &Measure{
 				Appendix: []Element{
-					Element{
-						Content: `<direction-type><rehearsal>1</rehearsal></direction-type>`,
-					},
-					Element{
-						Content: pitch,
-					},
-					Element{
-						Content: pitch,
-					},
+					{Content: `<direction-type><rehearsal>1</rehearsal></direction-type>`},
+					{Content: pitch},
+					{Content: pitch},
 				},
 				Notes: []Note{
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
-						Type:        NoteLengthHalf,
-						MeasureText: []MeasureText{{}},
+						Type:          NoteLengthHalf,
+						IndexPosition: 1,
+						MeasureText:   []MeasureText{{}},
 						Lyric: []Lyric{
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},
 					},
-					Note{
+					{
 						Pitch: struct {
 							Step   string `xml:"step"`
 							Octave int    `xml:"octave"`
 						}{Step: "G", Octave: 4},
-						Type: NoteLengthHalf,
+						IndexPosition: 2,
+						Type:          NoteLengthHalf,
 						Lyric: []Lyric{
 							Lyric{
 								Number:   1,
 								Syllabic: LyricSyllabicTypeEnd,
 								Text: []LyricText{
-									{
-										Value: "rap",
-									},
+									{Value: "rap"},
 								},
 							},
 						},

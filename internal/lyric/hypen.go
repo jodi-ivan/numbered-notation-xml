@@ -233,8 +233,12 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int,
 
 	canv.Group("hyphens")
 	for _, hl := range hypenLocation {
-		sty := getColoringStyle(ctx, hl.Verse, hl.TotalLyric)
-		canv.TextUnescaped(hl.Coordinate.X, hl.Coordinate.Y, "-", sty) // use the Unescaped because of the floating number
+		styles := []string{}
+		color := getColoringStyle(ctx, hl.Verse, hl.TotalLyric)
+		if color != "" {
+			styles = append(styles, color)
+		}
+		canv.TextUnescaped(hl.Coordinate.X, hl.Coordinate.Y, "-", styles...) // use the Unescaped because of the floating number
 	}
 	canv.Gend()
 }

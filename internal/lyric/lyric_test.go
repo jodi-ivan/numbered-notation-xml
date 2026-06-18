@@ -53,7 +53,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 					},
 				},
 			},
-			want:               VerseInfo{},
+			want:               VerseInfo{HasLyric: true},
 			wantTakenFromLyric: false,
 			wantWidth:          29,
 			wantLyric: []entity.Lyric{
@@ -81,7 +81,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 					},
 				},
 			},
-			want:               VerseInfo{},
+			want:               VerseInfo{HasLyric: true},
 			wantWidth:          46,
 			wantTakenFromLyric: true,
 			wantLyric: []entity.Lyric{
@@ -110,7 +110,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 					},
 				},
 			},
-			want:               VerseInfo{},
+			want:               VerseInfo{HasLyric: true},
 			wantWidth:          46,
 			wantTakenFromLyric: true,
 			wantLyric: []entity.Lyric{
@@ -232,7 +232,7 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
 				canv.EXPECT().Text(44, 125, "*Test")
 				canv.EXPECT().Text(60, 125, "ing")
-				canv.EXPECT().Qbez(59, 127, 66, 133, 73, 127, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(59, 127, 66, 133, 73, 127, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1;")
 				canv.EXPECT().Gend()
 				return canv
 			},

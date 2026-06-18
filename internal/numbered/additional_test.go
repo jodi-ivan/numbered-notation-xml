@@ -93,6 +93,7 @@ func Test_numberedInteractor_RendererFromAdditional(t *testing.T) {
 					NoteLength:    musicxml.NoteLengthQuarter,
 					IsDotted:      true,
 					Width:         15,
+					IsAdditional:  true,
 				},
 			},
 		},
@@ -122,9 +123,10 @@ func Test_numberedInteractor_RendererFromAdditional(t *testing.T) {
 							Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 						},
 					},
-					NoteLength: musicxml.NoteLengthEighth,
-					IsDotted:   true,
-					Width:      15,
+					NoteLength:   musicxml.NoteLengthEighth,
+					IsDotted:     true,
+					Width:        15,
+					IsAdditional: true,
 				},
 			},
 		},
@@ -159,10 +161,11 @@ func Test_numberedInteractor_RendererFromAdditional(t *testing.T) {
 							Type:   musicxml.NoteBeam_INTERNAL_TypeAdditional,
 						},
 					},
-					NoteLength: musicxml.NoteLength16th,
-					IsDotted:   true,
-					Width:      15,
-					IsNewLine:  true,
+					NoteLength:   musicxml.NoteLength16th,
+					IsDotted:     true,
+					Width:        15,
+					IsNewLine:    true,
+					IsAdditional: true,
 				},
 			},
 		},
@@ -171,6 +174,9 @@ func Test_numberedInteractor_RendererFromAdditional(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ni numberedInteractor
 			got := ni.RendererFromAdditional(tt.note, tt.header, tt.additionals)
+			for _, v := range got {
+				v.UUID = ""
+			}
 			assert.Equal(t, tt.want, got, "RendererFromAdditional()")
 
 		})

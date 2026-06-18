@@ -443,6 +443,13 @@ func TestNewTimeSignatures(t *testing.T) {
 						BeatType: 4,
 					},
 				},
+				UniqueSign: []Time{
+					Time{
+						Measure:  1,
+						Beat:     4,
+						BeatType: 4,
+					},
+				},
 			},
 		},
 		{
@@ -476,6 +483,18 @@ func TestNewTimeSignatures(t *testing.T) {
 			want: TimeSignature{
 				IsMixed: true,
 				Signatures: []Time{
+					Time{
+						Measure:  1,
+						Beat:     1,
+						BeatType: 4,
+					},
+					Time{
+						Measure:  2,
+						Beat:     4,
+						BeatType: 4,
+					},
+				},
+				UniqueSign: []Time{
 					Time{
 						Measure:  1,
 						Beat:     1,

@@ -33,7 +33,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(320, 35, "UNIT TEST")
+				canv.EXPECT().Text(360, 35, "UNIT TEST")
 				return canv
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -60,7 +60,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(300, 35, "1. UNIT TEST TITLE ONLY")
+				canv.EXPECT().Text(340, 35, "1. UNIT TEST TITLE ONLY")
 				return canv
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -70,7 +70,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 			},
 		},
 		{
-			name: "has metadata - title only with varinat",
+			name: "has metadata - title only with variant",
 			credit: []musicxml.Credit{
 				{
 					Type:  musicxml.CreditTypeTitle,
@@ -88,7 +88,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(296, 35, "1a. UNIT TEST TITLE WITH VARIANT")
+				canv.EXPECT().Text(336, 35, "1a. UNIT TEST TITLE WITH VARIANT")
 				return canv
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -117,7 +117,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(296, 35, "1. UNIT TEST TITLE ONLY WITH FOOTNOTES AND FOR KIDS *")
+				canv.EXPECT().Text(336, 35, "1. UNIT TEST TITLE ONLY WITH FOOTNOTES AND FOR KIDS *")
 				canv.EXPECT().TextUnescaped(float64(50), float64(35), `<tspan font-style="bold" font-size="125%">☆</tspan>`)
 				return canv
 			},
@@ -183,7 +183,7 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(335, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
+				canv.EXPECT().Text(375, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
 				return canv
 			},
 		},
@@ -204,7 +204,7 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(343, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
+				canv.EXPECT().Text(383, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
 				return canv
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -231,7 +231,7 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(347, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
+				canv.EXPECT().Text(387, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
 				return canv
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {

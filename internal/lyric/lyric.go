@@ -96,7 +96,10 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 
 	}
 
-	marginBottom = ((countedLyric - 1) * 25)
+	if countedLyric > 0 {
+		marginBottom = ((countedLyric - 1) * 25)
+	}
+
 	if countedLyric > MAX_VERSE_IN_MUSIC {
 		marginBottom += int(countedLyric/MAX_VERSE_IN_MUSIC) * LINE_BETWEEN_LYRIC
 	}
@@ -193,13 +196,16 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 			if strings.HasPrefix(lyricVal, "*") {
 				xPos -= int(li.CalculateLyricWidth("*"))
 			}
-			sty := getColoringStyle(ctx, l.Verse, len(n.Lyric))
 			if lyricVal == "" {
 				n.Lyric[i] = l
 				continue
-
 			}
-			canv.Text(xPos, int(yPos), lyricVal, sty)
+			styles := []string{}
+			sty := getColoringStyle(ctx, l.Verse, len(n.Lyric))
+			if sty != "" {
+				styles = append(styles, sty)
+			}
+			canv.Text(xPos, int(yPos), lyricVal, styles...)
 			elisionOpacity := "stroke-opacity:0.6"
 			if sty == "" {
 				elisionOpacity = ""

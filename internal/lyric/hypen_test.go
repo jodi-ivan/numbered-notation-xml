@@ -19,7 +19,7 @@ func Test_lyricInteractor_CalculateHypen(t *testing.T) {
 	tests := []struct {
 		name         string
 		args         args
-		wantLocation []entity.Coordinate
+		wantLocation []HyphenPosition
 	}{
 		{
 			name: "no need hypen between two lyrics",
@@ -78,8 +78,10 @@ func Test_lyricInteractor_CalculateHypen(t *testing.T) {
 					},
 				},
 			},
-			wantLocation: []entity.Coordinate{
-				entity.NewCoordinate(45.26, 120),
+			wantLocation: []HyphenPosition{
+				{
+					Coordinate: entity.NewCoordinate(45.26, 120),
+				},
 			},
 		},
 		{
@@ -104,12 +106,12 @@ func Test_lyricInteractor_CalculateHypen(t *testing.T) {
 					},
 				},
 			},
-			wantLocation: []entity.Coordinate{
-				entity.NewCoordinate(96.05, 120),
-				entity.NewCoordinate(146.84, 120),
-				entity.NewCoordinate(197.63, 120),
-				entity.NewCoordinate(248.42000000000002, 120),
-				entity.NewCoordinate(299.21, 120),
+			wantLocation: []HyphenPosition{
+				{Coordinate: entity.NewCoordinate(96.05, 120)},
+				{Coordinate: entity.NewCoordinate(146.84, 120)},
+				{Coordinate: entity.NewCoordinate(197.63, 120)},
+				{Coordinate: entity.NewCoordinate(248.42000000000002, 120)},
+				{Coordinate: entity.NewCoordinate(299.21, 120)},
 			},
 		},
 	}

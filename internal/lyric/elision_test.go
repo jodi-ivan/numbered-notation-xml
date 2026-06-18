@@ -37,7 +37,7 @@ func Test_lyricInteractor_RenderElision(t *testing.T) {
 			},
 			initCanvas: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Qbez(107, 102, 119, 108, 131, 102, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(107, 102, 119, 108, 131, 102, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1;")
 				return canv
 			},
 			pos: entity.Coordinate{

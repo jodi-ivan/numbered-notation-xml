@@ -38,10 +38,10 @@ func (m *MockLyric) EXPECT() *MockLyricMockRecorder {
 }
 
 // CalculateHypen mocks base method.
-func (m *MockLyric) CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) []entity.Coordinate {
+func (m *MockLyric) CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) []HyphenPosition {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalculateHypen", ctx, prevLyric, currentLyric)
-	ret0, _ := ret[0].([]entity.Coordinate)
+	ret0, _ := ret[0].([]HyphenPosition)
 	return ret0
 }
 
@@ -94,15 +94,20 @@ func (mr *MockLyricMockRecorder) CalculateOverallWidth(ls interface{}) *gomock.C
 }
 
 // RenderElision mocks base method.
-func (m *MockLyric) RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate) {
+func (m *MockLyric) RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate, sty ...string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderElision", ctx, canv, text, lyricPart, pos)
+	varargs := []interface{}{ctx, canv, text, lyricPart, pos}
+	for _, a := range sty {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "RenderElision", varargs...)
 }
 
 // RenderElision indicates an expected call of RenderElision.
-func (mr *MockLyricMockRecorder) RenderElision(ctx, canv, text, lyricPart, pos interface{}) *gomock.Call {
+func (mr *MockLyricMockRecorder) RenderElision(ctx, canv, text, lyricPart, pos interface{}, sty ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderElision", reflect.TypeOf((*MockLyric)(nil).RenderElision), ctx, canv, text, lyricPart, pos)
+	varargs := append([]interface{}{ctx, canv, text, lyricPart, pos}, sty...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderElision", reflect.TypeOf((*MockLyric)(nil).RenderElision), varargs...)
 }
 
 // RenderHypen mocks base method.

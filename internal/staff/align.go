@@ -16,6 +16,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/text"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -33,6 +34,7 @@ func NewRenderAlign() RenderStaffWithAlign {
 		Rhythm:   rhythm.New(splitter.New()),
 		Barline:  barlineInteractor,
 		Lyric:    lyricInteractor,
+		Text:     text.NewText(lyricInteractor),
 	}
 }
 
@@ -41,6 +43,7 @@ type renderStaffAlign struct {
 	Numbered numbered.Numbered
 	Rhythm   rhythm.Rhythm
 	Lyric    lyric.Lyric
+	Text     text.Text
 }
 
 func alignJustify(measure []*entity.NoteRenderer, y int, addedSpace float64, count *int, measureIndex int, lastMeasure bool) {
@@ -193,8 +196,14 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
 		rsa.Numbered.RenderNote(ctx, canv, measure, yPos, rightAlignOffset)
 		rsa.Rhythm.RenderBeam(ctx, yPos, canv, ts, measure)
-		rsa.RenderMeasureText(ctx, y+10, canv, measure, stafflines)
+
+		canv.Group("class='staff-text'")
+
+		rsa.Text.RenderMeasureText(ctx, y+10, canv, measure, stafflines)
+		RenderStaffLineDash(measure, canv, y+10, stafflines)
 		RenderTuplet(ctx, yPos, canv, measure)
+
+		canv.Gend()
 
 		canv.Gend()
 		canv.Gend()

@@ -3,6 +3,7 @@ package verse
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
@@ -115,10 +116,9 @@ func Test_verseInteractor_parse(t *testing.T) {
 							},
 						},
 						Position: versePosition{
-							Col:      2,
-							Row:      1,
-							RowWidth: 6,
-							Style:    6,
+							Col:   2,
+							Row:   1,
+							Style: 6,
 						},
 					},
 				},
@@ -136,7 +136,14 @@ func Test_verseInteractor_parse(t *testing.T) {
 
 			var v verseInteractor
 			v.Lyric = tt.lyricMock(ctrl)
-			got := v.parse(context.Background(), tt.y, &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses}})
+			meta := &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses}, ParsedVerse: map[int][][]entity.LyricWordVerse{}}
+			for i, v := range meta.Verse {
+				parsed := [][]entity.LyricWordVerse{}
+				json.Unmarshal([]byte(v.Content.String), &parsed)
+				meta.ParsedVerse[i] = parsed
+			}
+
+			got := v.parse(context.Background(), tt.y, meta)
 
 			assert.Equal(t, tt.want, got, "parse()")
 		})
@@ -149,7 +156,7 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
-		canv         func(c *gomock.Controller) *canvas.MockCanvas
+		canv         func(c *gomock.Controller) *canvas.MockCanvasTestify
 		lyricMock    func(c *gomock.Controller) *lyric.MockLyric
 		footnoteMock func(c *gomock.Controller) *footnote.MockFootnote
 
@@ -184,15 +191,15 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 
 				return li
 			},
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='verses'", "style='font-family:Caladea'")
-				canv.EXPECT().Group("class='verse'", "number='2'")
-				canv.EXPECT().Text(541, 300, "2. ")
-				canv.EXPECT().TextUnescaped(555.0, 300.0, " Dalam dunia 'ku dikawal")
+			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
+				canv := canvas.NewMockCanvasTestify(t)
+				canv.EXPECT().Group([]string{"class='verses'", "style='font-family:Caladea'"})
+				canv.EXPECT().Group([]string{"class='verse'", "number='2'"})
+				canv.EXPECT().Text(621, 300, "2. ")
+				canv.EXPECT().TextUnescaped(635.0, 300.0, " Dalam dunia 'ku dikawal")
 
 				canv.EXPECT().Group()
-				canv.EXPECT().Qbez(582, 302, 584, 307, 586, 302, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1")
+				canv.EXPECT().Qbez(662, 302, 664, 307, 666, 302, []string{"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1"})
 				canv.EXPECT().Gend().Times(3)
 				return canv
 			},
@@ -201,10 +208,10 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 				cursor := footnote.VerseLineCursor{
 					VerseNo:    2,
 					LinePos:    1,
-					Leftmargin: 455,
+					Leftmargin: 535,
 					LineText:   " Dalam dunia 'ku dikawal",
 				}
-				fn.EXPECT().AssignFootnotesMarker(gomock.Any(), entity.NewCoordinate(100, 300), 315, cursor, nil)
+				fn.EXPECT().AssignFootnotesMarker(gomock.Any(), entity.NewCoordinate(100, 300), 355, cursor, nil)
 				return fn
 			},
 		},
@@ -214,11 +221,14 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 			var v verseInteractor
 			v.Lyric = tt.lyricMock(ctrl)
 			v.Footnote = tt.footnoteMock(ctrl)
-			got := v.RenderVerse(context.Background(), tt.canv(ctrl), tt.y, &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{
-				Verse:          tt.verses,
-				VerseFootNotes: tt.verseFootnote,
-				// tt.verseFootnote
-			}})
+
+			meta := &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses, VerseFootNotes: tt.verseFootnote}, ParsedVerse: map[int][][]entity.LyricWordVerse{}}
+			for i, v := range meta.Verse {
+				parsed := [][]entity.LyricWordVerse{}
+				json.Unmarshal([]byte(v.Content.String), &parsed)
+				meta.ParsedVerse[i] = parsed
+			}
+			got := v.RenderVerse(context.Background(), tt.canv(ctrl), tt.y, meta)
 
 			assert.Equal(t, tt.want, got)
 		})

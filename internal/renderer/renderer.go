@@ -49,13 +49,13 @@ func NewRenderer() Renderer {
 func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *entity.HymnMetaData) {
 	canv.Start(constant.LAYOUT_WIDTH, 3000)
 	canv.Def()
-	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont("Caladea|Old Standard TT|Noto Music|Figtree")))
+	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont()))
 	canv.DefEnd()
 
 	keySignature := keysig.NewKeySignature(ctx, music.Part.Measures)
 	timeSignature := timesig.NewTimeSignatures(ctx, music.Part.Measures)
 
-	ir.Header.RenderSheetHeader(ctx, canv, music.Credit, metadata.HymnMetadata)
+	ir.Header.RenderSheetHeader(ctx, canv, music.Credit, metadata)
 	ir.Header.RenderKeyandTimeSignatures(ctx, canv, keySignature, timeSignature)
 
 	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature, metadata)
@@ -87,7 +87,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 
 }
 
-func googlefont(f string) []byte {
+func googlefont() []byte {
 	return []byte(`@font-face {
          font-family: 'Caladea';
          font-style: normal;
@@ -117,21 +117,5 @@ func googlefont(f string) []byte {
          font-style: normal;
          font-weight: 400;
          src: url(/assets/fonts/mozart11.ttf) format('truetype');
-       }
-		
-	   `)
-	// empty := []byte{}
-
-	// link := gwfURI + url.QueryEscape(f)
-	// r, err := http.Get(link)
-	// if err != nil {
-	// 	return empty
-	// }
-	// defer r.Body.Close()
-	// b, rerr := io.ReadAll(r.Body)
-	// if rerr != nil || r.StatusCode != http.StatusOK {
-	// 	return empty
-	// }
-
-	// return b
+       }`)
 }

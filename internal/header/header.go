@@ -6,18 +6,18 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
-	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 type Header interface {
-	RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata)
+	RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *entity.HymnMetaData)
 	RenderKeyandTimeSignatures(ctx context.Context, canv canvas.Canvas, key keysig.KeySignature, timeSignature timesig.TimeSignature)
 }
 
@@ -31,7 +31,7 @@ func NewHeader(l lyric.Lyric) Header {
 	}
 }
 
-func hasTitleNotes(verseNotes *repository.HymnMetadata) bool {
+func hasTitleNotes(verseNotes *entity.HymnMetaData) bool {
 	for _, notes := range verseNotes.VerseFootNotes {
 		for _, line := range notes {
 			if footnote.VerseNoteStyle(line.MarkerStyle.Int32) == footnote.VerseNoteStyleForTitle {
@@ -41,7 +41,7 @@ func hasTitleNotes(verseNotes *repository.HymnMetadata) bool {
 	}
 	return false
 }
-func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
+func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *entity.HymnMetaData) {
 	relativeY := constant.TITLE_Y_POS
 
 	workTitle := ""
@@ -71,7 +71,7 @@ func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas,
 
 }
 
-func (hi *headerInteractor) renderSubtitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
+func (hi *headerInteractor) renderSubtitle(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *entity.HymnMetaData) {
 	relativeY := constant.TITLE_Y_POS
 
 	subtitle := ""
@@ -97,7 +97,7 @@ func (hi *headerInteractor) renderSubtitle(ctx context.Context, canv canvas.Canv
 	canv.Text(int(subtitleX+num), relativeY+SUBTITLE_Y_POS, subtitle, SUBTITLE_ATTR)
 }
 
-func (hi *headerInteractor) RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
+func (hi *headerInteractor) RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *entity.HymnMetaData) {
 	hi.renderTitle(ctx, canv, credit, metadata)
 	hi.renderSubtitle(ctx, canv, credit, metadata)
 }

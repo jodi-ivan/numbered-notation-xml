@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -21,7 +22,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 		canv      func(*gomock.Controller) *canvas.MockCanvas
 		lyricMock func(*gomock.Controller) *lyric.MockLyric
 		credit    []musicxml.Credit
-		metadata  *repository.HymnMetadata
+		metadata  *entity.HymnMetaData
 	}{
 		{
 			name: "no metadata",
@@ -50,14 +51,14 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 					Words: "Unit Test",
 				},
 			},
-			metadata: &repository.HymnMetadata{
+			metadata: &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{
 				HymnData: repository.HymnData{
 					Title: "Unit test title only",
 					HymnIndicator: repository.HymnIndicator{
 						Number: 1,
 					},
 				},
-			},
+			}},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Text(340, 35, "1. UNIT TEST TITLE ONLY")
@@ -77,7 +78,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 					Words: "Unit Test",
 				},
 			},
-			metadata: &repository.HymnMetadata{
+			metadata: &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{
 				HymnData: repository.HymnData{
 					Title: "Unit test title with variant",
 					HymnIndicator: repository.HymnIndicator{
@@ -85,7 +86,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 						Variant: sql.NullString{Valid: true, String: "a"},
 					},
 				},
-			},
+			}},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Text(336, 35, "1a. UNIT TEST TITLE WITH VARIANT")
@@ -105,7 +106,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 					Words: "Unit Test",
 				},
 			},
-			metadata: &repository.HymnMetadata{
+			metadata: &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{
 				HymnData: repository.HymnData{
 					Title: "Unit test title only with footnotes and for kids",
 					HymnIndicator: repository.HymnIndicator{
@@ -114,7 +115,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 					IsForKids:      sql.NullInt16{Valid: true, Int16: 1},
 					TitleFootnotes: sql.NullString{Valid: true, String: "Bisa juga dinyanyikan dengan lagu unit test"},
 				},
-			},
+			}},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Text(336, 35, "1. UNIT TEST TITLE ONLY WITH FOOTNOTES AND FOR KIDS *")
@@ -153,7 +154,7 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 		canv      func(*gomock.Controller) *canvas.MockCanvas
 		lyricMock func(*gomock.Controller) *lyric.MockLyric
 		credit    []musicxml.Credit
-		metadata  *repository.HymnMetadata
+		metadata  *entity.HymnMetaData
 	}{
 		{
 			name: "no subtitle - empty string",
@@ -195,13 +196,13 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 					Words: "(KANON)",
 				},
 			},
-			metadata: &repository.HymnMetadata{
+			metadata: &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{
 				HymnData: repository.HymnData{
 					HymnIndicator: repository.HymnIndicator{
 						Number: 2,
 					},
 				},
-			},
+			}},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Text(383, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
@@ -221,14 +222,14 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 					Words: "(KANON)",
 				},
 			},
-			metadata: &repository.HymnMetadata{
+			metadata: &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{
 				HymnData: repository.HymnData{
 					HymnIndicator: repository.HymnIndicator{
 						Number:  2,
 						Variant: sql.NullString{Valid: true, String: "a"},
 					},
 				},
-			},
+			}},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Text(387, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)

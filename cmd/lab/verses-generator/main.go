@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/verse"
 )
 
 type WordBreakdown struct {
@@ -37,7 +37,7 @@ func main() {
 			continue
 		}
 		for _, w := range words {
-			syllable := lyric.SplitSyllable(w)
+			syllable := verse.SplitSyllable(w)
 			line = append(line, WordBreakdown{
 				Word:      w,
 				Breakdown: syllable,

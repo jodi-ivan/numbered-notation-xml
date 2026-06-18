@@ -17,7 +17,7 @@ type LyricPartVerse struct {
 	Breakdown []LyricStylePart       `json:"breakdown"`
 	Offset    int                    `json:"offset"`
 
-	Load1stVerse bool `json:"_"`
+	Load1stVerse bool `json:"-"`
 }
 
 type LyricWordVerse struct {

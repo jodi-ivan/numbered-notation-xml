@@ -9,10 +9,10 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	entity "github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	keysig "github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	musicxml "github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	timesig "github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
-	repository "github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	canvas "github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -52,7 +52,7 @@ func (mr *MockHeaderMockRecorder) RenderKeyandTimeSignatures(ctx, canv, key, tim
 }
 
 // RenderSheetHeader mocks base method.
-func (m *MockHeader) RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *repository.HymnMetadata) {
+func (m *MockHeader) RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *entity.HymnMetaData) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RenderSheetHeader", ctx, canv, credit, metadata)
 }

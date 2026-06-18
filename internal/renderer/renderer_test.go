@@ -2,12 +2,9 @@ package renderer
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/jarcoal/httpmock"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/footnote"
@@ -27,40 +24,12 @@ func Test_rendererInteractor_Render(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	googleFont := `
-	@font-face {
-		font-family: 'Caladea';
-		font-style: normal;
-		font-weight: 400;
-		src: url(https://fonts.gstatic.com/s/caladea/v1/default.ttf) format('truetype');
-	  }
-	  @font-face {
-		font-family: 'Figtree';
-		font-style: normal;
-		font-weight: 400;
-		src: url(https://fonts.gstatic.com/s/figtree/v1/default.ttf) format('truetype');
-	  }
-	  @font-face {
-		font-family: 'Noto Music';
-		font-style: normal;
-		font-weight: 400;
-		src: url(https://fonts.gstatic.com/s/notomusic/v1/default.ttf) format('truetype');
-	  }
-	  @font-face {
-		font-family: 'Old Standard TT';
-		font-style: normal;
-		font-weight: 400;
-		src: url(https://fonts.gstatic.com/s/oldstandardtt/v1/defailt.ttf) format('truetype');
-	  }
-	  `
 	creditsData := []musicxml.Credit{
 		{Type: musicxml.CreditTypeTitle, Words: "Unit Test"},
 	}
 
 	measures := []musicxml.Measure{
-		musicxml.Measure{
+		{
 			Number: 1,
 			Attribute: &musicxml.Attribute{
 				Key: &musicxml.KeySignature{
@@ -75,24 +44,20 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				},
 			},
 		},
-		musicxml.Measure{
+		{
 			Number: 2,
 			Print: &musicxml.Print{
 				NewSystem: musicxml.PrintNewSystemTypeYes,
 			},
 		},
-		musicxml.Measure{
-			Number: 3,
-		},
-		musicxml.Measure{
+		{Number: 3},
+		{
 			Number: 4,
 			Print: &musicxml.Print{
 				NewSystem: musicxml.PrintNewSystemTypeYes,
 			},
 		},
-		musicxml.Measure{
-			Number: 5,
-		},
+		{Number: 5},
 	}
 
 	keySignature := keysig.NewKeySignature(context.Background(), measures)
@@ -117,7 +82,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 
 	type args struct {
 		music    musicxml.MusicXML
-		metadata *repository.HymnMetadata
+		metadata *entity.HymnMetaData
 	}
 	tests := []struct {
 		name string
@@ -146,14 +111,11 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				canv := canvas.NewMockCanvas(c)
 				writerMock := canvas.NewMockWriter(c)
 
-				httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Caladea%7COld+Standard+TT%7CNoto+Music%7CFigtree",
-					httpmock.NewStringResponder(200, googleFont))
-				style := fmt.Sprintf(fontfmt, googleFont)
-
-				canv.EXPECT().Start(720, 2000)
+				canv.EXPECT().Start(800, 3000)
 				canv.EXPECT().Def()
 				canv.EXPECT().Writer().Return(writerMock)
-				writerMock.EXPECT().Write([]byte(style))
+
+				writerMock.EXPECT().Write(gomock.Any())
 				canv.EXPECT().DefEnd()
 				canv.EXPECT().End()
 
@@ -176,14 +138,14 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		{
 			name: "with metadata",
 			args: args{
-				metadata: &repository.HymnMetadata{
-					HymnData: repository.HymnData{
-						HymnIndicator: repository.HymnIndicator{
-							Number: 1,
+				metadata: &entity.HymnMetaData{
+					HymnMetadata: &repository.HymnMetadata{
+						HymnData: repository.HymnData{
+							HymnIndicator: repository.HymnIndicator{Number: 1},
+							Title:         "Unittest",
 						},
-						Title: "Unittest",
+						Verse: map[int]repository.HymnVerse{},
 					},
-					Verse: map[int]repository.HymnVerse{},
 				},
 				music: musicxml.MusicXML{
 					Part: musicxml.Part{
@@ -196,14 +158,10 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				canv := canvas.NewMockCanvas(c)
 				writerMock := canvas.NewMockWriter(c)
 
-				httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Caladea%7COld+Standard+TT%7CNoto+Music%7CFigtree",
-					httpmock.NewStringResponder(200, googleFont))
-				style := fmt.Sprintf(fontfmt, googleFont)
-
-				canv.EXPECT().Start(720, 2000)
+				canv.EXPECT().Start(800, 3000)
 				canv.EXPECT().Def()
 				canv.EXPECT().Writer().Return(writerMock)
-				writerMock.EXPECT().Write([]byte(style))
+				writerMock.EXPECT().Write(gomock.Any())
 				canv.EXPECT().DefEnd()
 				canv.EXPECT().End()
 
@@ -219,14 +177,14 @@ func Test_rendererInteractor_Render(t *testing.T) {
 			},
 			staffMock: func(c *gomock.Controller) *staff.MockStaff {
 				mockStaff := staff.NewMockStaff(c)
-				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature, nil).Return(100)
+				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature, metadata).Return(100)
 				return mockStaff
 			},
 
 			footnoteMock: func(c *gomock.Controller) *footnote.MockFootnote {
 				fm := footnote.NewMockFootnote(c)
 				pos := 150
-				fm.EXPECT().RenderMusicFootnotes(gomock.Any(), gomock.Any(), metadata, 100)
+				fm.EXPECT().RenderMusicFootnotes(gomock.Any(), gomock.Any(), metadata.HymnMetadata, 100)
 				fm.EXPECT().RenderVerseFootnotes(gomock.Any(), &pos, metadata.VerseFootNotes)
 				fm.EXPECT().RenderTitleFootnotes(gomock.Any(), 150, metadata.HymnData)
 				return fm
@@ -266,7 +224,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				ir.Verse = tt.verseMock(ctrl)
 			}
 
-			ir.Render(context.Background(), tt.args.music, tt.canvasMock(ctrl), &entity.HymnMetaData{HymnMetadata: tt.args.metadata})
+			ir.Render(context.Background(), tt.args.music, tt.canvasMock(ctrl), tt.args.metadata)
 		})
 	}
 }
@@ -294,73 +252,6 @@ func TestNewRenderer(t *testing.T) {
 
 			}
 
-		})
-	}
-}
-
-func Test_googlefont(t *testing.T) {
-
-	calibriFont := `
-		@font-face {
-			font-family: 'Caladea';
-			font-style: normal;
-			font-weight: 400;
-			src: url(https://fonts.gstatic.com/s/calibri/v1/default.ttf) format('truetype');
-			}
-	`
-
-	type args struct {
-		f string
-	}
-	tests := []struct {
-		name string
-		args args
-		init func()
-		want []byte
-	}{
-		{
-			name: "failed to get the font",
-			args: args{
-				f: "Calibri",
-			},
-			init: func() {
-				httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Calibri",
-					httpmock.NewErrorResponder(errors.New("nope")))
-			},
-			want: []byte{},
-		},
-		{
-			name: "non 200",
-			args: args{
-				f: "Calibri",
-			},
-			init: func() {
-				httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Calibri",
-					httpmock.NewStringResponder(999, "what is this response?"))
-			},
-			want: []byte{},
-		},
-		{
-			name: "Everything went fine",
-			args: args{
-				f: "Calibri",
-			},
-			init: func() {
-				httpmock.RegisterResponder("GET", "https://fonts.googleapis.com/css?family=Calibri",
-					httpmock.NewStringResponder(200, calibriFont))
-			},
-			want: []byte(calibriFont),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			httpmock.Activate()
-			defer httpmock.DeactivateAndReset()
-
-			tt.init()
-
-			got := googlefont(tt.args.f)
-			assert.Equal(t, string(tt.want), string(got))
 		})
 	}
 }

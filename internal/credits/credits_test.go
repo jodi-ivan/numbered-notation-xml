@@ -2,6 +2,7 @@ package credits
 
 import (
 	"database/sql"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -74,10 +75,10 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 				leftIndent: constant.LAYOUT_INDENT_LENGTH,
 			},
 			lines: []string{
-				"this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also added a long italic text for breaking </tspan>",
-				"down the text to the new line.</tspan>",
+				"this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also added a long italic text for breaking down the </tspan>",
+				"text to the new line.</tspan>",
 			},
-			lenLines: []int{661, 156},
+			lenLines: []int{711, 106},
 		},
 	}
 	for _, tt := range tests {
@@ -112,7 +113,7 @@ func Test_alignText(t *testing.T) {
 				targetLength: constant.LAYOUT_WIDTH,
 			},
 			// 5 spaces
-			want: "this&#160;&#160;&#160;&#160;&#160;is&#160;&#160;&#160;&#160;&#160;a&#160;&#160;&#160;&#160;&#160;very&#160;&#160;&#160;&#160;&#160;long&#160;&#160;&#160;&#160;&#160;text,&#160;&#160;&#160;&#160;&#160;this&#160;&#160;&#160;&#160;&#160;intentionally&#160;&#160;&#160;&#160;&#160;added&#160;&#160;&#160;&#160;&#160;with&#160;&#160;&#160;&#160;&#160;a&#160;&#160;&#160;&#160;&#160;lot&#160;&#160;&#160;&#160;&#160;of&#160;&#160;&#160;&#160;&#160;text&#160;&#160;&#160;&#160;&#160;just&#160;&#160;&#160;&#160;&#160;for&#160;&#160;&#160;&#160;&#160;satisfy&#160;&#160;&#160;&#160;&#160;requirement.&#160;&#160;&#160;&#160;&#160;<tspan font-style=\"italic\">Also",
+			want: strings.Join([]string{"this", "is", "a", "very", "long", "text,", "this", "intentionally", "added", "with", "a", "lot", "of", "text", "just", "for", "satisfy", "requirement.", "<tspan font-style=\"italic\">Also"}, strings.Repeat("&#160;", 10)),
 		},
 	}
 	for _, tt := range tests {
@@ -148,7 +149,7 @@ func Test_formatAndRenderText(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
-		canv       func(*gomock.Controller) *canvas.MockCanvas
+		canv       func(*gomock.Controller) *canvas.MockCanvasTestify
 		y          int
 		leftIndent int
 		text       string
@@ -156,15 +157,15 @@ func Test_formatAndRenderText(t *testing.T) {
 	}{
 		{
 			name: "nothing happened",
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				return canvas.NewMockCanvas(c)
+			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
+				return canvas.NewMockCanvasTestify(t)
 			},
 			want: []string{},
 		},
 		{
 			name: "one line without italic",
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canvMock := canvas.NewMockCanvas(c)
+			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
+				canvMock := canvas.NewMockCanvasTestify(t)
 				canvMock.EXPECT().TextUnescaped(50.0, 100.0, "this is the text without italic")
 
 				return canvMock
@@ -175,8 +176,8 @@ func Test_formatAndRenderText(t *testing.T) {
 		},
 		{
 			name: "one linewithout <i>italic</i>",
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canvMock := canvas.NewMockCanvas(c)
+			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
+				canvMock := canvas.NewMockCanvasTestify(t)
 				canvMock.EXPECT().TextUnescaped(50.0, 100.0, `this is the text with <tspan font-style="italic">Foreign title</tspan>`)
 
 				return canvMock
@@ -187,21 +188,21 @@ func Test_formatAndRenderText(t *testing.T) {
 		},
 		{
 			name: "with italic terminated is broken down to two lines",
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canvMock := canvas.NewMockCanvas(c)
+			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
+				canvMock := canvas.NewMockCanvasTestify(t)
 				canvMock.EXPECT().TextUnescaped(100.0, 100.0,
-					`this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style="italic">Also added a long italic text for breaking </tspan>`)
+					`this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style="italic">Also added a long italic text for breaking down the </tspan>`)
 
 				canvMock.EXPECT().TextUnescaped(100.0, 115.0,
-					`<tspan font-style="italic"> down the text to the new line.</tspan>`)
+					`<tspan font-style="italic"> text to the new line.</tspan>`)
 				return canvMock
 			},
 			y:          100,
 			leftIndent: constant.LAYOUT_INDENT_LENGTH,
 			text:       "this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <i>Also added a long italic text for breaking down the text to the new line.</i>",
 			want: []string{
-				"this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also added a long italic text for breaking </tspan>",
-				"<tspan font-style=\"italic\"> down the text to the new line.</tspan>",
+				"this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also added a long italic text for breaking down the </tspan>",
+				"<tspan font-style=\"italic\"> text to the new line.</tspan>",
 			},
 		},
 	}
@@ -326,14 +327,14 @@ func Test_renderCopyright(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
 
-				canvMock.EXPECT().Text(654, 100, "© unittest")
+				canvMock.EXPECT().Text(734, 100, "© unittest")
 				return canvMock
 			},
 		},
 		{
 			name:  "copyright offset to new line",
 			y:     newYPtr(),
-			wantY: 130,
+			wantY: 115,
 			metadata: repository.HymnData{
 				Copyright: sql.NullString{
 					Valid:  true,
@@ -344,7 +345,7 @@ func Test_renderCopyright(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
 
-				canvMock.EXPECT().Text(597, 115, "© this is long copyright")
+				canvMock.EXPECT().Text(677, 100, "© this is long copyright")
 				return canvMock
 			},
 		},
@@ -383,7 +384,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "BE only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(671, 115, "BE 100")
+				canvMock.EXPECT().Text(751, 115, "BE 100")
 				return canvMock
 			},
 			y: 115,
@@ -398,7 +399,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "NR only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(669, 115, "NR 100")
+				canvMock.EXPECT().Text(749, 115, "NR 100")
 				return canvMock
 			},
 			y: 115,
@@ -413,7 +414,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "Both",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(635, 115, "BE 100, NR 100")
+				canvMock.EXPECT().Text(715, 115, "BE 100, NR 100")
 				return canvMock
 			},
 			y: 115,

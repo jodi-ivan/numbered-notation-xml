@@ -17,6 +17,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/toping"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -35,6 +36,7 @@ func NewRenderAlign() RenderStaffWithAlign {
 		Barline:  barlineInteractor,
 		Lyric:    lyricInteractor,
 		Text:     text.NewText(lyricInteractor),
+		Toping:   toping.NewToping(),
 	}
 }
 
@@ -44,6 +46,7 @@ type renderStaffAlign struct {
 	Rhythm   rhythm.Rhythm
 	Lyric    lyric.Lyric
 	Text     text.Text
+	Toping   toping.Toping
 }
 
 func alignJustify(measure []*entity.NoteRenderer, y int, addedSpace float64, count *int, measureIndex int, lastMeasure bool) {
@@ -158,7 +161,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
 	margin := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
-	RenderMeasureTopping(ctx, y+10, canv, flatten, true)
+	rsa.Toping.RenderRepeatMeasure(ctx, y+10, canv, flatten, true) // for the gregorian
 	canv.Gend()
 
 	stafflines := lines.NewLineStaffWithLines(ts, ks, y)
@@ -200,8 +203,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		canv.Group("class='staff-text'")
 
 		rsa.Text.RenderMeasureText(ctx, y+10, canv, measure, stafflines)
-		RenderStaffLineDash(measure, canv, y+10, stafflines)
-		RenderTuplet(ctx, yPos, canv, measure)
+		rsa.Toping.RenderStaffLineDash(measure, canv, y+10, stafflines)
+		rsa.Toping.RenderTuplet(ctx, yPos, canv, measure)
 
 		canv.Gend()
 
@@ -212,7 +215,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	rsa.Lyric.RenderHypen(ctx, yPos, offsetLyric, canv, flatten)
 	rsa.Rhythm.RenderSlurTies(ctx, yPos, canv, slurTiesNote, float64(lastPos))
-	RenderMeasureTopping(ctx, yPos, canv, flatten)
+	rsa.Toping.RenderRepeatMeasure(ctx, yPos, canv, flatten) // for the numbered
 	canv.Gend()
 	canv.Gend()
 

@@ -1,4 +1,4 @@
-package staff
+package toping
 
 import (
 	"context"
@@ -14,7 +14,73 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, std ...bool) {
+type Toping interface {
+	RenderRepeatMeasure(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, std ...bool)
+	RenderTuplet(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer)
+	SetStaffLineDashRenderer(note *entity.NoteRenderer, dashes map[int]musicxml.DirectionDashesType)
+	RenderStaffLineDash(notes []*entity.NoteRenderer, canv canvas.Canvas, y int, linestaff ...lines.LineStaff)
+}
+
+func NewToping() Toping {
+	return &topingInteractor{}
+}
+
+type topingInteractor struct {
+}
+
+func (ti *topingInteractor) RenderTuplet(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer) {
+	pairs := [][2]CoordinateWithTuplet{}
+	pairData := []int{}
+	for _, n := range notes {
+		if n.Tuplet == nil {
+			continue
+		}
+
+		switch n.Tuplet.Type {
+		case musicxml.TupletTypeStart:
+			pairs = append(pairs, [2]CoordinateWithTuplet{
+				{
+					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
+					Tuplet:     *n.Tuplet,
+				},
+			})
+			pairData = append(pairData, n.TimeModifications.ActualNotes.Value)
+		case musicxml.TupletTypeStop:
+			curr := pairs[len(pairs)-1]
+			curr[1] = CoordinateWithTuplet{
+				Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
+				Tuplet:     *n.Tuplet,
+			}
+
+			pairs[len(pairs)-1] = curr
+		}
+	}
+
+	if len(pairs) > 0 {
+
+		canv.Group("class='tuplet'", `style="font-size:80%"`)
+		for i, pair := range pairs {
+			end := pair[1]
+			start := pair[0]
+
+			x := start.X + ((end.X - start.X) / 2)
+			if start.Tuplet.Braket == musicxml.BoolYes {
+				canv.Qbez(
+					int(start.X), int(end.Y)-22,
+					int(x)+4, int(start.Y)-38,
+					int(end.X)+8, int(end.Y)-22,
+					"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8",
+				)
+				canv.CenterRect(int(x)+4, int(start.Y)-26, 10, 12, "fill:white;stroke:none;")
+			}
+			canv.Text(int(x), int(start.Y)-22, fmt.Sprintf("%d", pairData[i]), "font-style:italic")
+
+		}
+		canv.Gend()
+	}
+}
+
+func (ti *topingInteractor) RenderRepeatMeasure(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, std ...bool) {
 	pairs := [][2]entity.Coordinate{}
 	pairsData := []string{}
 	pairsBar := [][2]musicxml.BarLineStyle{}
@@ -101,7 +167,7 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 
 }
 
-func SetStaffLineDashRenderer(note *entity.NoteRenderer, dashes map[int]musicxml.DirectionDashesType) {
+func (ti *topingInteractor) SetStaffLineDashRenderer(note *entity.NoteRenderer, dashes map[int]musicxml.DirectionDashesType) {
 	if dashes == nil {
 		return
 	}
@@ -114,7 +180,7 @@ func SetStaffLineDashRenderer(note *entity.NoteRenderer, dashes map[int]musicxml
 	}
 }
 
-func RenderStaffLineDash(notes []*entity.NoteRenderer, canv canvas.Canvas, y int, linestaff ...lines.LineStaff) {
+func (ti *topingInteractor) RenderStaffLineDash(notes []*entity.NoteRenderer, canv canvas.Canvas, y int, linestaff ...lines.LineStaff) {
 	dashSet := map[int][2]entity.Coordinate{}
 
 	for notePos, note := range notes {
@@ -131,10 +197,7 @@ func RenderStaffLineDash(notes []*entity.NoteRenderer, canv canvas.Canvas, y int
 				pair = [2]entity.Coordinate{}
 			}
 
-			loc := entity.Coordinate{
-				X: float64(note.PositionX),
-				Y: float64(y),
-			}
+			loc := entity.NewCoordinate(float64(note.PositionX), float64(y))
 
 			if len(linestaff) > 0 {
 				loc.Y -= noteMarginTop
@@ -162,62 +225,9 @@ func RenderStaffLineDash(notes []*entity.NoteRenderer, canv canvas.Canvas, y int
 			if n.Barline != nil {
 				n = notes[len(notes)-2]
 			}
-			pair[1].X = float64(n.PositionX) + 4
-			pair[1].Y = pair[0].Y
+			pair[1].X, pair[1].Y = float64(n.PositionX)+4, pair[0].Y
 		}
 		canv.Line(int(pair[0].X)+constant.LOWERCASE_LENGTH, int(pair[0].Y)-25, int(pair[1].X), int(pair[1].Y)-25, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1;stroke-dasharray:4 8;")
 	}
 
-}
-
-func RenderTuplet(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer) {
-	pairs := [][2]CoordinateWithTuplet{}
-	pairData := []int{}
-	for _, n := range notes {
-		if n.Tuplet == nil {
-			continue
-		}
-
-		switch n.Tuplet.Type {
-		case musicxml.TupletTypeStart:
-			pairs = append(pairs, [2]CoordinateWithTuplet{
-				{
-					Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
-					Tuplet:     *n.Tuplet,
-				},
-			})
-			pairData = append(pairData, n.TimeModifications.ActualNotes.Value)
-		case musicxml.TupletTypeStop:
-			curr := pairs[len(pairs)-1]
-			curr[1] = CoordinateWithTuplet{
-				Coordinate: entity.NewCoordinate(float64(n.PositionX), float64(y)),
-				Tuplet:     *n.Tuplet,
-			}
-
-			pairs[len(pairs)-1] = curr
-		}
-	}
-
-	if len(pairs) > 0 {
-
-		canv.Group("class='tuplet'", `style="font-size:80%"`)
-		for i, pair := range pairs {
-			end := pair[1]
-			start := pair[0]
-
-			x := start.X + ((end.X - start.X) / 2)
-			if start.Tuplet.Braket == musicxml.BoolYes {
-				canv.Qbez(
-					int(start.X), int(end.Y)-22,
-					int(x)+4, int(start.Y)-38,
-					int(end.X)+8, int(end.Y)-22,
-					"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8",
-				)
-				canv.CenterRect(int(x)+4, int(start.Y)-26, 10, 12, "fill:white;stroke:none;")
-			}
-			canv.Text(int(x), int(start.Y)-22, fmt.Sprintf("%d", pairData[i]), "font-style:italic")
-
-		}
-		canv.Gend()
-	}
 }

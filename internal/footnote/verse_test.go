@@ -79,7 +79,7 @@ func Test_footnoteInteractor_AssignFootnotesMarker(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Group("class='footnotes'", `style="font-style:italic;font-size:60%;font-family:'Figtree';font-weight:600"`)
-				canv.EXPECT().Text(50+620+20, int(100), "1)")
+				canv.EXPECT().Text(770, int(100), "1)")
 				canv.EXPECT().Gend()
 				return canv
 			},

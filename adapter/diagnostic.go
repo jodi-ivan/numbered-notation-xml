@@ -29,10 +29,10 @@ type DiagnosticHTTP struct {
 
 // SSEvent represents a single server-sent event packet.
 type SSEvent struct {
-	ID    string `json:"id"`    // Optional: Unique identifier for the event
-	Event string `json:"event"` // Optional: Custom event name (e.g., "update", "chat_message")
-	Data  []byte `json:"data"`  // Required: The main payload
-	Retry int    `json:"retry"` // Optional: Reconnection timeout value in milliseconds
+	ID    string
+	Event string
+	Data  []byte
+	Retry int
 }
 
 func (dh *DiagnosticHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -103,11 +103,6 @@ func (dh *DiagnosticHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps h
 				"event: close\n",
 				"data: stream_finished \n\n",
 			}
-			// body, _ := json.Marshal(SSEvent{
-			// 	ID:    uuid.NewString(),
-			// 	Event: "data",
-			// 	Data:  s,
-			// })
 
 			w.Write([]byte(strings.Join(body, "")))
 			if flusher, ok := w.(http.Flusher); ok {
@@ -137,16 +132,7 @@ func (dh *DiagnosticHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps h
 			if flusher, ok := w.(http.Flusher); ok {
 				flusher.Flush()
 			}
-			// time.Sleep(1 * time.Second)
-			// timeout.Reset(time.Millisecond * 100)
 
-			// case <-dig.Finish:
-			// 	log.Println("finishing")
-			// 	// time.Sleep(1 * time.Second)
-			// 	if flusher, ok := w.(http.Flusher); ok {
-			// 		flusher.Flush()
-			// 	}
-			// 	return
 		}
 	}
 }

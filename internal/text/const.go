@@ -9,3 +9,16 @@ const (
 
 	TEXT_STAFF_TOP_LINE_GAP_WIDTH = 10
 )
+
+const (
+	FERMATA_OFFSET     = 15
+	REPEAT_LINE_OFFSET = 8
+)
+
+const TEXT_BASELINE_DISTANCE = 10
+const TEXT_TO_STAFF_DISTANCE = 25
+
+const (
+	DEFAULT_TEXT_REFREIN = "Refrein"
+	DEFAULT_TEXT_FINE    = "Fine"
+)

@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"slices"
-	"sort"
-	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -15,7 +12,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/text"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
-	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, std ...bool) {
@@ -105,61 +101,31 @@ func RenderMeasureTopping(ctx context.Context, y int, canv canvas.Canvas, notes 
 
 }
 
-func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, linestaff ...lines.LineStaff) {
-	hasStaffText := false
+func SetStaffLineDashRenderer(note *entity.NoteRenderer, dashes map[int]musicxml.DirectionDashesType) {
+	if dashes == nil {
+		return
+	}
+	if note.MeasureDash == nil {
+		note.MeasureDash = map[int]musicxml.DirectionDashesType{}
+	}
 
+	for num, dashType := range dashes {
+		note.MeasureDash[num] = dashType
+	}
+}
+
+func RenderStaffLineDash(notes []*entity.NoteRenderer, canv canvas.Canvas, y int, linestaff ...lines.LineStaff) {
 	dashSet := map[int][2]entity.Coordinate{}
 
 	for notePos, note := range notes {
-
 		noteMarginTop := 0.0
-		if !hasStaffText && len(note.MeasureText) > 0 {
-			canv.Group("class='staff-text'")
-		}
-		hasStaffText = hasStaffText || len(note.MeasureText) > 0
 
-		if len(note.MeasureText) > 0 {
-			sort.Slice(note.MeasureText, func(i, j int) bool {
-				return note.MeasureText[i].RelativeY < note.MeasureText[j].RelativeY
-			})
-
-			offset := 0
-			if note.Fermata != nil {
-				offset = 15
-			}
-
-			if notes[0].Barline != nil && notes[0].Barline.Ending != nil {
-				offset += 8
-			}
-
-			if len(linestaff) > 0 {
-				noteMarginTop = text.GetTextMarginBottom(linestaff[0], notes, notePos)
-				offset += int(noteMarginTop)
-			}
-
-			for i, t := range note.MeasureText {
-
-				style := []string{`font-style:italic`}
-				if t.Text != MEASURE_TEXT_REFREIN && t.Text != MEASURE_TEXT_FINE {
-					style = append(style, `font-size:65%`, `font-weight:bold`)
-				}
-				xPos := note.PositionX
-				if t.TextAlignment == musicxml.TextAlignmentRight {
-					textLength := rsa.Lyric.CalculateLyricWidth(t.Text)
-					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
-				}
-
-				origPos := (len(note.MeasureText) - 1) * 10
-				yPos := (y - origPos) - offset - 25 - (i * -10)
-				if t.RelativeY < 0 {
-					yPos = y + (i * 10) + (len(note.Lyric) * 25) + 20
-					style = []string{"font-size:60%", "font-family:'Figtree'", "font-weight:600"}
-				}
-				canv.Text(xPos, yPos, t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
-			}
+		if len(linestaff) > 0 {
+			noteMarginTop = text.GetTextMarginBottom(linestaff[0], notes, notePos)
 		}
 
 		for num, dashType := range note.MeasureDash {
+
 			pair, ok := dashSet[num]
 			if !ok {
 				pair = [2]entity.Coordinate{}
@@ -188,7 +154,6 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv 
 			}
 			dashSet[num] = pair
 		}
-
 	}
 
 	for _, pair := range dashSet {
@@ -201,9 +166,6 @@ func (rsa *renderStaffAlign) RenderMeasureText(ctx context.Context, y int, canv 
 			pair[1].Y = pair[0].Y
 		}
 		canv.Line(int(pair[0].X)+constant.LOWERCASE_LENGTH, int(pair[0].Y)-25, int(pair[1].X), int(pair[1].Y)-25, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1;stroke-dasharray:4 8;")
-	}
-	if hasStaffText {
-		canv.Gend()
 	}
 
 }
@@ -258,45 +220,4 @@ func RenderTuplet(ctx context.Context, y int, canv canvas.Canvas, notes []*entit
 		}
 		canv.Gend()
 	}
-}
-
-func (si *staffInteractor) SetMeasureTextRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool {
-	var affectMarginbottom = []string{"Refrein", "Fine"}
-	prm, _ := params.GetParamFromContext(ctx)
-	count := 0
-	for _, mt := range note.MeasureText {
-		if noteRenderer.MeasureText == nil {
-			noteRenderer.MeasureText = []musicxml.MeasureText{}
-		}
-
-		if prm.Verse != 0 && strings.Contains(strings.ToLower(mt.Text), fmt.Sprintf("bait %d", prm.Verse)) {
-			continue
-		}
-		alignment := musicxml.TextAlignmentLeft
-		if isLastNote {
-			alignment = musicxml.TextAlignmentRight
-		}
-		if slices.Contains(affectMarginbottom, mt.Text) {
-			count++
-		}
-
-		noteRenderer.MeasureText = append(noteRenderer.MeasureText, musicxml.MeasureText{
-			Text:          mt.Text,
-			RelativeY:     mt.RelativeY,
-			TextAlignment: alignment,
-		})
-	}
-
-	if directionDashses != nil {
-		if noteRenderer.MeasureDash == nil {
-			noteRenderer.MeasureDash = map[int]musicxml.DirectionDashesType{}
-		}
-
-		for num, dashType := range directionDashses {
-			noteRenderer.MeasureDash[num] = dashType
-		}
-	}
-
-	return count > 0
-
 }

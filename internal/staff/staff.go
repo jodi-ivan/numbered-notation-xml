@@ -3,7 +3,6 @@ package staff
 import (
 	"context"
 	"math"
-	"slices"
 
 	"github.com/google/uuid"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/text"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/verse"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -29,7 +29,6 @@ import (
 type Staff interface {
 	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) StaffInfo
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
-	SetMeasureTextRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, note musicxml.Note, directionDashses map[int]musicxml.DirectionDashesType, isLastNote bool) bool
 	Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int
 }
 
@@ -41,6 +40,7 @@ type staffInteractor struct {
 	Rhythm        rhythm.Rhythm
 	RenderAlign   RenderStaffWithAlign
 	SyllableMatch verse.SyllableMatch
+	StaffText     text.Text
 }
 
 func NewStaff() Staff {
@@ -54,6 +54,7 @@ func NewStaff() Staff {
 		Rhythm:        rhythm.New(splitter.New()),
 		RenderAlign:   NewRenderAlign(),
 		SyllableMatch: verse.NewSyllableMatcher(),
+		StaffText:     text.NewText(lyricInteractor),
 	}
 }
 
@@ -158,13 +159,11 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1
-			hasMeasureText := si.SetMeasureTextRenderer(ctx, renderer, note, measure.DirectionDashes[notePos], isLastNote)
+			hasMeasureText := si.StaffText.SetMeasureTextRenderer(ctx, renderer, note, isLastNote)
 			if hasMeasureText || (len(note.MeasureText) > 0 && staffPos == 0) {
 				yOffset = true
 
-				isRefrein := slices.ContainsFunc(renderer.MeasureText, func(t musicxml.MeasureText) bool {
-					return t.Text == "Refrein"
-				})
+				isRefrein := si.StaffText.NoteHasText(renderer.MeasureText, text.DEFAULT_TEXT_REFREIN)
 
 				if hasMeasureText && isRefrein && renderer.MeasureNumber == 1 && notePos == 0 {
 					staffInfo.StartRenderOtherNotes = false
@@ -173,6 +172,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				refreinStartNote = refreinStartNote || isRefrein
 			}
 
+			SetStaffLineDashRenderer(renderer, measure.DirectionDashes[notePos])
 			si.Rhythm.SetRhythmNotation(renderer, note, n)
 
 			// lyric
@@ -186,11 +186,11 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || lyric.HasPrefix(renderer)
 				if notePos == 0 && mi > 0 && len(measures[mi-1].Notes) > 0 {
 					lastMeasure := measures[mi-1]
-					hasFine := slices.ContainsFunc(lastMeasure.Notes[len(lastMeasure.Notes)-1].MeasureText, func(t musicxml.MeasureText) bool {
-						return t.Text == "Fine"
-					})
 
-					staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || hasFine || (lastMeasure.RightMeasureText != nil && lastMeasure.RightMeasureText.Text == "Fine")
+					hasFine := si.StaffText.NoteHasText(lastMeasure.Notes[len(lastMeasure.Notes)-1].MeasureText, text.DEFAULT_TEXT_FINE)
+					measureFine := si.StaffText.MeasureHasText(lastMeasure, text.DEFAULT_TEXT_FINE)
+
+					staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || hasFine || measureFine
 				}
 			}
 
@@ -248,11 +248,9 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			startSyllable = 0
 			staffInfo.SyllableCount = 0
 
-			noteFine := slices.ContainsFunc(measure.Notes[len(measure.Notes)-1].MeasureText, func(t musicxml.MeasureText) bool {
-				return t.Text == "Fine"
-			})
-
-			if !data.ReffAtStart && (noteFine || (measure.RightMeasureText != nil && measure.RightMeasureText.Text == "Fine")) {
+			noteFine := si.StaffText.NoteHasText(measure.Notes[len(measure.Notes)-1].MeasureText, text.DEFAULT_TEXT_FINE)
+			measureTextFine := si.StaffText.MeasureHasText(measure, MEASURE_TEXT_FINE)
+			if !data.ReffAtStart && (noteFine || measureTextFine) {
 				staffInfo.StartRenderOtherNotes = true
 			}
 		}

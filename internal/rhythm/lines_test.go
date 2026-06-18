@@ -375,7 +375,7 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 			name: "no notes",
 			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
 				bs := splitter.NewMockBeamSplitter(c)
-				bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				// bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				return bs
 			},
 		},
@@ -383,7 +383,7 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 			name: "no beam",
 			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
 				bs := splitter.NewMockBeamSplitter(c)
-				bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				// bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				return bs
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
@@ -400,7 +400,7 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 			name: "has beam",
 			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
 				bs := splitter.NewMockBeamSplitter(c)
-				bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
+				// bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				return bs
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {

@@ -102,31 +102,32 @@ func (ti *topingInteractor) RenderRepeatMeasure(ctx context.Context, y int, canv
 		musicxml.BarLineStyleLightHeavy: -3,
 	}
 	for notePos, note := range notes {
-		if note.Barline != nil && note.Barline.Ending != nil {
-			switch note.Barline.Ending.Type {
-			case musicxml.BarlineEndingTypeStart:
-				pos := entity.NewCoordinate(float64(note.PositionX), float64(y))
-				if notePos > 0 && notes[notePos-1].Barline != nil &&
-					notes[notePos-1].Barline.BarStyle != musicxml.BarLineStyleNone {
-					pos = entity.NewCoordinate(float64(notes[notePos-1].PositionX), float64(y))
-
-				}
-				pairs = append(pairs, [2]entity.Coordinate{pos})
-				pairsData = append(pairsData, note.Barline.Ending.Number)
-				beginTarget, ok := rightMeasureMap[note.MeasureNumber-1]
-				if !ok {
-					beginTarget = musicxml.BarLineStyleRegular
-				}
-				pairsBar = append(pairsBar, [2]musicxml.BarLineStyle{beginTarget})
-			case musicxml.BarlineEndingTypeStop, musicxml.BarlineEndingTypeDiscontinue:
-				curr := pairs[len(pairs)-1]
-				curr[1] = entity.NewCoordinate(float64(note.PositionX), float64(y))
-
-				pairs[len(pairs)-1] = curr
-
-				pairsBar[len(pairsBar)-1][1] = note.Barline.BarStyle
+		if note.Barline == nil || (note.Barline != nil && note.Barline.Ending == nil) {
+			continue
+		}
+		switch note.Barline.Ending.Type {
+		case musicxml.BarlineEndingTypeStart:
+			pos := entity.NewCoordinate(float64(note.PositionX), float64(y))
+			if notePos > 0 && notes[notePos-1].Barline != nil &&
+				notes[notePos-1].Barline.BarStyle != musicxml.BarLineStyleNone {
+				pos = entity.NewCoordinate(float64(notes[notePos-1].PositionX), float64(y))
 
 			}
+			pairs = append(pairs, [2]entity.Coordinate{pos})
+			pairsData = append(pairsData, note.Barline.Ending.Number)
+			beginTarget, ok := rightMeasureMap[note.MeasureNumber-1]
+			if !ok {
+				beginTarget = musicxml.BarLineStyleRegular
+			}
+			pairsBar = append(pairsBar, [2]musicxml.BarLineStyle{beginTarget})
+		case musicxml.BarlineEndingTypeStop, musicxml.BarlineEndingTypeDiscontinue:
+			curr := pairs[len(pairs)-1]
+			curr[1] = entity.NewCoordinate(float64(note.PositionX), float64(y))
+
+			pairs[len(pairs)-1] = curr
+
+			pairsBar[len(pairsBar)-1][1] = note.Barline.BarStyle
+
 		}
 	}
 

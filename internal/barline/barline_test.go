@@ -233,7 +233,7 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		initCanvas func(ctrl *gomock.Controller) *canvas.MockCanvas
+		initCanvas func(ctrl *gomock.Controller) *canvas.MockCanvasTestify
 		args       args
 	}{
 		// case 1 : no repeat
@@ -249,12 +249,12 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 					Y: 125,
 				},
 			},
-			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				canvMock := canvas.NewMockCanvas(ctrl)
+			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvasTestify {
+				canvMock := canvas.NewMockCanvasTestify(t)
 
 				canvMock.EXPECT().TextUnescaped(float64(25), float64(131),
-					`<tspan x="25.00" y="131.00" font-size="180%">&#x01D102;</tspan>`,
-					`style="font-family:Noto Music"`)
+					`<tspan x="25.00" y="131.00" font-size="180%" >&#x01D102;</tspan>`,
+					[]string{`style="font-family:Noto Music"`})
 
 				return canvMock
 			},
@@ -275,13 +275,13 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 					Y: 125,
 				},
 			},
-			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				canvMock := canvas.NewMockCanvas(ctrl)
+			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvasTestify {
+				canvMock := canvas.NewMockCanvasTestify(t)
 
 				canvMock.EXPECT().TextUnescaped(
 					float64(25), float64(131),
-					`<tspan x="25.00" y="131.00" font-size="180%">&#x01D103;</tspan><tspan x="35.00" y="121.00">:</tspan>`,
-					`style="font-family:Noto Music"`,
+					`<tspan x="25.00" y="131.00" font-size="180%" >&#x01D103;</tspan><tspan x="35.00" y="121.00">:</tspan>`,
+					[]string{`style="font-family:Noto Music"`},
 				)
 
 				return canvMock
@@ -303,12 +303,12 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 					Y: 125,
 				},
 			},
-			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
-				canvMock := canvas.NewMockCanvas(ctrl)
+			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvasTestify {
+				canvMock := canvas.NewMockCanvasTestify(t)
 
 				canvMock.EXPECT().TextUnescaped(float64(25), float64(131),
-					`<tspan x="20.00" y="121.00">:</tspan><tspan x="25.00" y="131.00" font-size="180%">&#x01D102;</tspan>`,
-					`style="font-family:Noto Music"`)
+					`<tspan x="20.00" y="121.00">:</tspan><tspan x="25.00" y="131.00" font-size="180%" >&#x01D102;</tspan>`,
+					[]string{`style="font-family:Noto Music"`})
 
 				return canvMock
 			},

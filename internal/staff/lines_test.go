@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -138,7 +137,7 @@ func TestProcessPreviousLines(t *testing.T) {
 			},
 			wantTotalNotes: 3,
 			wantStaffInfo: StaffInfo{
-				MarginLeft: constant.LAYOUT_INDENT_LENGTH,
+				MarginLeft: 101,
 			},
 		},
 		{
@@ -161,7 +160,7 @@ func TestProcessPreviousLines(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got2 := ProcessPreviousLines(tt.prevNotes, keysig.KeySignature{}, tt.yPos)
+			got, got2 := ProcessPreviousLines(tt.prevNotes, keysig.NewKeySignature(context.Background(), []musicxml.Measure{{Attribute: &musicxml.Attribute{Key: &musicxml.KeySignature{}}}}), tt.yPos)
 			if len(got) == tt.wantTotalNotes {
 				t.Errorf("ProcessPreviousLines() total notes = %v, want %v", got, tt.wantTotalNotes)
 			}

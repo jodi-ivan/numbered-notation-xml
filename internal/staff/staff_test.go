@@ -15,8 +15,11 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/toping"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type testifyMatcher struct {
@@ -25,6 +28,7 @@ type testifyMatcher struct {
 }
 
 func (m testifyMatcher) Matches(x interface{}) bool {
+
 	return assert.Equal(m.t, m.expected, x)
 }
 
@@ -122,6 +126,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 
 	getNote := func(appx []musicxml.Element, i int) musicxml.Note {
 		n, _ := appx[i].ParseAsNote()
+		n.IndexPosition = i
 		if i > 0 {
 			d, err := appx[i-1].ParseAsDirection()
 			if err == nil && len(d.DirectionType) > 0 {
@@ -160,6 +165,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			want: StaffInfo{
 				MarginBottom:     15,
 				NextLineRenderer: []*entity.NoteRenderer{},
+				EndIndex:         1,
 			},
 			numberedMock: func(c *gomock.Controller) *numbered.MockNumbered {
 				nm := numbered.NewMockNumbered(c)
@@ -269,6 +275,10 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			si.BreathPause = tt.breathpauseMock(ctrl)
 			si.Barline = tt.barlineMock(ctrl)
 			si.RenderAlign = tt.renderAlignMock(ctrl)
+			si.StaffText = text.NewText(si.Lyric)
+			topingMock := toping.NewMockToping(t)
+			topingMock.EXPECT().SetStaffLineDashRenderer(mock.Anything, mock.Anything).Maybe()
+			si.Toping = topingMock
 
 			got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, 0, nil, tt.measures, StaffData{
 				PrevNotes: tt.prevNotes,
@@ -277,7 +287,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			})
 
 			assert.Equal(t, tt.want, got, "StaffInfo assert")
-
+			topingMock.AssertExpectations(t)
 		})
 	}
 }

@@ -37,6 +37,8 @@ func NewRenderAlign() RenderStaffWithAlign {
 		Lyric:    lyricInteractor,
 		Text:     text.NewText(lyricInteractor),
 		Toping:   toping.NewToping(),
+
+		Gregorian: gregorian.NewGregorian(),
 	}
 }
 
@@ -44,9 +46,11 @@ type renderStaffAlign struct {
 	Barline  barline.Barline
 	Numbered numbered.Numbered
 	Rhythm   rhythm.Rhythm
-	Lyric    lyric.Lyric
 	Text     text.Text
 	Toping   toping.Toping
+	Lyric    lyric.Lyric
+
+	Gregorian gregorian.Gregorian
 }
 
 func alignJustify(measure []*entity.NoteRenderer, y int, addedSpace float64, count *int, measureIndex int, lastMeasure bool) {
@@ -160,7 +164,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	}
 
 	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
-	margin := gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
+	margin := rsa.Gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
 	rsa.Toping.RenderRepeatMeasure(ctx, y+10, canv, flatten, true) // for the gregorian
 	canv.Gend()
 

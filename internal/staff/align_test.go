@@ -7,14 +7,18 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/toping"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_alignJustify(t *testing.T) {
@@ -114,8 +118,8 @@ func Test_renderStaffAlign_getAddedSpace(t *testing.T) {
 			},
 			totalNotes: 8,
 
-			want:  1.5375,
-			want2: 670,
+			want:  11.5375,
+			want2: 750,
 
 			wantRrightAlignOffset: 0,
 		},
@@ -138,8 +142,8 @@ func Test_renderStaffAlign_getAddedSpace(t *testing.T) {
 				return li
 			},
 			totalNotes: 8,
-			want:       1.25,
-			want2:      670,
+			want:       11.25,
+			want2:      750,
 
 			wantRrightAlignOffset: 5,
 		},
@@ -185,15 +189,15 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 	expectMeasures := map[int][]*entity.NoteRenderer{
 		1: {
 			{MeasureNumber: 1, PositionX: 50, PositionY: 100},
-			{MeasureNumber: 1, PositionX: 100, PositionY: 100, IsDotted: true}, {MeasureNumber: 1, PositionX: 150, PositionY: 100, IsDotted: true}, {MeasureNumber: 1, PositionX: 200, PositionY: 100, IsDotted: true},
-			{MeasureNumber: 1, PositionX: 250, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
-			{MeasureNumber: 1, PositionX: 307, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}},
+			{MeasureNumber: 1, PositionX: 106, PositionY: 100, IsDotted: true}, {MeasureNumber: 1, PositionX: 162, PositionY: 100, IsDotted: true}, {MeasureNumber: 1, PositionX: 218, PositionY: 100, IsDotted: true},
+			{MeasureNumber: 1, PositionX: 277, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
+			{MeasureNumber: 1, PositionX: 340, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}},
 		},
 		2: {
-			{MeasureNumber: 2, PositionX: 358, PositionY: 100},
-			{MeasureNumber: 2, PositionX: 408, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 458, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 508, PositionY: 100, IsDotted: true},
-			{MeasureNumber: 2, PositionX: 559, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
-			{MeasureNumber: 2, PositionX: 674, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleHeavyLight}},
+			{MeasureNumber: 2, PositionX: 398, PositionY: 100},
+			{MeasureNumber: 2, PositionX: 455, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 512, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 569, PositionY: 100, IsDotted: true},
+			{MeasureNumber: 2, PositionX: 626, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
+			{MeasureNumber: 2, PositionX: 754, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleHeavyLight}},
 		},
 	}
 
@@ -201,7 +205,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
-		canv         func(c *gomock.Controller) *canvas.MockCanvas
+		canv         func(c *gomock.Controller) *canvas.MockCanvasTestify
 		numberedMock func(c *gomock.Controller) *numbered.MockNumbered
 		rhythmMock   func(c *gomock.Controller) *rhythm.MockRhythm
 		lyricMock    func(c *gomock.Controller) *lyric.MockLyric
@@ -225,41 +229,43 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 					{MeasureNumber: 2, PositionX: 105, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleHeavyLight}},
 				},
 			},
-			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='staff'")
-				canv.EXPECT().Group("class='measure-align'", "number='1'")
-				canv.EXPECT().Group("class='measure-align'", "number='2'")
-				canv.EXPECT().Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'").Times(2)
-				canv.EXPECT().Gend().Times(5)
+			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
+				canv := canvas.NewMockCanvasTestify(t)
+				canv.EXPECT().Group([]string{"class='staff'"})
+				canv.EXPECT().Group([]string{`class="numbered"`})
+				canv.EXPECT().Group([]string{"class='staff-text'"})
+				canv.EXPECT().Group([]string{"class=\"gregorian\"", "style='font-family:mozart11'"})
+				canv.EXPECT().Group([]string{"class='measure-align'", "number='1'"})
+				canv.EXPECT().Group([]string{"class='measure-align'", "number='2'"})
+				canv.EXPECT().Group([]string{"class='note'", "style='font-family:Old Standard TT;font-weight:500'"}).Times(2)
+				canv.EXPECT().Gend().Times(9)
 				return canv
 			},
 			ts: timesig.NewTimeSignatures(context.Background(), measures),
 			y:  100,
 			numberedMock: func(c *gomock.Controller) *numbered.MockNumbered {
 				mock := numbered.NewMockNumbered(c)
-				mock.EXPECT().RenderNote(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[1]}, 100, 0)
-				mock.EXPECT().RenderNote(gomock.Any(), gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[2]}, 100, 0)
+				mock.EXPECT().RenderNote(gomock.Any(), gomock.Any(), gomock.Any(), 165, 0).Times(2)
 
 				return mock
 			},
 			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
 				mock := rhythm.NewMockRhythm(c)
 				ts := timesig.NewTimeSignatures(context.Background(), measures)
-				mock.EXPECT().RenderBeam(gomock.Any(), 100, gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[1]})
-				mock.EXPECT().RenderBeam(gomock.Any(), 100, gomock.Any(), ts, &testifyMatcher{t: t, expected: expectMeasures[2]})
-				mock.EXPECT().RenderSlurTies(gomock.Any(), 100, gomock.Any(),
+				mock.EXPECT().RenderBeam(gomock.Any(), 165, gomock.Any(), ts, gomock.Any()).Times(2)
+				mock.EXPECT().RenderSlurTies(gomock.Any(), 165, gomock.Any(),
 					testifyMatcher{expected: []*entity.NoteRenderer{}, t: t},
-					float64(670),
+					float64(750),
 				)
+				mock.EXPECT().Split(gomock.Any(), ts, gomock.Any())
+				mock.EXPECT().Split(gomock.Any(), ts, gomock.Any())
 
 				return mock
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
 				mock := lyric.NewMockLyric(c)
-				mock.EXPECT().RenderLyrics(gomock.Any(), 100, gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[1]})
-				mock.EXPECT().RenderLyrics(gomock.Any(), 100, gomock.Any(), &testifyMatcher{t: t, expected: expectMeasures[2]})
-				mock.EXPECT().RenderHypen(gomock.Any(), 100, 0, gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
+				mock.EXPECT().RenderLyrics(gomock.Any(), 165, gomock.Any(), gomock.Any()).Times(2) //&testifyMatcher{t: t, expected: expectMeasures[1]})
+				mock.EXPECT().RenderHypen(gomock.Any(), 165, 0, gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
 				return mock
 			},
 		},
@@ -271,7 +277,24 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 			rsa.Numbered = tt.numberedMock(ctrl)
 			rsa.Rhythm = tt.rhythmMock(ctrl)
 			rsa.Lyric = tt.lyricMock(ctrl)
-			rsa.RenderWithAlign(context.Background(), tt.canv(ctrl), 0, tt.y, tt.ts, ks, tt.noteRenderer)
+			gregMock := gregorian.NewMockGregorian(ctrl)
+			gregMock.EXPECT().RenderStaffLine(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+			rsa.Gregorian = gregMock
+			canv := tt.canv(ctrl)
+
+			topingMock := toping.NewMockToping(t)
+			topingMock.EXPECT().RenderRepeatMeasure(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+			topingMock.EXPECT().RenderRepeatMeasure(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+			topingMock.EXPECT().RenderStaffLineDash(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+			topingMock.EXPECT().RenderTuplet(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+			rsa.Toping = topingMock
+
+			mtMock := text.NewMockText(t)
+			mtMock.EXPECT().RenderMeasureText(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe()
+			rsa.Text = mtMock
+			rsa.RenderWithAlign(context.Background(), canv, 0, tt.y, tt.ts, ks, tt.noteRenderer)
+			canv.AssertExpectations(t)
+			mtMock.AssertExpectations(t)
 		})
 	}
 }

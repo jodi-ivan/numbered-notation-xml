@@ -261,7 +261,7 @@ func renderGroupBeam(canv canvas.Canvas, groupBeam []entity.CoordinateWithNoteLe
 		x3 := ((x1 + x2) / 2) - 6
 		y3 := ((y1 + y2) / 2) + 4 + (-1 * float64(compared) * 10)
 
-		canv.Text(int(math.Round(x3)), int(math.Round(y3)), "3", "font-family:Old Standard TT;font-size: 0.45em;font-style:italic")
+		canv.Text(int(math.Round(x3)), int(math.Round(y3)), "3", "font-family:Old Standard TT;font-size: 14.4px;font-style:italic")
 		margin.SetBottom(entity.NewCoordinate(x3, y3-(float64(compared)*5)))
 	}
 

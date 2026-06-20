@@ -47,7 +47,7 @@ func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, s
 		if b.Repeat != nil && b.Repeat.Direction == musicxml.BarLineRepeatDirectionBackward {
 			canv.Text(
 				int(pos.X)-6, middleLine+5,
-				":", `style="font-family:Noto Music;font-size:0.6em"`)
+				":", `style="font-family:Noto Music;font-size:19.2px"`)
 		}
 
 	case musicxml.BarLineStyleHeavyLight:
@@ -62,7 +62,7 @@ func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, s
 		if b.Repeat != nil && b.Repeat.Direction == musicxml.BarLineRepeatDirectionForward {
 			canv.Text(
 				int(pos.X)+8, middleLine+5,
-				":", `style="font-family:Noto Music;font-size:0.6em"`)
+				":", `style="font-family:Noto Music;font-size:19.2px"`)
 		}
 
 	}

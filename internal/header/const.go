@@ -22,6 +22,6 @@ const (
 )
 
 const (
-	FOR_KIDS_ELMNT = `<tspan font-style="bold" font-size="125%">☆</tspan>`
-	SUBTITLE_ATTR  = `style="font-size:70%;font-family:'Figtree';font-weight:600"`
+	FOR_KIDS_ELMNT = `<tspan font-style="bold" font-size="12px">☆</tspan>`
+	SUBTITLE_ATTR  = `style="font-size:11.2px;font-family:'Figtree';font-weight:600"`
 )

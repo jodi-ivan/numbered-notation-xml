@@ -131,11 +131,11 @@ func (ls *LineStaff) Render(canv canvas.Canvas, y int, measureNo int, inclTimesi
 	key := ls.Keysig.GetKeyOnMeasure(context.Background(), measureNo)
 	accidentalSet := key.GetAccidentals()
 
-	canv.Group(`class="clef"`, `style="font-size:2em"`)
+	canv.Group(`class="clef"`, `style="font-size:28px"`)
 	canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH+5, float64(initialY+15), TREBLE_CLEF_HEX)
 	canv.Gend()
 
-	canv.Group(`class="keysig"`, `style="font-size:1.75em"`)
+	canv.Group(`class="keysig"`, `style="font-size:28px"`)
 	offset := 0
 
 	// key signature changes

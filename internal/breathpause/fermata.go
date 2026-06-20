@@ -15,7 +15,7 @@ func RenderFermata(ctx context.Context, canv canvas.Canvas, fermata *musicxml.Fe
 		canv.TextUnescaped(
 			pos.X-4, pos.Y-7,
 			fermataUnicode,
-			`style="font-family:Noto Music;font-size:150%"`,
+			`style="font-family:Noto Music;font-size:24px"`,
 		)
 	}
 }

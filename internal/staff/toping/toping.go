@@ -58,7 +58,7 @@ func (ti *topingInteractor) RenderTuplet(ctx context.Context, y int, canv canvas
 
 	if len(pairs) > 0 {
 
-		canv.Group("class='tuplet'", `style="font-size:80%"`)
+		canv.Group("class='tuplet'", `style="font-size:12.8px"`)
 		for i, pair := range pairs {
 			end := pair[1]
 			start := pair[0]
@@ -141,7 +141,7 @@ func (ti *topingInteractor) RenderRepeatMeasure(ctx context.Context, y int, canv
 		for i, pair := range pairs {
 			x1 := int(math.Round(pair[0].X)) + offsetStart[pairsBar[i][0]]
 			x2 := int(math.Round(pair[1].X)) - offsetEnd[pairsBar[i][1]] - 5
-			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:60%;font-family:Old Standard TT;"`)
+			canv.Text(x1+3, int(math.Round(pair[0].Y))-22, pairsData[i], `style="font-weight:bold;font-size:9.6px;font-family:Old Standard TT;"`)
 			// vertical line at start
 			canv.Line(
 				x1, int(math.Round(pair[0].Y))-y1Offset,

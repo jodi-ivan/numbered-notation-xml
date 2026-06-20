@@ -126,7 +126,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 	prefixes := map[string]LyricPosition{}
 
 	offsetCenterVal := 0
-	canv.Group("class='lyric'", "style='font-family:Caladea'")
+	canv.Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
 	var prev *entity.NoteRenderer
 	minPrefix := float64(constant.LAYOUT_WIDTH)
 	offsetCenter := false
@@ -222,7 +222,7 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 				if p.Lyrics.Text[0].Italic {
 					style = []string{
 						`font-style="italic"`,
-						`font-size="90%"`,
+						`font-size="14.4px"`,
 					}
 					minPrefix += li.CalculateLyricWidth(prefixVal) * 0.1
 				}

@@ -118,7 +118,7 @@ func (ti *textInteractor) RenderMeasureText(ctx context.Context, y int, canv can
 
 				style := []string{`font-style:italic`}
 				if t.Text != DEFAULT_TEXT_REFREIN && t.Text != DEFAULT_TEXT_FINE {
-					style = append(style, `font-size:65%`, `font-weight:bold`)
+					style = append(style, `font-size:10.4px`, `font-weight:bold`)
 				}
 				xPos := note.PositionX
 				if t.TextAlignment == musicxml.TextAlignmentRight {
@@ -130,7 +130,7 @@ func (ti *textInteractor) RenderMeasureText(ctx context.Context, y int, canv can
 				yPos := (y - origPos) - offset - TEXT_TO_STAFF_DISTANCE - (i * -TEXT_BASELINE_DISTANCE)
 				if t.RelativeY < 0 {
 					yPos = y + (i * TEXT_BASELINE_DISTANCE) + (len(note.Lyric) * TEXT_TO_STAFF_DISTANCE) + 20
-					style = []string{"font-size:60%", "font-family:'Figtree'", "font-weight:600"}
+					style = []string{"font-size:9.6px", "font-family:'Figtree'", "font-weight:600"}
 				}
 				canv.Text(xPos, yPos, t.Text, fmt.Sprintf(`style="%s"`, strings.Join(style, ";")))
 			}

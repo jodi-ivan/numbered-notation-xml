@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"runtime/debug"
 	"sync"
 	"unsafe"
 
@@ -65,6 +66,13 @@ func RenderHymnSVG(number C.int, variant *C.char, configJson *C.char) *C.char {
 
 	ctx := context.Background()
 	e := GetEngine()
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Panic: ", err)
+			debug.PrintStack()
+		}
+	}()
 	// 1. Convert C types to Go types
 	goNumber := int(number)
 
@@ -83,7 +91,11 @@ func RenderHymnSVG(number C.int, variant *C.char, configJson *C.char) *C.char {
 	if configJson != nil {
 		jsonStr := C.GoString(configJson)
 		if jsonStr != "" {
-			_ = json.Unmarshal([]byte(jsonStr), &config)
+			err := json.Unmarshal([]byte(jsonStr), &config)
+			if err != nil {
+				log.Println("[DLL] Failed to unmarshal config", err.Error())
+				return C.CString(err.Error())
+			}
 			param := params.Param{
 				SingleVerseMode: config.FocusMode,
 				Verse:           config.Verse,
@@ -96,9 +108,9 @@ func RenderHymnSVG(number C.int, variant *C.char, configJson *C.char) *C.char {
 	// 3. Call your internal layout engine (Mockup logic here)
 	// svgOutput := internalRenderEngine(goNumber, goVariant, config)
 	buff := bytes.NewBuffer(nil)
-	content, err := e.RenderHymn(context.Background(), buff, goNumber, goVariant...)
+	content, err := e.RenderHymn(ctx, buff, goNumber, goVariant...)
 	if err != nil {
-		log.Printf("Problem creating file: %v\n", err)
+		log.Printf("[DLL] Problem creating file: %v\n", err)
 		return C.CString(err.Error())
 	}
 	// 4. Return string back to C++

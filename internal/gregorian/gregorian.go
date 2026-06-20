@@ -38,7 +38,7 @@ func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y 
 
 	groupBeam := [][]entity.CoordinateWithNoteLength{{}}
 
-	canv.Group(`class="notes"`, `style="font-size:2em"`)
+	canv.Group(`class="notes"`, `style="font-size:32px"`)
 	currentMeasure := 0
 
 	groupBeamSlurTies := rhythm.GetGroupSlueTies(notes, lineStaff) // mock this
@@ -65,7 +65,7 @@ func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y 
 			canv.TextUnescaped(
 				breathpause.AdjustPosition(posX, prevNotePosX),
 				float64(lineStaff.GetTopLine())-STAFF_SPACE_WIDTH,
-				"&#xF0E2;", `style="font-size:1.3em"`)
+				"&#xF0E2;", `style="font-size:41.6px"`)
 
 			if len(note.Beam) >= 1 && note.Beam[1].Type == musicxml.NoteBeamTypeEnd {
 				groupBeam = append(groupBeam, []entity.CoordinateWithNoteLength{})

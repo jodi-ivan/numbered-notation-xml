@@ -13,6 +13,7 @@ type Param struct {
 	SingleVerseMode  bool
 
 	Diagnostic *DiagParam
+	Render     *RenderParam
 }
 
 type paramCtx struct {

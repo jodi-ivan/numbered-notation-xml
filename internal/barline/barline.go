@@ -2,8 +2,6 @@ package barline
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -95,31 +93,28 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 }
 
 func (bi *barlineInteractor) RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate, styles ...string) {
-	forward := ""
-	backward := ""
-
+	if _, ok := unicode[barline.BarStyle]; !ok {
+		return
+	}
 	if barline.Repeat != nil {
+		var x float64
+		y := float64(coordinate.Y) - 3
 		switch barline.Repeat.Direction {
 		case musicxml.BarLineRepeatDirectionBackward:
-			backward = fmt.Sprintf(`<tspan x="%.2f" y="%.2f">:</tspan>`, coordinate.X-5, coordinate.Y-4)
+			x = coordinate.X - 5
 		case musicxml.BarLineRepeatDirectionForward:
-			forward = fmt.Sprintf(`<tspan x="%.2f" y="%.2f">:</tspan>`, coordinate.X+10, coordinate.Y-4)
+			x = coordinate.X + 10
+		}
+
+		if x != 0 {
+			canv.TextUnescaped(x, y, ":", `style="font-family:Noto Music;font-size:16px"`)
 		}
 	}
 
-	if len(styles) == 0 {
-		styles = append(styles, `font-size="180%"`)
-	}
-	barlineWithRepeat := fmt.Sprintf(`%s<tspan x="%.2f" y="%.2f" %s >%s</tspan>%s`,
-		backward,
-		coordinate.X, coordinate.Y+6,
-		strings.Join(styles, " "),
-		unicode[barline.BarStyle], forward)
-
 	canv.TextUnescaped(
 		coordinate.X, coordinate.Y+6,
-		barlineWithRepeat,
-		`style="font-family:Noto Music"`,
+		unicode[barline.BarStyle],
+		`style="font-family:Noto Music;font-size:28.8px"`,
 	)
 
 }

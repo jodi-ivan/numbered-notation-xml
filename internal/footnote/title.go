@@ -20,7 +20,7 @@ func (fi *footnoteInteractor) RenderTitleFootnotes(canv canvas.Canvas, y int, me
 	if metadata.IsForKids.Int16 == 1 {
 		canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH, float64(y+25),
 			`<tspan font-style="italic">Semua nyayian dengan tanda</tspan>
-			<tspan font-style="bold" font-size="125%%">☆</tspan>
+			<tspan font-style="bold" font-size="12px">☆</tspan>
 			<tspan font-style="italic">: khusus untuk anak-anak</tspan>`,
 		)
 	}

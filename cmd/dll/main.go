@@ -12,6 +12,7 @@ import (
 	"unsafe"
 
 	"github.com/jodi-ivan/numbered-notation-xml/adapter"
+	"github.com/jodi-ivan/numbered-notation-xml/decorator"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
@@ -22,6 +23,7 @@ import (
 
 var (
 	stringAdapter *adapter.RenderString
+	repo          repository.Repository
 	engineOnce    sync.Once
 	stateMutex    sync.Mutex
 )
@@ -44,7 +46,7 @@ func GetEngine() *adapter.RenderString {
 			return
 		}
 
-		repo := repository.New(context.Background(), db)
+		repo = repository.New(context.Background(), db)
 		usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer())
 		stringAdapter = adapter.NewRenderString(usecaseMod)
 
@@ -56,6 +58,75 @@ func GetEngine() *adapter.RenderString {
 type RenderConfig struct {
 	Verse     int  `json:"verse"`
 	FocusMode bool `json:"focus_mode"`
+}
+
+//export RenderHymnSVGWithInfo
+func RenderHymnSVGWithInfo(number C.int, variant *C.char, configJson *C.char, totalVerse, totalVariant *C.int) *C.char {
+	stateMutex.Lock()
+	defer stateMutex.Unlock()
+
+	ctx := context.Background()
+	e := GetEngine()
+	adapterWithDecorator := decorator.HymnVarianDirectReport{
+		Repo: repo,
+		Next: e,
+	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Panic: ", err)
+			debug.PrintStack()
+		}
+	}()
+
+	goNumber := int(number)
+
+	goVariant := []string{}
+	if variant != nil {
+		goVariant = append(goVariant, C.GoString(variant))
+	}
+
+	config := RenderConfig{
+		Verse:     0, // Default verse
+		FocusMode: false,
+	}
+
+	if configJson != nil {
+		jsonStr := C.GoString(configJson)
+		if jsonStr != "" {
+			err := json.Unmarshal([]byte(jsonStr), &config)
+			if err != nil {
+				log.Println("[DLL] Failed to unmarshal config", err.Error())
+				return C.CString(err.Error())
+			}
+			param := params.Param{
+				SingleVerseMode: config.FocusMode,
+				Verse:           config.Verse,
+			}
+
+			ctx = params.NewParamContext(ctx, &param)
+		}
+	}
+
+	buff := bytes.NewBuffer(nil)
+	content, err := adapterWithDecorator.RenderHymn(ctx, buff, goNumber, goVariant...)
+	if err != nil {
+		log.Printf("[DLL] Problem creating file: %v\n", err)
+		return C.CString(err.Error())
+	}
+
+	log.Println(adapterWithDecorator.TotalVariant, adapterWithDecorator.TotalVerse)
+
+	if totalVariant != nil {
+		*totalVariant = C.int(adapterWithDecorator.TotalVariant)
+	}
+
+	if totalVerse != nil {
+		*totalVerse = C.int(adapterWithDecorator.TotalVerse)
+	}
+
+	return C.CString(content)
+
 }
 
 //export RenderHymnSVG
@@ -119,12 +190,14 @@ func RenderHymnSVG(number C.int, variant *C.char, configJson *C.char) *C.char {
 	return C.CString(content)
 }
 
-// export FreeRenderedString
+//export FreeRenderedString
 func FreeRenderedString(ptr *C.char) {
 	if ptr != nil {
 		C.free(unsafe.Pointer(ptr))
 	}
 }
+
+func RenderHymnSvg()
 
 // build it by
 // go build -buildmode=c-shared -o libhymn_renderer.so cmd/dll/main.go

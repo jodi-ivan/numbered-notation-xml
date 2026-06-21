@@ -12,8 +12,9 @@ type Param struct {
 	Verse            int
 	SingleVerseMode  bool
 
-	Diagnostic *DiagParam
-	Render     *RenderParam
+	Diagnostic   *DiagParam
+	Render       *RenderParam
+	DirectReport *DirectReport
 }
 
 type paramCtx struct {

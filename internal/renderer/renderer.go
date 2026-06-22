@@ -3,6 +3,7 @@ package renderer
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
@@ -72,6 +73,27 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 			metadata.Verse[1] = verseInfo
 		}
 
+		maxRow := 0
+		totalEachLine := 0
+
+		for i, v := range metadata.Verse {
+			if len(metadata.ParsedVerse[i]) > totalEachLine {
+				totalEachLine = len(metadata.ParsedVerse[i])
+				log.Println("current total line detected", totalEachLine)
+			}
+
+			if v.Row.Int16 > int16(maxRow) {
+				maxRow = int(v.Row.Int16)
+
+			}
+		}
+
+		if v2, ok := metadata.Verse[2]; ok && (v2.StyleRow.Int32 == 0 || v2.StyleRow.Int32 == 12) {
+			maxRow = len(metadata.Verse) - 1
+		}
+
+		estimated := relativeY + (maxRow * (totalEachLine * verse.LINE_DISTANCE)) + 125
+
 		ir.Footnote.RenderMusicFootnotes(ctx, canv, metadata.HymnMetadata, relativeY)
 		verseInfo := ir.Verse.RenderVerse(ctx, canv, relativeY, metadata)
 
@@ -81,7 +103,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		ir.Footnote.RenderVerseFootnotes(canv, &relativeY, metadata.VerseFootNotes)
 		ir.Credits.RenderCredits(ctx, canv, &relativeY, metadata.HymnData)
 		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
-
+		log.Println("[Render] Total estimated line is ", estimated, ", actual:", relativeY, "with diff of ", relativeY-estimated)
 	}
 	canv.End()
 

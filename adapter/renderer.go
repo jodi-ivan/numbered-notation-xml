@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	svg "github.com/ajstarks/svgo"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -54,7 +53,7 @@ type RenderHTTP struct {
 
 func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	delegator := &CanvasDelegatorHTTP{w: w, r: r}
-	canv := canvas.NewCanvasWithDelegator(svg.New(w), delegator)
+	canv := canvas.NewBufferedCanvas(w, delegator)
 	raw := ps.ByName("number")
 
 	var variant []string

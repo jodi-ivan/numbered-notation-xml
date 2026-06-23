@@ -115,8 +115,6 @@ func RenderHymnSVGWithInfo(number C.int, variant *C.char, configJson *C.char, to
 		return C.CString(err.Error())
 	}
 
-	log.Println(adapterWithDecorator.TotalVariant, adapterWithDecorator.TotalVerse)
-
 	if totalVariant != nil {
 		*totalVariant = C.int(adapterWithDecorator.TotalVariant)
 	}
@@ -196,8 +194,6 @@ func FreeRenderedString(ptr *C.char) {
 		C.free(unsafe.Pointer(ptr))
 	}
 }
-
-func RenderHymnSvg()
 
 // build it by
 // go build -buildmode=c-shared -o libhymn_renderer.so cmd/dll/main.go

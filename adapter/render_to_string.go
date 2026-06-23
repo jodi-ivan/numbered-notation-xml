@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 
-	svg "github.com/ajstarks/svgo"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -30,7 +29,7 @@ func NewRenderString(u usecase.Usecase) *RenderString {
 }
 
 func (rs *RenderString) RenderHymn(ctx context.Context, buf *bytes.Buffer, number int, variant ...string) (string, error) {
-	canv := canvas.NewCanvasWithDelegator(svg.New(buf), &CanvasDelegator{})
+	canv := canvas.NewBufferedCanvas(buf, &CanvasDelegator{})
 	err := rs.usecase.RenderHymn(ctx, canv, number, variant...)
 	if err != nil {
 		return "", err

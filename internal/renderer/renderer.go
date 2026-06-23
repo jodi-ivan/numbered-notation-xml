@@ -47,12 +47,13 @@ func NewRenderer() Renderer {
 }
 
 func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *entity.HymnMetaData) {
+  canvHeight := 3000
 	ns := []string{}
 	param, _ := params.GetParamFromContext(ctx)
 	if param.Render != nil && param.Render.WhiteBackground {
 		ns = append(ns, "background-color='#FFFFFF'")
 	}
-	canv.Start(constant.LAYOUT_WIDTH, 3000, ns...)
+
 	canv.Def()
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont()))
 	canv.DefEnd()
@@ -65,7 +66,6 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	canv.Gend()
 
 	relativeY := ir.Staff.Render(ctx, canv, music.Part, keySignature, timeSignature, metadata)
-
 	if metadata != nil {
 		prm, _ := params.GetParamFromContext(ctx)
 		if prm.Verse > 2 || (prm.Verse > 1 && prm.SingleVerseMode) {
@@ -86,9 +86,11 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		}
 		ir.Footnote.RenderVerseFootnotes(canv, &relativeY, metadata.VerseFootNotes)
 		ir.Credits.RenderCredits(ctx, canv, &relativeY, metadata.HymnData)
-		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
 
+		canvHeight = relativeY + 50
+		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
 	}
+	canv.Start(constant.LAYOUT_WIDTH, canvHeight)
 	canv.End()
 
 }

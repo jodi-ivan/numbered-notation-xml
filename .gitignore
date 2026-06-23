@@ -41,3 +41,4 @@ mscz/
 *.db
 
 *.zip
+dist/

@@ -231,7 +231,7 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, y, offsetCenter int,
 		}
 	}
 
-	canv.Group("hyphens")
+	canv.Group("class='hyphens'", `style="font-size:16px"`)
 	for _, hl := range hypenLocation {
 		styles := []string{}
 		color := getColoringStyle(ctx, hl.Verse, hl.TotalLyric)

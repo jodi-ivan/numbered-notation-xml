@@ -194,7 +194,7 @@ func (ni *numberedInteractor) RenderNote(ctx context.Context, canv canvas.Canvas
 		} else {
 			if len(n.LeadingHeader) == 1 && unicode.IsNumber(rune(n.LeadingHeader[0])) {
 				canv.Circle(n.PositionX+REHERSHAL_CIRCLE_X_OFFSET, n.PositionY-REHERSHAL_CIRCLE_Y_OFFSET, REHERSHAL_CIRCLE_RADIUS, `stroke="black"`, `fill="none"`, `stroke-width="1.3"`)
-				canv.Text(n.PositionX+REHERSHAL_TEXT_X_OFFSET, n.PositionY-REHERSHAL_TEXT_Y_OFFSET, n.LeadingHeader, `font-weight="600"`, `style="font-size:60%"`)
+				canv.Text(n.PositionX+REHERSHAL_TEXT_X_OFFSET, n.PositionY-REHERSHAL_TEXT_Y_OFFSET, n.LeadingHeader, `font-weight="600"`, `style="font-size:9.6px"`)
 			}
 			noteStr := fmt.Sprintf("%d", n.Note)
 			canv.Text(n.PositionX, y, noteStr)

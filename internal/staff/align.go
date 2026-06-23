@@ -200,7 +200,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			offsetLyric = newOffsetLyric
 		}
 
-		canv.Group("class='note'", "style='font-family:Old Standard TT;font-weight:500'")
+		canv.Group("class='note'", "style='font-family:Old Standard TT;font-size:16px'")
 		rsa.Numbered.RenderNote(ctx, canv, measure, yPos, rightAlignOffset)
 		rsa.Rhythm.RenderBeam(ctx, yPos, canv, ts, measure)
 

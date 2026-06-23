@@ -8,7 +8,7 @@ import (
 
 func RenderGregorian(ctx context.Context, canv canvas.Canvas, lines [5]int, timeSig TimeSignature, x float64) {
 
-	canv.Group(`class="timesig"`, `style="font-size:2em"`)
+	canv.Group(`class="timesig"`, `style="font-size:32px"`)
 	uniHex := map[int]string{
 		1:  "&#xF031;",
 		2:  "&#xF032;",

@@ -15,6 +15,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 type Usecase interface {
@@ -170,6 +171,13 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		if flow != canvas.DelegatorErrorFlowControlIgnore {
 			return err
 		}
+	}
+
+	param, _ := params.GetParamFromContext(ctx)
+	if param.DirectReport != nil {
+		go func() {
+			param.DirectReport.TotalVerse <- len(metaData.Verse)
+		}()
 	}
 
 	metaWithParsedVerse := &entity.HymnMetaData{

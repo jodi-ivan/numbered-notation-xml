@@ -29,7 +29,7 @@ func getAccidental(key keysig.Key, note *entity.NoteRenderer, accidentalsBefore 
 
 func renderBean(canv canvas.Canvas, pos entity.Coordinate, noteType musicxml.NoteLength, note string, accidental string, octave, topLineStaff int, dotted bool) {
 	if accidental != "" {
-		canv.TextUnescaped(pos.X-8, pos.Y, accidental, `style="font-size:0.8em"`)
+		canv.TextUnescaped(pos.X-8, pos.Y, accidental, `style="font-size:25.6px"`)
 	}
 	canv.TextUnescaped(pos.X, pos.Y, beanNoteHex[noteType])
 
@@ -188,7 +188,7 @@ func isDottedNote(notes []*entity.NoteRenderer, notePos int, ts timesig.TimeSign
 
 func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, slursties []rhythm.SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]entity.CoordinateWithNoteLength, []rhythm.SlurTieGroup) {
 
-	canv.Group(`class="note"`)
+	canv.Group(`class="note"`, `style="font-size:32px"`)
 	defer func() {
 		canv.Gend()
 	}()

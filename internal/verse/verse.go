@@ -175,7 +175,7 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 }
 
 func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, metadata *entity.HymnMetaData) VerseInfo {
-	canv.Group("class='verses'", "style='font-family:Caladea'")
+	canv.Group("class='verses'", "style='font-family:Caladea;font-size:16px'")
 
 	prm, _ := params.GetParamFromContext(ctx)
 

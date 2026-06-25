@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/jodi-ivan/numbered-notation-xml/adapter"
+	strmadapter "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/audio-stream/stream"
 	lab "github.com/jodi-ivan/numbered-notation-xml/cmd/rest/adapter"
 	"github.com/jodi-ivan/numbered-notation-xml/decorator"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
@@ -63,12 +64,16 @@ func main() {
 		Db:        db,
 	})
 
-	sigs := make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 2)
 
 	ws.Register("GET", "/internal/diagnostic/verse/:scope", &adapter.DiagnosticHTTP{
 		Usecase:   usecaseMod,
 		Interrupt: sigs,
 		Repo:      repo,
+	})
+
+	ws.Register("GET", "/internal/v1/lab", &strmadapter.AudioStream{
+		Sig: sigs,
 	})
 
 	err = ws.Serve(cfg.Webserver.Port)

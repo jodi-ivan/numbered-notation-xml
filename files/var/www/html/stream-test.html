@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FM Stream Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 300px;
+        }
+        h1 {
+            color: #333;
+            margin: 0 0 30px 0;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .play-btn {
+            background: #667eea;
+            color: white;
+        }
+        .play-btn:hover {
+            background: #5568d3;
+        }
+        .play-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .stop-btn {
+            background: #f56565;
+            color: white;
+        }
+        .stop-btn:hover {
+            background: #e53e3e;
+        }
+        .stop-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .status-text {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+            margin-right: 8px;
+        }
+        .status-indicator.connected {
+            background: #48bb78;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .error {
+            color: #f56565;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ FM Stream Player</h1>
+        
+        <div class="controls">
+            <button id="playBtn" class="play-btn">Play</button>
+            <button id="stopBtn" class="stop-btn" disabled>Stop</button>
+        </div>
+
+        <div class="status">
+            <div class="status-text">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="statusText">Disconnected</span>
+            </div>
+            <div id="errorMsg" class="error"></div>
+        </div>
+    </div>
+
+    <script>
+        const STREAM_URL = '/internal/v1/lab'; // Adjust to your endpoint
+        let audio = null;
+        let isPlaying = false;
+
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusText = document.getElementById('statusText');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function updateStatus(connected, message) {
+            statusText.textContent = message;
+            statusIndicator.classList.toggle('connected', connected);
+        }
+
+        function clearError() {
+            errorMsg.textContent = '';
+        }
+
+        function showError(message) {
+            errorMsg.textContent = '❌ ' + message;
+        }
+
+        playBtn.addEventListener('click', async () => {
+            if (isPlaying) return;
+
+            clearError();
+            updateStatus(false, 'Connecting...');
+            playBtn.disabled = true;
+            stopBtn.disabled = false;
+
+            try {
+                // Create audio element
+                audio = new Audio();
+                audio.crossOrigin = 'anonymous';
+                audio.src = STREAM_URL;
+
+                // Handle audio events
+                audio.addEventListener('play', () => {
+                    isPlaying = true;
+                    updateStatus(true, 'Playing');
+                });
+
+                audio.addEventListener('pause', () => {
+                    isPlaying = false;
+                    updateStatus(false, 'Paused');
+                });
+
+                audio.addEventListener('ended', () => {
+                    isPlaying = false;
+                    updateStatus(false, 'Ended');
+                    playBtn.disabled = false;
+                    stopBtn.disabled = true;
+                });
+
+                audio.addEventListener('error', (e) => {
+                    isPlaying = false;
+                    const errorType = audio.error?.code || 'Unknown error';
+                    showError(`Playback error: ${errorType}`);
+                    updateStatus(false, 'Error');
+                    playBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    console.error('Audio error:', e);
+                });
+
+                // Start playing
+                await audio.play();
+
+            } catch (error) {
+                isPlaying = false;
+                showError(error.message || 'Failed to play stream');
+                updateStatus(false, 'Failed');
+                playBtn.disabled = false;
+                stopBtn.disabled = true;
+                console.error('Play error:', error);
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (audio) {
+                audio.pause();
+                audio.src = '';
+                audio = null;
+            }
+            isPlaying = false;
+            updateStatus(false, 'Stopped');
+            playBtn.disabled = false;
+            stopBtn.disabled = true;
+            clearError();
+        });
+    </script>
+</body>
+</html>

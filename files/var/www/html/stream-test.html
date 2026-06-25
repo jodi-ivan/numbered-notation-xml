@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
             margin: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+
         .container {
             background: white;
             padding: 40px;
@@ -22,16 +24,19 @@
             text-align: center;
             min-width: 300px;
         }
+
         h1 {
             color: #333;
             margin: 0 0 30px 0;
         }
+
         .controls {
             display: flex;
             gap: 10px;
             justify-content: center;
             margin-bottom: 20px;
         }
+
         button {
             padding: 12px 30px;
             font-size: 16px;
@@ -41,36 +46,46 @@
             transition: all 0.3s;
             font-weight: bold;
         }
+
         .play-btn {
             background: #667eea;
             color: white;
         }
+
         .play-btn:hover {
             background: #5568d3;
         }
+
         .play-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
+
         .stop-btn {
             background: #f56565;
             color: white;
         }
+
         .stop-btn:hover {
             background: #e53e3e;
         }
+
         .stop-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
+
         .status {
             margin: 20px 0;
             font-size: 14px;
         }
+
         .status-text {
             color: #666;
             margin-bottom: 10px;
+            margin-top: 20px;
         }
+
         .status-indicator {
             display: inline-block;
             width: 12px;
@@ -79,14 +94,24 @@
             background: #ccc;
             margin-right: 8px;
         }
+
         .status-indicator.connected {
             background: #48bb78;
             animation: pulse 1s infinite;
         }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
+
         .error {
             color: #f56565;
             margin-top: 10px;
@@ -94,16 +119,19 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>🎙️ FM Stream Player</h1>
-        
+
         <div class="controls">
             <button id="playBtn" class="play-btn">Play</button>
             <button id="stopBtn" class="stop-btn" disabled>Stop</button>
+
         </div>
 
         <div class="status">
+            <label>repeat: <input type="number" id="repeat" step="1" min="2" max="15" placeholder="1" /></label>
             <div class="status-text">
                 <span class="status-indicator" id="statusIndicator"></span>
                 <span id="statusText">Disconnected</span>
@@ -122,6 +150,8 @@
         const statusText = document.getElementById('statusText');
         const statusIndicator = document.getElementById('statusIndicator');
         const errorMsg = document.getElementById('errorMsg');
+        const repeatInput = document.getElementById("repeat");
+
 
         function updateStatus(connected, message) {
             statusText.textContent = message;
@@ -150,6 +180,9 @@
                 audio.crossOrigin = 'anonymous';
                 audio.src = STREAM_URL;
 
+                if (repeatInput.value) {
+                    audio.src += ("?repeat=" + repeatInput.value)
+                }
                 // Handle audio events
                 audio.addEventListener('play', () => {
                     isPlaying = true;
@@ -205,4 +238,5 @@
         });
     </script>
 </body>
+
 </html>

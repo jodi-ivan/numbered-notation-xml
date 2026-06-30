@@ -79,7 +79,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			RepeatInfo:    info.RepeatInfo,
 
 			SyllableOffset: info.SyllableOffset,
-			TotalBeat:      info.TotalBeat,
+			TotalBeat:      info.TotalBeat, // TODO: send this to result useacase
 		}
 		x = staffLines.GetLeftIndent(info.NextLineRenderer[0].MeasureNumber)
 		idx := len(staffes) - 1

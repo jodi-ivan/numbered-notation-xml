@@ -1,10 +1,12 @@
 package usecase
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
@@ -12,6 +14,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/playback"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -40,32 +43,38 @@ func New(config config.Config, repo repository.Repository, renderer renderer.Ren
 	}
 }
 
-func collectRepeat(measures []musicxml.Measure) [][2]int {
+func collectRepeat(measures []musicxml.Measure) [][3]int {
 
-	result := [][2]int{}
+	result := [][3]int{}
 	// check if there is any repeat at all
 	for i := 0; i < len(measures); i++ {
 		for _, b := range measures[i].Barline {
 			if b.Repeat != nil {
 				switch b.Repeat.Direction {
 				case musicxml.BarLineRepeatDirectionForward:
-					result = append(result, [2]int{measures[i].Number})
+					result = append(result, [3]int{measures[i].Number})
 				case musicxml.BarLineRepeatDirectionBackward:
 					// closing
 					if len(result) == 0 {
-						result = append(result, [2]int{1}) // beginning of the measure
+						result = append(result, [3]int{1}) // beginning of the measure
 					}
 					lastKnown := result[len(result)-1]
 					lastKnown[1] = measures[i].Number
 					result[len(result)-1] = lastKnown
 				}
+
+			}
+			if b.Ending != nil && b.Ending.Type == musicxml.BarlineEndingTypeDiscontinue && len(result) > 0 {
+				lastKnown := result[len(result)-1]
+				lastKnown[2] = measures[i].Number - lastKnown[1]
+				result[len(result)-1] = lastKnown
 			}
 		}
 	}
 	return result
 }
 
-func ProcessRepeats(music *musicxml.MusicXML) [][2]int {
+func ProcessRepeats(music *musicxml.MusicXML) [][3]int {
 
 	repeats := collectRepeat(music.Part.Measures)
 
@@ -169,16 +178,7 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}
 	}
 
-	totalMeasure := len(music.Part.Measures)
 	hasRepeats := ProcessRepeats(&music)
-
-	// count the measure
-	if len(hasRepeats) > 0 {
-		// case 2: it has repeat
-		for _, v := range hasRepeats {
-			totalMeasure += (v[1] - v[0]) + 1
-		}
-	}
 
 	// detect Fine in the whole music
 	hasFine := -1
@@ -189,7 +189,7 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}
 
 		for _, n := range m.Notes {
-			if err != nil && i.text.NoteHasText(n.MeasureText, text.DEFAULT_TEXT_FINE) {
+			if i.text.NoteHasText(n.MeasureText, text.DEFAULT_TEXT_FINE) {
 				hasFine = m.Number
 				break
 			}
@@ -200,12 +200,10 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}
 	}
 
-	if hasFine > -1 {
-		// so far, all fine is added from beginning of the music and the beginning also a refrein
-		totalMeasure += hasFine
-	}
+	slices.SortFunc(hasRepeats, func(i, j [3]int) int {
+		return cmp.Compare(i[0], j[0])
+	})
 
-	music.TotalMeasure = totalMeasure
 	music.Tempo = music.Part.Measures[0].Tempo
 
 	metaData, err := i.repo.GetHymnMetaData(ctx, hymnNum, variant...)
@@ -240,6 +238,9 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		metaWithParsedVerse.ParsedVerse[i] = whole
 
 	}
+	lastMeasure := music.Part.Measures[len(music.Part.Measures)-1].Number
+	steps := playback.GenerateSteps(hasFine, lastMeasure, hasRepeats)
+	music.TotalMeasure = len(steps)
 
 	canv.Delegator().OnBeforeStartWrite()
 

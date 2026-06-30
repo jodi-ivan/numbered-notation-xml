@@ -45,6 +45,9 @@ type MusicXML struct {
 	Credit  []Credit `xml:"credit"`
 	Part    Part     `xml:"part"`
 	Work    Work     `xml:"work"`
+
+	TotalMeasure int `xml:"-"`
+	Tempo        int `xml:"-"`
 }
 
 type CreditType string
@@ -201,9 +204,14 @@ type Tie struct {
 	LineType NoteSlurLineType `xml:"line-type,attr"`
 }
 
+type Sound struct {
+	Tempo int `xml:"tempo,attr"`
+}
+
 type Direction struct {
 	Placement     string          `xml:"placement,attr"`
 	DirectionType []DirectionType `xml:"direction-type"`
+	Sound         *Sound          `xml:"sound"`
 }
 
 type DirectionDashesType string

@@ -80,7 +80,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	for mi, measure := range measures {
 
 		mSyllcount := 0
-		measure.Build()
 
 		notes := []*entity.NoteRenderer{}
 

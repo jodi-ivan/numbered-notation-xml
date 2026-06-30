@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/xml"
 	"io"
+	"log"
 	"os"
 
 	"github.com/jmoiron/sqlx"
@@ -136,6 +137,15 @@ func (r *repository) GetMusicXML(ctx context.Context, filepath string) (musicxml
 	err = xml.Unmarshal(content, &music)
 	if err != nil {
 		return musicxml.MusicXML{}, err
+	}
+
+	for i := range music.Part.Measures {
+		m := &music.Part.Measures[i]
+		err = m.Build()
+		if err != nil {
+			log.Println("[GetMusicXML] Failed to parsing the measure, ", m.Number, ". Err: ", err.Error())
+			return music, err
+		}
 	}
 
 	return music, err

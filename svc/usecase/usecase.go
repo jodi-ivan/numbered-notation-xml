@@ -10,8 +10,10 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
@@ -26,6 +28,7 @@ type interactor struct {
 	config   config.Config
 	repo     repository.Repository
 	renderer renderer.Renderer
+	text     text.Text
 }
 
 func New(config config.Config, repo repository.Repository, renderer renderer.Renderer) Usecase {
@@ -33,6 +36,7 @@ func New(config config.Config, repo repository.Repository, renderer renderer.Ren
 		config:   config,
 		repo:     repo,
 		renderer: renderer,
+		text:     text.NewText(lyric.NewLyric()),
 	}
 }
 
@@ -61,12 +65,12 @@ func collectRepeat(measures []musicxml.Measure) [][2]int {
 	return result
 }
 
-func ProcessRepeats(music *musicxml.MusicXML) {
+func ProcessRepeats(music *musicxml.MusicXML) [][2]int {
 
 	repeats := collectRepeat(music.Part.Measures)
 
 	if len(repeats) == 0 {
-		return
+		return nil
 	}
 	bli := barline.NewBarline()
 
@@ -148,6 +152,8 @@ func ProcessRepeats(music *musicxml.MusicXML) {
 		}
 	}
 
+	return repeats
+
 }
 
 func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum int, variant ...string) error {
@@ -163,7 +169,44 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}
 	}
 
-	ProcessRepeats(&music)
+	totalMeasure := len(music.Part.Measures)
+	hasRepeats := ProcessRepeats(&music)
+
+	// count the measure
+	if len(hasRepeats) > 0 {
+		// case 2: it has repeat
+		for _, v := range hasRepeats {
+			totalMeasure += (v[1] - v[0]) + 1
+		}
+	}
+
+	// detect Fine in the whole music
+	hasFine := -1
+	for _, m := range music.Part.Measures {
+		if i.text.MeasureHasText(m, text.DEFAULT_TEXT_FINE) {
+			hasFine = m.Number
+			break
+		}
+
+		for _, n := range m.Notes {
+			if err != nil && i.text.NoteHasText(n.MeasureText, text.DEFAULT_TEXT_FINE) {
+				hasFine = m.Number
+				break
+			}
+
+		}
+		if hasFine > -1 {
+			break
+		}
+	}
+
+	if hasFine > -1 {
+		// so far, all fine is added from beginning of the music and the beginning also a refrein
+		totalMeasure += hasFine
+	}
+
+	music.TotalMeasure = totalMeasure
+	music.Tempo = music.Part.Measures[0].Tempo
 
 	metaData, err := i.repo.GetHymnMetaData(ctx, hymnNum, variant...)
 	if err != nil {

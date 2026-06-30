@@ -3,6 +3,7 @@ package lines
 import (
 	"cmp"
 	"context"
+	"fmt"
 	"unicode"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -127,6 +128,11 @@ func (ls *LineStaff) Render(canv canvas.Canvas, y int, measureNo int, inclTimesi
 	x := float64(constant.LAYOUT_INDENT_LENGTH)
 	initialY := ls.Lines[0]
 	canv.Group(`class="staff-markings"`)
+
+	if measureNo > 1 && ls.TimeSig.Signatures[0].Beat != 1 {
+		measureMarking := fmt.Sprintf("%d", measureNo)
+		canv.Text(constant.LAYOUT_INDENT_LENGTH-len(measureMarking)*4, ls.Lines[0]-15, measureMarking)
+	}
 	// clef
 	key := ls.Keysig.GetKeyOnMeasure(context.Background(), measureNo)
 	accidentalSet := key.GetAccidentals()

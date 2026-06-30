@@ -181,24 +181,7 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 	hasRepeats := ProcessRepeats(&music)
 
 	// detect Fine in the whole music
-	hasFine := -1
-	for _, m := range music.Part.Measures {
-		if i.text.MeasureHasText(m, text.DEFAULT_TEXT_FINE) {
-			hasFine = m.Number
-			break
-		}
-
-		for _, n := range m.Notes {
-			if i.text.NoteHasText(n.MeasureText, text.DEFAULT_TEXT_FINE) {
-				hasFine = m.Number
-				break
-			}
-
-		}
-		if hasFine > -1 {
-			break
-		}
-	}
+	hasFine := i.text.FindMeasureByText(music.Part.Measures, text.DEFAULT_TEXT_FINE)
 
 	slices.SortFunc(hasRepeats, func(i, j [3]int) int {
 		return cmp.Compare(i[0], j[0])

@@ -1,9 +1,11 @@
 package staff
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"math"
+	"slices"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -175,6 +177,25 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	canv.Group(`class="numbered"`)
 	offsetLyric := 0
 	for mi, measure := range noteRenderer {
+
+		max := slices.MaxFunc(measure, func(a, b *entity.NoteRenderer) int {
+			return cmp.Compare(len(a.Lyric), len(b.Lyric))
+		})
+
+		rectX := measure[0].PositionX - 5
+		if mi > 0 {
+			rectX = noteRenderer[mi-1][len(noteRenderer[mi-1])-1].PositionX
+		}
+		rectX1 := measure[len(measure)-1].PositionX
+		hasNewLine := slices.ContainsFunc(measure, func(mc *entity.NoteRenderer) bool { return mc.IsNewLine })
+		if hasNewLine { // last measure
+			rectX1 = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8
+		}
+		rectY := (y + lyric.DISTANCE_NOTE_TO_LYRIC + (len(max.Lyric) * lyric.LINE_BETWEEN_LYRIC))
+		canv.Rect(rectX, y,
+			rectX1-rectX,
+			((rectY)+(yPos-y))-y,
+			"fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:0.9")
 
 		canv.Group("class='measure-align'", fmt.Sprintf("number='%d'", measure[0].MeasureNumber))
 

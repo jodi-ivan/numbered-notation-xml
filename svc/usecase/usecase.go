@@ -224,10 +224,19 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 	lastMeasure := music.Part.Measures[len(music.Part.Measures)-1].Number
 	steps := playback.GenerateSteps(hasFine, lastMeasure, hasRepeats)
 	music.TotalMeasure = len(steps)
+	param.Playback = &params.PlaybackParams{
+		Rect: map[int][][2]entity.Coordinate{},
+	}
+
+	for _, s := range steps {
+		param.Playback.Rect[s.MeasureNumber] = [][2]entity.Coordinate{}
+	}
+
+	rctx := params.NewParamContext(ctx, param)
 
 	canv.Delegator().OnBeforeStartWrite()
 
-	i.renderer.Render(ctx, music, canv, metaWithParsedVerse)
+	i.renderer.Render(rctx, music, canv, metaWithParsedVerse)
 
 	return nil
 }

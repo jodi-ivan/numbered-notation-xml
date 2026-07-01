@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int {
@@ -88,6 +89,11 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, idx, metadata, nil, data)
 		relativeY += info.MarginBottom + STAFF_LINE_DISTANCE + 70
+	}
+
+	param, _ := params.GetParamFromContext(ctx)
+	if param != nil && param.Playback != nil {
+		param.Playback.TotalBeat = info.TotalBeat
 	}
 
 	return relativeY

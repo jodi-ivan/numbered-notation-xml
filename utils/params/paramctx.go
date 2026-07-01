@@ -15,6 +15,7 @@ type Param struct {
 	Diagnostic   *DiagParam
 	Render       *RenderParam
 	DirectReport *DirectReport
+	Playback     *PlaybackParams
 }
 
 type paramCtx struct {

@@ -235,13 +235,7 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 	canv.Delegator().OnBeforeStartWrite()
 
 	i.renderer.Render(rctx, music, canv, metaWithParsedVerse)
-	t := playback.CalculateDuration(&steps, music.Tempo, param.Playback.TotalBeat, param.Playback.Rect)
-	canv.Text(constant.LAYOUT_INDENT_LENGTH, 100, t.String())
-	for _, rect := range steps {
-		canv.Rect(int(rect.Rect[0].X), int(rect.Rect[0].Y), int(rect.Rect[1].X), int(rect.Rect[1].Y), "fill:none;stroke:#FF0000;stroke-linecap:round;stroke-width:0.9")
-		canv.Text(int(rect.Rect[0].X), int(rect.Rect[0].Y), rect.DurationStr)
-	}
-	canv.End()
+	playback.CalculateDuration(&steps, music.Tempo, param.Playback.TotalBeat, param.Playback.Rect)
 
 	return nil
 }

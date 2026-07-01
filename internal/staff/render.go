@@ -28,7 +28,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 		SyllableOffset:   map[int]int{},
-		TotalBeat:        map[int]float64{},
+		TotalBeat:        map[int][]float64{},
 	}
 	oldMarginButtom := 0
 	for i, st := range staffes {

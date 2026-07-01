@@ -91,7 +91,7 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
 	}
 	canv.Start(constant.LAYOUT_WIDTH, canvHeight)
-	canv.End()
+	// canv.End()
 
 }
 

@@ -21,6 +21,7 @@ type Text interface {
 	MeasureHasText(measure musicxml.Measure, t string) bool
 	SetMeasureTextRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, note musicxml.Note, isLastNote bool) bool
 	RenderMeasureText(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, linestaff ...lines.LineStaff)
+	FindMeasureByText(measures []musicxml.Measure, t string) int
 }
 
 func NewText(l lyric.Lyric) Text {
@@ -31,6 +32,23 @@ func NewText(l lyric.Lyric) Text {
 
 type textInteractor struct {
 	Lyric lyric.Lyric
+}
+
+func (ti *textInteractor) FindMeasureByText(measures []musicxml.Measure, t string) int {
+	hasFine := -1
+	for _, m := range measures {
+		if ti.MeasureHasText(m, t) {
+			return m.Number
+		}
+
+		for _, n := range m.Notes {
+			if ti.NoteHasText(n.MeasureText, t) {
+				return m.Number
+			}
+		}
+	}
+	return hasFine
+
 }
 
 func (ti *textInteractor) NoteHasText(measureText []musicxml.MeasureText, t ...string) bool {

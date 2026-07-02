@@ -16,7 +16,7 @@ func getColoringStyle(ctx context.Context, verse, totalLyric int) string {
 		return coloringOpacity[0]
 	}
 
-	if prm.Verse < 2 || prm.SingleVerseMode {
+	if prm.Verse < 2 || (totalLyric == 1 && prm.Verse >= 2 && verse == 0) || prm.SingleVerseMode {
 		return ""
 	}
 

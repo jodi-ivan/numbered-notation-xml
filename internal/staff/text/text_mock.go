@@ -41,6 +41,63 @@ func (_m *MockText) EXPECT() *MockText_Expecter {
 	return &MockText_Expecter{mock: &_m.Mock}
 }
 
+// FindMeasureByText provides a mock function for the type MockText
+func (_mock *MockText) FindMeasureByText(measures []musicxml.Measure, t string) int {
+	ret := _mock.Called(measures, t)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindMeasureByText")
+	}
+
+	var r0 int
+	if returnFunc, ok := ret.Get(0).(func([]musicxml.Measure, string) int); ok {
+		r0 = returnFunc(measures, t)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	return r0
+}
+
+// MockText_FindMeasureByText_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindMeasureByText'
+type MockText_FindMeasureByText_Call struct {
+	*mock.Call
+}
+
+// FindMeasureByText is a helper method to define mock.On call
+//   - measures []musicxml.Measure
+//   - t string
+func (_e *MockText_Expecter) FindMeasureByText(measures interface{}, t interface{}) *MockText_FindMeasureByText_Call {
+	return &MockText_FindMeasureByText_Call{Call: _e.mock.On("FindMeasureByText", measures, t)}
+}
+
+func (_c *MockText_FindMeasureByText_Call) Run(run func(measures []musicxml.Measure, t string)) *MockText_FindMeasureByText_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 []musicxml.Measure
+		if args[0] != nil {
+			arg0 = args[0].([]musicxml.Measure)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockText_FindMeasureByText_Call) Return(n int) *MockText_FindMeasureByText_Call {
+	_c.Call.Return(n)
+	return _c
+}
+
+func (_c *MockText_FindMeasureByText_Call) RunAndReturn(run func(measures []musicxml.Measure, t string) int) *MockText_FindMeasureByText_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // MeasureHasText provides a mock function for the type MockText
 func (_mock *MockText) MeasureHasText(measure musicxml.Measure, t string) bool {
 	ret := _mock.Called(measure, t)

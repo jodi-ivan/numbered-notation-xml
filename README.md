@@ -80,3 +80,5 @@ Development pauses occasionally when I research better automation approaches
 - https://www.gkiharapanindah.org/download/rekap-kidung-jemaat/
 - https://mymusictheory.com/more-music-theory-topics/key-signatures-chart/
 - https://fontdrop.info/#/?darkmode=true 
+- Original MIDI Audio Arrangement by GEMA/SABDA (sabda.org). Modified for single-verse playback.
+- Sound Effect by <a href="https://pixabay.com/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=91643">freesound_community</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=91643">Pixabay</a>

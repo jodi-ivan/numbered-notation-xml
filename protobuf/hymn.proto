@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package hymn;
+
+option go_package = "github.com/jodi-ivan/numbered-notation-xml/protobuf/hymn";
+message Coordinate {
+  double x = 1; 
+  double y = 2; 
+}
+
+message RectangularArea {
+    Coordinate top_left_pos = 1;
+    int32 width = 2;
+    int32 height = 3;
+} 
+message Step {
+  int32 duration_millisecond = 1;
+  string duration_str = 2;
+  int32 lyric_part = 3;
+  int32 measure_number = 4;
+  double total_beat = 5;
+
+  RectangularArea rect = 6;
+}
+
+message Metadata {
+  int32 total_verse = 1;
+  repeated string variant = 2;
+  repeated Step playback_step = 3;
+  int64 overall_duration_mill = 4;
+}
+
+message HymnSVG {
+  Metadata metadata = 1;
+  string svg_body = 2;
+}

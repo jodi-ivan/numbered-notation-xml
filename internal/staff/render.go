@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int {
@@ -27,6 +28,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 		SyllableOffset:   map[int]int{},
+		TotalBeat:        map[int][]float64{},
 	}
 	oldMarginButtom := 0
 	for i, st := range staffes {
@@ -40,6 +42,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			RepeatInfo:    info.RepeatInfo,
 
 			SyllableOffset: info.SyllableOffset,
+			TotalBeat:      info.TotalBeat,
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, i, metadata, st, data)
 		info.RepeatInfo = append(data.RepeatInfo, info.RepeatInfo...)
@@ -77,6 +80,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			RepeatInfo:    info.RepeatInfo,
 
 			SyllableOffset: info.SyllableOffset,
+			TotalBeat:      info.TotalBeat, // TODO: send this to result useacase
 		}
 		x = staffLines.GetLeftIndent(info.NextLineRenderer[0].MeasureNumber)
 		idx := len(staffes) - 1
@@ -85,6 +89,11 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, idx, metadata, nil, data)
 		relativeY += info.MarginBottom + STAFF_LINE_DISTANCE + 70
+	}
+
+	param, _ := params.GetParamFromContext(ctx)
+	if param != nil && param.Playback != nil {
+		param.Playback.TotalBeat = info.TotalBeat
 	}
 
 	return relativeY

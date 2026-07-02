@@ -1,17 +1,22 @@
 package usecase
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/playback"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/text"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
@@ -26,6 +31,7 @@ type interactor struct {
 	config   config.Config
 	repo     repository.Repository
 	renderer renderer.Renderer
+	text     text.Text
 }
 
 func New(config config.Config, repo repository.Repository, renderer renderer.Renderer) Usecase {
@@ -33,40 +39,47 @@ func New(config config.Config, repo repository.Repository, renderer renderer.Ren
 		config:   config,
 		repo:     repo,
 		renderer: renderer,
+		text:     text.NewText(lyric.NewLyric()),
 	}
 }
 
-func collectRepeat(measures []musicxml.Measure) [][2]int {
+func collectRepeat(measures []musicxml.Measure) [][3]int {
 
-	result := [][2]int{}
+	result := [][3]int{}
 	// check if there is any repeat at all
 	for i := 0; i < len(measures); i++ {
 		for _, b := range measures[i].Barline {
 			if b.Repeat != nil {
 				switch b.Repeat.Direction {
 				case musicxml.BarLineRepeatDirectionForward:
-					result = append(result, [2]int{measures[i].Number})
+					result = append(result, [3]int{measures[i].Number})
 				case musicxml.BarLineRepeatDirectionBackward:
 					// closing
 					if len(result) == 0 {
-						result = append(result, [2]int{1}) // beginning of the measure
+						result = append(result, [3]int{1}) // beginning of the measure
 					}
 					lastKnown := result[len(result)-1]
 					lastKnown[1] = measures[i].Number
 					result[len(result)-1] = lastKnown
 				}
+
+			}
+			if b.Ending != nil && b.Ending.Type == musicxml.BarlineEndingTypeDiscontinue && len(result) > 0 {
+				lastKnown := result[len(result)-1]
+				lastKnown[2] = measures[i].Number - lastKnown[1]
+				result[len(result)-1] = lastKnown
 			}
 		}
 	}
 	return result
 }
 
-func ProcessRepeats(music *musicxml.MusicXML) {
+func ProcessRepeats(music *musicxml.MusicXML) [][3]int {
 
 	repeats := collectRepeat(music.Part.Measures)
 
 	if len(repeats) == 0 {
-		return
+		return nil
 	}
 	bli := barline.NewBarline()
 
@@ -148,6 +161,8 @@ func ProcessRepeats(music *musicxml.MusicXML) {
 		}
 	}
 
+	return repeats
+
 }
 
 func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum int, variant ...string) error {
@@ -163,7 +178,16 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}
 	}
 
-	ProcessRepeats(&music)
+	hasRepeats := ProcessRepeats(&music)
+
+	// detect Fine in the whole music
+	hasFine := i.text.FindMeasureByText(music.Part.Measures, text.DEFAULT_TEXT_FINE)
+
+	slices.SortFunc(hasRepeats, func(i, j [3]int) int {
+		return cmp.Compare(i[0], j[0])
+	})
+
+	music.Tempo = music.Part.Measures[0].Tempo
 
 	metaData, err := i.repo.GetHymnMetaData(ctx, hymnNum, variant...)
 	if err != nil {
@@ -197,10 +221,21 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		metaWithParsedVerse.ParsedVerse[i] = whole
 
 	}
+	lastMeasure := music.Part.Measures[len(music.Part.Measures)-1].Number
+	steps := playback.GenerateSteps(hasFine, lastMeasure, hasRepeats)
+	music.TotalMeasure = len(steps)
+	param.Playback = &params.PlaybackParams{Rect: map[int][][2]entity.Coordinate{}}
+
+	for _, s := range steps {
+		param.Playback.Rect[s.MeasureNumber] = [][2]entity.Coordinate{}
+	}
+
+	rctx := params.NewParamContext(ctx, param)
 
 	canv.Delegator().OnBeforeStartWrite()
 
-	i.renderer.Render(ctx, music, canv, metaWithParsedVerse)
+	i.renderer.Render(rctx, music, canv, metaWithParsedVerse)
+	playback.CalculateDuration(&steps, music.Tempo, param.Playback.TotalBeat, param.Playback.Rect)
 
 	return nil
 }

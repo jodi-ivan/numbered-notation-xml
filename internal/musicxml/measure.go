@@ -39,7 +39,8 @@ type Measure struct {
 	// FIXME: one centralized place for the measured text
 	RightMeasureText *MeasureText   `xml:"-"`
 	PrefixHeader     map[int]string `xml:"-"`
-	RepeatInfo       *RepeatInfo
+	RepeatInfo       *RepeatInfo    `xml:"-"`
+	Tempo            int
 }
 
 func (m *Measure) Build() error {
@@ -72,6 +73,10 @@ func (m *Measure) Build() error {
 			d, err := elmnt.ParseAsDirection()
 			if err != nil {
 				return err
+			}
+
+			if d.Sound != nil && d.Sound.Tempo != 0 {
+				m.Tempo = d.Sound.Tempo
 			}
 			if len(d.DirectionType) == 0 {
 				continue

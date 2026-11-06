@@ -77,10 +77,12 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		align, staffInfo = ProcessPreviousLines(data.PrevNotes, data.KeySig, y)
 		pos = data.PrevNotes[len(data.PrevNotes)-1].IndexPosition + 1
 	}
+
+	staffInfo.TotalBeat = data.TotalBeat
+
 	for mi, measure := range measures {
 
 		mSyllcount := 0
-		measure.Build()
 
 		notes := []*entity.NoteRenderer{}
 
@@ -112,7 +114,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			n, octave, strikethrough := moveabledo.GetNumberedNotation(currKeySig, note)
 			noteLength := data.TimeSig.GetNoteLength(ctx, measure.Number, note)
-
 			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) && currTimesig.IsCommonTime() {
 				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength && mergedLength < 3 {
 					note, noteLength = mergedNote, mergedLength
@@ -334,6 +335,17 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			y += 10
 			staffInfo.MarginBottom += 10
 		}
+	}
+
+	totalBeat := map[int]float64{}
+	for _, notes := range align {
+		for _, note := range notes {
+			totalBeat[note.MeasureNumber] += note.NoteValue
+		}
+	}
+
+	for tb, b := range totalBeat {
+		staffInfo.TotalBeat[tb] = append(staffInfo.TotalBeat[tb], b)
 	}
 
 	staffInfo.MarginBottom += si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, y, data.TimeSig, data.KeySig, align)

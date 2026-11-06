@@ -42,3 +42,8 @@ mscz/
 
 *.zip
 dist/
+
+# audio
+*.mp3
+*.mid
+*.midi

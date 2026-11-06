@@ -19,6 +19,7 @@ type StaffInfo struct {
 	SyllableCount         int
 	RepeatInfo            []*musicxml.RepeatInfo
 	SyllableOffset        map[int]int
+	TotalBeat             map[int][]float64
 }
 
 type StaffData struct {
@@ -31,6 +32,7 @@ type StaffData struct {
 	RepeatInfo    []*musicxml.RepeatInfo
 
 	SyllableOffset map[int]int
+	TotalBeat      map[int][]float64
 }
 
 const (

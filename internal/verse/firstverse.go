@@ -36,7 +36,6 @@ func BuildContent(music musicxml.MusicXML, metadata *entity.HymnMetaData) [][]en
 	prevTotalLyric := -1
 	wordVerses := map[int]entity.LyricWordVerse{}
 	for _, measure := range music.Part.Measures {
-		measure.Build()
 		for _, note := range measure.Notes {
 			if len(note.Lyric) == 0 {
 				continue

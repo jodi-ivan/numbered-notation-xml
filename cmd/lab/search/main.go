@@ -162,19 +162,19 @@ func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Docu
 		return nil, err
 	}
 
-	cats := map[string][]string{}
+	cats := map[string][]category.Entry{}
 
 	doc := &Document{
 		ID:            strconv.Itoa(metadata.HymnID),
-		Title:         metadata.Title,
 		Title_ngram:   metadata.Title,
+		Title:         metadata.Title,
 		HymnNo:        metadata.Number,
 		BE:            int(metadata.RefBE.Int16),
 		NR:            int(metadata.RefNR.Int16),
 		Copyright:     metadata.Copyright.String,
 		MusicCredit:   metadata.Music,
 		OriginalTitle: GetOriginalTitle(metadata),
-		Catergory:     []category.Entry{},
+		Catergory:     []category.Entry{}, // Initialize as []category.Entry
 	}
 
 	if len(vaiant) > 0 {
@@ -186,22 +186,22 @@ func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Docu
 		currCats := category.Lookup(num, verse)
 		for _, curr := range currCats {
 			if cats[curr.H1] == nil {
-				cats[curr.H1] = []string{}
+				cats[curr.H1] = []category.Entry{}
 			}
 
-			cats[curr.H1] = append(cats[curr.H1], curr.H2)
+			cats[curr.H1] = append(cats[curr.H1], curr)
 		}
 		verses[verse-1] = VerseDoc{No: verse, Content: BuildContent(repo, metadata, verse)}
 	}
 
-	h2s := map[string]bool{}
-	for h1, cat := range cats {
-		for _, h2 := range cat {
-			if h2s[h2] {
+	h2s := map[string]bool{} // Tracks unique H2 values
+	for _, cat := range cats {
+		for _, entry := range cat {
+			if h2s[entry.H2] {
 				continue
 			}
-			h2s[h2] = true
-			doc.Catergory = append(doc.Catergory, category.Entry{H1: h1, H2: h2})
+			h2s[entry.H2] = true
+			doc.Catergory = append(doc.Catergory, entry)
 		}
 	}
 
@@ -316,11 +316,25 @@ func main() {
 		146: []string{"a", "b"},
 		168: []string{"a", "b", "c"},
 		174: []string{"a", "b"},
+		222: []string{"a", "b"},
+		229: []string{"a", "b"},
+		240: []string{"a", "b"},
+		248: []string{"a", "b"},
+		250: []string{"a", "b"},
+		287: []string{"a", "b"},
+		303: []string{"a", "b"},
+		311: []string{"a", "b"},
+		312: []string{"a", "b"},
+		365: []string{"a", "b", "c"},
+		369: []string{"a", "b"},
+		466: []string{"a", "b"},
+		473: []string{"a", "b"},
+		478: []string{"a", "b", "c"},
 	}
 	// Add documents
 	documents := []*Document{}
 
-	for no := 1; no <= 214; no++ {
+	for no := 1; no <= 478; no++ {
 		var doc *Document
 		var err error
 		if variant, ok := variants[no]; ok {
@@ -332,9 +346,8 @@ func main() {
 						return
 					}
 				}
+				documents = append(documents, doc)
 
-				raw, _ := json.MarshalIndent(doc, "", "    ")
-				log.Println(string(raw))
 			}
 		} else {
 			doc, err = BuildDocument(repo, no)
@@ -342,18 +355,23 @@ func main() {
 				log.Fatalf("Failed to build docs: %s", err.Error())
 				return
 			}
+			documents = append(documents, doc)
+
 		}
 
-		documents = append(documents, doc)
 	}
 
 	// Iterate and index the documents
 	batch := index.NewBatch()
 	for _, doc := range documents {
-		batch.Index(doc.ID, doc)
+		err := batch.Index(doc.ID, doc)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	if err := index.Batch(batch); err != nil {
 		log.Fatal(err)
 	}
-
+	stats, _ := index.Stats().MarshalJSON()
+	log.Println("success to build the index. ", string(stats))
 }

@@ -20,6 +20,7 @@ type CanvasDelegatorHTTP struct {
 
 func (cdh *CanvasDelegatorHTTP) OnBeforeStartWrite() {
 	cdh.w.Header().Set("Content-Type", "image/svg+xml")
+	// add browser cache here for 6 hours. AI!
 	cdh.w.WriteHeader(http.StatusOK)
 }
 

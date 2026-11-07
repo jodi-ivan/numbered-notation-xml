@@ -65,7 +65,7 @@ func main() {
 	defer db.Close()
 
 	repo := repository.New(context.Background(), db)
-	usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer())
+	usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer(), nil)
 	stringRender := adapter.NewRenderString(usecaseMod)
 
 	switch *method {

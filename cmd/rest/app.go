@@ -14,6 +14,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/search"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/storage"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/webserver"
 )
@@ -38,7 +39,16 @@ func main() {
 
 	repo := repository.New(context.Background(), db)
 
-	usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer())
+	provider, err := search.NewSearhProvider(cfg)
+	if err != nil {
+		log.Printf("Failed to start the search provider. Err: %s", err.Error())
+		os.Exit(1)
+		return
+	}
+
+	defer provider.Close()
+
+	usecaseMod := usecase.New(cfg, repo, renderer.NewRenderer(), provider)
 
 	httpRender := adapter.New(
 		decorator.WithVariantRedirect(repo)(usecaseMod),
@@ -63,6 +73,7 @@ func main() {
 		Db:        db,
 	})
 
+	ws.Register("GET", "/kidung-jemaat/search", &adapter.SearchAdapterHTTP{Usecase: usecaseMod})
 	sigs := make(chan os.Signal, 1)
 
 	ws.Register("GET", "/internal/diagnostic/verse/:scope", &adapter.DiagnosticHTTP{

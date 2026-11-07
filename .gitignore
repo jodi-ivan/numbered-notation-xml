@@ -42,3 +42,6 @@ mscz/
 
 *.zip
 dist/
+
+# Output of bleve indexing
+**/*.bleve/

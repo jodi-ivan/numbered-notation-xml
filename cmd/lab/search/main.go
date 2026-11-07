@@ -9,10 +9,14 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
 	_ "github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
 	_ "github.com/blevesearch/bleve/v2/analysis/token/lowercase"
+	"github.com/blevesearch/bleve/v2/analysis/token/ngram"
 	_ "github.com/blevesearch/bleve/v2/analysis/token/ngram"
 	_ "github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
+	bleve_unicode "github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
+	_ "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/token/lowercase"
@@ -29,6 +33,7 @@ type VerseDoc struct {
 	Start   int    `json:"start"`
 	End     int    `json:"end"`
 }
+
 type Document struct {
 	ID            string           `json:"id"`
 	Title         string           `json:"title"`
@@ -225,16 +230,11 @@ func main() {
 	indexPath := "files/index/kj.bleve"
 	// Create a new index
 	indexMapping := bleve.NewIndexMapping()
-	index, err := bleve.New(indexPath, indexMapping)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer index.Close()
 
 	// 1. Create a custom token filter for n-grams (3 to 6 characters is usually sweet spot)
 	err = indexMapping.AddCustomTokenFilter("my_ngram",
 		map[string]interface{}{
-			"type": "ngram",
+			"type": ngram.Name,
 			"min":  3,
 			"max":  6,
 		})
@@ -255,13 +255,22 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := indexMapping.AddCustomAnalyzer("indonesian", map[string]interface{}{
+		"type":          custom.Name,
+		"tokenizer":     bleve_unicode.Name,
+		"token_filters": []string{lowercase.Name, "indonesian_stem"},
+	}); err != nil {
+		panic(err)
+	}
+
 	docMapping := bleve.NewDocumentMapping()
 
 	contentMapping := bleve.NewTextFieldMapping()
 	contentMapping.Store = true
 	contentMapping.IncludeTermVectors = true
-	docMapping.AddFieldMappingsAt("content", contentMapping)
+	contentMapping.Analyzer = "indonesian"
 
+	docMapping.AddFieldMappingsAt("content", contentMapping)
 	versesMapping := bleve.NewDocumentMapping()
 
 	noMapping := bleve.NewNumericFieldMapping()
@@ -269,6 +278,7 @@ func main() {
 
 	verseContentMapping := bleve.NewTextFieldMapping()
 	verseContentMapping.Store = true
+	verseContentMapping.Analyzer = "indonesian"
 
 	startMapping := bleve.NewNumericFieldMapping()
 	startMapping.Store = true
@@ -284,9 +294,12 @@ func main() {
 
 	titleMap := bleve.NewTextFieldMapping()
 	titleMap.Store = true
+	titleMap.Analyzer = "indonesian"
 
+	// ngram for autocomplete
 	titleNgram := bleve.NewTextFieldMapping()
 	titleNgram.Store = true
+
 	titleNgram.Analyzer = "part_word_analyzer"
 
 	ogMap := bleve.NewTextFieldMapping()
@@ -304,6 +317,12 @@ func main() {
 	docMapping.AddFieldMappingsAt("title_ngram", titleNgram)
 
 	indexMapping.DefaultMapping = docMapping
+
+	index, err := bleve.New(indexPath, indexMapping)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer index.Close()
 
 	var variants = map[int][]string{
 		24:  []string{"a", "b"},
@@ -364,6 +383,8 @@ func main() {
 	// Iterate and index the documents
 	batch := index.NewBatch()
 	for _, doc := range documents {
+		// raw, _ := json.Marshal(doc.Verses)
+		// log.Printf("%d. %s \n %s \n %s\n\n", doc.HymnNo, doc.Title, doc.Content, string(raw))
 		err := batch.Index(doc.ID, doc)
 		if err != nil {
 			log.Fatal(err)

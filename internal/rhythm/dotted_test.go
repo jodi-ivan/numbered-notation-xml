@@ -252,7 +252,7 @@ func Test_rhythmInteractor_AdjustMultiDottedRenderer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ri := &rhythmInteractor{}
-			gotX, gotY := ri.AdjustMultiDottedRenderer(tt.args.notes, tt.args.x, tt.args.y, keysig.NewKeySignature(context.Background(), []musicxml.Measure{{Attribute: &musicxml.Attribute{Key: &musicxml.KeySignature{}}}}))
+			gotX, gotY := ri.AdjustMultiDottedRenderer(context.Background(), tt.args.notes, tt.args.x, tt.args.y, keysig.NewKeySignature(context.Background(), []musicxml.Measure{{Attribute: &musicxml.Attribute{Key: &musicxml.KeySignature{}}}}))
 			if gotX != tt.wantX {
 				t.Errorf("rhythmInteractor.AdjustMultiDottedRenderer() got X = %v, want %v", gotX, tt.wantX)
 			}

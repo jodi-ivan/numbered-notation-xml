@@ -20,6 +20,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	gomock_new "go.uber.org/mock/gomock"
 )
 
 type testifyMatcher struct {
@@ -58,6 +59,10 @@ func TestNewStaff(t *testing.T) {
 func Test_staffInteractor_RenderStaff(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	ctrlUber := gomock_new.NewController(t)
+	defer ctrlUber.Finish()
+
 	kj001 := []musicxml.Measure{
 		{
 			Number: 1,
@@ -148,7 +153,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 		measures        []musicxml.Measure
 		prevNotes       []*entity.NoteRenderer
 		numberedMock    func(c *gomock.Controller) *numbered.MockNumbered
-		rhythmMock      func(c *gomock.Controller) *rhythm.MockRhythm
+		rhythmMock      func(c *gomock_new.Controller) *rhythm.MockRhythm
 		lyricMock       func(c *gomock.Controller) *lyric.MockLyric
 		breathpauseMock func(c *gomock.Controller) *breathpause.MockBreathPause
 		barlineMock     func(c *gomock.Controller) *barline.MockBarline
@@ -173,10 +178,10 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				nm.EXPECT().RendererFromAdditional(testifyMatcher{t: t, expected: getNote(kj001[0].Appendix, 1)}, gomock.Any(), []numbered.NoteLength{{Type: musicxml.NoteLengthQuarter}})
 				return nm
 			},
-			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
+			rhythmMock: func(c *gomock_new.Controller) *rhythm.MockRhythm {
 				rm := rhythm.NewMockRhythm(c)
 				rm.EXPECT().SetRhythmNotation(gomock.Any(), gomock.Any(), 3)
-				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 95, signatures["kj001"].ks).Return(50, 95)
+				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), gomock.Any(), 50, 95, signatures["kj001"].ks).Return(50, 95)
 				return rm
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -237,10 +242,10 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				})
 				return nm
 			},
-			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
+			rhythmMock: func(c *gomock_new.Controller) *rhythm.MockRhythm {
 				rm := rhythm.NewMockRhythm(c)
 				rm.EXPECT().SetRhythmNotation(gomock.Any(), gomock.Any(), 6)
-				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), 50, 95, signatures["kj075"].ks).Return(50, 95)
+				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), gomock.Any(), 50, 95, signatures["kj075"].ks).Return(50, 95)
 				return rm
 			},
 			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
@@ -270,7 +275,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var si staffInteractor
 			si.Numbered = tt.numberedMock(ctrl)
-			si.Rhythm = tt.rhythmMock(ctrl)
+			si.Rhythm = tt.rhythmMock(ctrlUber)
 			si.Lyric = tt.lyricMock(ctrl)
 			si.BreathPause = tt.breathpauseMock(ctrl)
 			si.Barline = tt.barlineMock(ctrl)

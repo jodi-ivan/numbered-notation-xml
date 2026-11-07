@@ -160,7 +160,7 @@ func TestProcessPreviousLines(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got2 := ProcessPreviousLines(tt.prevNotes, keysig.NewKeySignature(context.Background(), []musicxml.Measure{{Attribute: &musicxml.Attribute{Key: &musicxml.KeySignature{}}}}), tt.yPos)
+			got, got2 := ProcessPreviousLines(context.Background(), tt.prevNotes, keysig.NewKeySignature(context.Background(), []musicxml.Measure{{Attribute: &musicxml.Attribute{Key: &musicxml.KeySignature{}}}}), tt.yPos)
 			if len(got) == tt.wantTotalNotes {
 				t.Errorf("ProcessPreviousLines() total notes = %v, want %v", got, tt.wantTotalNotes)
 			}

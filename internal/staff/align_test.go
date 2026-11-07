@@ -19,6 +19,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	gomock_new "go.uber.org/mock/gomock"
 )
 
 func Test_alignJustify(t *testing.T) {
@@ -168,6 +169,9 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	ctrlUber := gomock_new.NewController(t)
+	defer ctrlUber.Finish()
+
 	measures := []musicxml.Measure{
 		{
 			Number: 1,
@@ -207,7 +211,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 		// Named input parameters for target function.
 		canv         func(c *gomock.Controller) *canvas.MockCanvasTestify
 		numberedMock func(c *gomock.Controller) *numbered.MockNumbered
-		rhythmMock   func(c *gomock.Controller) *rhythm.MockRhythm
+		rhythmMock   func(c *gomock_new.Controller) *rhythm.MockRhythm
 		lyricMock    func(c *gomock.Controller) *lyric.MockLyric
 		y            int
 		ts           timesig.TimeSignature
@@ -249,7 +253,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 
 				return mock
 			},
-			rhythmMock: func(c *gomock.Controller) *rhythm.MockRhythm {
+			rhythmMock: func(c *gomock_new.Controller) *rhythm.MockRhythm {
 				mock := rhythm.NewMockRhythm(c)
 				ts := timesig.NewTimeSignatures(context.Background(), measures)
 				mock.EXPECT().RenderBeam(gomock.Any(), 165, gomock.Any(), ts, gomock.Any()).Times(2)
@@ -275,7 +279,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 			// TODO: construct the receiver type.
 			var rsa renderStaffAlign
 			rsa.Numbered = tt.numberedMock(ctrl)
-			rsa.Rhythm = tt.rhythmMock(ctrl)
+			rsa.Rhythm = tt.rhythmMock(ctrlUber)
 			rsa.Lyric = tt.lyricMock(ctrl)
 			gregMock := gregorian.NewMockGregorian(ctrl)
 			gregMock.EXPECT().RenderStaffLine(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()

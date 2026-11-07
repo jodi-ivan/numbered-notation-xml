@@ -12,32 +12,39 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
+	svc "github.com/jodi-ivan/numbered-notation-xml/svc/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/search"
 )
 
 type Usecase interface {
 	RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum int, variant ...string) error
+	Lookup(ctx context.Context, term string) ([]svc.SearchMatch, error)
+	Highlight(ctx context.Context, hits []svc.SearchMatch) []HighlightSearchResult
 }
 
 type interactor struct {
 	config   config.Config
 	repo     repository.Repository
 	renderer renderer.Renderer
+
+	searchProvider search.Provider
 }
 
-func New(config config.Config, repo repository.Repository, renderer renderer.Renderer) Usecase {
+func New(config config.Config, repo repository.Repository, renderer renderer.Renderer, searchProvider search.Provider) Usecase {
 	return &interactor{
 		config:   config,
 		repo:     repo,
 		renderer: renderer,
+
+		searchProvider: searchProvider,
 	}
 }
 
 func collectRepeat(measures []musicxml.Measure) [][2]int {
-
 	result := [][2]int{}
 	// check if there is any repeat at all
 	for i := 0; i < len(measures); i++ {
@@ -147,6 +154,22 @@ func ProcessRepeats(music *musicxml.MusicXML) {
 			}
 		}
 	}
+}
+func (i *interactor) Lookup(ctx context.Context, term string) ([]svc.SearchMatch, error) {
+	query := search.BuildQuery(ctx, term)
+	hits, err := i.searchProvider.Search(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []svc.SearchMatch{}
+
+	for _, hit := range hits.Hits {
+		result = append(result, search.NewSearchMatch(hit))
+	}
+
+	i.rankSearchResult(ctx, result)
+	return result, nil
 
 }
 

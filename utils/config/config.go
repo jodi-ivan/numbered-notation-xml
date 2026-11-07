@@ -10,6 +10,7 @@ type Config struct {
 	Webserver WebServerConfig
 	MusicXML  MusicXMLConfig
 	SQLite    SQLiteConfig
+	Bleve     BleveConfig
 }
 
 type MusicXMLConfig struct {
@@ -23,6 +24,11 @@ type WebServerConfig struct {
 
 type SQLiteConfig struct {
 	DBPath string
+}
+
+type BleveConfig struct {
+	Enabled   bool
+	IndexPath string
 }
 
 func InitConfig(env string) (Config, error) {

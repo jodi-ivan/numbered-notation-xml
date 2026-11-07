@@ -3,6 +3,7 @@ package decorator
 import (
 	"context"
 
+	"github.com/jodi-ivan/numbered-notation-xml/svc/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -27,6 +28,14 @@ func (hvd *HymnVariantDecorator) RenderHymn(ctx context.Context, canv canvas.Can
 		}
 	}
 	return hvd.next.RenderHymn(ctx, canv, hymnNum, variant...)
+}
+
+func (hvd *HymnVariantDecorator) Lookup(ctx context.Context, term string) ([]entity.SearchMatch, error) {
+	return hvd.next.Lookup(ctx, term)
+}
+
+func (hvd *HymnVariantDecorator) Highlight(ctx context.Context, hits []entity.SearchMatch) []usecase.HighlightSearchResult {
+	return hvd.Highlight(ctx, hits)
 }
 
 func WithVariantRedirect(repo repository.Repository) HTTPMiddlewareAdapter {

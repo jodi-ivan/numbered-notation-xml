@@ -50,7 +50,7 @@ The engine outputs SVG-based notation modeled after the original KJ print style.
 | <img src="files/var/www/assets/kj-088.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-101.svg" alt="Alt Text"> |
 
 
-** With Notatopm
+** With Notation
 | | |
 |--| -- | 
 | <img src="files/var/www/assets/kj-005-staff.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-046-staff.svg" alt="Alt Text"> | 

@@ -8,10 +8,12 @@ import (
 
 	core "github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/v2/analysis/char/regexp"
 	"github.com/blevesearch/bleve/v2/analysis/token/lowercase"
 	"github.com/blevesearch/bleve/v2/analysis/token/ngram"
 	"github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
 	"github.com/blevesearch/bleve/v2/search"
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 	_ "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
@@ -20,8 +22,24 @@ import (
 func init() {
 	indexMapping := core.NewIndexMapping()
 	var err error
+
+	var charFilters []string
+	for _, r := range stem.ElisionRules {
+		err := indexMapping.AddCustomCharFilter(r.Name, map[string]interface{}{
+			"type":    regexp.Name,
+			"regexp":  r.Pattern,
+			"replace": r.Replace,
+		})
+		if err != nil {
+			log.Fatal(err)
+
+		}
+		charFilters = append(charFilters, r.Name)
+	}
+
 	if err := indexMapping.AddCustomAnalyzer("indonesian", map[string]interface{}{
 		"type":          custom.Name,
+		"char_filters":  charFilters,
 		"tokenizer":     unicode.Name,
 		"token_filters": []string{lowercase.Name, "indonesian_stem"},
 	}); err != nil {

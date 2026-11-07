@@ -11,11 +11,14 @@ import (
 
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
 	_ "github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/v2/analysis/char/regexp"
 	_ "github.com/blevesearch/bleve/v2/analysis/token/lowercase"
 	"github.com/blevesearch/bleve/v2/analysis/token/ngram"
 	_ "github.com/blevesearch/bleve/v2/analysis/token/ngram"
 	_ "github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
 	bleve_unicode "github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
+	"github.com/blevesearch/bleve/v2/mapping"
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 	_ "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 
 	"github.com/blevesearch/bleve/v2"
@@ -217,6 +220,15 @@ func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Docu
 
 }
 
+func dump(m mapping.IndexMapping, analyzer, text string) {
+	an := m.AnalyzerNamed(analyzer)
+	var terms []string
+	for _, t := range an.Analyze([]byte(text)) {
+		terms = append(terms, fmt.Sprintf("%q", t.Term))
+	}
+	fmt.Printf("%-20s %-10s -> %v\n", analyzer, text, terms)
+}
+
 func main() {
 
 	db, err := storage.NewStorage(context.Background(), "files/database/kidung-jemaat.db")
@@ -230,6 +242,20 @@ func main() {
 	indexPath := "files/index/kj.bleve"
 	// Create a new index
 	indexMapping := bleve.NewIndexMapping()
+
+	var charFilters []string
+	for _, r := range stem.ElisionRules {
+		err := indexMapping.AddCustomCharFilter(r.Name, map[string]interface{}{
+			"type":    regexp.Name,
+			"regexp":  r.Pattern,
+			"replace": r.Replace,
+		})
+		if err != nil {
+			log.Fatal(err)
+
+		}
+		charFilters = append(charFilters, r.Name)
+	}
 
 	// 1. Create a custom token filter for n-grams (3 to 6 characters is usually sweet spot)
 	err = indexMapping.AddCustomTokenFilter("my_ngram",
@@ -257,6 +283,7 @@ func main() {
 
 	if err := indexMapping.AddCustomAnalyzer("indonesian", map[string]interface{}{
 		"type":          custom.Name,
+		"char_filters":  charFilters,
 		"tokenizer":     bleve_unicode.Name,
 		"token_filters": []string{lowercase.Name, "indonesian_stem"},
 	}); err != nil {
@@ -323,6 +350,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer index.Close()
+
+	// for _, w := range []string{"telah", "t'lah", "cahaya", "cah'ya"} {
+	// 	dump(indexMapping, "indonesian", w)
+	// 	dump(indexMapping, "part_word_analyzer", w)
+	// }
 
 	var variants = map[int][]string{
 		24:  []string{"a", "b"},

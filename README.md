@@ -7,8 +7,6 @@ This project aims to digitize and render **Kidung Jemaat** hymns into numbered n
 The goal is to create a searchable, accessible, and accurate digital version of Kidung Jemaat, starting from **MusicXML** sources and manually curated metadata.
 The engine outputs SVG-based notation modeled after the original KJ print style.
 
-
-
 ## 🏁 Getting started
 - Clone the repository
 - Checkout [releases tab](https://github.com/jodi-ivan/numbered-notation-xml/releases)  
@@ -21,29 +19,16 @@ The engine outputs SVG-based notation modeled after the original KJ print style.
 - open browser and open `http//localhost:[port]/kidung-jemaat/render/1` (currently from 1 to 478c)
 > 💡 Alternatively you can download the `goldenfiles.zip` to see the final render looks like. 
 
----
-## 🖼 Screenshot
-
-** taken from the goldenfiles
-**SVG modified to have background color
-| | |
-|--| -- | 
-| <img src="files/var/www/assets/kj-005.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-046.svg" alt="Alt Text"> | 
-| <img src="files/var/www/assets/kj-088.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-101.svg" alt="Alt Text"> |
-
----
+# Features
+### 🔹 Full SVG
+### 🔹 Numbered and Classical notation
+### 🔹 Syllable counting (can map other verse with the music)
+### 🔹 Search with full Indonesian stemming support 
 
 ## 🔧 Features in Progress
-
-### 🔹 Lyric Processing
-* Automatic syllable alignment per note for the verses (so the notated music is not only the 1st verse only)
-
-### 🔹 Content management and discovery
-* For searchability and categorization
-
 ### 🔹GUI 
 
-### 🔹Synthesized voice for sing the hymn and follow along   
+### 🔹Follow Along with music
 
 ## 📌 Next Features on the Roadmap
 
@@ -52,10 +37,31 @@ The engine outputs SVG-based notation modeled after the original KJ print style.
 * Multi-staff layout
 * Proper vertical alignment
 
-### 🎼 Full Musical Notation (Optional Mode)
-Switch between:
-- Numbered notation
-- Traditional staff notation
+---
+
+---
+## 🖼 Screenshot
+
+
+** Numbered Only
+| | |
+|--| -- | 
+| <img src="files/var/www/assets/kj-005.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-046.svg" alt="Alt Text"> | 
+| <img src="files/var/www/assets/kj-088.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-101.svg" alt="Alt Text"> |
+
+
+** With Notatopm
+| | |
+|--| -- | 
+| <img src="files/var/www/assets/kj-005-staff.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-046-staff.svg" alt="Alt Text"> | 
+| <img src="files/var/www/assets/kj-088-staff.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-101-staff.svg" alt="Alt Text"> |
+
+
+** Syllable counting and music matching (Beta)
+
+| Non Focus mode | Focus mode |
+|--| -- | 
+| <img src="files/var/www/assets/kj-005-verse-2.svg" alt="Alt Text"> | <img src="files/var/www/assets/kj-005-verse-2-focus.svg" alt="Alt Text"> |
 
 ---
 
@@ -70,8 +76,6 @@ Along the way, it grew into a more general exploration of:
 * MusicXML parsing
 * text-notation alignment
 
-Development pauses occasionally when I research better automation approaches
-
 
 ## 🤓 References (sites that I used for content and references music theory)
 - https://www.hooktheory.com/cheat-sheet
@@ -79,4 +83,4 @@ Development pauses occasionally when I research better automation approaches
 - https://www.musicca.com/dictionary/scales 
 - https://www.gkiharapanindah.org/download/rekap-kidung-jemaat/
 - https://mymusictheory.com/more-music-theory-topics/key-signatures-chart/
-- https://fontdrop.info/#/?darkmode=true 
+- https://fontdrop.info/#/?darkmode=true

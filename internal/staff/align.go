@@ -20,6 +20,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/toping"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 type RenderStaffWithAlign interface {
@@ -163,14 +164,23 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 		}
 	}
 
-	canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
-	margin := rsa.Gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
-	rsa.Toping.RenderRepeatMeasure(ctx, y+10, canv, flatten, true) // for the gregorian
-	canv.Gend()
+	margin := gregorian.VMargin{} // empty margin
+
+	isGregorian := params.GetGregorianToggle(ctx)
+	if isGregorian {
+		canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
+		margin = rsa.Gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
+		rsa.Toping.RenderRepeatMeasure(ctx, y+10, canv, flatten, true) // for the gregorian
+		canv.Gend()
+	}
 
 	stafflines := lines.NewLineStaffWithLines(ts, ks, y)
 
-	yPos := y + gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom) + additionalMarginBottom
+	yPos := y + additionalMarginBottom
+	if isGregorian {
+		yPos += gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom)
+
+	}
 
 	canv.Group(`class="numbered"`)
 	offsetLyric := 0
@@ -206,8 +216,14 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 		canv.Group("class='staff-text'")
 
-		rsa.Text.RenderMeasureText(ctx, y+10, canv, measure, stafflines)
-		rsa.Toping.RenderStaffLineDash(measure, canv, y+10, stafflines)
+		yWithOffset := y + 10
+		gregorianStaff := []lines.LineStaff{stafflines}
+		if !isGregorian {
+			yWithOffset = y
+			gregorianStaff = []lines.LineStaff{}
+		}
+		rsa.Text.RenderMeasureText(ctx, yWithOffset, canv, measure, gregorianStaff...)
+		rsa.Toping.RenderStaffLineDash(measure, canv, yWithOffset, gregorianStaff...)
 		rsa.Toping.RenderTuplet(ctx, yPos, canv, measure)
 
 		canv.Gend()

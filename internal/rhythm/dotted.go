@@ -1,6 +1,7 @@
 package rhythm
 
 import (
+	"context"
 	"math"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
@@ -9,10 +10,11 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 // TODO: remove the dot positioning operation here, since it handled in the align justify.
-func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int, ks keysig.KeySignature) (int, int) {
+func (ri *rhythmInteractor) AdjustMultiDottedRenderer(ctx context.Context, notes []*entity.NoteRenderer, x int, y int, ks keysig.KeySignature) (int, int) {
 
 	xNotes := 0
 	continueDot := false
@@ -43,8 +45,8 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 			dotCount = 0
 		}
 
-		// TODO: config toggle here
-		if n.AbsoluteAccidental != "" {
+		isGregorian := params.GetGregorianToggle(ctx)
+		if n.AbsoluteAccidental != "" && !isGregorian {
 			x += 4
 		}
 		n.PositionX = x
@@ -82,9 +84,12 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(notes []*entity.NoteRender
 			x += constant.LOWERCASE_LENGTH
 		}
 		if n.IsNewLine {
-			// TODO: config toggle here
 			lineStaff := lines.NewMiddleNonFirstLineStaff(ks)
-			x = lineStaff.GetLeftIndent(n.MeasureNumber)
+			if isGregorian {
+				x = lineStaff.GetLeftIndent(n.MeasureNumber)
+			} else {
+				x = constant.LAYOUT_INDENT_LENGTH
+			}
 			// y is not added up because it will handled by the staff (the function that call this function).
 		}
 	}

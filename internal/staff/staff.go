@@ -74,7 +74,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	pos := 0
 	startSyllable := data.SyllableCount
 	if len(data.PrevNotes) > 0 {
-		align, staffInfo = ProcessPreviousLines(data.PrevNotes, data.KeySig, y)
+		align, staffInfo = ProcessPreviousLines(ctx, data.PrevNotes, data.KeySig, y)
 		pos = data.PrevNotes[len(data.PrevNotes)-1].IndexPosition + 1
 	}
 	for mi, measure := range measures {
@@ -259,7 +259,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		// data || staffinfo
-		x, y = si.Rhythm.AdjustMultiDottedRenderer(notes, x, y, data.KeySig)
+		x, y = si.Rhythm.AdjustMultiDottedRenderer(ctx, notes, x, y, data.KeySig)
 
 		var rightBarlineRenderer *entity.NoteRenderer
 		x, rightBarlineRenderer = si.Barline.GetRendererRightBarline(measure, x)
@@ -283,13 +283,18 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		if staffInfo.Multiline {
 			// // -------
 			if len(staffInfo.NextLineRenderer) == 0 && len(align) > 0 && staffInfo.ForceNewLine {
-				indent := linestaff.GetLeftIndent(measure.Number)
+
+				isGregorian := params.GetGregorianToggle(ctx)
+				indent := constant.LAYOUT_INDENT_LENGTH
+				if isGregorian {
+					indent = linestaff.GetLeftIndent(measure.Number)
+				}
 				staffInfo.MarginLeft = indent
-				si.Rhythm.AdjustMultiDottedRenderer(notes, indent, y, data.KeySig)
+				si.Rhythm.AdjustMultiDottedRenderer(ctx, notes, indent, y, data.KeySig)
 				notes = append(notes, rightBarlineRenderer)
 				staffInfo.NextLineRenderer = notes
 			} else {
-				nextstaffInfo := PrepareNextLines(staffInfo, data.KeySig, notes, rightBarlineRenderer)
+				nextstaffInfo := PrepareNextLines(ctx, staffInfo, data.KeySig, notes, rightBarlineRenderer)
 				staffInfo.NextLineRenderer = append(staffInfo.NextLineRenderer, nextstaffInfo.NextLineRenderer...)
 				alignMeasures = append(alignMeasures, filteredNotes...)
 				staffInfo.MarginLeft = nextstaffInfo.MarginLeft

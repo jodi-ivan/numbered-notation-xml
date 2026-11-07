@@ -3,10 +3,12 @@ package staff
 import (
 	"context"
 
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 // SplitLines split the measure in the lines manner
@@ -37,7 +39,7 @@ func (si *staffInteractor) SplitLines(ctx context.Context, part musicxml.Part) [
 	return append(result, currentLine)
 }
 
-func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignature, yPos int) ([][]*entity.NoteRenderer, StaffInfo) {
+func ProcessPreviousLines(ctx context.Context, prevNotes []*entity.NoteRenderer, ks keysig.KeySignature, yPos int) ([][]*entity.NoteRenderer, StaffInfo) {
 	result := [][]*entity.NoteRenderer{}
 	staffInfo := StaffInfo{}
 	pos := -1
@@ -58,6 +60,8 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignatu
 			break
 		}
 	}
+
+	isGregorian := params.GetGregorianToggle(ctx)
 	staffInfo.MarginBottom = (maxTotalLyric - 1) * 25
 	if pos != -1 {
 		result = append(result, prevNotes[:pos+1])
@@ -71,7 +75,11 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignatu
 
 			offset = 2
 			// TEST: need to be tested
-			staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
+			if isGregorian {
+				staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
+			} else {
+				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+			}
 			prevNotes[pos].IsNewLine = false
 			staffInfo.ForceNewLine = true
 		}
@@ -80,19 +88,27 @@ func ProcessPreviousLines(prevNotes []*entity.NoteRenderer, ks keysig.KeySignatu
 		staffInfo.Multiline = true
 	} else {
 		result = append(result, prevNotes)
-		staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
+		if isGregorian {
+			staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
+		} else {
+			staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
+		}
 	}
 
 	return result, staffInfo
 }
 
-func PrepareNextLines(staffInfo StaffInfo, ks keysig.KeySignature, notes []*entity.NoteRenderer, rightBarline *entity.NoteRenderer) StaffInfo {
+func PrepareNextLines(ctx context.Context, staffInfo StaffInfo, ks keysig.KeySignature, notes []*entity.NoteRenderer, rightBarline *entity.NoteRenderer) StaffInfo {
 	proceed := false
 	maxTotalLyric := 1
 
 	staffLines := lines.NewMiddleNonFirstLineStaff(ks)
 
-	indent := staffLines.GetLeftIndent(notes[0].MeasureNumber)
+	isGregorian := params.GetGregorianToggle(ctx)
+	indent := constant.LAYOUT_INDENT_LENGTH
+	if isGregorian {
+		indent = staffLines.GetLeftIndent(notes[0].MeasureNumber)
+	}
 	for _, note := range notes {
 		if !proceed {
 			if note.IsNewLine {

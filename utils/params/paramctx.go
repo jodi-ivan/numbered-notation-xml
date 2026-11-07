@@ -8,9 +8,9 @@ import (
 const PARAM_CTX_KEY = "param"
 
 type Param struct {
-	DisableGregorian bool
-	Verse            int
-	SingleVerseMode  bool
+	Gregorian       bool
+	Verse           int
+	SingleVerseMode bool
 
 	Diagnostic   *DiagParam
 	Render       *RenderParam
@@ -60,4 +60,17 @@ func GetParamFromContext(ctx context.Context) (*Param, bool) {
 
 	return param, true
 
+}
+
+func GetGregorianToggle(ctx context.Context) bool {
+	p, ok := GetParamFromContext(ctx)
+	/*
+	 |  ok  |   greogrian  |  want  |
+	 +------+--------------+--------+
+	 |   F  |   ? (any)    |   T    |
+	 |   T  |      T       |   T    |
+	 |   T  |      F       |   F    |
+
+	*/
+	return !ok || p.Gregorian
 }

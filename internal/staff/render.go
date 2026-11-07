@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int {
@@ -22,8 +23,11 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 
 	staffLines := lines.NewLineStaff(timeSignature, keySignature)
 
-	// TODO: config toggle here
-	x := staffLines.GetLeftIndentWithTimeSignature()
+	isGregorian := params.GetGregorianToggle(ctx)
+	x := constant.LAYOUT_INDENT_LENGTH
+	if isGregorian {
+		x = staffLines.GetLeftIndentWithTimeSignature()
+	}
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
 		SyllableOffset:   map[int]int{},
@@ -43,7 +47,10 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, i, metadata, st, data)
 		info.RepeatInfo = append(data.RepeatInfo, info.RepeatInfo...)
-		relativeY = relativeY + STAFF_LINE_DISTANCE + 70 + info.MarginBottom
+		relativeY = relativeY + 70 + info.MarginBottom
+		if isGregorian {
+			relativeY += STAFF_LINE_DISTANCE
+		}
 
 		nextMeasureNumber := 1 + len(st)
 		if len(st) > 0 {
@@ -61,7 +68,10 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			x = info.MarginLeft + barline.BARLINE_AFTER_SPACE
 			info.Multiline = false
 		} else {
-			x = staffLines.GetLeftIndent(nextMeasureNumber)
+			x = constant.LAYOUT_INDENT_LENGTH
+			if isGregorian {
+				x = staffLines.GetLeftIndent(nextMeasureNumber)
+			}
 		}
 		oldMarginButtom = info.MarginBottom
 	}
@@ -78,13 +88,19 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 
 			SyllableOffset: info.SyllableOffset,
 		}
-		x = staffLines.GetLeftIndent(info.NextLineRenderer[0].MeasureNumber)
+		x = constant.LAYOUT_INDENT_LENGTH
+		if isGregorian {
+			x = staffLines.GetLeftIndent(info.NextLineRenderer[0].MeasureNumber)
+		}
 		idx := len(staffes) - 1
 		if idx <= 0 {
 			idx = 1
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, idx, metadata, nil, data)
-		relativeY += info.MarginBottom + STAFF_LINE_DISTANCE + 70
+		relativeY += info.MarginBottom + 70
+		if isGregorian {
+			relativeY += STAFF_LINE_DISTANCE
+		}
 	}
 
 	return relativeY

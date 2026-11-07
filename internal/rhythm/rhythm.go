@@ -12,7 +12,7 @@ import (
 )
 
 type Rhythm interface {
-	AdjustMultiDottedRenderer(notes []*entity.NoteRenderer, x int, y int, ks keysig.KeySignature) (int, int)
+	AdjustMultiDottedRenderer(ctx context.Context, notes []*entity.NoteRenderer, x int, y int, ks keysig.KeySignature) (int, int)
 	SetRhythmNotation(noteRenderer *entity.NoteRenderer, note musicxml.Note, numberedNote int)
 	RenderBezier(set []SlurBezier, canv canvas.Canvas)
 	RenderSlurTies(ctx context.Context, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, maxXPosition float64)

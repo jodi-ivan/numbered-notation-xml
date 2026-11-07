@@ -95,7 +95,17 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
+	gregorianStr := r.FormValue("gregorian")
+	gregorian := true
+	if gregorianStr != "" {
+		b, err := strconv.ParseBool(gregorianStr)
+		if err == nil {
+			gregorian = b
+		}
+	}
+
 	prm := &params.Param{
+		Gregorian:       gregorian,
 		Verse:           verseNo,
 		SingleVerseMode: focusMode,
 	}

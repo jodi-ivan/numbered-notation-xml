@@ -20,6 +20,7 @@ type SearchAdapterHTTP struct {
 }
 
 func (sah *SearchAdapterHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	ctx := r.Context()
 	term := r.FormValue("q")
 	if term == "" {
 		log.Println("[SearchAdapterHTTP] invalid query q ")
@@ -28,7 +29,7 @@ func (sah *SearchAdapterHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	hits, err := sah.Usecase.Lookup(r.Context(), term)
+	hits, err := sah.Usecase.Lookup(ctx, term)
 	if err != nil {
 		log.Printf("[SearchAdapterHTTP] failed to lookup, err: ", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -36,7 +37,9 @@ func (sah *SearchAdapterHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	raw, _ := json.Marshal(hits)
+	highlights := sah.Usecase.Highlight(ctx, hits)
+
+	raw, _ := json.Marshal(highlights)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

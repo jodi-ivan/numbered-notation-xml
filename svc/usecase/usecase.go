@@ -7,14 +7,15 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
-	"github.com/jodi-ivan/numbered-notation-xml/utils/bleve"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/search"
 )
 
 type Usecase interface {
 	RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum int, variant ...string) error
 	Lookup(ctx context.Context, term string) ([]entity.SearchMatch, error)
+	Highlight(ctx context.Context, hits []entity.SearchMatch) []HighlightSearchResult
 }
 
 type interactor struct {
@@ -22,11 +23,10 @@ type interactor struct {
 	repo     repository.Repository
 	renderer renderer.Renderer
 
-	// TODO: move the tech to repository
-	searchProvider bleve.Provider
+	searchProvider search.Provider
 }
 
-func New(config config.Config, repo repository.Repository, renderer renderer.Renderer, searchProvider bleve.Provider) Usecase {
+func New(config config.Config, repo repository.Repository, renderer renderer.Renderer, searchProvider search.Provider) Usecase {
 	return &interactor{
 		config:   config,
 		repo:     repo,
@@ -37,8 +37,7 @@ func New(config config.Config, repo repository.Repository, renderer renderer.Ren
 }
 
 func (i *interactor) Lookup(ctx context.Context, term string) ([]entity.SearchMatch, error) {
-	// TODO: move the tech to repository
-	query := bleve.BuildQuery(ctx, term)
+	query := search.BuildQuery(ctx, term)
 	hits, err := i.searchProvider.Search(ctx, query)
 	if err != nil {
 		return nil, err
@@ -47,10 +46,10 @@ func (i *interactor) Lookup(ctx context.Context, term string) ([]entity.SearchMa
 	result := []entity.SearchMatch{}
 
 	for _, hit := range hits.Hits {
-		result = append(result, bleve.NewSearchMatch(hit))
+		result = append(result, search.NewSearchMatch(hit))
 	}
 
-	// TODO: ranking here.
+	i.rankSearchResult(ctx, result)
 	return result, nil
 
 }

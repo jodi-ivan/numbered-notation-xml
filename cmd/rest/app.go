@@ -13,8 +13,8 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
-	search "github.com/jodi-ivan/numbered-notation-xml/utils/bleve"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/search"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/storage"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/webserver"
 )

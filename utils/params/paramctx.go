@@ -63,7 +63,6 @@ func GetParamFromContext(ctx context.Context) (*Param, bool) {
 	return param, true
 
 }
-
 func GetGregorianToggle(ctx context.Context) bool {
 	p, ok := GetParamFromContext(ctx)
 	/*
@@ -87,4 +86,13 @@ func GetDeviceInformation(ctx context.Context) *config.DeviceDimensions {
 		return nil
 	}
 	return &dims
+}
+
+func IgnoreNewLine(ctx context.Context) bool {
+	p, ok := GetParamFromContext(ctx)
+	if !ok || p.Render == nil {
+		return false
+	}
+
+	return true
 }

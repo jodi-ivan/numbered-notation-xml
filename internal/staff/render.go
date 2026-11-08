@@ -21,7 +21,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 
 	staffes := si.SplitLines(ctx, part)
 
-	if params.GetDeviceInformation(ctx) != nil {
+	if params.IgnoreNewLine(ctx) {
 		// remove the classical (the book marking) new line breaks to one line.
 		//  hopefuly we found which measure to break later on
 		flattenedStaffes := make([]musicxml.Measure, 0)

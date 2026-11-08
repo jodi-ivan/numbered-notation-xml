@@ -47,7 +47,7 @@ func NewRenderer() Renderer {
 }
 
 func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXML, canv canvas.Canvas, metadata *entity.HymnMetaData) {
-  canvHeight := 3000
+	canvHeight := 3000
 	ns := []string{}
 	param, _ := params.GetParamFromContext(ctx)
 	if param.Render != nil && param.Render.WhiteBackground {

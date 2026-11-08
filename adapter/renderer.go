@@ -104,10 +104,40 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 		}
 	}
 
+	deviceTypeStr := r.FormValue("device_type")
+	deviceType := 0
+	if deviceTypeStr != "" {
+		dt, err := strconv.Atoi(deviceTypeStr)
+		if err != nil {
+			log.Printf("[ServeHTTP] invalid device_type: %v", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Invalid URL"))
+			return
+		}
+		deviceType = dt
+	}
+
+	deviceTypeOrientationStr := r.FormValue("device_type_orientation")
+	deviceTypeOrientation := params.OrientationPortrait
+	if deviceTypeOrientationStr != "" {
+		dt, err := strconv.Atoi(deviceTypeOrientationStr)
+		if err != nil {
+			log.Printf("[ServeHTTP] invalid device_type_orientation: %v", err.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Invalid URL"))
+			return
+		}
+		deviceTypeOrientation = params.Orientation(dt)
+	}
+
 	prm := &params.Param{
 		Gregorian:       gregorian,
 		Verse:           verseNo,
 		SingleVerseMode: focusMode,
+		Render: &params.RenderParam{
+			DeviceType:  deviceType,
+			Orientation: deviceTypeOrientation,
+		},
 	}
 
 	err = rh.usecase.RenderHymn(params.NewParamContext(r.Context(), prm), canv, num, variant...)

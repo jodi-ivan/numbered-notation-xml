@@ -3,6 +3,8 @@ package params
 import (
 	"context"
 	"time"
+
+	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
 )
 
 const PARAM_CTX_KEY = "param"
@@ -73,4 +75,16 @@ func GetGregorianToggle(ctx context.Context) bool {
 
 	*/
 	return !ok || p.Gregorian
+}
+
+func GetDeviceInformation(ctx context.Context) *config.DeviceDimensions {
+	p, ok := GetParamFromContext(ctx)
+	if !ok || p.Render == nil {
+		return nil
+	}
+	dims, found := config.DeviceTypeMap[p.Render.DeviceType]
+	if !found {
+		return nil
+	}
+	return &dims
 }

@@ -91,7 +91,11 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		canvHeight = relativeY + 50
 		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
 	}
-	canv.Start(constant.LAYOUT_WIDTH, canvHeight)
+	marginRight := params.GetMaxPositionX(ctx)
+	if marginRight == 0 {
+		marginRight = constant.LAYOUT_WIDTH
+	}
+	canv.Start(marginRight, canvHeight)
 	canv.End()
 
 	param, ok := params.GetParamFromContext(ctx)

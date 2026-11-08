@@ -137,7 +137,18 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	}
 	lastMeasure := noteRenderer[len(noteRenderer)-1]
 	lastNote := lastMeasure[len(lastMeasure)-1]
-	added, lastPos := rsa.getAddedSpace(lastNote, &rightAlignOffset, totalNotes)
+
+	maxNoteWidth := lastNote.Width
+	if p, ok := params.GetParamFromContext(ctx); ok && p.Render != nil {
+		maxNoteWidth = p.Render.MaxNoteWidth
+	}
+	added, lastPos := 0.0, lastNote.PositionX+maxNoteWidth
+	staffMarginRight := lastPos
+	if !params.IgnoreNewLine(ctx) {
+		added, lastPos = rsa.getAddedSpace(lastNote, &rightAlignOffset, totalNotes)
+		staffMarginRight = constant.LAYOUT_WIDTH
+	}
+	params.SetMaxPositionX(ctx, lastPos)
 
 	canv.Group("class='staff'")
 
@@ -166,15 +177,16 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	margin := gregorian.VMargin{} // empty margin
 
+	stafflines := lines.NewLineStaffWithLines(ts, ks, y)
+	stafflines.SetMarginRight(staffMarginRight)
+
 	isGregorian := params.GetGregorianToggle(ctx)
 	if isGregorian {
 		canv.Group(`class="gregorian"`, "style='font-family:mozart11'")
-		margin = rsa.Gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, ks, ts)
+		margin = rsa.Gregorian.RenderStaffLine(ctx, staffPos, y, canv, flatten, stafflines)
 		rsa.Toping.RenderRepeatMeasure(ctx, y+10, canv, flatten, true) // for the gregorian
 		canv.Gend()
 	}
-
-	stafflines := lines.NewLineStaffWithLines(ts, ks, y)
 
 	yPos := y + additionalMarginBottom
 	if isGregorian {

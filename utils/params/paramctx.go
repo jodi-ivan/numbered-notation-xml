@@ -66,11 +66,11 @@ func GetParamFromContext(ctx context.Context) (*Param, bool) {
 func GetGregorianToggle(ctx context.Context) bool {
 	p, ok := GetParamFromContext(ctx)
 	/*
-	 |  ok  |   greogrian  |  want  |
-	 +------+--------------+--------+
-	 |   F  |   ? (any)    |   T    |
-	 |   T  |      T       |   T    |
-	 |   T  |      F       |   F    |
+		|  ok  |   greogrian  |  want  |
+		+------+--------------+--------+
+		|   F  |   ? (any)    |   T    |
+		|   T  |      T       |   T    |
+		|   T  |      F       |   F    |
 
 	*/
 	return !ok || p.Gregorian
@@ -98,6 +98,24 @@ func SetMaxNoteWith(ctx context.Context, value int) {
 	if value > p.Render.MaxNoteWidth {
 		p.Render.MaxNoteWidth = value
 	}
+}
+
+// GetMaxPositionX retrieves the maximum note position X from the context.
+func GetMaxPositionX(ctx context.Context) int {
+	p, ok := GetParamFromContext(ctx)
+	if !ok || p.Render == nil {
+		return 0
+	}
+	return p.Render.MaxPositionX
+}
+
+// SetMaxPositionX sets the maximum note position X for the RenderParam in the context.
+func SetMaxPositionX(ctx context.Context, value int) {
+	p, ok := GetParamFromContext(ctx)
+	if !ok || p.Render == nil {
+		return
+	}
+	p.Render.MaxPositionX = value
 }
 
 func IgnoreNewLine(ctx context.Context) bool {

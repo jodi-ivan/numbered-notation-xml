@@ -7,16 +7,14 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
 type Gregorian interface {
-	RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) VMargin
+	RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, lineStaff lines.LineStaff) VMargin
 }
 
 func NewGregorian() Gregorian {
@@ -25,10 +23,9 @@ func NewGregorian() Gregorian {
 
 type gregorianInteractor struct{}
 
-func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature) VMargin {
+func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, lineStaff lines.LineStaff) VMargin {
 
-	lineStaff := lines.NewLineStaff(timeSignature, keySignature)
-	lineStaff.Render(canv, y, notes[0].MeasureNumber, staffPos == 0)
+	lineStaff.Render(ctx, canv, y, notes[0].MeasureNumber, staffPos == 0)
 	margin := VMargin{
 		Top:           entity.NewCoordinate(0, float64(lineStaff.GetTopLine())),
 		Bottom:        entity.NewCoordinate(0, float64(lineStaff.GetBottomLine())),
@@ -92,7 +89,7 @@ func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y 
 
 		var noteMargin VMargin
 		pairs := []rhythm.SlurTieGroup{}
-		noteMargin, groupBeam, pairs = RenderNote(ctx, canv, lineStaff, groupBeam, groupBeamSlurTies, i, notes, timeSignature, keySignature) // mock this
+		noteMargin, groupBeam, pairs = RenderNote(ctx, canv, lineStaff, groupBeam, groupBeamSlurTies, i, notes, lineStaff.GetTimeSig(), lineStaff.GetKeysig()) // mock this
 		margin.Merge(noteMargin)
 
 		groupBeamSlurTies = append(groupBeamSlurTies, pairs...)

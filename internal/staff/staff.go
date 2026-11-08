@@ -158,7 +158,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				renderer.Fermata = note.Notations.Fermata
 			}
 
-			staffInfo.Multiline = staffInfo.Multiline || renderer.IsNewLine
+			staffInfo.Multiline = params.GetDeviceInformation(ctx) == nil && (staffInfo.Multiline || renderer.IsNewLine)
 
 			// text above the measure
 			isLastNote := notePos == len(measure.Notes)-1 && mi == len(measures)-1

@@ -21,6 +21,20 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 
 	staffes := si.SplitLines(ctx, part)
 
+	if params.GetDeviceInformation(ctx) != nil {
+		// remove the classical (the book marking) new line breaks to one line.
+		//  hopefuly we found which measure to break later on
+		flattenedStaffes := make([]musicxml.Measure, 0)
+		for _, staff := range staffes {
+			for _, note := range staff {
+				flattenedStaffes = append(flattenedStaffes, note)
+			}
+		}
+
+		staffes = [][]musicxml.Measure{flattenedStaffes}
+
+	}
+
 	staffLines := lines.NewLineStaff(timeSignature, keySignature)
 
 	isGregorian := params.GetGregorianToggle(ctx)

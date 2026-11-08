@@ -327,7 +327,15 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		if len(alignMeasures) > 0 {
-			align = append(align, alignMeasures)
+			if params.IgnoreNewLine(ctx) {
+				if len(align) == 0 {
+					align = [][]*entity.NoteRenderer{{}}
+				}
+				align[0] = append(align[0], alignMeasures...)
+
+			} else {
+				align = append(align, alignMeasures)
+			}
 		}
 
 	}

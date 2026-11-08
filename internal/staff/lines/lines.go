@@ -23,25 +23,22 @@ type LineStaff struct {
 
 func NewMiddleNonFirstLineStaff(ks keysig.KeySignature) LineStaff {
 	return LineStaff{
-		Keysig:      ks,
-		MarginRight: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8,
+		Keysig: ks,
 	}
 }
 
 func NewLineStaff(ts timesig.TimeSignature, ks keysig.KeySignature) LineStaff {
 	return LineStaff{
-		Keysig:      ks,
-		TimeSig:     ts,
-		MarginRight: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8,
+		Keysig:  ks,
+		TimeSig: ts,
 	}
 }
 
 func NewLineStaffWithLines(ts timesig.TimeSignature, ks keysig.KeySignature, y int) LineStaff {
 
 	result := LineStaff{
-		Keysig:      ks,
-		TimeSig:     ts,
-		MarginRight: constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH + 8,
+		Keysig:  ks,
+		TimeSig: ts,
 	}
 	for i := 0; i <= 4; i++ {
 		result.Lines[i] = y
@@ -113,7 +110,10 @@ func (ls *LineStaff) GetYPosKeySig(pitch string, isFlat bool) float64 {
 	return pos[pitch]
 }
 
-func (ls *LineStaff) Render(canv canvas.Canvas, y int, measureNo int, inclTimesig bool) {
+func (ls *LineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, measureNo int, inclTimesig bool) {
+	if ls.MarginRight == 0 {
+		ls.MarginRight = constant.LAYOUT_WIDTH
+	}
 	ls.MeasureStart = measureNo
 	canv.Group(`class="staff-line"`)
 	for i := 0; i <= 4; i++ {
@@ -209,6 +209,10 @@ func (ls *LineStaff) GetLeftIndent(measure ...int) int {
 	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith + offset
 }
 
+func (ls *LineStaff) SetMarginRight(mr int) {
+	ls.MarginRight = mr - constant.LAYOUT_INDENT_LENGTH + ACCIDENTAL_KEY_SIGNATURE_WIDTH
+}
+
 func (ls *LineStaff) GetMarginRight() int {
 	return ls.MarginRight
 }
@@ -217,4 +221,12 @@ func (ls *LineStaff) GetLeftIndentWithTimeSignature() int {
 	key := ls.Keysig.GetKeyOnMeasure(context.Background(), 1)
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
 	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(ls.TimeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(ls.TimeSig.UniqueSign)-1)) + keySigWith)
+}
+
+func (ls *LineStaff) GetKeysig() keysig.KeySignature {
+	return ls.Keysig
+}
+
+func (ls *LineStaff) GetTimeSig() timesig.TimeSignature {
+	return ls.TimeSig
 }

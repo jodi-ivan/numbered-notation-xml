@@ -12,4 +12,5 @@ type RenderParam struct {
 	DeviceType      int
 	Orientation     Orientation
 	MaxNoteWidth    int
+	MaxPositionX    int
 }

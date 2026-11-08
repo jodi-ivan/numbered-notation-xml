@@ -1,8 +1,11 @@
 package musicxml
 
 import (
+	"context"
 	"log"
 	"strings"
+
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 type RepeatInfoType string
@@ -42,7 +45,7 @@ type Measure struct {
 	RepeatInfo       *RepeatInfo
 }
 
-func (m *Measure) Build() error {
+func (m *Measure) Build(ctx context.Context) error {
 	m.NewLineIndex = map[int]bool{}
 	var measureText []MeasureText
 	foundDirectionType := 0
@@ -79,7 +82,9 @@ func (m *Measure) Build() error {
 			initalDirection := d.DirectionType[0]
 
 			if initalDirection.Word.Value == "__layout=br" {
-				m.NewLineIndex[i-foundDirectionType] = true
+				if !params.IgnoreNewLine(ctx) {
+					m.NewLineIndex[i-foundDirectionType] = true
+				}
 				foundDirectionType++
 			} else if initalDirection.Word.Value == "D.C. al Fine" {
 				continue

@@ -73,7 +73,7 @@ func GetOriginalTitle(metadata *repository.HymnMetadata) []string {
 	return result
 }
 
-func BuildContent(repo repository.Repository, metadata *repository.HymnMetadata, verse int) string {
+func BuildContent(ctx context.Context, repo repository.Repository, metadata *repository.HymnMetadata, verse int) string {
 	if verse == 1 {
 		path := fmt.Sprintf("files/scores/musicxml/kj-%03d.musicxml", metadata.Number)
 		if metadata.Variant.String != "" {
@@ -88,7 +88,7 @@ func BuildContent(repo repository.Repository, metadata *repository.HymnMetadata,
 		lMapper := map[int]string{}
 		prevTotalLyric := -1
 		for _, measure := range xmls.Part.Measures {
-			measure.Build()
+			measure.Build(ctx)
 			for _, note := range measure.Notes {
 				if len(note.Lyric) == 0 {
 					continue
@@ -199,7 +199,7 @@ func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Docu
 
 			cats[curr.H1] = append(cats[curr.H1], curr)
 		}
-		verses[verse-1] = VerseDoc{No: verse, Content: BuildContent(repo, metadata, verse)}
+		verses[verse-1] = VerseDoc{No: verse, Content: BuildContent(context.Background(), repo, metadata, verse)}
 	}
 
 	h2s := map[string]bool{} // Tracks unique H2 values

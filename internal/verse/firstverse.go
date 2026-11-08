@@ -1,6 +1,7 @@
 package verse
 
 import (
+	"context"
 	"unicode"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -29,14 +30,14 @@ func GetLineSyllableBound(metadata *entity.HymnMetaData) []int {
 	return syllLine
 }
 
-func BuildContent(music musicxml.MusicXML, metadata *entity.HymnMetaData) [][]entity.LyricWordVerse {
+func BuildContent(ctx context.Context, music musicxml.MusicXML, metadata *entity.HymnMetaData) [][]entity.LyricWordVerse {
 
 	lMapper := map[int][]entity.LyricWordVerse{}
 
 	prevTotalLyric := -1
 	wordVerses := map[int]entity.LyricWordVerse{}
 	for _, measure := range music.Part.Measures {
-		measure.Build()
+		measure.Build(ctx)
 		for _, note := range measure.Notes {
 			if len(note.Lyric) == 0 {
 				continue

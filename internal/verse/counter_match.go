@@ -197,7 +197,7 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 				Verse:    lyricVerse,
 			})
 
-			li.SetLyricRenderer(note, appendedLyric)
+			li.SetLyricRenderer(ctx, note, appendedLyric)
 			continue
 		}
 		load1stVerse := false
@@ -216,7 +216,7 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 					al.Verse = 2
 					appendedLyric[i] = al
 				}
-				li.SetLyricRenderer(note, appendedLyric)
+				li.SetLyricRenderer(ctx, note, appendedLyric)
 				continue
 			}
 		}
@@ -304,7 +304,7 @@ func (m *matcher) LoadVerse(ctx context.Context, targetVerse int, clear bool, no
 
 		}
 		appendedLyric = append(appendedLyric, newLyric...)
-		info := li.SetLyricRenderer(note, appendedLyric) // the one that calculate the margin, padding and width of the notes.
+		info := li.SetLyricRenderer(ctx, note, appendedLyric) // the one that calculate the margin, padding and width of the notes.
 		if marginBottom < info.MarginBottom {
 			marginBottom = info.MarginBottom
 		}

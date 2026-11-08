@@ -88,6 +88,18 @@ func GetDeviceInformation(ctx context.Context) *config.DeviceDimensions {
 	return &dims
 }
 
+// SetMaxNoteWith sets the maximum note width for the RenderParam.
+func SetMaxNoteWith(ctx context.Context, value int) {
+	p, ok := GetParamFromContext(ctx)
+	if !ok || p.Render == nil {
+		return
+	}
+
+	if value > p.Render.MaxNoteWidth {
+		p.Render.MaxNoteWidth = value
+	}
+}
+
 func IgnoreNewLine(ctx context.Context) bool {
 	p, ok := GetParamFromContext(ctx)
 	if !ok || p.Render == nil {

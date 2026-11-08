@@ -179,7 +179,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			si.Rhythm.SetRhythmNotation(renderer, note, n)
 
 			// lyric
-			verseInfo := si.Lyric.SetLyricRenderer(renderer, note.Lyric)
+			verseInfo := si.Lyric.SetLyricRenderer(ctx, renderer, note.Lyric)
 			if staffInfo.MarginBottom < verseInfo.MarginBottom {
 				staffInfo.MarginBottom = verseInfo.MarginBottom
 			}

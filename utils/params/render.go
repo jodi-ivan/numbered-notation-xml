@@ -11,4 +11,5 @@ type RenderParam struct {
 	WhiteBackground bool
 	DeviceType      int
 	Orientation     Orientation
+	MaxNoteWidth    int
 }

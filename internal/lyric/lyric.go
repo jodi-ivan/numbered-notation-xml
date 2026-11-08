@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 var (
@@ -32,7 +33,7 @@ func init() {
 
 type Lyric interface {
 	CalculateLyricWidth(string) float64
-	SetLyricRenderer(noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo
+	SetLyricRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []HyphenPosition)
 	RenderHypen(ctx context.Context, y, offsetCenter int, canv canvas.Canvas, measure []*entity.NoteRenderer)
 	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate, sty ...string)
@@ -49,7 +50,7 @@ func NewLyric() Lyric {
 }
 
 // SetLyricRenderer prepares the renderer for lyrics, also calculate space underneath the note and after the note
-func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo {
+func (li *lyricInteractor) SetLyricRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo {
 	// lyric
 	var lyricWidth, noteWidth, marginBottom int
 	countedLyric := 0
@@ -115,6 +116,7 @@ func (li *lyricInteractor) SetLyricRenderer(noteRenderer *entity.NoteRenderer, r
 	}
 	noteRenderer.Width += constant.LOWERCASE_LENGTH / 2 // lyric padding
 
+	params.SetMaxNoteWith(ctx, noteRenderer.Width)
 	return VerseInfo{
 		MarginBottom: marginBottom,
 		HasLyric:     len(rawLyric) > 0,

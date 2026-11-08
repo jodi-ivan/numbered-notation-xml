@@ -3,6 +3,7 @@ package renderer
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
@@ -92,6 +93,12 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 	}
 	canv.Start(constant.LAYOUT_WIDTH, canvHeight)
 	canv.End()
+
+	param, ok := params.GetParamFromContext(ctx)
+	if ok && param.Render != nil {
+		log.Println("Max note length is ", param.Render.MaxNoteWidth)
+
+	}
 
 }
 

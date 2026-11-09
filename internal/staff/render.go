@@ -44,7 +44,10 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	}
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
-		SyllableOffset:   map[int]int{},
+		SyllableTracker: entity.SyllableCounterTracker{
+			SyllableOffset: map[int]int{},
+			RepeatInfo:     []*musicxml.RepeatInfo{},
+		},
 	}
 	oldMarginButtom := 0
 	for i, st := range staffes {
@@ -52,15 +55,15 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			TimeSig:       timeSignature,
 			KeySig:        keySignature,
 			PrevNotes:     info.NextLineRenderer,
-			SyllableCount: info.SyllableCount,
+			SyllableCount: info.SyllableTracker.SyllableCount,
 			IndexStart:    info.EndIndex,
-			ReffAtStart:   info.StartRenderOtherNotes,
-			RepeatInfo:    info.RepeatInfo,
+			ReffAtStart:   info.SyllableTracker.StartRenderOtherNotes,
+			RepeatInfo:    info.SyllableTracker.RepeatInfo,
 
-			SyllableOffset: info.SyllableOffset,
+			SyllableOffset: info.SyllableTracker.SyllableOffset,
 		}
 		info = si.RenderStaff(ctx, canv, x, relativeY, i, metadata, st, data)
-		info.RepeatInfo = append(data.RepeatInfo, info.RepeatInfo...)
+		info.SyllableTracker.RepeatInfo = append(data.RepeatInfo, info.SyllableTracker.RepeatInfo...)
 		relativeY = relativeY + 70 + info.MarginBottom
 		if isGregorian {
 			relativeY += STAFF_LINE_DISTANCE
@@ -95,12 +98,12 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			TimeSig:       timeSignature,
 			KeySig:        keySignature,
 			PrevNotes:     info.NextLineRenderer,
-			SyllableCount: info.SyllableCount,
+			SyllableCount: info.SyllableTracker.SyllableCount,
 			IndexStart:    info.EndIndex,
-			ReffAtStart:   info.StartRenderOtherNotes,
-			RepeatInfo:    info.RepeatInfo,
+			ReffAtStart:   info.SyllableTracker.StartRenderOtherNotes,
+			RepeatInfo:    info.SyllableTracker.RepeatInfo,
 
-			SyllableOffset: info.SyllableOffset,
+			SyllableOffset: info.SyllableTracker.SyllableOffset,
 		}
 		x = constant.LAYOUT_INDENT_LENGTH
 		if isGregorian {

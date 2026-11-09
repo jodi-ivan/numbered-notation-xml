@@ -14,11 +14,9 @@ type StaffInfo struct {
 	NextLineRenderer []*entity.NoteRenderer
 	EndIndex         int // for staff level numbering index
 
-	StartRenderOtherNotes bool
-	ForceNewLine          bool
-	SyllableCount         int
-	RepeatInfo            []*musicxml.RepeatInfo
-	SyllableOffset        map[int]int
+	ForceNewLine bool
+
+	SyllableTracker entity.SyllableCounterTracker
 }
 
 type StaffData struct {

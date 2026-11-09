@@ -36,7 +36,7 @@ type rendererInteractor struct {
 
 func NewRenderer() Renderer {
 	l := lyric.NewLyric()
-	f := footnote.New(l)
+	f := footnote.New(l.CalculateLyricWidth)
 	return &rendererInteractor{
 		Lyric:    l,
 		Staff:    staff.NewStaff(),

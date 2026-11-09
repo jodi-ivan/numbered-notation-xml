@@ -35,7 +35,7 @@ func (fi *footnoteInteractor) AssignFootnotesMarker(canv canvas.Canvas, pos enti
 		return
 	}
 
-	xPos := cursor.Leftmargin + int(fi.li.CalculateLyricWidth(cursor.LineText)+pos.X)
+	xPos := cursor.Leftmargin + int(fi.TextWidthCalculator(cursor.LineText)+pos.X)
 	styleFontSize := BASE_FOOTNOTES_STYLE
 	switch verseStyle {
 	case VerseNoteStyleAlignRight:
@@ -44,7 +44,7 @@ func (fi *footnoteInteractor) AssignFootnotesMarker(canv canvas.Canvas, pos enti
 		xPos = int(pos.X) + cursor.Leftmargin + approxLineLength
 	case VerseNoteStyleHeadonly, VerseNoteStyleDirectAppendText:
 		styleFontSize = BASE_VERSE_STYLE
-		xPos -= int(fi.li.CalculateLyricWidth(" ")) // lyric on db is just white spaces
+		xPos -= int(fi.TextWidthCalculator(" ")) // lyric on db is just white spaces
 	}
 	canv.Group(CLASSNAME_GROUP, fmt.Sprintf(STYLE_VERSE_FOOTNOTES_GROUP_CUSTOM, styleFontSize))
 	canv.Text(xPos, int(pos.Y), currentLine.FootnoteMarker.String)

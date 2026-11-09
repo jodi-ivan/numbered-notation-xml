@@ -117,11 +117,11 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 			return
 		}
 		deviceType = dt
-		deviceTypeOrientationStr := r.FormValue("dt_orientation")
+		deviceTypeOrientationStr := r.FormValue("orientation")
 		if deviceTypeOrientationStr != "" {
 			dt, err := strconv.Atoi(deviceTypeOrientationStr)
 			if err != nil {
-				log.Printf("[ServeHTTP] invalid dt_orientation: %v", err.Error())
+				log.Printf("[ServeHTTP] invalid orientation: %v", err.Error())
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte("Invalid URL"))
 				return

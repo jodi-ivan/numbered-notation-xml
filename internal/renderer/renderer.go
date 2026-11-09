@@ -91,17 +91,27 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		canvHeight = relativeY + 50
 		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
 	}
-	marginRight := params.GetMaxPositionX(ctx)
-	if marginRight == 0 {
-		marginRight = constant.LAYOUT_WIDTH
+	// physical book layout
+	marginRight := constant.LAYOUT_WIDTH
+
+	if p, ok := params.GetParamFromContext(ctx); ok && p.Render != nil {
+		// one line
+		if p.Render.DeviceType == 0 {
+			marginRight = params.GetMaxPositionX(ctx)
+		} else {
+			marginRight, _ = params.GetDeviceDimensions(ctx)
+		}
+
+		marginRight += constant.LAYOUT_INDENT_LENGTH
 	}
+
+	// TODO: 2nd pass for the resize the min notes as the max note length
 	canv.Start(marginRight, canvHeight)
 	canv.End()
 
 	param, ok := params.GetParamFromContext(ctx)
 	if ok && param.Render != nil {
 		log.Println("Max note length is ", param.Render.MaxNoteWidth)
-
 	}
 
 }

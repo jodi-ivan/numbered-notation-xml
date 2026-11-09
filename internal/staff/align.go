@@ -145,8 +145,11 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	added, lastPos := 0.0, lastNote.PositionX+maxNoteWidth
 	staffMarginRight := lastPos
 	if di := params.GetDeviceInformation(ctx); di != nil && params.IgnoreNewLine(ctx) {
-		lastPos, _ = params.GetDeviceDimensions(ctx)
-		staffMarginRight = lastPos
+		dDimension, _ := params.GetDeviceDimensions(ctx)
+		if dDimension != 0 {
+			lastPos = dDimension
+			staffMarginRight = lastPos
+		}
 
 		added, lastPos = rsa.getAddedSpace(lastPos, lastNote, &rightAlignOffset, totalNotes)
 	} else {

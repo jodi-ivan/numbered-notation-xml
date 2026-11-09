@@ -2,7 +2,8 @@ package note
 
 import (
 	"context"
-	"uuid"
+
+	"github.com/google/uuid"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"

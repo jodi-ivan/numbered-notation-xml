@@ -4,17 +4,14 @@ import (
 	"context"
 	"math"
 
-	"github.com/google/uuid"
-
-	"github.com/jodi-ivan/numbered-notation-xml/diagnostics"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/moveabledo"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	note_pkg "github.com/jodi-ivan/numbered-notation-xml/internal/note"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
@@ -85,8 +82,6 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		notes := []*entity.NoteRenderer{}
 
 		currTimesig := data.TimeSig.GetTimesignatureOnMeasure(ctx, measure.Number)
-		currKeySig := data.KeySig.GetKeyOnMeasure(ctx, measure.Number)
-
 		alignMeasures := []*entity.NoteRenderer{}
 
 		// barline
@@ -110,15 +105,15 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				continue
 			}
 
-			n, octave, strikethrough := moveabledo.GetNumberedNotation(currKeySig, note)
-			noteLength := data.TimeSig.GetNoteLength(ctx, measure.Number, note)
+			renderer := note_pkg.ConvertToRenderer(ctx, x, y, notePos, pos, measure, data.KeySig, data.TimeSig)
+
+			noteLength := renderer.NoteValue
 
 			if rhythm.HasTies(note) && (notePos+1 < len(measure.Notes)) && currTimesig.IsCommonTime() {
 				if mergedLength, mergedNote := rhythm.MergeNotes(ctx, note, measure.Notes[notePos+1], currTimesig); mergedLength > noteLength && mergedLength < 3 {
 					note, noteLength = mergedNote, mergedLength
 					skipNote[notePos+1] = true
 				}
-
 			}
 
 			// additionalRenderer is all the new notes that needs represented in numbered when the original musicxml doesnot
@@ -132,31 +127,10 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				}
 				additionalNotes = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
 			}
-			renderer := &entity.NoteRenderer{
-				UUID:      uuid.New().String(),
-				PositionX: x, PositionY: int(y),
-				Note: n, NoteLength: note.Type, Octave: octave,
-				Strikethrough: strikethrough, NoteValue: noteLength,
-				IsRest: (note.Rest != nil),
 
-				Beam:          map[int]entity.Beam{},
-				IsNewLine:     measure.NewLineIndex[notePos],
-				MeasureNumber: measure.Number,
-
-				AbsoluteNote: note.Pitch.Step, AbsoluteOctave: note.Pitch.Octave,
-				AbsoluteAccidental: note.Accidental,
-				TimeModifications:  note.TimeModification,
-
-				LeadingHeader: measure.PrefixHeader[notePos],
-				IndexPosition: pos + note.IndexPosition + data.IndexStart,
-			}
-
-			// log.Println(measure.Number, pos+note.IndexPosition+data.IndexStart, data.IndexStart, pos, note.IndexPosition)
+			// syllable counter
+			renderer.IndexPosition = pos + note.IndexPosition + data.IndexStart
 			staffInfo.EndIndex = pos + note.IndexPosition + data.IndexStart
-
-			if note.Notations != nil && note.Notations.Fermata != nil {
-				renderer.Fermata = note.Notations.Fermata
-			}
 
 			staffInfo.Multiline = !params.IgnoreNewLine(ctx) && (staffInfo.Multiline || renderer.IsNewLine)
 
@@ -169,14 +143,14 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				isRefrein := si.StaffText.NoteHasText(renderer.MeasureText, text.DEFAULT_TEXT_REFREIN)
 
 				if hasMeasureText && isRefrein && renderer.MeasureNumber == 1 && notePos == 0 {
-					staffInfo.StartRenderOtherNotes = false
+					staffInfo.SyllableTracker.StartRenderOtherNotes = false
 				}
 
 				refreinStartNote = refreinStartNote || isRefrein
 			}
 
 			si.Toping.SetStaffLineDashRenderer(renderer, measure.DirectionDashes[notePos])
-			si.Rhythm.SetRhythmNotation(renderer, note, n)
+			si.Rhythm.SetRhythmNotation(renderer, note, renderer.Note)
 
 			// lyric
 			verseInfo := si.Lyric.SetLyricRenderer(ctx, renderer, note.Lyric)
@@ -186,14 +160,14 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 
 			if verseInfo.HasLyric {
 				mSyllcount++
-				staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || lyric.HasPrefix(renderer)
+				staffInfo.SyllableTracker.StartRenderOtherNotes = staffInfo.SyllableTracker.StartRenderOtherNotes || lyric.HasPrefix(renderer)
 				if notePos == 0 && mi > 0 && len(measures[mi-1].Notes) > 0 {
 					lastMeasure := measures[mi-1]
 
 					hasFine := si.StaffText.NoteHasText(lastMeasure.Notes[len(lastMeasure.Notes)-1].MeasureText, text.DEFAULT_TEXT_FINE)
 					measureFine := si.StaffText.MeasureHasText(lastMeasure, text.DEFAULT_TEXT_FINE)
 
-					staffInfo.StartRenderOtherNotes = staffInfo.StartRenderOtherNotes || hasFine || measureFine
+					staffInfo.SyllableTracker.StartRenderOtherNotes = staffInfo.SyllableTracker.StartRenderOtherNotes || hasFine || measureFine
 				}
 			}
 
@@ -222,40 +196,28 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		// this is happens on the measure note render level.
-		if (data.ReffAtStart || staffInfo.StartRenderOtherNotes) || (measures[0].Number == 1 && !refreinStartNote) {
-			start := startSyllable
+		lt := verse.SyllableTracker{
+			Matcher:     si.SyllableMatch,
+			MetaData:    metadata,
+			ReffAtStart: data.ReffAtStart,
+		}
 
-			repeatInfo := data.RepeatInfo
-			if measure.RepeatInfo != nil {
-				if staffInfo.RepeatInfo == nil {
-					staffInfo.RepeatInfo = []*musicxml.RepeatInfo{}
-				}
+		noteFine := si.StaffText.NoteHasText(measure.Notes[len(measure.Notes)-1].MeasureText, text.DEFAULT_TEXT_FINE)
+		measureTextFine := si.StaffText.MeasureHasText(measure, MEASURE_TEXT_FINE)
+		fineAtEnd := noteFine || measureTextFine
 
-				staffInfo.RepeatInfo = append(staffInfo.RepeatInfo, measure.RepeatInfo)
-				repeatInfo = staffInfo.RepeatInfo
-			}
+		repeatInfo := data.RepeatInfo
+		if measure.RepeatInfo != nil {
+			staffInfo.SyllableTracker.RepeatInfo = append(staffInfo.SyllableTracker.RepeatInfo, measure.RepeatInfo)
+			repeatInfo = staffInfo.SyllableTracker.RepeatInfo
+		}
 
-			matcher := si.SyllableMatch
-			if p, ok := params.GetParamFromContext(ctx); ok && p.Diagnostic != nil {
-				matcher = diagnostics.GetVerseDiagnostic(matcher)
-			}
-			var marginBottom int
-			staffInfo.SyllableOffset, marginBottom = matcher.LoadOtherVerse(ctx, notes, metadata, start, data.SyllableOffset, repeatInfo)
-			if staffInfo.MarginBottom < marginBottom {
-				staffInfo.MarginBottom = marginBottom
-			}
-			startSyllable += mSyllcount
-			staffInfo.StartRenderOtherNotes = true
-		} else {
-			mSyllcount = 0
-			startSyllable = 0
-			staffInfo.SyllableCount = 0
-
-			noteFine := si.StaffText.NoteHasText(measure.Notes[len(measure.Notes)-1].MeasureText, text.DEFAULT_TEXT_FINE)
-			measureTextFine := si.StaffText.MeasureHasText(measure, MEASURE_TEXT_FINE)
-			if !data.ReffAtStart && (noteFine || measureTextFine) {
-				staffInfo.StartRenderOtherNotes = true
-			}
+		shouldTrackFirsMeasure := (measures[0].Number == 1 && !refreinStartNote) || data.ReffAtStart
+		syllableTracker, _startSyllable, marginBottom := lt.TrackSyllable(ctx, notes, &mSyllcount, startSyllable, data.SyllableOffset, staffInfo.SyllableTracker, shouldTrackFirsMeasure, fineAtEnd, repeatInfo)
+		startSyllable = _startSyllable
+		staffInfo.SyllableTracker = syllableTracker
+		if staffInfo.MarginBottom < marginBottom {
+			staffInfo.MarginBottom = marginBottom
 		}
 
 		// data || staffinfo
@@ -350,7 +312,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 	}
 
 	staffInfo.MarginBottom += si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, y, data.TimeSig, data.KeySig, align)
-	staffInfo.SyllableCount += startSyllable
+	staffInfo.SyllableTracker.SyllableCount += startSyllable
 
 	return
 }

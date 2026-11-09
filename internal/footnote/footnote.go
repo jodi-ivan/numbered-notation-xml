@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
+
+type TextCalc func(txt string) float64
 
 type Footnote interface {
 	AssignFootnotesMarker(canv canvas.Canvas, pos entity.Coordinate, defaultX int, cursor VerseLineCursor, verseFootnote map[int]map[int]repository.VerseFootNotes)
@@ -17,11 +18,11 @@ type Footnote interface {
 }
 
 type footnoteInteractor struct {
-	li lyric.Lyric
+	TextWidthCalculator TextCalc
 }
 
-func New(li lyric.Lyric) Footnote {
+func New(txtCalc TextCalc) Footnote {
 	return &footnoteInteractor{
-		li: li,
+		TextWidthCalculator: txtCalc,
 	}
 }

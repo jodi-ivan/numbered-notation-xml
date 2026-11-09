@@ -27,3 +27,10 @@ type CoordinateWithNoteLength struct {
 	NoteID     string
 	Tuplet     *musicxml.Tuplet
 }
+
+type SyllableCounterTracker struct {
+	RepeatInfo            []*musicxml.RepeatInfo
+	StartRenderOtherNotes bool
+	SyllableCount         int
+	SyllableOffset        map[int]int
+}

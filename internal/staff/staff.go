@@ -128,7 +128,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				additionalNotes = si.Numbered.SplitNote(ctx, noteLength, currTimesig, note.Type, next.Type)
 			}
 
-			// syllable counter
+			renderer.NoteValue = noteLength
 			renderer.IndexPosition = pos + note.IndexPosition + data.IndexStart
 			staffInfo.EndIndex = pos + note.IndexPosition + data.IndexStart
 
@@ -202,9 +202,13 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 			ReffAtStart: data.ReffAtStart,
 		}
 
-		noteFine := si.StaffText.NoteHasText(measure.Notes[len(measure.Notes)-1].MeasureText, text.DEFAULT_TEXT_FINE)
+		fineAtEnd := false
+		if len(measure.Notes) > 0 {
+			noteFine := si.StaffText.NoteHasText(measure.Notes[len(measure.Notes)-1].MeasureText, text.DEFAULT_TEXT_FINE)
+			fineAtEnd = fineAtEnd || noteFine
+		}
 		measureTextFine := si.StaffText.MeasureHasText(measure, MEASURE_TEXT_FINE)
-		fineAtEnd := noteFine || measureTextFine
+		fineAtEnd = fineAtEnd || measureTextFine
 
 		repeatInfo := data.RepeatInfo
 		if measure.RepeatInfo != nil {

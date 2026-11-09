@@ -25,7 +25,7 @@ import (
 )
 
 type Staff interface {
-	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) StaffInfo
+	RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) ([][]*entity.NoteRenderer, StaffInfo)
 	SplitLines(ctx context.Context, part musicxml.Part) [][]musicxml.Measure
 	Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int
 }
@@ -58,7 +58,7 @@ func NewStaff() Staff {
 	}
 }
 
-func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) (staffInfo StaffInfo) {
+func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) (renderers [][]*entity.NoteRenderer, staffInfo StaffInfo) {
 
 	staffInfo.NextLineRenderer = []*entity.NoteRenderer{}
 	linestaff := lines.NewLineStaff(data.TimeSig, data.KeySig)
@@ -315,8 +315,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 	}
 
-	staffInfo.MarginBottom += si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, y, data.TimeSig, data.KeySig, align)
 	staffInfo.SyllableTracker.SyllableCount += startSyllable
+	return align, staffInfo
 
-	return
 }

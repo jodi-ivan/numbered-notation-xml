@@ -80,7 +80,8 @@ func (bi *barlineInteractor) GetRendererRightBarline(measure musicxml.Measure, x
 		MeasureNumber: measure.Number,
 		PositionX:     x,
 		Barline:       &barline,
-		Width:         BARLINE_AFTER_SPACE,
+		Width:         constant.LOWERCASE_LENGTH + BARLINE_AFTER_SPACE,
+
 		// HACK: why there is no width define here?
 	}
 

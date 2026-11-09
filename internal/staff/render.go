@@ -15,6 +15,47 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
+func (si *staffInteractor) RenderWithWrap(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) StaffInfo {
+	notes, staffInfo := si.RenderStaff(ctx, canv, x, y, staffPos, metadata, measures, data)
+
+	di, ok := params.GetDeviceDimensions(ctx)
+	if (ok && di == 0) || !ok {
+		staffInfo.MarginBottom += si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, y, data.TimeSig, data.KeySig, notes)
+		return staffInfo
+	}
+
+	wrapped := Wrap(ctx, x, di, data.KeySig, notes[0])
+
+	baseMargin := staffInfo.MarginBottom
+	currentY := y
+	lastMargin := 0
+
+	for i, line := range wrapped {
+		lineMargin := baseMargin // fresh per line, never accumulated across lines
+
+		if i > 0 {
+			_, prev := ProcessPreviousLines(ctx, wrapped[i-1], data.KeySig, currentY)
+			if prev.MarginBottom > lineMargin {
+				lineMargin = prev.MarginBottom
+			}
+			staffInfo.MarginLeft = prev.MarginLeft
+		}
+
+		lineMargin += si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, currentY, data.TimeSig, data.KeySig, [][]*entity.NoteRenderer{line})
+
+		if i == len(wrapped)-1 {
+			lastMargin = lineMargin // caller will add 70 + this
+		} else {
+			currentY += 70 + lineMargin + STAFF_LINE_DISTANCE
+		}
+	}
+
+	// Caller does: relativeY += 70 + MarginBottom
+	// We want:     total = (currentY - y) + 70 + lastMargin
+	staffInfo.MarginBottom = (currentY - y) + lastMargin
+	return staffInfo
+}
+
 func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part musicxml.Part, keySignature keysig.KeySignature, timeSignature timesig.TimeSignature, metadata *entity.HymnMetaData) int {
 
 	relativeY := constant.TITLE_Y_POS + header.HEADER_OFFSET
@@ -62,7 +103,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 
 			SyllableOffset: info.SyllableTracker.SyllableOffset,
 		}
-		info = si.RenderStaff(ctx, canv, x, relativeY, i, metadata, st, data)
+		info = si.RenderWithWrap(ctx, canv, x, relativeY, i, metadata, st, data)
 		info.SyllableTracker.RepeatInfo = append(data.RepeatInfo, info.SyllableTracker.RepeatInfo...)
 		relativeY = relativeY + 70 + info.MarginBottom
 		if isGregorian {
@@ -113,7 +154,7 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 		if idx <= 0 {
 			idx = 1
 		}
-		info = si.RenderStaff(ctx, canv, x, relativeY, idx, metadata, nil, data)
+		info = si.RenderWithWrap(ctx, canv, x, relativeY, idx, metadata, nil, data)
 		relativeY += info.MarginBottom + 70
 		if isGregorian {
 			relativeY += STAFF_LINE_DISTANCE

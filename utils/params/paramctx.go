@@ -88,6 +88,24 @@ func GetDeviceInformation(ctx context.Context) *config.DeviceDimensions {
 	return &dims
 }
 
+// GetDeviceDimensions retrieves the device dimensions based on context and provided parameters.
+func GetDeviceDimensions(ctx context.Context) (int, bool) {
+	p, ok := GetParamFromContext(ctx)
+	if !ok || p.Render == nil {
+		return -1, false
+	}
+
+	dims, found := config.DeviceTypeMap[p.Render.DeviceType]
+	if !found {
+		return -1, false
+	}
+
+	if p.Render.Orientation == OrientationPortrait {
+		return dims.PortraitW, true
+	}
+	return dims.LandscapeW, true
+}
+
 // SetMaxNoteWith sets the maximum note width for the RenderParam.
 func SetMaxNoteWith(ctx context.Context, value int) {
 	p, ok := GetParamFromContext(ctx)

@@ -94,11 +94,11 @@ func alignJustify(measure []*entity.NoteRenderer, y int, addedSpace float64, cou
 	}
 }
 
-func (rsa *renderStaffAlign) getAddedSpace(lastNote *entity.NoteRenderer, rightAlignOffset *int, totalNotes int) (float64, int) {
+func (rsa *renderStaffAlign) getAddedSpace(marginRightPos int, lastNote *entity.NoteRenderer, rightAlignOffset *int, totalNotes int) (float64, int) {
 
-	remaining := float64((constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH) - lastNote.PositionX)
+	remaining := float64((marginRightPos - constant.LAYOUT_INDENT_LENGTH) - lastNote.PositionX)
 
-	lastPos := constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH
+	lastPos := marginRightPos - constant.LAYOUT_INDENT_LENGTH
 	lastNote.PositionX = lastPos + 4
 	if lastNote.Barline != nil {
 		remaining -= barline.GetBarlineWidth(lastNote.Barline.BarStyle)
@@ -144,9 +144,15 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	}
 	added, lastPos := 0.0, lastNote.PositionX+maxNoteWidth
 	staffMarginRight := lastPos
-	if !params.IgnoreNewLine(ctx) {
-		added, lastPos = rsa.getAddedSpace(lastNote, &rightAlignOffset, totalNotes)
+	if di := params.GetDeviceInformation(ctx); di != nil && params.IgnoreNewLine(ctx) {
+		lastPos, _ = params.GetDeviceDimensions(ctx)
+		staffMarginRight = lastPos
+
+		added, lastPos = rsa.getAddedSpace(lastPos, lastNote, &rightAlignOffset, totalNotes)
+	} else {
+		added, lastPos = rsa.getAddedSpace(constant.LAYOUT_WIDTH, lastNote, &rightAlignOffset, totalNotes)
 		staffMarginRight = constant.LAYOUT_WIDTH
+
 	}
 	params.SetMaxPositionX(ctx, lastPos)
 

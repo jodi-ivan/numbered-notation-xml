@@ -102,7 +102,6 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 			marginRight, _ = params.GetDeviceDimensions(ctx)
 		}
 
-		marginRight += constant.LAYOUT_INDENT_LENGTH
 	}
 
 	// TODO: 2nd pass for the resize the min notes as the max note length

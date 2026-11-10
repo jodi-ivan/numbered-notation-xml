@@ -86,7 +86,7 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(ctx context.Context, notes
 		if n.IsNewLine {
 			lineStaff := lines.NewMiddleNonFirstLineStaff(ks)
 			if isGregorian {
-				x = lineStaff.GetLeftIndent(n.MeasureNumber)
+				x = lineStaff.GetLeftIndent(n.MeasureNumber + 1)
 			} else {
 				x = constant.LAYOUT_INDENT_LENGTH
 			}

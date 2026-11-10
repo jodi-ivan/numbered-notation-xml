@@ -16,6 +16,7 @@ import (
 )
 
 func (si *staffInteractor) RenderWithWrap(ctx context.Context, canv canvas.Canvas, x, y, staffPos int, metadata *entity.HymnMetaData, measures []musicxml.Measure, data StaffData) StaffInfo {
+	isGregorian := params.GetGregorianToggle(ctx)
 	notes, staffInfo := si.RenderStaff(ctx, canv, x, y, staffPos, metadata, measures, data)
 
 	di, ok := params.GetDeviceDimensions(ctx)
@@ -41,12 +42,15 @@ func (si *staffInteractor) RenderWithWrap(ctx context.Context, canv canvas.Canva
 			staffInfo.MarginLeft = prev.MarginLeft
 		}
 
-		lineMargin += si.RenderAlign.RenderWithAlign(ctx, canv, staffPos, currentY, data.TimeSig, data.KeySig, [][]*entity.NoteRenderer{line})
+		lineMargin += si.RenderAlign.RenderWithAlign(ctx, canv, i, currentY, data.TimeSig, data.KeySig, [][]*entity.NoteRenderer{line})
 
 		if i == len(wrapped)-1 {
 			lastMargin = lineMargin // caller will add 70 + this
 		} else {
-			currentY += 70 + lineMargin + STAFF_LINE_DISTANCE
+			currentY += 70 + lineMargin
+			if isGregorian {
+				currentY += STAFF_LINE_DISTANCE
+			}
 		}
 	}
 

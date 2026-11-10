@@ -37,7 +37,7 @@ func Wrap(ctx context.Context, x, maxPosX int, ks keysig.KeySignature, oneline [
 		current[len(current)-1].IsNewLine = true
 		result = append(result, current)
 		ri := rhythm.New(nil)
-		ri.AdjustMultiDottedRenderer(ctx, current, x, (lineNum-1)*70, ks)
+		x, _ = ri.AdjustMultiDottedRenderer(ctx, current, x, (lineNum-1)*70, ks)
 
 		current = nil
 		posX = 0

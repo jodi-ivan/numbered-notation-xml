@@ -14,6 +14,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 type Header interface {
@@ -66,7 +67,12 @@ func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas,
 		}
 	}
 	titleWidth := hi.Lyric.CalculateLyricWidth(workTitle)
-	titleX := (constant.LAYOUT_WIDTH / 2) - (titleWidth * 0.5)
+	width := constant.LAYOUT_WIDTH
+	if di, ok := params.GetDeviceDimensions(ctx); ok && di != 0 {
+		width = di + constant.LAYOUT_INDENT_LENGTH
+	}
+
+	titleX := (float64(width) / 2) - (titleWidth * 0.5)
 	canv.Text(int(titleX), relativeY, workTitle)
 
 }
@@ -93,7 +99,11 @@ func (hi *headerInteractor) renderSubtitle(ctx context.Context, canv canvas.Canv
 		}
 	}
 	subtitleWidth := (utils.CalculateSecondaryLyricWidth(subtitle) * SUBTITLE_TO_CREDITS_SIZE_RATIO)
-	subtitleX := (constant.LAYOUT_WIDTH / 2) - (subtitleWidth * 0.5)
+	width := constant.LAYOUT_WIDTH
+	if di, ok := params.GetDeviceDimensions(ctx); ok && di != 0 {
+		width = di + constant.LAYOUT_INDENT_LENGTH
+	}
+	subtitleX := (float64(width) / 2) - (subtitleWidth * 0.5)
 	canv.Text(int(subtitleX+num), relativeY+SUBTITLE_Y_POS, subtitle, SUBTITLE_ATTR)
 }
 

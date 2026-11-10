@@ -180,8 +180,12 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 	prm, _ := params.GetParamFromContext(ctx)
 
 	parsedVerse := v.parse(ctx, y, metadata)
+	width := constant.LAYOUT_WIDTH
+	if di, ok := params.GetDeviceDimensions(ctx); ok && di != 0 {
+		width = di
+	}
 
-	defaultX := int(math.Round((constant.LAYOUT_WIDTH / 2) - (parsedVerse.MaxLineWidth / 2)))
+	defaultX := int(math.Round((float64(width) / 2) - (parsedVerse.MaxLineWidth / 2)))
 	x := defaultX
 	if parsedVerse.IsMultiColumn {
 		x = constant.LAYOUT_INDENT_LENGTH * 2
@@ -210,7 +214,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		margin := 0
 		if parsedVerse.IsMultiColumn {
 			if col == 2 {
-				margin = constant.LAYOUT_WIDTH - (constant.LAYOUT_INDENT_LENGTH * 3.5) - int(parsedVerse.MaxRightPos)
+				margin = width - (constant.LAYOUT_INDENT_LENGTH * 3.5) - int(parsedVerse.MaxRightPos)
 				yVerse = parsedVerse.RowPositionY[row]
 				y = yVerse
 			} else if style == VerseRowStyleSingleColumn {
@@ -219,7 +223,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		}
 
 		if parsedVerse.IsMultiColumn && totalVerse > 3 && totalVerse%2 == 1 { // clamp the gap --> col 1 increase margin, col 2 decrease margin
-			if parsedVerse.IsMultiColumn && constant.LAYOUT_WIDTH > parsedVerse.MaxLineWidth*4 {
+			if parsedVerse.IsMultiColumn && float64(width) > parsedVerse.MaxLineWidth*4 {
 				offset = parsedVerse.MaxLineWidth / 2
 			}
 

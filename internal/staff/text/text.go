@@ -122,8 +122,19 @@ func (ti *textInteractor) RenderMeasureText(ctx context.Context, y int, canv can
 				}
 				xPos := note.PositionX
 				if t.TextAlignment == musicxml.TextAlignmentRight {
-					textLength := ti.Lyric.CalculateLyricWidth(t.Text)
-					xPos = constant.LAYOUT_WIDTH - constant.LAYOUT_INDENT_LENGTH - int(textLength)
+					// textLength := ti.Lyric.CalculateLyricWidth(t.Text)
+
+					// Find the position of the last note in the current measure
+					lastNoteInMeasureX := note.PositionX
+
+					for j := notePos + 1; j < len(notes); j++ {
+						lastNoteInMeasureX = notes[j].PositionX
+						if notes[j].MeasureNumber != note.MeasureNumber {
+							break
+						}
+					}
+
+					xPos = lastNoteInMeasureX - constant.LAYOUT_INDENT_LENGTH //- int(textLength)
 				}
 
 				origPos := (len(note.MeasureText) - 1) * TEXT_BASELINE_DISTANCE

@@ -50,6 +50,18 @@ func Wrap(ctx context.Context, x, maxPosX int, ks keysig.KeySignature, oneline [
 			mw += int(n.Width)
 		}
 
+		if mw > maxPosX {
+			for _, n := range measure {
+				w := int(n.Width)
+				if posX+w > maxPosX {
+					flush()
+				}
+				current = append(current, n)
+				posX += w
+			}
+			continue
+		}
+
 		// The measure doesn't fit: move it entirely to a new line.
 		if posX+mw > maxPosX {
 			flush()

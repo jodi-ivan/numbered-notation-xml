@@ -178,6 +178,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 	canv.Group("class='verses'", "style='font-family:Caladea;font-size:16px'")
 
 	prm, _ := params.GetParamFromContext(ctx)
+	forceSingleColumn := false
 
 	parsedVerse := v.parse(ctx, y, metadata)
 	width := constant.LAYOUT_WIDTH
@@ -187,6 +188,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 
 	if parsedVerse.IsMultiColumn && width < int(parsedVerse.MaxLineWidth*2+constant.LAYOUT_INDENT_LENGTH*4) {
 		parsedVerse.IsMultiColumn = false
+		forceSingleColumn = true
 	}
 
 	defaultX := int(math.Round((float64(width) / 2) - (parsedVerse.MaxLineWidth / 2)))
@@ -242,7 +244,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 			}
 		}
 
-		if style == VerseRowStyleSingleColumn {
+		if style == VerseRowStyleSingleColumn && !forceSingleColumn {
 			x = defaultX + int(constant.LAYOUT_INDENT_LENGTH/2)
 		}
 		xPos := x + margin + int(offset)

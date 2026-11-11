@@ -203,6 +203,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	}
 
+	hypenYPos := map[string][]int64{}
+
 	canv.Group(`class="numbered"`)
 	offsetLyric := 0
 	for mi, measure := range noteRenderer {
@@ -226,11 +228,15 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 			}
 		}
-		newOffsetLyric := rsa.Lyric.RenderLyrics(ctx, yPos+offsetLyric, canv, measure, prev...)
-		if newOffsetLyric > 0 && offsetLyric == 0 {
-			offsetLyric = newOffsetLyric
-		}
+		yMap := rsa.Lyric.RenderLyrics(ctx, yPos+offsetLyric, canv, measure, prev...)
+		for k, v := range yMap {
+			if _, ok := hypenYPos[k]; ok {
+				hypenYPos[k] = v
+			} else {
+				hypenYPos[k] = append(hypenYPos[k], v...)
 
+			}
+		}
 		canv.Group("class='note'", "style='font-family:Old Standard TT;font-size:16px'")
 		rsa.Numbered.RenderNote(ctx, canv, measure, yPos, rightAlignOffset)
 		rsa.Rhythm.RenderBeam(ctx, yPos, canv, ts, measure)
@@ -254,7 +260,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 
 	}
 
-	rsa.Lyric.RenderHypen(ctx, yPos, offsetLyric, canv, flatten)
+	rsa.Lyric.RenderHypen(ctx, hypenYPos, canv, flatten)
 	rsa.Rhythm.RenderSlurTies(ctx, yPos, canv, slurTiesNote, float64(lastPos))
 	rsa.Toping.RenderRepeatMeasure(ctx, yPos, canv, flatten) // for the numbered
 	canv.Gend()

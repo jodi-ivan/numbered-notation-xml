@@ -35,12 +35,12 @@ type Lyric interface {
 	CalculateLyricWidth(string) float64
 	SetLyricRenderer(ctx context.Context, noteRenderer *entity.NoteRenderer, rawLyric []musicxml.Lyric) VerseInfo
 	CalculateHypen(ctx context.Context, prevLyric, currentLyric *LyricPosition) (location []HyphenPosition)
-	RenderHypen(ctx context.Context, y, offsetCenter int, canv canvas.Canvas, measure []*entity.NoteRenderer)
+	RenderHypen(ctx context.Context, lyricPositionY map[string][]int64, canv canvas.Canvas, measure []*entity.NoteRenderer)
 	RenderElision(ctx context.Context, canv canvas.Canvas, text []entity.Text, lyricPart int, pos entity.Coordinate, sty ...string)
 	CalculateMarginLeft(txt string) float64
 	CalculateOverallWidth(ls []entity.Lyric) float64
 	SplitLyricPrefix(note *entity.NoteRenderer, y int, part int, leftBarline *entity.NoteRenderer) []LyricPosition
-	RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer, prevNote ...*entity.NoteRenderer) int
+	RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer, prevNote ...*entity.NoteRenderer) map[string][]int64
 }
 
 type lyricInteractor struct{}
@@ -123,11 +123,11 @@ func (li *lyricInteractor) SetLyricRenderer(ctx context.Context, noteRenderer *e
 	}
 }
 
-func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer, prevNote ...*entity.NoteRenderer) int {
+func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.Canvas, measure []*entity.NoteRenderer, prevNote ...*entity.NoteRenderer) map[string][]int64 {
 
+	noteYPositions := make(map[string][]int64)
 	prefixes := map[string]LyricPosition{}
 
-	offsetCenterVal := 0
 	canv.Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
 	var prev *entity.NoteRenderer
 	minPrefix := float64(constant.LAYOUT_WIDTH)
@@ -158,7 +158,6 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 
 			if offsetCenter {
 				yPos += 10
-				offsetCenterVal = 10
 			}
 			text := l.Text
 
@@ -208,6 +207,10 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 				styles = append(styles, sty)
 			}
 			canv.Text(xPos, int(yPos), lyricVal, styles...)
+			if noteYPositions[n.UUID] == nil {
+				noteYPositions[n.UUID] = []int64{}
+			}
+			noteYPositions[n.UUID] = append(noteYPositions[n.UUID], int64(yPos))
 			elisionOpacity := "stroke-opacity:0.6"
 			if sty == "" {
 				elisionOpacity = ""
@@ -240,5 +243,5 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 
 	canv.Gend()
 
-	return offsetCenterVal
+	return noteYPositions
 }

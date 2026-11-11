@@ -31,9 +31,9 @@ func (sah *SearchAdapterHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, 
 
 	hits, err := sah.Usecase.Lookup(ctx, term)
 	if err != nil {
-		log.Printf("[SearchAdapterHTTP] failed to lookup, err: ", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Query can't be empty"))
+		log.Printf("[SearchAdapterHTTP] failed to lookup, err: %v", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to search."))
 		return
 	}
 

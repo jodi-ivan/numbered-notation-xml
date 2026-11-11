@@ -13,12 +13,14 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/webserver"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func TestRenderHTTP_ServeHTTP(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 	type args struct {
 		r  *http.Request
 		ps httprouter.Params
@@ -27,7 +29,7 @@ func TestRenderHTTP_ServeHTTP(t *testing.T) {
 		name string
 		args args
 
-		initMock                   func(ctrl *gomock.Controller) *usecase.MockUsecase
+		initMock                   func(ctrl *ubermock.Controller) *usecase.MockUsecase
 		initHTTPResponseWriterMock func(ctrl *gomock.Controller) *webserver.MockResponseWriter
 	}{
 		{
@@ -57,6 +59,7 @@ func TestRenderHTTP_ServeHTTP(t *testing.T) {
 				return res
 			},
 		},
+
 		{
 			name: "everything went fine",
 			args: args{
@@ -72,7 +75,7 @@ func TestRenderHTTP_ServeHTTP(t *testing.T) {
 				res := webserver.NewMockResponseWriter(ctrl)
 				return res
 			},
-			initMock: func(ctrl *gomock.Controller) *usecase.MockUsecase {
+			initMock: func(ctrl *ubermock.Controller) *usecase.MockUsecase {
 				res := usecase.NewMockUsecase(ctrl)
 				res.EXPECT().RenderHymn(gomock.Any(), gomock.Any(), int(1))
 				return res
@@ -93,9 +96,124 @@ func TestRenderHTTP_ServeHTTP(t *testing.T) {
 				res := webserver.NewMockResponseWriter(ctrl)
 				return res
 			},
-			initMock: func(ctrl *gomock.Controller) *usecase.MockUsecase {
+			initMock: func(ctrl *ubermock.Controller) *usecase.MockUsecase {
 				res := usecase.NewMockUsecase(ctrl)
 				res.EXPECT().RenderHymn(gomock.Any(), gomock.Any(), int(1), "a")
+				return res
+			},
+		},
+		{
+			name: "everything went fine#3 - with gregorian",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{
+						Key:   "number",
+						Value: "1a",
+					},
+				}),
+				r: &http.Request{
+					Form: map[string][]string{"gregorian": []string{"true"}},
+				},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				return res
+			},
+			initMock: func(ctrl *ubermock.Controller) *usecase.MockUsecase {
+				res := usecase.NewMockUsecase(ctrl)
+				res.EXPECT().RenderHymn(gomock.Any(), gomock.Any(), int(1), "a")
+				return res
+			},
+		},
+		{
+			name: "everything went fine#4 - correct device_type and orientation",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{
+						Key:   "number",
+						Value: "1a",
+					},
+				}),
+				r: &http.Request{
+					Form: map[string][]string{"device_type": []string{"1"}, "orientation": []string{"1"}},
+				},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				return res
+			},
+			initMock: func(ctrl *ubermock.Controller) *usecase.MockUsecase {
+				res := usecase.NewMockUsecase(ctrl)
+				res.EXPECT().RenderHymn(gomock.Any(), gomock.Any(), int(1), "a")
+				return res
+			},
+		},
+		{
+			name: "invalid verse parameter",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{Key: "number", Value: "1"},
+				}),
+				r: &http.Request{
+					Form: map[string][]string{"verse": []string{"abc"}},
+				},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				res.EXPECT().WriteHeader(http.StatusBadRequest)
+				res.EXPECT().Write([]byte("Invalid URL"))
+				return res
+			},
+		},
+		{
+			name: "invalid focus parameter",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{Key: "number", Value: "1"},
+				}),
+				r: &http.Request{
+					Form: map[string][]string{"verse": []string{"1"}, "focus": []string{"yes"}},
+				},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				res.EXPECT().WriteHeader(http.StatusBadRequest)
+				res.EXPECT().Write([]byte("Invalid URL"))
+				return res
+			},
+		},
+		{
+			name: "invalid device_type parameter",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{Key: "number", Value: "1"},
+				}),
+				r: &http.Request{
+					Form: map[string][]string{"verse": []string{"1"}, "device_type": []string{"unknown"}},
+				},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				res.EXPECT().WriteHeader(http.StatusBadRequest)
+				res.EXPECT().Write([]byte("Invalid URL"))
+				return res
+			},
+		},
+		{
+			name: "invalid orientation parameter",
+			args: args{
+				ps: httprouter.Params([]httprouter.Param{
+					httprouter.Param{Key: "number", Value: "1"},
+				}),
+				r: &http.Request{
+					Form: map[string][]string{"verse": []string{"1"}, "device_type": []string{"1"}, "orientation": []string{"sideways"}},
+				},
+			},
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+				res := webserver.NewMockResponseWriter(ctrl)
+				res.EXPECT().WriteHeader(http.StatusBadRequest)
+				res.EXPECT().Write([]byte("Invalid URL"))
+
 				return res
 			},
 		},
@@ -104,7 +222,7 @@ func TestRenderHTTP_ServeHTTP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rh := &RenderHTTP{}
 			if tt.initMock != nil {
-				rh.usecase = tt.initMock(ctrl)
+				rh.usecase = tt.initMock(uberCtrl)
 			}
 
 			w := tt.initHTTPResponseWriterMock(ctrl)
@@ -215,7 +333,7 @@ func TestNew(t *testing.T) {
 		{
 			name: "default",
 			args: args{
-				u: usecase.New(config.Config{}, nil, nil),
+				u: usecase.New(config.Config{}, nil, nil, nil),
 			},
 		},
 	}

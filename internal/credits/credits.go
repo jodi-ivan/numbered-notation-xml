@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/layout"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
@@ -32,14 +33,16 @@ func NewCredits() Credits {
 // returns:
 //   - the breakdown lines, with parse <i> to <tspan>
 //   - the length for each line
-func autoWrapText(text string, leftIndent int) ([]string, []int) {
+func autoWrapText(ctx context.Context, text string, leftIndent int) ([]string, []int) {
+	_, marginRight := layout.GetMargin(ctx)
+	layoutWidth := layout.GetLayoutWidth(ctx)
 	full := strings.Fields(text)
 	result := []string{}
 	length := 0
 
 	lines := []string{}
 	lenLines := []int{}
-	available := constant.LAYOUT_WIDTH - (leftIndent + constant.LAYOUT_INDENT_LENGTH)
+	available := layoutWidth - (leftIndent + marginRight)
 
 	italic := false
 	for _, word := range full {
@@ -108,8 +111,10 @@ func alignText(text string, textLength, targetLength int) string {
 	return strings.ReplaceAll(text, escaped, unescaped)
 }
 
-func formatAndRenderText(canv canvas.Canvas, y, leftIndent int, text string) []string {
-	wrapped, lenLines := autoWrapText(text, leftIndent)
+func formatAndRenderText(ctx context.Context, canv canvas.Canvas, y, leftIndent int, text string) []string {
+	wrapped, lenLines := autoWrapText(ctx, text, leftIndent)
+	marginLeft, marginRight := layout.GetMargin(ctx)
+	layoutWidth := layout.GetLayoutWidth(ctx)
 	for i, line := range wrapped {
 		text := line
 		hasBegin := strings.Contains(line, TSPAN_CONTAINS_CHECK)
@@ -120,18 +125,19 @@ func formatAndRenderText(canv canvas.Canvas, y, leftIndent int, text string) []s
 			text = fmt.Sprintf("%s %s", utils.TSPAN_OPENING, text)
 		}
 		if len(wrapped) > 1 && i < len(wrapped)-1 {
-			text = alignText(text, lenLines[i], constant.LAYOUT_WIDTH-(constant.LAYOUT_INDENT_LENGTH*2))
+			text = alignText(text, lenLines[i], layoutWidth-(marginLeft+marginRight))
 		}
-		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+leftIndent), float64(y+(i*newLineHeight)), text)
+		canv.TextUnescaped(float64(marginLeft+leftIndent), float64(y+(i*newLineHeight)), text)
 		wrapped[i] = text
 	}
 
 	return wrapped
 }
 
-func renderMusicAndLyric(canv canvas.Canvas, y *int, metadata repository.HymnData) (lastLineIndent float64) {
+func renderMusicAndLyric(ctx context.Context, canv canvas.Canvas, y *int, metadata repository.HymnData) (lastLineIndent float64) {
 	leftIndent := indentLyric
 
+	marginLeft, _ := layout.GetMargin(ctx)
 	lyricMusicMerged := metadata.Lyric == metadata.Music
 	if lyricMusicMerged {
 		leftIndent = indentMusicAndLyric
@@ -141,14 +147,14 @@ func renderMusicAndLyric(canv canvas.Canvas, y *int, metadata repository.HymnDat
 	if lyricMusicMerged {
 		prefix = PREFIX_MERGED_LYRIC_MUSIC
 	}
-	canv.Text(constant.LAYOUT_INDENT_LENGTH, *y, prefix)
+	canv.Text(marginLeft, *y, prefix)
 
-	wrapped := formatAndRenderText(canv, *y, leftIndent, metadata.Lyric)
+	wrapped := formatAndRenderText(ctx, canv, *y, leftIndent, metadata.Lyric)
 	*y += newLineHeight * len(wrapped)
 
 	if !lyricMusicMerged {
-		canv.Text(constant.LAYOUT_INDENT_LENGTH, *y, PREFIX_MUSIC)
-		wrapped = formatAndRenderText(canv, *y, leftIndent, metadata.Music)
+		canv.Text(marginLeft, *y, PREFIX_MUSIC)
+		wrapped = formatAndRenderText(ctx, canv, *y, leftIndent, metadata.Music)
 		*y += newLineHeight * len(wrapped)
 	}
 
@@ -161,25 +167,28 @@ func renderMusicAndLyric(canv canvas.Canvas, y *int, metadata repository.HymnDat
 	return float64(leftIndent) + utils.CalculateSecondaryLyricWidth(lastLine)
 }
 
-func renderCopyright(canv canvas.Canvas, y *int, leftIndent float64, metadata repository.HymnData) {
+func renderCopyright(ctx context.Context, canv canvas.Canvas, y *int, leftIndent float64, metadata repository.HymnData) {
 
 	if !metadata.Copyright.Valid {
 		return
 	}
 
+	marginLeft, marginRight := layout.GetMargin(ctx)
+	layoutWidth := layout.GetLayoutWidth(ctx)
+
 	copyrightY := *y
 	length := utils.CalculateSecondaryLyricWidth(metadata.Copyright.String)
-	if constant.LAYOUT_WIDTH-int(leftIndent+length) < constant.LAYOUT_INDENT_LENGTH {
+	if layoutWidth-(marginRight+int(length)) < marginLeft || length > float64(layoutWidth)/2 {
 		copyrightY += newLineHeight
 		*y = *y + newLineHeight
 	}
 
-	canv.Text(constant.LAYOUT_WIDTH-int(length)-constant.LAYOUT_INDENT_LENGTH+constant.UPPERCASE_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
+	canv.Text(layoutWidth-int(length)-marginLeft-marginRight+constant.UPPERCASE_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
 	*y = *y + newLineHeight
 
 }
 
-func renderReferences(canv canvas.Canvas, y int, metadata repository.HymnData) {
+func renderReferences(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData) {
 	ref := ""
 	if metadata.RefBE.Valid {
 		ref += fmt.Sprintf("BE %d", metadata.RefBE.Int16)
@@ -194,8 +203,9 @@ func renderReferences(canv canvas.Canvas, y int, metadata repository.HymnData) {
 	}
 
 	if ref != "" {
+		layoutWidth := layout.GetLayoutWidth(ctx)
 		l := utils.CalculateSecondaryLyricWidth(ref)
-		canv.Text(constant.LAYOUT_WIDTH-constant.UPPERCASE_LENGTH-int(l), y, ref)
+		canv.Text(layoutWidth-constant.UPPERCASE_LENGTH-int(l), y, ref)
 	}
 }
 
@@ -206,10 +216,10 @@ func (ci *creditsInteractor) RenderCredits(ctx context.Context, canv canvas.Canv
 	}
 	canv.Group(GROUP_CLASSNAME, GROUP_STYLE)
 
-	lastLineIndent := renderMusicAndLyric(canv, y, metadata)
+	lastLineIndent := renderMusicAndLyric(ctx, canv, y, metadata)
 
-	renderCopyright(canv, y, lastLineIndent, metadata)
-	renderReferences(canv, *y, metadata)
+	renderCopyright(ctx, canv, y, lastLineIndent, metadata)
+	renderReferences(ctx, canv, *y, metadata)
 
 	canv.Gend()
 

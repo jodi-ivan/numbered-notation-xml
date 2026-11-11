@@ -133,6 +133,12 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, y int, canv canv
 					Coordinate: entity.NewCoordinate(float64(note.PositionX), float64(y)),
 					Octave:     note.Octave,
 				}
+				if temp.Start.X == 0 && temp.Start.Y == 0 {
+					temp.Start = CoordinateWithOctave{
+						Coordinate: entity.NewCoordinate(float64(note.PositionX-constant.UPPERCASE_LENGTH), float64(y)),
+						Octave:     0,
+					}
+				}
 				ties[note.Note] = temp
 
 				tiesSet = append(tiesSet, ties[note.Note])

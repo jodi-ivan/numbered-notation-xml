@@ -106,7 +106,12 @@ func processTieNote(
 		}
 	}
 
-	if tracking != nil && note.Tie.Type == musicxml.NoteSlurTypeStop {
+	if note.Tie.Type == musicxml.NoteSlurTypeStop {
+		if tracking == nil {
+			tracking = &SlurTieGroup{
+				Start: entity.NewCoordinate(float64(note.PositionX-constant.UPPERCASE_LENGTH), float64(yPos)),
+			}
+		}
 		tracking.AccumulativeDirection += direction
 		tracking.End = entity.NewCoordinate(float64(note.PositionX), yPos)
 		tracking.NoteMember = append(tracking.NoteMember, note.UUID)

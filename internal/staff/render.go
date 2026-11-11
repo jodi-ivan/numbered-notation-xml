@@ -8,6 +8,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/header"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/layout"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
@@ -83,9 +84,9 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 	staffLines := lines.NewLineStaff(timeSignature, keySignature)
 
 	isGregorian := params.GetGregorianToggle(ctx)
-	x := constant.LAYOUT_INDENT_LENGTH
+	x, _ := layout.GetMargin(ctx)
 	if isGregorian {
-		x = staffLines.GetLeftIndentWithTimeSignature()
+		x = staffLines.GetLeftIndentWithTimeSignature(ctx)
 	}
 	info := StaffInfo{
 		NextLineRenderer: []*entity.NoteRenderer{},
@@ -130,9 +131,9 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 			x = info.MarginLeft + barline.BARLINE_AFTER_SPACE
 			info.Multiline = false
 		} else {
-			x = constant.LAYOUT_INDENT_LENGTH
+			x, _ = layout.GetMargin(ctx)
 			if isGregorian {
-				x = staffLines.GetLeftIndent(nextMeasureNumber)
+				x = staffLines.GetLeftIndent(ctx, nextMeasureNumber)
 			}
 		}
 		oldMarginButtom = info.MarginBottom
@@ -150,9 +151,9 @@ func (si *staffInteractor) Render(ctx context.Context, canv canvas.Canvas, part 
 
 			SyllableOffset: info.SyllableTracker.SyllableOffset,
 		}
-		x = constant.LAYOUT_INDENT_LENGTH
+		x, _ = layout.GetMargin(ctx)
 		if isGregorian {
-			x = staffLines.GetLeftIndent(info.NextLineRenderer[0].MeasureNumber)
+			x = staffLines.GetLeftIndent(ctx, info.NextLineRenderer[0].MeasureNumber)
 		}
 		idx := len(staffes) - 1
 		if idx <= 0 {

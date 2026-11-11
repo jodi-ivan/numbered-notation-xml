@@ -104,7 +104,7 @@ func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y 
 	assignStemDirection(directions, notes)
 
 	if len(groupBeamSlurTies) > 0 {
-		st := rhythm.RenderSlurTies(canv, lineStaff, groupBeam, groupBeamSlurTies)
+		st := rhythm.RenderSlurTies(ctx, canv, lineStaff, groupBeam, groupBeamSlurTies)
 		margin.Set(st[:]...)
 	}
 	setMarginTop(notes, lineStaff)

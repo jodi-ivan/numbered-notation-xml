@@ -253,7 +253,7 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 				isGregorian := params.GetGregorianToggle(ctx)
 				indent := constant.LAYOUT_INDENT_LENGTH
 				if isGregorian {
-					indent = linestaff.GetLeftIndent(measure.Number)
+					indent = linestaff.GetLeftIndent(ctx, measure.Number)
 				}
 				staffInfo.MarginLeft = indent
 				si.Rhythm.AdjustMultiDottedRenderer(ctx, notes, indent, y, data.KeySig)

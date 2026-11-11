@@ -76,7 +76,7 @@ func ProcessPreviousLines(ctx context.Context, prevNotes []*entity.NoteRenderer,
 			offset = 2
 			// TEST: need to be tested
 			if isGregorian {
-				staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
+				staffInfo.MarginLeft = staffLines.GetLeftIndent(ctx, prevNotes[0].MeasureNumber)
 			} else {
 				staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
 			}
@@ -89,7 +89,7 @@ func ProcessPreviousLines(ctx context.Context, prevNotes []*entity.NoteRenderer,
 	} else {
 		result = append(result, prevNotes)
 		if isGregorian {
-			staffInfo.MarginLeft = staffLines.GetLeftIndent(prevNotes[0].MeasureNumber)
+			staffInfo.MarginLeft = staffLines.GetLeftIndent(ctx, prevNotes[0].MeasureNumber)
 		} else {
 			staffInfo.MarginLeft = constant.LAYOUT_INDENT_LENGTH
 		}
@@ -107,7 +107,7 @@ func PrepareNextLines(ctx context.Context, staffInfo StaffInfo, ks keysig.KeySig
 	isGregorian := params.GetGregorianToggle(ctx)
 	indent := constant.LAYOUT_INDENT_LENGTH
 	if isGregorian {
-		indent = staffLines.GetLeftIndent(notes[0].MeasureNumber)
+		indent = staffLines.GetLeftIndent(ctx, notes[0].MeasureNumber)
 	}
 	for _, note := range notes {
 		if !proceed {

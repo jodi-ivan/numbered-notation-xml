@@ -8,6 +8,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/layout"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
@@ -86,9 +87,9 @@ func (ri *rhythmInteractor) AdjustMultiDottedRenderer(ctx context.Context, notes
 		if n.IsNewLine {
 			lineStaff := lines.NewMiddleNonFirstLineStaff(ks)
 			if isGregorian {
-				x = lineStaff.GetLeftIndent(n.MeasureNumber + 1)
+				x = lineStaff.GetLeftIndent(ctx, n.MeasureNumber+1)
 			} else {
-				x = constant.LAYOUT_INDENT_LENGTH
+				x, _ = layout.GetMargin(ctx)
 			}
 			// y is not added up because it will handled by the staff (the function that call this function).
 		}

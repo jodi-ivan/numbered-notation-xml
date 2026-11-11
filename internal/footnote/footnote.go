@@ -11,10 +11,10 @@ import (
 type TextCalc func(txt string) float64
 
 type Footnote interface {
-	AssignFootnotesMarker(canv canvas.Canvas, pos entity.Coordinate, defaultX int, cursor VerseLineCursor, verseFootnote map[int]map[int]repository.VerseFootNotes)
-	RenderVerseFootnotes(canv canvas.Canvas, y *int, footnotes map[int]map[int]repository.VerseFootNotes)
+	AssignFootnotesMarker(ctx context.Context, canv canvas.Canvas, pos entity.Coordinate, defaultX int, cursor VerseLineCursor, verseFootnote map[int]map[int]repository.VerseFootNotes)
+	RenderVerseFootnotes(ctx context.Context, canv canvas.Canvas, y *int, footnotes map[int]map[int]repository.VerseFootNotes)
 	RenderMusicFootnotes(ctx context.Context, canv canvas.Canvas, metadata *repository.HymnMetadata, y int)
-	RenderTitleFootnotes(canv canvas.Canvas, y int, metadata repository.HymnData)
+	RenderTitleFootnotes(ctx context.Context, canv canvas.Canvas, y int, metadata repository.HymnData)
 }
 
 type footnoteInteractor struct {

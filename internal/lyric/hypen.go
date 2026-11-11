@@ -113,7 +113,16 @@ func (li *lyricInteractor) RenderHypen(ctx context.Context, lyricPositionY map[s
 				pos[i] = [2]*LyricPosition{}
 			}
 			pair := pos[i]
-			hyphenYPos := float64(lyricPositionY[n.UUID][i])
+			hyphenYPos := 0.0 // float64(n.PositionY) + DISTANCE_NOTE_TO_LYRIC + 5
+			if lPosY, ok := lyricPositionY[n.UUID]; ok && len(lPosY) > i {
+				hyphenYPos = float64(lyricPositionY[n.UUID][i])
+			} else if pair[0] != nil && pair[0].Coordinate.Y != 0 {
+				hyphenYPos = pair[0].Coordinate.Y
+			} else if pair[1] != nil && pair[1].Coordinate.Y != 0 {
+				hyphenYPos = pair[1].Coordinate.Y
+
+			}
+
 			switch l.Syllabic {
 			case musicxml.LyricSyllabicTypeBegin:
 				// prev

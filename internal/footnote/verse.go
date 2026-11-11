@@ -1,12 +1,13 @@
 package footnote
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/layout"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/utils"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -21,7 +22,7 @@ type VerseLineCursor struct {
 	LineText   string
 }
 
-func (fi *footnoteInteractor) AssignFootnotesMarker(canv canvas.Canvas, pos entity.Coordinate, defaultX int, cursor VerseLineCursor, verseFootnote map[int]map[int]repository.VerseFootNotes) {
+func (fi *footnoteInteractor) AssignFootnotesMarker(ctx context.Context, canv canvas.Canvas, pos entity.Coordinate, defaultX int, cursor VerseLineCursor, verseFootnote map[int]map[int]repository.VerseFootNotes) {
 
 	footnotes, hasFootnotes := verseFootnote[cursor.VerseNo]
 	if !hasFootnotes {
@@ -35,12 +36,14 @@ func (fi *footnoteInteractor) AssignFootnotesMarker(canv canvas.Canvas, pos enti
 		return
 	}
 
+	// _, marginRight := layout.GetMargin(ctx)
+	layoutWidth := layout.GetLayoutWidth(ctx)
 	xPos := cursor.Leftmargin + int(fi.TextWidthCalculator(cursor.LineText)+pos.X)
 	styleFontSize := BASE_FOOTNOTES_STYLE
 	switch verseStyle {
 	case VerseNoteStyleAlignRight:
 		styleFontSize = BASE_STYLE_GROUP
-		approxLineLength := constant.LAYOUT_WIDTH - (2 * defaultX)
+		approxLineLength := layoutWidth - (2 * defaultX)
 		xPos = int(pos.X) + cursor.Leftmargin + approxLineLength
 	case VerseNoteStyleHeadonly, VerseNoteStyleDirectAppendText:
 		styleFontSize = BASE_VERSE_STYLE
@@ -51,7 +54,7 @@ func (fi *footnoteInteractor) AssignFootnotesMarker(canv canvas.Canvas, pos enti
 	canv.Gend()
 }
 
-func (fi *footnoteInteractor) RenderVerseFootnotes(canv canvas.Canvas, y *int, footnotes map[int]map[int]repository.VerseFootNotes) {
+func (fi *footnoteInteractor) RenderVerseFootnotes(ctx context.Context, canv canvas.Canvas, y *int, footnotes map[int]map[int]repository.VerseFootNotes) {
 	if len(footnotes) == 0 {
 		return
 	}
@@ -86,8 +89,8 @@ func (fi *footnoteInteractor) RenderVerseFootnotes(canv canvas.Canvas, y *int, f
 	}
 	canv.Group(CLASSNAME_GROUP, fmt.Sprintf(STYLE_GROUP_CUSTOM, footnotesStyle))
 	totalLine := 0
-
-	indent := float64(constant.LAYOUT_INDENT_LENGTH + 20)
+	marginLeft, _ := layout.GetMargin(ctx)
+	indent := float64(marginLeft + 20)
 	for i, fn := range flatten {
 		lines := strings.Split(fn.Footnote.String, "<br/>")
 		if len(lines) >= 2 {

@@ -85,11 +85,11 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		if verseInfo.MarginBottom != 0 {
 			relativeY = verseInfo.MarginBottom
 		}
-		ir.Footnote.RenderVerseFootnotes(canv, &relativeY, metadata.VerseFootNotes)
+		ir.Footnote.RenderVerseFootnotes(ctx, canv, &relativeY, metadata.VerseFootNotes)
 		ir.Credits.RenderCredits(ctx, canv, &relativeY, metadata.HymnData)
 
 		canvHeight = relativeY + 50
-		ir.Footnote.RenderTitleFootnotes(canv, relativeY, metadata.HymnData)
+		ir.Footnote.RenderTitleFootnotes(ctx, canv, relativeY, metadata.HymnData)
 	}
 	// physical book layout
 	layoutWidth := constant.LAYOUT_WIDTH

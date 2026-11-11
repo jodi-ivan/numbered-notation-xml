@@ -260,7 +260,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 				Leftmargin: margin + int(offset),
 				LineText:   liveVerse,
 			}
-			v.Footnote.AssignFootnotesMarker(canv, entity.NewCoordinate(float64(x), float64(y)), defaultX, cursor, metadata.VerseFootNotes)
+			v.Footnote.AssignFootnotesMarker(ctx, canv, entity.NewCoordinate(float64(x), float64(y)), defaultX, cursor, metadata.VerseFootNotes)
 			y += LINE_DISTANCE
 		}
 

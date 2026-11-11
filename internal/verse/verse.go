@@ -185,6 +185,10 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		width = di
 	}
 
+	if parsedVerse.IsMultiColumn && width < int(parsedVerse.MaxLineWidth*2+constant.LAYOUT_INDENT_LENGTH*4) {
+		parsedVerse.IsMultiColumn = false
+	}
+
 	defaultX := int(math.Round((float64(width) / 2) - (parsedVerse.MaxLineWidth / 2)))
 	x := defaultX
 	if parsedVerse.IsMultiColumn {

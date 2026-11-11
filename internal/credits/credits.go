@@ -3,6 +3,7 @@ package credits
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -95,20 +96,40 @@ func autoWrapText(ctx context.Context, text string, leftIndent int) ([]string, [
 	return lines, lenLines
 }
 
-// UNTESTED: needs more cases
-// this will FORCE the text to be aligned
-// added spaces between words, with assumed that the length of the space is 2px
-func alignText(text string, textLength, targetLength int) string {
-	escaped := "tspan-font-style"
-	unescaped := "tspan font-style"
-	// clean the tag
+func alignText(text string, textLength, targetLength float64) string {
+	const (
+		escaped          = "tspan-font-style"
+		unescaped        = "tspan font-style"
+		singleSpaceWidth = 2 // px, at fixed font size
+
+	)
+
 	text = strings.ReplaceAll(text, unescaped, escaped)
 	words := strings.Fields(text)
-	spaceLeft := targetLength - textLength
-	if len(words) > 2 && (spaceLeft > (len(words)-2)*spaceWidth) {
-		text = strings.Join(words, strings.Repeat("&#160;", (spaceLeft/(len(words)-2))))
+	gaps := len(words) - 1
+
+	// floor, so the result can never exceed targetLength
+	extra := int(math.Floor((targetLength - textLength) / singleSpaceWidth))
+	if gaps < 2 || extra <= 0 {
+		return strings.ReplaceAll(text, escaped, unescaped)
 	}
-	return strings.ReplaceAll(text, escaped, unescaped)
+
+	perGap := extra / gaps
+	remainder := extra % gaps // first `remainder` gaps get one more
+
+	var sb strings.Builder
+	for i, w := range words {
+		sb.WriteString(w)
+		if i < gaps {
+			n := perGap
+			if i < remainder {
+				n++
+			}
+			sb.WriteString(" ")
+			sb.WriteString(strings.Repeat("&#160;", n))
+		}
+	}
+	return strings.ReplaceAll(sb.String(), escaped, unescaped)
 }
 
 func formatAndRenderText(ctx context.Context, canv canvas.Canvas, y, leftIndent int, text string) []string {
@@ -125,7 +146,7 @@ func formatAndRenderText(ctx context.Context, canv canvas.Canvas, y, leftIndent 
 			text = fmt.Sprintf("%s %s", utils.TSPAN_OPENING, text)
 		}
 		if len(wrapped) > 1 && i < len(wrapped)-1 {
-			text = alignText(text, lenLines[i], layoutWidth-(marginLeft+marginRight))
+			text = alignText(text, float64(lenLines[i]), float64(layoutWidth-(marginLeft+marginRight)))
 		}
 		canv.TextUnescaped(float64(marginLeft+leftIndent), float64(y+(i*newLineHeight)), text)
 		wrapped[i] = text

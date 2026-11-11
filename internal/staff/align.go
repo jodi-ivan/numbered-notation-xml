@@ -11,6 +11,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/layout"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
@@ -94,12 +95,12 @@ func alignJustify(measure []*entity.NoteRenderer, y int, addedSpace float64, cou
 	}
 }
 
-func (rsa *renderStaffAlign) getAddedSpace(marginRightPos int, lastNote *entity.NoteRenderer, rightAlignOffset *int, totalNotes int) (float64, int) {
+func (rsa *renderStaffAlign) getAddedSpace(marginRightPos, rightIndent int, lastNote *entity.NoteRenderer, rightAlignOffset *int, totalNotes int) (float64, int) {
 
-	remaining := float64((marginRightPos - constant.LAYOUT_INDENT_LENGTH) - lastNote.PositionX)
+	remaining := float64((marginRightPos - rightIndent) - lastNote.PositionX)
 
-	lastPos := marginRightPos - constant.LAYOUT_INDENT_LENGTH
-	lastNote.PositionX = lastPos + 4
+	lastPos := marginRightPos - rightIndent
+	lastNote.PositionX = lastPos - 4
 	if lastNote.Barline != nil {
 		remaining -= barline.GetBarlineWidth(lastNote.Barline.BarStyle)
 	} else if len(lastNote.Lyric) > 0 {
@@ -138,12 +139,11 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	lastMeasure := noteRenderer[len(noteRenderer)-1]
 	lastNote := lastMeasure[len(lastMeasure)-1]
 
-	maxNoteWidth := lastNote.Width
-	if p, ok := params.GetParamFromContext(ctx); ok && p.Render != nil {
-		maxNoteWidth = p.Render.MaxNoteWidth
-	}
-	added, lastPos := 0.0, lastNote.PositionX+maxNoteWidth
+	added, lastPos := 0.0, lastNote.PositionX
+	_, rightLayoutMargin := layout.GetMargin(ctx)
+
 	staffMarginRight := lastPos
+
 	if di := params.GetDeviceInformation(ctx); di != nil && params.IgnoreNewLine(ctx) {
 		dDimension, _ := params.GetDeviceDimensions(ctx)
 		if dDimension != 0 {
@@ -151,9 +151,9 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			staffMarginRight = lastPos
 		}
 
-		added, lastPos = rsa.getAddedSpace(lastPos, lastNote, &rightAlignOffset, totalNotes)
+		added, lastPos = rsa.getAddedSpace(lastPos, rightLayoutMargin, lastNote, &rightAlignOffset, totalNotes)
 	} else {
-		added, lastPos = rsa.getAddedSpace(constant.LAYOUT_WIDTH, lastNote, &rightAlignOffset, totalNotes)
+		added, lastPos = rsa.getAddedSpace(constant.LAYOUT_WIDTH, constant.LAYOUT_INDENT_LENGTH, lastNote, &rightAlignOffset, totalNotes)
 		staffMarginRight = constant.LAYOUT_WIDTH
 
 	}

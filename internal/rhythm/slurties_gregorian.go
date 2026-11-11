@@ -2,6 +2,7 @@ package rhythm
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"math"
 	"slices"
@@ -173,7 +174,7 @@ func GetYPosGroup(group []entity.CoordinateWithNoteLength, staffLine lines.LineS
 	return staffLine.GetStemDirectionCompare(farthest.Y)
 }
 
-func GetBezierPoints(st SlurTieGroup, lineStaff lines.LineStaff, direction int) (entity.Coordinate, entity.Coordinate, entity.Coordinate) {
+func GetBezierPoints(ctx context.Context, st SlurTieGroup, lineStaff lines.LineStaff, direction int) (entity.Coordinate, entity.Coordinate, entity.Coordinate) {
 	tiesEndOffset := map[int][2]entity.Coordinate{
 		-1: {entity.NewCoordinate(6, -6), entity.NewCoordinate(6, -6)},
 		1:  {entity.NewCoordinate(6, 6), entity.NewCoordinate(3, 6)},
@@ -193,7 +194,7 @@ func GetBezierPoints(st SlurTieGroup, lineStaff lines.LineStaff, direction int) 
 
 	// no start
 	if start.X == 0 || start.Y == 0 {
-		start = entity.NewCoordinate(float64(lineStaff.GetLeftIndent())-(20), placeholderY)
+		start = entity.NewCoordinate(float64(lineStaff.GetLeftIndent(ctx))-(20), placeholderY)
 	}
 
 	// no end
@@ -229,7 +230,7 @@ func GetBezierPoints(st SlurTieGroup, lineStaff lines.LineStaff, direction int) 
 
 }
 
-func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, slurties []SlurTieGroup) [2]entity.Coordinate {
+func RenderSlurTies(ctx context.Context, canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, slurties []SlurTieGroup) [2]entity.Coordinate {
 	canv.Group(`class="slurties"`)
 
 	pulls := []entity.Coordinate{}
@@ -283,7 +284,7 @@ func RenderSlurTies(canv canvas.Canvas, lineStaff lines.LineStaff, groupBeam [][
 			sluLineType = st.Slur.LineType
 		}
 
-		start, pull, end := GetBezierPoints(st, lineStaff, direction)
+		start, pull, end := GetBezierPoints(ctx, st, lineStaff, direction)
 
 		// handle ties inside slur
 		if !isTies && tiesNotes[st.NoteMember[0]] {

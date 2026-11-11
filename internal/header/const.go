@@ -1,7 +1,7 @@
 package header
 
 const (
-	HEADER_OFFSET = 60
+	HEADER_OFFSET = 75
 )
 
 const (

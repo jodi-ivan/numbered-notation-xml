@@ -7,6 +7,7 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/layout"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
@@ -114,17 +115,20 @@ func (ls *LineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, meas
 	if ls.MarginRight == 0 {
 		ls.MarginRight = constant.LAYOUT_WIDTH
 	}
+	leftMargin, rightMargin := layout.GetMargin(ctx)
+	ls.MarginRight -= rightMargin
+
 	ls.MeasureStart = measureNo
 	canv.Group(`class="staff-line"`)
 	for i := 0; i <= 4; i++ {
 		ls.Lines[i] = y
-		canv.Line(constant.LAYOUT_INDENT_LENGTH, y, ls.MarginRight, y, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
+		canv.Line(leftMargin, y, ls.MarginRight, y, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8")
 		y += STAFF_SPACE_WIDTH
 	}
-	canv.Line(constant.LAYOUT_INDENT_LENGTH, ls.Lines[0], constant.LAYOUT_INDENT_LENGTH, y-STAFF_SPACE_WIDTH, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1")
+	canv.Line(leftMargin, ls.Lines[0], leftMargin, y-STAFF_SPACE_WIDTH, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1")
 	canv.Gend()
 
-	x := float64(constant.LAYOUT_INDENT_LENGTH)
+	x := float64(leftMargin)
 	initialY := ls.Lines[0]
 	canv.Group(`class="staff-markings"`)
 	// clef
@@ -132,7 +136,7 @@ func (ls *LineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, meas
 	accidentalSet := key.GetAccidentals()
 
 	canv.Group(`class="clef"`, `style="font-size:28px"`)
-	canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH+5, float64(initialY+15), TREBLE_CLEF_HEX)
+	canv.TextUnescaped(float64(leftMargin)+5, float64(initialY+15), TREBLE_CLEF_HEX)
 	canv.Gend()
 
 	canv.Group(`class="keysig"`, `style="font-size:28px"`)
@@ -146,7 +150,7 @@ func (ls *LineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, meas
 			accidental := accidentalHex[musicxml.NoteAccidentalNatural]
 			width := ACCIDENTAL_KEY_SIGNATURE_WIDTH
 
-			canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+CLEF_WIDTH)+float64(width*x),
+			canv.TextUnescaped(float64(leftMargin+CLEF_WIDTH)+float64(width*x),
 				ls.GetYPosKeySig(acc, key.Prev.Fifth < 0),
 				accidental)
 		}
@@ -159,7 +163,7 @@ func (ls *LineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, meas
 		if key.Fifth < 0 {
 			accidental = accidentalHex[musicxml.NoteAccidentalFlat]
 		}
-		canv.TextUnescaped(float64(constant.LAYOUT_INDENT_LENGTH+CLEF_WIDTH+offset)+float64(width*x),
+		canv.TextUnescaped(float64(leftMargin+CLEF_WIDTH+offset)+float64(width*x),
 			ls.GetYPosKeySig(acc, key.Fifth < 0),
 			accidental)
 	}
@@ -194,7 +198,7 @@ func (ls *LineStaff) GetYPos(pitch rune, octave int) float64 {
 	return float64(ls.Lines[0]) + float64(stepsBelow)*(float64(STAFF_SPACE_WIDTH)/2)
 }
 
-func (ls *LineStaff) GetLeftIndent(measure ...int) int {
+func (ls *LineStaff) GetLeftIndent(ctx context.Context, measure ...int) int {
 	measureNum := ls.MeasureStart
 	if len(measure) > 0 {
 		measureNum = measure[0]
@@ -206,21 +210,23 @@ func (ls *LineStaff) GetLeftIndent(measure ...int) int {
 	if key.Start && key.Prev != nil {
 		offset = (len(key.Prev.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH) + PADDING_WIDTH
 	}
-	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith + offset
+	leftMargin, _ := layout.GetMargin(ctx)
+	return leftMargin + CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith + offset
 }
 
 func (ls *LineStaff) SetMarginRight(mr int) {
-	ls.MarginRight = mr - constant.LAYOUT_INDENT_LENGTH + ACCIDENTAL_KEY_SIGNATURE_WIDTH
+	ls.MarginRight = mr
 }
 
 func (ls *LineStaff) GetMarginRight() int {
 	return ls.MarginRight
 }
 
-func (ls *LineStaff) GetLeftIndentWithTimeSignature() int {
+func (ls *LineStaff) GetLeftIndentWithTimeSignature(ctx context.Context) int {
+	leftMargin, _ := layout.GetMargin(ctx)
 	key := ls.Keysig.GetKeyOnMeasure(context.Background(), 1)
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
-	return constant.LAYOUT_INDENT_LENGTH + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(ls.TimeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(ls.TimeSig.UniqueSign)-1)) + keySigWith)
+	return leftMargin + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(ls.TimeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(ls.TimeSig.UniqueSign)-1)) + keySigWith)
 }
 
 func (ls *LineStaff) GetKeysig() keysig.KeySignature {

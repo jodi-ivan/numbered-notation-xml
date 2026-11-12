@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/diagnostics"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/barline"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/breathpause"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -196,8 +197,13 @@ func (si *staffInteractor) RenderStaff(ctx context.Context, canv canvas.Canvas, 
 		}
 
 		// this is happens on the measure note render level.
+		syllMatcher := si.SyllableMatch
+
+		if p, ok := params.GetParamFromContext(ctx); ok && p.Diagnostic != nil {
+			syllMatcher = diagnostics.GetVerseDiagnostic(syllMatcher)
+		}
 		lt := verse.SyllableTracker{
-			Matcher:     si.SyllableMatch,
+			Matcher:     syllMatcher,
 			MetaData:    metadata,
 			ReffAtStart: data.ReffAtStart,
 		}

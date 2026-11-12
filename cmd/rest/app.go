@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/jodi-ivan/numbered-notation-xml/adapter"
-	lab "github.com/jodi-ivan/numbered-notation-xml/cmd/rest/adapter"
+	lab "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/adapter"
 	"github.com/jodi-ivan/numbered-notation-xml/decorator"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/renderer"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"

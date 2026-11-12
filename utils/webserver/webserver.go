@@ -14,6 +14,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type ResponseWriteFlusher interface {
+	http.ResponseWriter
+	http.Flusher
+}
 type ResponseWriter interface {
 	Header() http.Header
 	Write(data []byte) (int, error)

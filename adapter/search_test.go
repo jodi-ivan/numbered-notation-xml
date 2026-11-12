@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/webserver"
 	"github.com/julienschmidt/httprouter"
+	"github.com/stretchr/testify/assert"
 	ubermock "go.uber.org/mock/gomock"
 )
 
@@ -29,9 +30,8 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 		args args
 
 		initMock                   func(ctrl *ubermock.Controller) *usecase.MockUsecase
-		initHTTPResponseWriterMock func(ctrl *gomock.Controller) *webserver.MockResponseWriter
-		wantStatusCode             int    // desired HTTP status code
-		wantBody                   string // desired response body content (optional)
+		initHTTPResponseWriterMock func(ctrl *gomock.Controller) (*webserver.MockResponseWriter, http.Header)
+		wantHeader                 http.Header
 	}{
 		{
 			name: "successful search",
@@ -50,14 +50,17 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 				).AnyTimes()
 				return mockUsecase
 			},
-			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) (*webserver.MockResponseWriter, http.Header) {
 				res := webserver.NewMockResponseWriter(ctrl)
 				header := http.Header{}
 				res.EXPECT().Header().Return(header) //.Set("Content-Type", "application/json")
 
 				res.EXPECT().WriteHeader(200)
 				res.EXPECT().Write([]byte(`[{"title":{"snippet":"","spans":null},"full_title":"Test Title","tier":0}]`))
-				return res
+				return res, header
+			},
+			wantHeader: map[string][]string{
+				"Content-Type": []string{"application/json"},
 			},
 		},
 		{
@@ -71,11 +74,11 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 				mockUsecase.EXPECT().Lookup(gomock.Any(), "error").Return(nil, errors.New("lookup failed")).AnyTimes()
 				return mockUsecase
 			},
-			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) (*webserver.MockResponseWriter, http.Header) {
 				res := webserver.NewMockResponseWriter(ctrl)
 				res.EXPECT().WriteHeader(500)
 				res.EXPECT().Write([]byte("Failed to search."))
-				return res
+				return res, nil
 			},
 		},
 		{
@@ -87,12 +90,12 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 			initMock: func(ctrl *ubermock.Controller) *usecase.MockUsecase {
 				return usecase.NewMockUsecase(ctrl)
 			},
-			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) *webserver.MockResponseWriter {
+			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) (*webserver.MockResponseWriter, http.Header) {
 				res := webserver.NewMockResponseWriter(ctrl)
 				res.EXPECT().WriteHeader(400)
 				res.EXPECT().Write([]byte("Query can't be empty"))
 
-				return res
+				return res, nil
 			},
 		},
 	}
@@ -103,8 +106,9 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 				sah.Usecase = tt.initMock(uberCtrl)
 			}
 
-			w := tt.initHTTPResponseWriterMock(ctrl)
+			w, h := tt.initHTTPResponseWriterMock(ctrl)
 			sah.ServeHTTP(w, tt.args.r, tt.args.ps)
+			assert.Equal(t, tt.wantHeader, h)
 		})
 	}
 }

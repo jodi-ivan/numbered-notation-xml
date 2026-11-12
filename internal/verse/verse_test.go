@@ -13,9 +13,13 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_verseInteractor_elisionPosition(t *testing.T) {
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	tests := []struct {
@@ -25,7 +29,7 @@ func Test_verseInteractor_elisionPosition(t *testing.T) {
 		y                     int
 		lineBeforeWord        string
 		syllableBeforeElision string
-		lyricMock             func(c *gomock.Controller) *lyric.MockLyric
+		lyricMock             func(c *ubermock.Controller) *lyric.MockLyric
 		want                  [2]entity.Coordinate
 	}{
 		{
@@ -42,7 +46,7 @@ func Test_verseInteractor_elisionPosition(t *testing.T) {
 				},
 			},
 			lineBeforeWord: "unittest",
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("t").Return(3.0)
 				li.EXPECT().CalculateLyricWidth("u").Return(3.0)
@@ -61,7 +65,7 @@ func Test_verseInteractor_elisionPosition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var v verseInteractor
-			v.Lyric = tt.lyricMock(ctrl)
+			v.Lyric = tt.lyricMock(uberCtrl)
 			got := v.elisionPosition(tt.p, tt.y, tt.lineBeforeWord, tt.syllableBeforeElision)
 			assert.Equal(t, tt.want, got, "elisionPosition()")
 
@@ -70,14 +74,16 @@ func Test_verseInteractor_elisionPosition(t *testing.T) {
 }
 
 func Test_verseInteractor_parse(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
+
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		y         int
 		verses    map[int]repository.HymnVerse
-		lyricMock func(c *gomock.Controller) *lyric.MockLyric
+		lyricMock func(c *ubermock.Controller) *lyric.MockLyric
 
 		want ParsedVerseWithInfo
 	}{
@@ -93,7 +99,7 @@ func Test_verseInteractor_parse(t *testing.T) {
 					VerseNum: sql.NullInt32{Int32: 2, Valid: true},
 				},
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("n").Return(3.0)
 				li.EXPECT().CalculateLyricWidth("ia").Return(6.0)
@@ -135,7 +141,7 @@ func Test_verseInteractor_parse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			var v verseInteractor
-			v.Lyric = tt.lyricMock(ctrl)
+			v.Lyric = tt.lyricMock(uberCtrl)
 			meta := &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses}, ParsedVerse: map[int][][]entity.LyricWordVerse{}}
 			for i, v := range meta.Verse {
 				parsed := [][]entity.LyricWordVerse{}
@@ -153,12 +159,14 @@ func Test_verseInteractor_parse(t *testing.T) {
 func Test_verseInteractor_RenderVerse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		canv         func(c *gomock.Controller) *canvas.MockCanvasTestify
-		lyricMock    func(c *gomock.Controller) *lyric.MockLyric
-		footnoteMock func(c *gomock.Controller) *footnote.MockFootnote
+		lyricMock    func(c *ubermock.Controller) *lyric.MockLyric
+		footnoteMock func(c *ubermock.Controller) *footnote.MockFootnote
 
 		y             int
 		verses        map[int]repository.HymnVerse
@@ -178,7 +186,7 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 				},
 			},
 			want: VerseInfo{MarginBottom: 330},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("n").Return(3.0)
 				li.EXPECT().CalculateLyricWidth("ia").Return(6.0)
@@ -193,7 +201,7 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvasTestify {
 				canv := canvas.NewMockCanvasTestify(t)
-				canv.EXPECT().Group([]string{"class='verses'", "style='font-family:Caladea'"})
+				canv.EXPECT().Group([]string{"class='verses'", "style='font-family:Caladea;font-size:16px'"})
 				canv.EXPECT().Group([]string{"class='verse'", "number='2'"})
 				canv.EXPECT().Text(621, 300, "2. ")
 				canv.EXPECT().TextUnescaped(635.0, 300.0, " Dalam dunia 'ku dikawal")
@@ -203,7 +211,7 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 				canv.EXPECT().Gend().Times(3)
 				return canv
 			},
-			footnoteMock: func(c *gomock.Controller) *footnote.MockFootnote {
+			footnoteMock: func(c *ubermock.Controller) *footnote.MockFootnote {
 				fn := footnote.NewMockFootnote(c)
 				cursor := footnote.VerseLineCursor{
 					VerseNo:    2,
@@ -211,7 +219,7 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 					Leftmargin: 535,
 					LineText:   " Dalam dunia 'ku dikawal",
 				}
-				fn.EXPECT().AssignFootnotesMarker(gomock.Any(), entity.NewCoordinate(100, 300), 355, cursor, nil)
+				fn.EXPECT().AssignFootnotesMarker(ubermock.Any(), ubermock.Any(), entity.NewCoordinate(100, 300), 355, cursor, nil)
 				return fn
 			},
 		},
@@ -219,8 +227,8 @@ func Test_verseInteractor_RenderVerse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var v verseInteractor
-			v.Lyric = tt.lyricMock(ctrl)
-			v.Footnote = tt.footnoteMock(ctrl)
+			v.Lyric = tt.lyricMock(uberCtrl)
+			v.Footnote = tt.footnoteMock(uberCtrl)
 
 			meta := &entity.HymnMetaData{HymnMetadata: &repository.HymnMetadata{Verse: tt.verses, VerseFootNotes: tt.verseFootnote}, ParsedVerse: map[int][][]entity.LyricWordVerse{}}
 			for i, v := range meta.Verse {

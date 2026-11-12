@@ -1,6 +1,7 @@
 package footnote
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -10,16 +11,19 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_footnoteInteractor_AssignFootnotesMarker(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		canv      func(*gomock.Controller) *canvas.MockCanvas
-		lyricMock func(*gomock.Controller) *lyric.MockLyric
+		lyricMock func(*ubermock.Controller) *lyric.MockLyric
 
 		cursor        VerseLineCursor
 		pos           entity.Coordinate
@@ -78,12 +82,12 @@ func Test_footnoteInteractor_AssignFootnotesMarker(t *testing.T) {
 			pos:      entity.NewCoordinate(50, 100),
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='footnotes'", `style="font-style:italic;font-size:60%;font-family:'Figtree';font-weight:600"`)
+				canv.EXPECT().Group("class='footnotes'", `style="font-style:italic;font-size:9.6px;font-family:'Figtree';font-weight:600"`)
 				canv.EXPECT().Text(770, int(100), "1)")
 				canv.EXPECT().Gend()
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("this is unit").Return(100.0)
 				return li
@@ -109,12 +113,12 @@ func Test_footnoteInteractor_AssignFootnotesMarker(t *testing.T) {
 			pos:      entity.NewCoordinate(50, 100),
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='footnotes'", `style="font-style:italic;font-family:'Caladea';font-size:90%;font-weight:600;"`)
+				canv.EXPECT().Group("class='footnotes'", `style="font-style:italic;font-family:'Caladea';font-size:16px;font-weight:600;"`)
 				canv.EXPECT().Text(162, int(100), "*)")
 				canv.EXPECT().Gend()
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("this is unit").Return(100.0)
 				li.EXPECT().CalculateLyricWidth(" ").Return(8.0)
@@ -127,13 +131,13 @@ func Test_footnoteInteractor_AssignFootnotesMarker(t *testing.T) {
 			// TODO: construct the receiver type.
 			var fi footnoteInteractor
 			if tt.lyricMock != nil {
-				fi.li = tt.lyricMock(ctrl)
+				fi.TextWidthCalculator = tt.lyricMock(uberCtrl).CalculateLyricWidth
 			}
 			canv := canvas.Canvas(nil)
 			if tt.canv != nil {
 				canv = tt.canv(ctrl)
 			}
-			fi.AssignFootnotesMarker(canv, tt.pos, tt.defaultX, tt.cursor, tt.verseFootnote)
+			fi.AssignFootnotesMarker(context.Background(), canv, tt.pos, tt.defaultX, tt.cursor, tt.verseFootnote)
 		})
 	}
 }
@@ -183,7 +187,7 @@ func Test_footnoteInteractor_RenderVerseFootnotes(t *testing.T) {
 			y: getY(),
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;font-style:italic"`)
+				canv.EXPECT().Group("class='footnotes'", `style="font-size:9.6px;font-family:'Figtree';font-weight:600;font-style:italic"`)
 				canv.EXPECT().Text(70, 95, "unit = test")
 				canv.EXPECT().Gend()
 				return canv
@@ -204,7 +208,7 @@ func Test_footnoteInteractor_RenderVerseFootnotes(t *testing.T) {
 			y: getY(),
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600;"`)
+				canv.EXPECT().Group("class='footnotes'", `style="font-size:9.6px;font-family:'Figtree';font-weight:600;"`)
 				canv.EXPECT().TextUnescaped(float64(70), float64(95), `this is <tspan font-style="italic">unit:</tspan> `)
 				canv.EXPECT().TextUnescaped(float64(123), float64(95), "test1")
 				canv.EXPECT().TextUnescaped(float64(123), float64(110), "test2")
@@ -222,11 +226,12 @@ func Test_footnoteInteractor_RenderVerseFootnotes(t *testing.T) {
 			if tt.canv != nil {
 				canv = tt.canv(ctrl)
 			}
-			fi.RenderVerseFootnotes(canv, tt.y, tt.footnotes)
+			fi.RenderVerseFootnotes(context.Background(), canv, tt.y, tt.footnotes)
 			if tt.y != nil {
 				assert.Equal(t, tt.wantY, *tt.y)
 
 			}
+
 		})
 	}
 }

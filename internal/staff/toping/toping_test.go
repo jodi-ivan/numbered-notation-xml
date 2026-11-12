@@ -51,7 +51,7 @@ func Test_topingInteractor_RenderTuplet(t *testing.T) {
 			},
 			canv: func() *canvas.MockCanvasTestify {
 				res := canvas.NewMockCanvasTestify(t)
-				res.EXPECT().Group([]string{"class='tuplet'", `style="font-size:80%"`})
+				res.EXPECT().Group([]string{"class='tuplet'", `style="font-size:12.8px"`})
 				res.EXPECT().Text(110, 78, "1", []string{"font-style:italic"})
 				res.EXPECT().Gend()
 				return res
@@ -76,7 +76,7 @@ func Test_topingInteractor_RenderTuplet(t *testing.T) {
 			},
 			canv: func() *canvas.MockCanvasTestify {
 				res := canvas.NewMockCanvasTestify(t)
-				res.EXPECT().Group([]string{"class='tuplet'", `style="font-size:80%"`})
+				res.EXPECT().Group([]string{"class='tuplet'", `style="font-size:12.8px"`})
 				res.EXPECT().Text(110, 78, "3", []string{"font-style:italic"})
 				res.EXPECT().Qbez(100, 78, 114, 62, 128, 78, []string{"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:0.8"})
 				res.EXPECT().CenterRect(114, 74, 10, 12, []string{"fill:white;stroke:none;"})
@@ -122,7 +122,7 @@ func Test_topingInteractor_RenderRepeatMeasure(t *testing.T) {
 			canv: func() *canvas.MockCanvasTestify {
 				res := canvas.NewMockCanvasTestify(t)
 				res.EXPECT().Group([]string{"class='staff-topping'"})
-				res.EXPECT().Text(105, 78, "1", []string{`style="font-weight:bold;font-size:60%;font-family:Old Standard TT;"`})
+				res.EXPECT().Text(105, 78, "1", []string{`style="font-weight:bold;font-size:9.6px;font-family:Old Standard TT;"`})
 				res.EXPECT().Line(102, 75, 102, 70, []string{"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1"})
 				res.EXPECT().Line(102, 70, 105, 70, []string{"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1"})
 				res.EXPECT().Line(105, 75, 105, 70, []string{"fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1"})

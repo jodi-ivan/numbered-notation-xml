@@ -95,11 +95,11 @@ func alignJustify(measure []*entity.NoteRenderer, y int, addedSpace float64, cou
 	}
 }
 
-func (rsa *renderStaffAlign) getAddedSpace(marginRightPos, rightIndent int, lastNote *entity.NoteRenderer, rightAlignOffset *int, totalNotes int) (float64, int) {
+func (rsa *renderStaffAlign) getAddedSpace(layoutWidth, rightIndent int, lastNote *entity.NoteRenderer, rightAlignOffset *int, totalNotes int) (float64, int) {
 
-	remaining := float64((marginRightPos - rightIndent) - lastNote.PositionX)
+	remaining := float64((layoutWidth - rightIndent) - lastNote.PositionX)
 
-	lastPos := marginRightPos - rightIndent
+	lastPos := layoutWidth - rightIndent
 	lastNote.PositionX = lastPos - 4
 	if lastNote.Barline != nil {
 		remaining -= barline.GetBarlineWidth(lastNote.Barline.BarStyle)

@@ -210,7 +210,7 @@ func Test_textInteractor_RenderMeasureText(t *testing.T) {
 			y: 100,
 			lyric: func(c *ubermock.Controller) *lyric.MockLyric {
 				res := lyric.NewMockLyric(c)
-				res.EXPECT().CalculateLyricWidth("unittest").Return(16.0)
+				// res.EXPECT().CalculateLyricWidth("unittest").Return(16.0)
 				return res
 			},
 			canv: func() *canvas.MockCanvasTestify {

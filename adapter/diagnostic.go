@@ -35,6 +35,22 @@ type SSEvent struct {
 	Retry int
 }
 
+var GetParam func(bool) *params.Param = func(f bool) *params.Param {
+	return &params.Param{
+		Verse:           3, // hardcoded to trigger the load verse mechanism
+		SingleVerseMode: f,
+		Diagnostic: &params.DiagParam{
+			VerseSyllMatch:  make(chan map[int]bool, 1),
+			VerseDiagnostic: make(chan params.VerseDiagnostic),
+			Finish:          make(chan bool, 1),
+			Mu:              &sync.RWMutex{},
+			MapMtx:          &sync.Map{},
+		},
+	}
+}
+
+var NewParam = GetParam
+
 func (dh *DiagnosticHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	target := svg.New(io.Discard)
 
@@ -43,10 +59,11 @@ func (dh *DiagnosticHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps h
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.WriteHeader(http.StatusOK)
 
 	no, vars, err := utils.ParseHymnWithVariant(ps.ByName("scope"))
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+
 		w.Write([]byte("Invalid param" + err.Error()))
 		if flusher, ok := w.(http.Flusher); ok {
 			flusher.Flush()
@@ -66,24 +83,14 @@ func (dh *DiagnosticHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps h
 		}
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 
 	timeout := time.NewTimer(2 * time.Second)
 	defer timeout.Stop()
 
-	dig := &params.DiagParam{
-		VerseSyllMatch:  make(chan map[int]bool, 1),
-		VerseDiagnostic: make(chan params.VerseDiagnostic),
-		Finish:          make(chan bool, 1),
-		Mu:              &sync.RWMutex{},
-		MapMtx:          &sync.Map{},
-	}
+	prm := NewParam(focusMode)
 
 	go func() {
-		prm := &params.Param{
-			Verse:           3, // hardcoded to trigger the load verse mechanism
-			SingleVerseMode: focusMode,
-			Diagnostic:      dig,
-		}
 		rctx := params.NewParamContext(r.Context(), prm)
 		v := []string{}
 		if vars != "" {
@@ -113,10 +120,9 @@ func (dh *DiagnosticHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps h
 		case intr := <-dh.Interrupt:
 			log.Println("inside the server", intr)
 			return
-		case <-dig.VerseDiagnostic:
-
+		case <-prm.Diagnostic.VerseDiagnostic:
 			syncMap := map[int]interface{}{}
-			dig.MapMtx.Range(func(key, value any) bool {
+			prm.Diagnostic.MapMtx.Range(func(key, value any) bool {
 				syncMap[key.(int)] = value
 				return true
 			})

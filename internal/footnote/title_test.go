@@ -1,6 +1,7 @@
 package footnote
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -28,7 +29,7 @@ func Test_footnoteInteractor_RenderTitleFootnotes(t *testing.T) {
 			name: "title only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
+				canvMock.EXPECT().Group("class='footnotes'", `style="font-size:9.6px;font-family:'Figtree';font-weight:600"`)
 				// canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH, float64(y), notes)
 				canvMock.EXPECT().TextUnescaped(50.0, 130.0, `<tspan font-style="italic">* Bisa juga di unittest</tspan>`)
 				canvMock.EXPECT().Gend()
@@ -46,13 +47,14 @@ func Test_footnoteInteractor_RenderTitleFootnotes(t *testing.T) {
 			name: "kids mark only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
-				// canv.TextUnescaped(constant.LAYOUT_INDENT_LENGTH, float64(y), notes)
+				canvMock.EXPECT().Group("class='footnotes'", `style="font-size:9.6px;font-family:'Figtree';font-weight:600"`)
+				// Mocking the TextUnescaped call based on the expected output structure
 				canvMock.EXPECT().TextUnescaped(50.0, 125.0,
 					`<tspan font-style="italic">Semua nyayian dengan tanda</tspan>
-			<tspan font-style="bold" font-size="125%%">☆</tspan>
+			<tspan font-style="bold" font-size="12px">☆</tspan>
 			<tspan font-style="italic">: khusus untuk anak-anak</tspan>`,
 				)
+				// FIX: Ensure Gend() is called as reported in the log
 				canvMock.EXPECT().Gend()
 				return canvMock
 			},
@@ -69,7 +71,7 @@ func Test_footnoteInteractor_RenderTitleFootnotes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// TODO: construct the receiver type.
 			var fi footnoteInteractor
-			fi.RenderTitleFootnotes(tt.canv(ctrl), tt.y, tt.metadata)
+			fi.RenderTitleFootnotes(context.Background(), tt.canv(ctrl), tt.y, tt.metadata)
 		})
 	}
 }

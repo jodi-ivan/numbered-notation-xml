@@ -204,7 +204,7 @@ func renderCopyright(ctx context.Context, canv canvas.Canvas, y *int, leftIndent
 		*y = *y + newLineHeight
 	}
 
-	canv.Text(layoutWidth-int(length)-marginLeft-marginRight+constant.UPPERCASE_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
+	canv.Text(layoutWidth-int(length)-constant.LOWERCASE_LENGTH, copyrightY, fmt.Sprintf("© %s", metadata.Copyright.String))
 	*y = *y + newLineHeight
 
 }
@@ -226,7 +226,7 @@ func renderReferences(ctx context.Context, canv canvas.Canvas, y int, metadata r
 	if ref != "" {
 		layoutWidth := layout.GetLayoutWidth(ctx)
 		l := utils.CalculateSecondaryLyricWidth(ref)
-		canv.Text(layoutWidth-constant.UPPERCASE_LENGTH-int(l), y, ref)
+		canv.Text(layoutWidth-int(l), y, ref)
 	}
 }
 

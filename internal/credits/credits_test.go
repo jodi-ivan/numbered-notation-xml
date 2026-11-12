@@ -356,7 +356,7 @@ func Test_renderCopyright(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
 
-				canvMock.EXPECT().Text(684, 100, "© unittest")
+				canvMock.EXPECT().Text(749, 100, "© unittest")
 				return canvMock
 			},
 		},
@@ -374,7 +374,7 @@ func Test_renderCopyright(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
 
-				canvMock.EXPECT().Text(627, 100, "© this is long copyright")
+				canvMock.EXPECT().Text(692, 100, "© this is long copyright")
 				return canvMock
 			},
 		},
@@ -413,7 +413,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "BE only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(751, 115, "BE 100")
+				canvMock.EXPECT().Text(771, 115, "BE 100")
 				return canvMock
 			},
 			y: 115,
@@ -428,7 +428,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "NR only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(749, 115, "NR 100")
+				canvMock.EXPECT().Text(769, 115, "NR 100")
 				return canvMock
 			},
 			y: 115,
@@ -443,7 +443,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "Both",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(715, 115, "BE 100, NR 100")
+				canvMock.EXPECT().Text(735, 115, "BE 100, NR 100")
 				return canvMock
 			},
 			y: 115,

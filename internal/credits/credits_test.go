@@ -1,6 +1,7 @@
 package credits
 
 import (
+	"context"
 	"database/sql"
 	"strings"
 	"testing"
@@ -12,6 +13,10 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
 )
+
+const nbsp = "&#160;"
+
+func rep(n int) string { return strings.Repeat(nbsp, n) }
 
 func TestNewCredits(t *testing.T) {
 	tests := []struct {
@@ -83,7 +88,7 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lines, lenLines := autoWrapText(tt.args.text, tt.args.leftIndent)
+			lines, lenLines := autoWrapText(context.Background(), tt.args.text, tt.args.leftIndent)
 			if !assert.Equal(t, tt.lines, lines) {
 				t.Errorf("creditsInteractor.autoWrapText() lines got = %v, want %v", lines, tt.lines)
 			}
@@ -94,32 +99,56 @@ func Test_creditsInteractor_autoWrapText(t *testing.T) {
 	}
 }
 
-func Test_alignText(t *testing.T) {
-	type args struct {
+func Test_AlignText(t *testing.T) {
+	tests := []struct {
+		name         string
 		text         string
 		textLength   int
 		targetLength int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
+		want         string
 	}{
+		{"single word", "hello", 50, 100, "hello"},
+		{"two words (only 1 gap) are unchanged", "hello world", 50, 100, "hello world"},
+		{"target equals text length", "a b c d", 100, 100, "a b c d"},
+		{"target smaller than text length", "a b c d", 100, 90, "a b c d"},
+		{"room smaller than one space", "a b c d", 100, 101, "a b c d"},
 		{
-			name: "everything went fine",
-			args: args{
-				text:         "this is a very long text, this intentionally added with a lot of text just for satisfy requirement. <tspan font-style=\"italic\">Also",
-				textLength:   625,
-				targetLength: constant.LAYOUT_WIDTH,
-			},
-			// 5 spaces
-			want: strings.Join([]string{"this", "is", "a", "very", "long", "text,", "this", "intentionally", "added", "with", "a", "lot", "of", "text", "just", "for", "satisfy", "requirement.", "<tspan font-style=\"italic\">Also"}, strings.Repeat("&#160;", 10)),
+			// 20/2 = 10 extra, 4 gaps -> 2 each, remainder 2 -> 3,3,2,2
+			"remainder spread over first gaps",
+			"a b c d e", 100, 120,
+			"a " + rep(3) + "b " + rep(3) + "c " + rep(2) + "d " + rep(2) + "e",
+		},
+		{
+			// 16/2 = 8 extra, 4 gaps -> 2 each
+			"even distribution",
+			"a b c d e", 100, 116,
+			"a " + rep(2) + "b " + rep(2) + "c " + rep(2) + "d " + rep(2) + "e",
+		},
+		{
+			// 9/2 = 4 extra (floor), 3 gaps -> 1 each, remainder 1 -> 2,1,1
+			"odd px rounds down",
+			"a b c d", 100, 109,
+			"a " + rep(2) + "b " + rep(1) + "c " + rep(1) + "d",
+		},
+		{
+			// 6/2 = 3 extra, 2 gaps -> 1 each, remainder 1 -> 2,1
+			"multiple spaces in input are collapsed",
+			"a   b    c", 50, 56,
+			"a " + rep(2) + "b " + rep(1) + "c",
+		},
+		{
+			// the tspan tag counts as one word; 3 extra, 2 gaps -> 2,1
+			"tspan tag is preserved",
+			`<tspan font-style="italic">hi</tspan> there you`, 50, 56,
+			`<tspan font-style="italic">hi</tspan> ` + rep(2) + "there " + rep(1) + "you",
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := alignText(tt.args.text, tt.args.textLength, tt.args.targetLength); !assert.Equal(t, tt.want, got) {
-				t.Errorf("alignText() = %v, want %v", got, tt.want)
+			got := alignText(tt.text, float64(tt.textLength), float64(tt.targetLength))
+			if got != tt.want {
+				t.Errorf("alignText() =\n  %q\nwant\n  %q", got, tt.want)
 			}
 		})
 	}
@@ -208,7 +237,7 @@ func Test_formatAndRenderText(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := formatAndRenderText(tt.canv(ctrl), tt.y, tt.leftIndent, tt.text)
+			got := formatAndRenderText(context.Background(), tt.canv(ctrl), tt.y, tt.leftIndent, tt.text)
 			if !assert.Equal(t, tt.want, got) {
 				t.Errorf("formatAndRenderText() = %v, want %v", got, tt.want)
 			}
@@ -271,7 +300,7 @@ func Test_renderMusicAndLyric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := renderMusicAndLyric(tt.canv(ctrl), tt.y, tt.metadata)
+			got := renderMusicAndLyric(context.Background(), tt.canv(ctrl), tt.y, tt.metadata)
 			if !assert.Equal(t, tt.want, got) {
 				t.Errorf("renderMusicAndLyric() = %v, want %v", got, tt.want)
 			}
@@ -327,7 +356,7 @@ func Test_renderCopyright(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
 
-				canvMock.EXPECT().Text(734, 100, "© unittest")
+				canvMock.EXPECT().Text(684, 100, "© unittest")
 				return canvMock
 			},
 		},
@@ -345,14 +374,14 @@ func Test_renderCopyright(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
 
-				canvMock.EXPECT().Text(677, 100, "© this is long copyright")
+				canvMock.EXPECT().Text(627, 100, "© this is long copyright")
 				return canvMock
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			renderCopyright(tt.canv(ctrl), tt.y, tt.leftIndent, tt.metadata)
+			renderCopyright(context.Background(), tt.canv(ctrl), tt.y, tt.leftIndent, tt.metadata)
 
 			if !assert.Equal(t, tt.wantY, *tt.y) {
 				t.Errorf("&y renderCopyright() = %v, want %v", *tt.y, tt.wantY)
@@ -432,7 +461,7 @@ func Test_renderReferences(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			renderReferences(tt.canv(ctrl), tt.y, tt.metadata)
+			renderReferences(context.Background(), tt.canv(ctrl), tt.y, tt.metadata)
 		})
 	}
 }

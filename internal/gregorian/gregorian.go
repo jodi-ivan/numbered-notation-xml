@@ -18,10 +18,14 @@ type Gregorian interface {
 }
 
 func NewGregorian() Gregorian {
-	return &gregorianInteractor{}
+	return &gregorianInteractor{
+		Barline: barline.NewBarline(),
+	}
 }
 
-type gregorianInteractor struct{}
+type gregorianInteractor struct {
+	Barline barline.Barline
+}
 
 func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y int, canv canvas.Canvas, notes []*entity.NoteRenderer, lineStaff lines.LineStaff) VMargin {
 
@@ -79,7 +83,7 @@ func (gi *gregorianInteractor) RenderStaffLine(ctx context.Context, staffPos, y 
 
 		if note.Barline != nil {
 			barlinePos := entity.NewCoordinate(float64(note.PositionX), float64(lineStaff.GetBottomLine()))
-			barline.RenderGregorian(canv, note.Barline, i == len(notes)-1, lineStaff, barlinePos) // mock this
+			gi.Barline.RenderGregorian(canv, note.Barline, i == len(notes)-1, lineStaff, barlinePos)
 			continue
 		}
 

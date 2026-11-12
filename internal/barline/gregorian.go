@@ -7,7 +7,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, staffLine lines.LineStaff, pos entity.Coordinate) {
+func (bi *barlineInteractor) RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, staffLine lines.LineStaff, pos entity.Coordinate) {
 	canv.Group(`class="barline"`)
 	defer func() {
 		canv.Gend()
@@ -27,6 +27,7 @@ func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, s
 	case musicxml.BarLineStyleLightLight:
 		leftBarlineOffset := 1
 		rightBarlineOffset := 4
+
 		canv.Line(
 			int(pos.X)+leftBarlineOffset, topLine,
 			int(pos.X)+leftBarlineOffset, bottomLine, lineStyleRegular)
@@ -36,6 +37,7 @@ func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, s
 			int(pos.X)+rightBarlineOffset, bottomLine, lineStyleRegular)
 
 	case musicxml.BarLineStyleLightHeavy:
+
 		canv.Line(
 			int(pos.X)+1, topLine,
 			int(pos.X)+1, bottomLine, lineStyleRegular)
@@ -51,6 +53,7 @@ func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, s
 		}
 
 	case musicxml.BarLineStyleHeavyLight:
+
 		canv.Line(
 			int(pos.X)+2, topLine+2,
 			int(pos.X)+2, bottomLine-2, lineStyleHeavy)
@@ -60,6 +63,7 @@ func RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, s
 			int(pos.X)+7, bottomLine, lineStyleRegular)
 
 		if b.Repeat != nil && b.Repeat.Direction == musicxml.BarLineRepeatDirectionForward {
+
 			canv.Text(
 				int(pos.X)+8, middleLine+5,
 				":", `style="font-family:Noto Music;font-size:19.2px"`)

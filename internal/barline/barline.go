@@ -6,6 +6,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
@@ -13,6 +14,7 @@ type Barline interface {
 	GetRendererLeftBarline(measure musicxml.Measure, x int, lastRightBarlinePosition *CoordinateWithBarline) (*entity.NoteRenderer, *BarlineInfo)
 	GetRendererRightBarline(measure musicxml.Measure, x int) (int, *entity.NoteRenderer)
 	RenderBarline(ctx context.Context, canv canvas.Canvas, barline musicxml.Barline, coordinate entity.Coordinate, s ...string)
+	RenderGregorian(canv canvas.Canvas, b *musicxml.Barline, isLastNote bool, staffLine lines.LineStaff, pos entity.Coordinate)
 }
 
 type barlineInteractor struct{}

@@ -13,7 +13,25 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
 
-type LineStaff struct {
+type LineStaff interface {
+	GetLines() [5]int
+	GetMiddleLine() int
+	GetTopLine() int
+	GetBottomLine() int
+	GetStemDirection(pitch rune, octave int) int
+	GetStemDirectionCompare(yPos float64) int
+	GetYPosKeySig(pitch string, isFlat bool) float64
+	Render(ctx context.Context, canv canvas.Canvas, y int, measureNo int, inclTimesig bool)
+	GetYPos(pitch rune, octave int) float64
+	GetLeftIndent(ctx context.Context, measure ...int) int
+	SetMarginRight(mr int)
+	GetMarginRight() int
+	GetLeftIndentWithTimeSignature(ctx context.Context) int
+	GetKeysig() keysig.KeySignature
+	GetTimeSig() timesig.TimeSignature
+}
+
+type lineStaff struct {
 	Lines        [5]int
 	Keysig       keysig.KeySignature
 	TimeSig      timesig.TimeSignature
@@ -23,13 +41,13 @@ type LineStaff struct {
 }
 
 func NewMiddleNonFirstLineStaff(ks keysig.KeySignature) LineStaff {
-	return LineStaff{
+	return &lineStaff{
 		Keysig: ks,
 	}
 }
 
 func NewLineStaff(ts timesig.TimeSignature, ks keysig.KeySignature) LineStaff {
-	return LineStaff{
+	return &lineStaff{
 		Keysig:  ks,
 		TimeSig: ts,
 	}
@@ -37,7 +55,7 @@ func NewLineStaff(ts timesig.TimeSignature, ks keysig.KeySignature) LineStaff {
 
 func NewLineStaffWithLines(ts timesig.TimeSignature, ks keysig.KeySignature, y int) LineStaff {
 
-	result := LineStaff{
+	result := &lineStaff{
 		Keysig:  ks,
 		TimeSig: ts,
 	}
@@ -48,23 +66,23 @@ func NewLineStaffWithLines(ts timesig.TimeSignature, ks keysig.KeySignature, y i
 
 	return result
 }
-func (ls *LineStaff) GetLines() [5]int {
+func (ls *lineStaff) GetLines() [5]int {
 	return ls.Lines
 }
 
-func (ls *LineStaff) GetMiddleLine() int {
+func (ls *lineStaff) GetMiddleLine() int {
 	return ls.Lines[2]
 }
 
-func (ls *LineStaff) GetTopLine() int {
+func (ls *lineStaff) GetTopLine() int {
 	return ls.Lines[0]
 }
 
-func (ls *LineStaff) GetBottomLine() int {
+func (ls *lineStaff) GetBottomLine() int {
 	return ls.Lines[4]
 }
 
-func (ls *LineStaff) GetStemDirection(pitch rune, octave int) int {
+func (ls *lineStaff) GetStemDirection(pitch rune, octave int) int {
 	yPos := ls.GetYPos(pitch, octave)
 	direction := cmp.Compare(yPos, float64(ls.GetMiddleLine()))
 	if direction == 0 {
@@ -74,7 +92,7 @@ func (ls *LineStaff) GetStemDirection(pitch rune, octave int) int {
 	return direction
 }
 
-func (ls *LineStaff) GetStemDirectionCompare(yPos float64) int {
+func (ls *lineStaff) GetStemDirectionCompare(yPos float64) int {
 	direction := cmp.Compare(yPos, float64(ls.GetMiddleLine()))
 	if direction == 0 {
 		direction = -1
@@ -84,7 +102,7 @@ func (ls *LineStaff) GetStemDirectionCompare(yPos float64) int {
 
 }
 
-func (ls *LineStaff) GetYPosKeySig(pitch string, isFlat bool) float64 {
+func (ls *lineStaff) GetYPosKeySig(pitch string, isFlat bool) float64 {
 	if isFlat {
 		// Flat order: B E A D G C F
 		pos := map[string]float64{
@@ -111,7 +129,7 @@ func (ls *LineStaff) GetYPosKeySig(pitch string, isFlat bool) float64 {
 	return pos[pitch]
 }
 
-func (ls *LineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, measureNo int, inclTimesig bool) {
+func (ls *lineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, measureNo int, inclTimesig bool) {
 	if ls.MarginRight == 0 {
 		ls.MarginRight = constant.LAYOUT_WIDTH
 	}
@@ -178,7 +196,7 @@ func (ls *LineStaff) Render(ctx context.Context, canv canvas.Canvas, y int, meas
 	canv.Gend()
 }
 
-func (ls *LineStaff) GetYPos(pitch rune, octave int) float64 {
+func (ls *lineStaff) GetYPos(pitch rune, octave int) float64 {
 	noteOrder := []rune{'C', 'D', 'E', 'F', 'G', 'A', 'B'}
 
 	diatonicIndex := func(p rune, oct int) int {
@@ -198,7 +216,7 @@ func (ls *LineStaff) GetYPos(pitch rune, octave int) float64 {
 	return float64(ls.Lines[0]) + float64(stepsBelow)*(float64(STAFF_SPACE_WIDTH)/2)
 }
 
-func (ls *LineStaff) GetLeftIndent(ctx context.Context, measure ...int) int {
+func (ls *lineStaff) GetLeftIndent(ctx context.Context, measure ...int) int {
 	measureNum := ls.MeasureStart
 	if len(measure) > 0 {
 		measureNum = measure[0]
@@ -214,25 +232,25 @@ func (ls *LineStaff) GetLeftIndent(ctx context.Context, measure ...int) int {
 	return leftMargin + CLEF_WIDTH + (PADDING_WIDTH * 2) + keySigWith + offset
 }
 
-func (ls *LineStaff) SetMarginRight(mr int) {
+func (ls *lineStaff) SetMarginRight(mr int) {
 	ls.MarginRight = mr
 }
 
-func (ls *LineStaff) GetMarginRight() int {
+func (ls *lineStaff) GetMarginRight() int {
 	return ls.MarginRight
 }
 
-func (ls *LineStaff) GetLeftIndentWithTimeSignature(ctx context.Context) int {
+func (ls *lineStaff) GetLeftIndentWithTimeSignature(ctx context.Context) int {
 	leftMargin, _ := layout.GetMargin(ctx)
 	key := ls.Keysig.GetKeyOnMeasure(context.Background(), 1)
 	keySigWith := len(key.GetAccidentals()) * ACCIDENTAL_KEY_SIGNATURE_WIDTH
 	return leftMargin + CLEF_WIDTH + (timesig.GREGORIAN_WIDTH * len(ls.TimeSig.UniqueSign)) + (PADDING_WIDTH*(3+(len(ls.TimeSig.UniqueSign)-1)) + keySigWith)
 }
 
-func (ls *LineStaff) GetKeysig() keysig.KeySignature {
+func (ls *lineStaff) GetKeysig() keysig.KeySignature {
 	return ls.Keysig
 }
 
-func (ls *LineStaff) GetTimeSig() timesig.TimeSignature {
+func (ls *lineStaff) GetTimeSig() timesig.TimeSignature {
 	return ls.TimeSig
 }

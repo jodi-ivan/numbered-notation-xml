@@ -172,7 +172,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 				Barline: &musicxml.Barline{
 					Location: musicxml.BarlineLocationRight,
 				},
-				Width: 4,
+				Width: 19,
 			},
 		},
 		{
@@ -199,7 +199,7 @@ func Test_barlineInteractor_GetRendererRightBarline(t *testing.T) {
 			wantRenderer: &entity.NoteRenderer{
 				MeasureNumber: 1,
 				PositionX:     25,
-				Width:         4,
+				Width:         19,
 				Barline: &musicxml.Barline{
 					Location: musicxml.BarlineLocationRight,
 					BarStyle: musicxml.BarLineStyleLightHeavy,
@@ -233,7 +233,7 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		initCanvas func(ctrl *gomock.Controller) *canvas.MockCanvasTestify
+		initCanvas func(ctrl *gomock.Controller) *canvas.MockCanvas
 		args       args
 	}{
 		// case 1 : no repeat
@@ -249,12 +249,12 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 					Y: 125,
 				},
 			},
-			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvasTestify {
-				canvMock := canvas.NewMockCanvasTestify(t)
+			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(ctrl)
 
 				canvMock.EXPECT().TextUnescaped(float64(25), float64(131),
-					`<tspan x="25.00" y="131.00" font-size="180%" >&#x01D102;</tspan>`,
-					[]string{`style="font-family:Noto Music"`})
+					`&#x01D102;`,
+					[]string{`style="font-family:Noto Music;font-size:28.8px"`})
 
 				return canvMock
 			},
@@ -275,13 +275,13 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 					Y: 125,
 				},
 			},
-			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvasTestify {
-				canvMock := canvas.NewMockCanvasTestify(t)
-
+			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(ctrl)
+				canvMock.EXPECT().TextUnescaped(float64(35), float64(122), ":", `style="font-family:Noto Music;font-size:16px"`)
 				canvMock.EXPECT().TextUnescaped(
 					float64(25), float64(131),
-					`<tspan x="25.00" y="131.00" font-size="180%" >&#x01D103;</tspan><tspan x="35.00" y="121.00">:</tspan>`,
-					[]string{`style="font-family:Noto Music"`},
+					`&#x01D103;`,
+					[]string{`style="font-family:Noto Music;font-size:28.8px"`},
 				)
 
 				return canvMock
@@ -303,12 +303,13 @@ func Test_barlineInteractor_RenderBarline(t *testing.T) {
 					Y: 125,
 				},
 			},
-			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvasTestify {
-				canvMock := canvas.NewMockCanvasTestify(t)
+			initCanvas: func(ctrl *gomock.Controller) *canvas.MockCanvas {
+				canvMock := canvas.NewMockCanvas(ctrl)
+				canvMock.EXPECT().TextUnescaped(float64(20), float64(122), ":", `style="font-family:Noto Music;font-size:16px"`)
 
 				canvMock.EXPECT().TextUnescaped(float64(25), float64(131),
-					`<tspan x="20.00" y="121.00">:</tspan><tspan x="25.00" y="131.00" font-size="180%" >&#x01D102;</tspan>`,
-					[]string{`style="font-family:Noto Music"`})
+					`&#x01D102;`,
+					[]string{`style="font-family:Noto Music;font-size:28.8px"`})
 
 				return canvMock
 			},

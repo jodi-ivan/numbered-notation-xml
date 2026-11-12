@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_numberedInteractor_GetLengthNote(t *testing.T) {
@@ -349,13 +350,15 @@ func Test_numberedInteractor_GetLengthNote(t *testing.T) {
 func Test_numberedInteractor_RenderNote(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		canv        func(*gomock.Controller) *canvas.MockCanvasTestify
 		lyricMock   func(*gomock.Controller) *lyric.MockLyric
-		barlineMock func(*gomock.Controller) *barline.MockBarline
+		barlineMock func(*ubermock.Controller) *barline.MockBarline
 
 		measure          []*entity.NoteRenderer
 		y                int
@@ -371,13 +374,13 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 				canv.EXPECT().Text(70, 100, "1")
 
 				canv.EXPECT().Circle(59, 72, 6, []string{`stroke="black"`, `fill="none"`, `stroke-width="1.3"`})
-				canv.EXPECT().Text(56, 75, "1", []string{`font-weight="600"`, `style="font-size:60%"`})
+				canv.EXPECT().Text(56, 75, "1", []string{`font-weight="600"`, `style="font-size:9.6px"`})
 
 				return canv
 			},
-			barlineMock: func(c *gomock.Controller) *barline.MockBarline {
+			barlineMock: func(c *ubermock.Controller) *barline.MockBarline {
 				b := barline.NewMockBarline(c)
-				b.EXPECT().RenderBarline(gomock.Any(), gomock.Any(), gomock.Any(), entity.NewCoordinate(50, 100))
+				b.EXPECT().RenderBarline(ubermock.Any(), ubermock.Any(), ubermock.Any(), entity.NewCoordinate(50, 100))
 				return b
 			},
 			measure: []*entity.NoteRenderer{
@@ -418,7 +421,7 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 				ni.Lyric = tt.lyricMock(ctrl)
 			}
 			if tt.barlineMock != nil {
-				ni.Barline = tt.barlineMock(ctrl)
+				ni.Barline = tt.barlineMock(uberCtrl)
 			}
 			canv := canvas.Canvas(nil)
 			if tt.canv != nil {

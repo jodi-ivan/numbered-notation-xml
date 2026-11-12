@@ -2,6 +2,7 @@ package lyric
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -135,6 +136,25 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 			assert.Equal(t, tt.wantLyric, tt.args.noteRenderer.Lyric, "the renderer lyric")
 		})
 	}
+}
+
+type testifyMatcher struct {
+	expected interface{}
+	t        *testing.T
+}
+
+func (m testifyMatcher) Matches(x interface{}) bool {
+
+	return assert.Equal(m.t, m.expected, x)
+}
+
+func (m testifyMatcher) String() string {
+	return fmt.Sprintf("is equal to %v", m.expected)
+}
+
+// Helper function to create a new matcher
+func IsEqual(expected interface{}, t *testing.T) gomock.Matcher {
+	return testifyMatcher{expected: expected, t: t}
 }
 
 func Test_lyricInteractor_RenderLyrics(t *testing.T) {
@@ -279,6 +299,81 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 							Syllabic: musicxml.LyricSyllabicTypeEnd,
 						},
 					},
+				},
+			},
+		},
+		{
+			name: "with prefix",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
+				canv.EXPECT().Group("class='leading-header'")
+				canv.EXPECT().Text(34, 125, "1.", "")
+				canv.EXPECT().Text(50, 125, "U")
+				canv.EXPECT().Text(60, 125, "nit")
+				canv.EXPECT().Gend().Times(2)
+				return canv
+			},
+			want: map[string][]int64{
+				"1": {125}, "2": {125},
+			},
+			measure: []*entity.NoteRenderer{
+				{
+					UUID:      "1",
+					PositionX: 50,
+					PositionY: 100,
+					Lyric: []entity.Lyric{
+						{
+							Text: []entity.Text{
+								{Value: "1.U"},
+							},
+							Syllabic: musicxml.LyricSyllabicTypeBegin,
+						},
+					},
+				},
+				{
+					UUID:      "2",
+					PositionX: 60,
+					PositionY: 100,
+					Lyric: []entity.Lyric{
+						{
+							Text: []entity.Text{
+								{Value: "nit"},
+							},
+							Syllabic: musicxml.LyricSyllabicTypeEnd,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "with leading header",
+			canv: func(c *gomock.Controller) *canvas.MockCanvas {
+				canv := canvas.NewMockCanvas(c)
+				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
+				canv.EXPECT().Group("class='leading-header'")
+				canv.EXPECT().Text(50, 125, "test")
+				canv.EXPECT().Text(7, 100, "unit", testifyMatcher{t: t, expected: ""})
+				canv.EXPECT().Gend().Times(2)
+				return canv
+			},
+			want: map[string][]int64{
+				"1": {125},
+			},
+			measure: []*entity.NoteRenderer{
+				{
+					UUID:      "1",
+					PositionX: 50,
+					PositionY: 100,
+					Lyric: []entity.Lyric{
+						{
+							Text: []entity.Text{
+								{Value: "test"},
+							},
+							Syllabic: musicxml.LyricSyllabicTypeBegin,
+						},
+					},
+					LeadingHeader: "unit",
 				},
 			},
 		},

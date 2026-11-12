@@ -128,6 +128,7 @@ func Test_lyricInteractor_CalculateHypen(t *testing.T) {
 func Test_lyricInteractor_RenderHypen(t *testing.T) {
 	type args struct {
 		measure []*entity.NoteRenderer
+		yPos    map[string][]int64
 	}
 
 	ctrl := gomock.NewController(t)
@@ -144,7 +145,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
 				// writerMock := canvas.NewMockWriter(ctrl)
-				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
 				// canv.EXPECT().Writer().Return(writerMock)
 				canv.EXPECT().Gend()
 				return canv
@@ -157,7 +158,8 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
 				// writerMock := canvas.NewMockWriter(ctrl)
-				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
+
 				// canv.EXPECT().Writer().Return(writerMock)
 				canv.EXPECT().Gend()
 				return canv
@@ -173,15 +175,20 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
+
 				canv.EXPECT().TextUnescaped(78.8850, float64(25), "-")
 				canv.EXPECT().TextUnescaped(33.6500, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
+				yPos: map[string][]int64{
+					"1": {25}, "2": {25}, "3": {25},
+				},
 				measure: []*entity.NoteRenderer{
 					{
+						UUID:      "1",
 						PositionX: 25,
 						Lyric: []entity.Lyric{
 							{
@@ -195,6 +202,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "2",
 						PositionX: 40,
 						Lyric: []entity.Lyric{
 							{
@@ -208,6 +216,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "3",
 						PositionX: 100,
 						Lyric: []entity.Lyric{
 							{
@@ -227,15 +236,21 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-middle-end-single",
 			initCanvMock: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("hyphens")
+				// canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
+
 				canv.EXPECT().TextUnescaped(78.885, float64(25), "-")
 				canv.EXPECT().TextUnescaped(33.6500, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
+				yPos: map[string][]int64{
+					"1": {25}, "2": {25}, "3": {25}, "4": {25},
+				},
 				measure: []*entity.NoteRenderer{
 					{
+						UUID:      "1",
 						PositionX: 25,
 						Lyric: []entity.Lyric{
 							{
@@ -247,6 +262,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "2",
 						PositionX: 40,
 						Lyric: []entity.Lyric{
 							{
@@ -258,6 +274,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "3",
 						PositionX: 100,
 						Lyric: []entity.Lyric{
 							{
@@ -269,6 +286,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "4",
 						PositionX: 160,
 						Lyric: []entity.Lyric{
 							{
@@ -286,7 +304,8 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-middle-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
+
 				canv.EXPECT().TextUnescaped(120.7500, float64(25), "-")
 				canv.EXPECT().TextUnescaped(90.0900, float64(25), "-")
 				canv.EXPECT().TextUnescaped(55.0350, float64(25), "-")
@@ -294,8 +313,10 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 				return canv
 			},
 			args: args{
+				yPos: map[string][]int64{"1": {25}, "2": {25}, "3": {25}, "4": {25}},
 				measure: []*entity.NoteRenderer{
 					{
+						UUID:      "1",
 						PositionX: 25,
 						Lyric: []entity.Lyric{
 							{
@@ -307,6 +328,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "2",
 						PositionX: 77,
 						Lyric: []entity.Lyric{
 							{
@@ -318,6 +340,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "3",
 						PositionX: 103,
 						Lyric: []entity.Lyric{
 							{
@@ -329,6 +352,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "4",
 						PositionX: 134,
 						Lyric: []entity.Lyric{
 							{
@@ -346,7 +370,8 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-end-begin-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
+
 				canv.EXPECT().TextUnescaped(161.1300, float64(25), "-")
 				canv.EXPECT().TextUnescaped(127.0650, float64(25), "-")
 				canv.EXPECT().TextUnescaped(49.0950, float64(25), "-")
@@ -354,8 +379,11 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 				return canv
 			},
 			args: args{
+				yPos: map[string][]int64{
+					"1": {25}, "2": {25}, "3": {25}, "4": {25}, "5": {25}},
 				measure: []*entity.NoteRenderer{
 					{
+						UUID:      "1",
 						PositionX: 25,
 						Lyric: []entity.Lyric{
 							{
@@ -367,6 +395,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "2",
 						PositionX: 62,
 						Lyric: []entity.Lyric{
 							{
@@ -378,6 +407,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "3",
 						PositionX: 102,
 						Lyric: []entity.Lyric{
 							{
@@ -389,6 +419,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "4",
 						PositionX: 140,
 						Lyric: []entity.Lyric{
 							{
@@ -400,6 +431,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "5",
 						PositionX: 179,
 						Lyric: []entity.Lyric{
 							{
@@ -417,7 +449,8 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. begin-middle-end-single-begin-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
+
 				canv.EXPECT().TextUnescaped(243.0950, float64(25), "-")
 				canv.EXPECT().TextUnescaped(79.1300, float64(25), "-")
 				canv.EXPECT().TextUnescaped(50.0650, float64(25), "-")
@@ -425,8 +458,10 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 				return canv
 			},
 			args: args{
+				yPos: map[string][]int64{"1": {25}, "2": {25}, "3": {25}, "4": {25}, "5": {25}, "6": {25}},
 				measure: []*entity.NoteRenderer{
 					{
+						UUID:      "1",
 						PositionX: 25,
 						Lyric: []entity.Lyric{
 							{
@@ -438,6 +473,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "2",
 						PositionX: 63,
 						Lyric: []entity.Lyric{
 							{
@@ -449,6 +485,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "3",
 						PositionX: 92,
 						Lyric: []entity.Lyric{
 							{
@@ -460,6 +497,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "4",
 						PositionX: 179,
 						Lyric: []entity.Lyric{
 							{
@@ -471,6 +509,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "5",
 						PositionX: 219,
 						Lyric: []entity.Lyric{
 							{
@@ -482,6 +521,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "6",
 						PositionX: 256,
 						Lyric: []entity.Lyric{
 							{
@@ -499,14 +539,17 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 			name: "Positive case. middle-middle-end",
 			initCanvMock: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
-				canv.EXPECT().Group("hyphens")
+				canv.EXPECT().Group("class='hyphens'", `style="font-size:16px"`)
+
 				canv.EXPECT().TextUnescaped(43.2050, float64(25), "-")
 				canv.EXPECT().Gend()
 				return canv
 			},
 			args: args{
+				yPos: map[string][]int64{"1": {25}, "2": {25}, "3": {25}},
 				measure: []*entity.NoteRenderer{
 					{
+						UUID:      "1",
 						PositionX: 25,
 						Lyric: []entity.Lyric{
 							{
@@ -518,6 +561,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "2",
 						PositionX: 56,
 						Lyric: []entity.Lyric{
 							{
@@ -529,6 +573,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 						},
 					},
 					{
+						UUID:      "3",
 						PositionX: 96,
 						Lyric: []entity.Lyric{
 							{
@@ -547,7 +592,7 @@ func Test_lyricInteractor_RenderHypen(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			li := &lyricInteractor{}
-			li.RenderHypen(context.Background(), 0, 0, tt.initCanvMock(ctrl), tt.args.measure)
+			li.RenderHypen(context.Background(), tt.args.yPos, tt.initCanvMock(ctrl), tt.args.measure)
 		})
 	}
 }

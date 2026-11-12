@@ -30,7 +30,7 @@ func TestRenderFermata(t *testing.T) {
 			canv: func(ctrl *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(ctrl)
 				// writerMock := canvas.NewMockWriter(ctrl)
-				canv.EXPECT().TextUnescaped(46.0, 93.0, "&#x1D110;", `style="font-family:Noto Music;font-size:150%"`)
+				canv.EXPECT().TextUnescaped(46.0, 93.0, "&#x1D110;", `style="font-family:Noto Music;font-size:24px"`)
 				return canv
 			},
 			fermata: &musicxml.Femata{},

@@ -126,7 +126,7 @@ func Test_lyricInteractor_SetLyricRenderer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			li := &lyricInteractor{}
-			if got := li.SetLyricRenderer(tt.args.noteRenderer, tt.args.note.Lyric); !assert.Equal(t, tt.want, got) {
+			if got := li.SetLyricRenderer(context.Background(), tt.args.noteRenderer, tt.args.note.Lyric); !assert.Equal(t, tt.want, got) {
 				t.Errorf("lyricInteractor.SetLyricRenderer() = %v, want %v", got, tt.want)
 			}
 
@@ -145,21 +145,25 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 		// Named input parameters for target function.
 		canv    func(*gomock.Controller) *canvas.MockCanvas
 		measure []*entity.NoteRenderer
+		want    map[string][]int64
 	}{
 		{
 			name: "empty measure",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
+				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
+
 				canv.EXPECT().Gend()
 				return canv
 			},
+			want: map[string][]int64{},
 		},
 		{
 			name: "no lyric",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
+				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
+
 				canv.EXPECT().Gend()
 				return canv
 			},
@@ -168,12 +172,16 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 					Lyric: []entity.Lyric{},
 				},
 			},
+			want: map[string][]int64{},
 		},
 		{
 			name: "no text",
+			want: map[string][]int64{},
+
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
+				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
+
 				canv.EXPECT().Gend()
 				return canv
 			},
@@ -192,14 +200,18 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 			name: "no prefix",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
+				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
 				canv.EXPECT().Text(50, 125, "U")
 				canv.EXPECT().Text(60, 125, "nit")
 				canv.EXPECT().Gend()
 				return canv
 			},
+			want: map[string][]int64{
+				"1": {125}, "2": {125},
+			},
 			measure: []*entity.NoteRenderer{
 				{
+					UUID:      "1",
 					PositionX: 50,
 					PositionY: 100,
 					Lyric: []entity.Lyric{
@@ -212,6 +224,7 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 					},
 				},
 				{
+					UUID:      "2",
 					PositionX: 60,
 					PositionY: 100,
 					Lyric: []entity.Lyric{
@@ -229,15 +242,18 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 			name: "no prefix - and notes - with elsion",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea'")
+				canv.EXPECT().Group("class='lyric'", "style='font-family:Caladea;font-size:16px'")
+
 				canv.EXPECT().Text(44, 125, "*Test")
 				canv.EXPECT().Text(60, 125, "ing")
 				canv.EXPECT().Qbez(59, 127, 66, 133, 73, 127, "fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1.1;")
 				canv.EXPECT().Gend()
 				return canv
 			},
+			want: map[string][]int64{"1": {125}, "2": {125}},
 			measure: []*entity.NoteRenderer{
 				{
+					UUID:      "1",
 					PositionX: 50,
 					PositionY: 100,
 					Lyric: []entity.Lyric{
@@ -252,6 +268,7 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 					},
 				},
 				{
+					UUID:      "2",
 					PositionX: 60,
 					PositionY: 100,
 					Lyric: []entity.Lyric{
@@ -273,7 +290,8 @@ func Test_lyricInteractor_RenderLyrics(t *testing.T) {
 			if tt.canv != nil {
 				canv = tt.canv(ctrl)
 			}
-			li.RenderLyrics(context.Background(), 100, canv, tt.measure)
+			got := li.RenderLyrics(context.Background(), 100, canv, tt.measure)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

@@ -11,16 +11,20 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_headerInteractor_renderTitle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
+
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		canv      func(*gomock.Controller) *canvas.MockCanvas
-		lyricMock func(*gomock.Controller) *lyric.MockLyric
+		lyricMock func(*ubermock.Controller) *lyric.MockLyric
 		credit    []musicxml.Credit
 		metadata  *entity.HymnMetaData
 	}{
@@ -37,7 +41,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 				canv.EXPECT().Text(360, 35, "UNIT TEST")
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("UNIT TEST").Return(80.0)
 				return li
@@ -64,7 +68,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 				canv.EXPECT().Text(340, 35, "1. UNIT TEST TITLE ONLY")
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("1. UNIT TEST TITLE ONLY").Return(120.0)
 				return li
@@ -92,7 +96,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 				canv.EXPECT().Text(336, 35, "1a. UNIT TEST TITLE WITH VARIANT")
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("1a. UNIT TEST TITLE WITH VARIANT").Return(128.0)
 				return li
@@ -119,10 +123,10 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
 				canv.EXPECT().Text(336, 35, "1. UNIT TEST TITLE ONLY WITH FOOTNOTES AND FOR KIDS *")
-				canv.EXPECT().TextUnescaped(float64(50), float64(35), `<tspan font-style="bold" font-size="125%">☆</tspan>`)
+				canv.EXPECT().TextUnescaped(float64(50), float64(35), `<tspan font-style="bold" font-size="12px">☆</tspan>`)
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("1. UNIT TEST TITLE ONLY WITH FOOTNOTES AND FOR KIDS *").Return(128.0)
 				return li
@@ -134,7 +138,7 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 			// TODO: construct the receiver type.
 			var hi headerInteractor
 			if tt.lyricMock != nil {
-				hi.Lyric = tt.lyricMock(ctrl)
+				hi.Lyric = tt.lyricMock(uberCtrl)
 			}
 			canv := canvas.Canvas(nil)
 			if tt.canv != nil {
@@ -148,11 +152,13 @@ func Test_headerInteractor_renderTitle(t *testing.T) {
 func Test_headerInteractor_renderSubtitle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		canv      func(*gomock.Controller) *canvas.MockCanvas
-		lyricMock func(*gomock.Controller) *lyric.MockLyric
+		lyricMock func(*ubermock.Controller) *lyric.MockLyric
 		credit    []musicxml.Credit
 		metadata  *entity.HymnMetaData
 	}{
@@ -175,7 +181,7 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 			},
 		},
 		{
-			name: "has subtitle, no metadata",
+			name: "has_subtitle,_no_metadata",
 			credit: []musicxml.Credit{
 				{
 					Type:  musicxml.CreditTypeSubtitle,
@@ -183,9 +189,10 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 				},
 			},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
-				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(375, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
-				return canv
+				canvMock := canvas.NewMockCanvas(c)
+				// FIX: Ensure the style argument is passed as a string, not []interface{}
+				canvMock.EXPECT().Text(375, 53, "(KANON)", `style="font-size:11.2px;font-family:'Figtree';font-weight:600"`)
+				return canvMock
 			},
 		},
 		{
@@ -205,10 +212,10 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 			}},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(383, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
+				canv.EXPECT().Text(383, 53, "(KANON)", `style="font-size:11.2px;font-family:'Figtree';font-weight:600"`)
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("2. ").Return(16.0)
 				return li
@@ -232,10 +239,10 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 			}},
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canv := canvas.NewMockCanvas(c)
-				canv.EXPECT().Text(387, 53, "(KANON)", `style="font-size:70%;font-family:'Figtree';font-weight:600"`)
+				canv.EXPECT().Text(387, 53, "(KANON)", `style="font-size:11.2px;font-family:'Figtree';font-weight:600"`)
 				return canv
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateLyricWidth("2. ").Return(18.0)
 				li.EXPECT().CalculateLyricWidth("2a. ").Return(24.0)
@@ -248,7 +255,7 @@ func Test_headerInteractor_renderSubtitle(t *testing.T) {
 			// TODO: construct the receiver type.
 			var hi headerInteractor
 			if tt.lyricMock != nil {
-				hi.Lyric = tt.lyricMock(ctrl)
+				hi.Lyric = tt.lyricMock(uberCtrl)
 			}
 			canv := canvas.Canvas(nil)
 			if tt.canv != nil {

@@ -43,7 +43,7 @@ func NewKeySignature(ctx context.Context, measures []musicxml.Measure) KeySignat
 
 }
 
-func (ks *KeySignature) GetKeyOnMeasure(ctx context.Context, measure int) Key {
+func (ks KeySignature) GetKeyOnMeasure(ctx context.Context, measure int) Key {
 	if len(ks.Signatures) == 1 {
 		return ks.Signatures[0]
 	}

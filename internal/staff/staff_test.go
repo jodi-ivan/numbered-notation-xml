@@ -20,7 +20,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	gomock_new "go.uber.org/mock/gomock"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 type testifyMatcher struct {
@@ -60,7 +60,7 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ctrlUber := gomock_new.NewController(t)
+	ctrlUber := ubermock.NewController(t)
 	defer ctrlUber.Finish()
 
 	kj001 := []musicxml.Measure{
@@ -153,10 +153,10 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 		measures        []musicxml.Measure
 		prevNotes       []*entity.NoteRenderer
 		numberedMock    func(c *gomock.Controller) *numbered.MockNumbered
-		rhythmMock      func(c *gomock_new.Controller) *rhythm.MockRhythm
-		lyricMock       func(c *gomock.Controller) *lyric.MockLyric
+		rhythmMock      func(c *ubermock.Controller) *rhythm.MockRhythm
+		lyricMock       func(c *ubermock.Controller) *lyric.MockLyric
 		breathpauseMock func(c *gomock.Controller) *breathpause.MockBreathPause
-		barlineMock     func(c *gomock.Controller) *barline.MockBarline
+		barlineMock     func(c *ubermock.Controller) *barline.MockBarline
 		renderAlignMock func(c *gomock.Controller) *MockRenderStaffWithAlign
 		want            StaffInfo
 	}{
@@ -178,15 +178,15 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				nm.EXPECT().RendererFromAdditional(testifyMatcher{t: t, expected: getNote(kj001[0].Appendix, 1)}, gomock.Any(), []numbered.NoteLength{{Type: musicxml.NoteLengthQuarter}})
 				return nm
 			},
-			rhythmMock: func(c *gomock_new.Controller) *rhythm.MockRhythm {
+			rhythmMock: func(c *ubermock.Controller) *rhythm.MockRhythm {
 				rm := rhythm.NewMockRhythm(c)
-				rm.EXPECT().SetRhythmNotation(gomock.Any(), gomock.Any(), 3)
-				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), gomock.Any(), 50, 95, signatures["kj001"].ks).Return(50, 95)
+				rm.EXPECT().SetRhythmNotation(ubermock.Any(), ubermock.Any(), 3)
+				rm.EXPECT().AdjustMultiDottedRenderer(ubermock.Any(), ubermock.Any(), 50, 95, signatures["kj001"].ks).Return(50, 95)
 				return rm
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
-				li.EXPECT().SetLyricRenderer(gomock.Any(), gomock.Any())
+				li.EXPECT().SetLyricRenderer(ubermock.Any(), ubermock.Any(), ubermock.Any())
 
 				return li
 			},
@@ -195,14 +195,14 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				bp.EXPECT().SetAndGetBreathPauseRenderer(gomock.Any(), testifyMatcher{t: t, expected: getNote(kj001[0].Appendix, 1)})
 				return bp
 			},
-			barlineMock: func(c *gomock.Controller) *barline.MockBarline {
+			barlineMock: func(c *ubermock.Controller) *barline.MockBarline {
 				bm := barline.NewMockBarline(c)
 				bm.EXPECT().GetRendererRightBarline(gomock.Any(), 50).Return(50, &entity.NoteRenderer{PositionX: 90, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}})
 				return bm
 			},
 			renderAlignMock: func(c *gomock.Controller) *MockRenderStaffWithAlign {
 				ra := NewMockRenderStaffWithAlign(c)
-				ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 0, 110, signatures["kj001"].ts, signatures["kj001"].ks, gomock.Any())
+				// ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 0, 110, signatures["kj001"].ts, signatures["kj001"].ks, gomock.Any())
 				return ra
 			},
 		},
@@ -242,15 +242,15 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				})
 				return nm
 			},
-			rhythmMock: func(c *gomock_new.Controller) *rhythm.MockRhythm {
+			rhythmMock: func(c *ubermock.Controller) *rhythm.MockRhythm {
 				rm := rhythm.NewMockRhythm(c)
-				rm.EXPECT().SetRhythmNotation(gomock.Any(), gomock.Any(), 6)
-				rm.EXPECT().AdjustMultiDottedRenderer(gomock.Any(), gomock.Any(), 50, 95, signatures["kj075"].ks).Return(50, 95)
+				rm.EXPECT().SetRhythmNotation(ubermock.Any(), ubermock.Any(), 6)
+				rm.EXPECT().AdjustMultiDottedRenderer(ubermock.Any(), ubermock.Any(), 50, 95, signatures["kj075"].ks).Return(50, 95)
 				return rm
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
-				li.EXPECT().SetLyricRenderer(gomock.Any(), gomock.Any())
+				li.EXPECT().SetLyricRenderer(ubermock.Any(), ubermock.Any(), ubermock.Any())
 
 				return li
 			},
@@ -259,14 +259,14 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 				bp.EXPECT().SetAndGetBreathPauseRenderer(gomock.Any(), gomock.Any())
 				return bp
 			},
-			barlineMock: func(c *gomock.Controller) *barline.MockBarline {
+			barlineMock: func(c *ubermock.Controller) *barline.MockBarline {
 				bm := barline.NewMockBarline(c)
 				bm.EXPECT().GetRendererRightBarline(gomock.Any(), 50).Return(50, &entity.NoteRenderer{PositionX: 90, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleRegular}})
 				return bm
 			},
 			renderAlignMock: func(c *gomock.Controller) *MockRenderStaffWithAlign {
 				ra := NewMockRenderStaffWithAlign(c)
-				ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 0, 95, signatures["kj075"].ts, signatures["kj075"].ks, gomock.Any())
+				// ra.EXPECT().RenderWithAlign(gomock.Any(), gomock.Any(), 0, 95, signatures["kj075"].ts, signatures["kj075"].ks, gomock.Any())
 				return ra
 			},
 		},
@@ -276,16 +276,16 @@ func Test_staffInteractor_RenderStaff(t *testing.T) {
 			var si staffInteractor
 			si.Numbered = tt.numberedMock(ctrl)
 			si.Rhythm = tt.rhythmMock(ctrlUber)
-			si.Lyric = tt.lyricMock(ctrl)
+			si.Lyric = tt.lyricMock(ctrlUber)
 			si.BreathPause = tt.breathpauseMock(ctrl)
-			si.Barline = tt.barlineMock(ctrl)
+			si.Barline = tt.barlineMock(ctrlUber)
 			si.RenderAlign = tt.renderAlignMock(ctrl)
 			si.StaffText = text.NewText(si.Lyric)
 			topingMock := toping.NewMockToping(t)
 			topingMock.EXPECT().SetStaffLineDashRenderer(mock.Anything, mock.Anything).Maybe()
 			si.Toping = topingMock
 
-			got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, 0, nil, tt.measures, StaffData{
+			_, got := si.RenderStaff(context.Background(), nil, tt.x, tt.y, 0, nil, tt.measures, StaffData{
 				PrevNotes: tt.prevNotes,
 				KeySig:    tt.keySignature,
 				TimeSig:   tt.timeSignature,

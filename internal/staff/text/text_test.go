@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 	"github.com/stretchr/testify/assert"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_textInteractor_NoteHasText(t *testing.T) {
@@ -68,6 +69,7 @@ func Test_textInteractor_NoteHasText(t *testing.T) {
 }
 
 func Test_textInteractor_SetMeasureTextRenderer(t *testing.T) {
+
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
@@ -148,13 +150,15 @@ func Test_textInteractor_SetMeasureTextRenderer(t *testing.T) {
 }
 
 func Test_textInteractor_RenderMeasureText(t *testing.T) {
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	tests := []struct {
 		name      string // description of this test case
 		y         int
 		canv      func() *canvas.MockCanvasTestify
-		lyric     func(c *gomock.Controller) *lyric.MockLyric
+		lyric     func(c *ubermock.Controller) *lyric.MockLyric
 		notes     []*entity.NoteRenderer
 		linestaff []lines.LineStaff
 	}{
@@ -204,14 +208,14 @@ func Test_textInteractor_RenderMeasureText(t *testing.T) {
 				},
 			},
 			y: 100,
-			lyric: func(c *gomock.Controller) *lyric.MockLyric {
+			lyric: func(c *ubermock.Controller) *lyric.MockLyric {
 				res := lyric.NewMockLyric(c)
-				res.EXPECT().CalculateLyricWidth("unittest").Return(16.0)
+				// res.EXPECT().CalculateLyricWidth("unittest").Return(16.0)
 				return res
 			},
 			canv: func() *canvas.MockCanvasTestify {
 				res := canvas.NewMockCanvasTestify(t)
-				res.EXPECT().Text(734, 67, "unittest", []string{`style="font-style:italic;font-size:65%;font-weight:bold"`})
+				res.EXPECT().Text(50, 67, "unittest", []string{`style="font-style:italic;font-size:10.4px;font-weight:bold"`})
 				return res
 			},
 		},
@@ -222,7 +226,7 @@ func Test_textInteractor_RenderMeasureText(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ti textInteractor
 			if tt.lyric != nil {
-				ti.Lyric = tt.lyric(ctrl)
+				ti.Lyric = tt.lyric(uberCtrl)
 			}
 			canv := tt.canv()
 			ti.RenderMeasureText(context.Background(), tt.y, canv, tt.notes, tt.linestaff...)

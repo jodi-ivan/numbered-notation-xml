@@ -1,6 +1,7 @@
 package musicxml
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -396,7 +397,7 @@ func TestMeasure_Build(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := tt.m()
-			if err := m.Build(); (err != nil) != tt.wantErr {
+			if err := m.Build(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Measure.Build() error = %v, wantErr %v", err, tt.wantErr)
 			}
 

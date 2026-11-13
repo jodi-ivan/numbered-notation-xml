@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/gregorian"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
@@ -19,7 +20,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	gomock_new "go.uber.org/mock/gomock"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_alignJustify(t *testing.T) {
@@ -89,6 +90,8 @@ func Test_alignJustify(t *testing.T) {
 }
 
 func Test_renderStaffAlign_getAddedSpace(t *testing.T) {
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	rightAlignOffset := func() *int {
@@ -100,7 +103,7 @@ func Test_renderStaffAlign_getAddedSpace(t *testing.T) {
 		name string // description of this test case
 		// Named input parameters for target function.
 		lastNote   *entity.NoteRenderer
-		lyricMock  func(c *gomock.Controller) *lyric.MockLyric
+		lyricMock  func(c *ubermock.Controller) *lyric.MockLyric
 		totalNotes int
 		want       float64
 		want2      int
@@ -134,7 +137,7 @@ func Test_renderStaffAlign_getAddedSpace(t *testing.T) {
 					{Text: []entity.Text{{Value: "testing"}}},
 				},
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				li := lyric.NewMockLyric(c)
 				li.EXPECT().CalculateOverallWidth([]entity.Lyric{
 					{Text: []entity.Text{{Value: "unit"}}},
@@ -153,9 +156,9 @@ func Test_renderStaffAlign_getAddedSpace(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var rsa renderStaffAlign
 			if tt.lyricMock != nil {
-				rsa.Lyric = tt.lyricMock(ctrl)
+				rsa.Lyric = tt.lyricMock(uberCtrl)
 			}
-			got, got2 := rsa.getAddedSpace(tt.lastNote, tt.rightAlignOffset, tt.totalNotes)
+			got, got2 := rsa.getAddedSpace(constant.LAYOUT_WIDTH, constant.LAYOUT_INDENT_LENGTH, tt.lastNote, tt.rightAlignOffset, tt.totalNotes)
 
 			assert.Equal(t, tt.want, got, "renderStaffAlign_getAddedSpace --> added")
 			assert.Equal(t, tt.want2, got2, "renderStaffAlign_getAddedSpace --> lastPos")
@@ -169,7 +172,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	ctrlUber := gomock_new.NewController(t)
+	ctrlUber := ubermock.NewController(t)
 	defer ctrlUber.Finish()
 
 	measures := []musicxml.Measure{
@@ -201,9 +204,11 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 			{MeasureNumber: 2, PositionX: 398, PositionY: 100},
 			{MeasureNumber: 2, PositionX: 455, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 512, PositionY: 100, IsDotted: true}, {MeasureNumber: 2, PositionX: 569, PositionY: 100, IsDotted: true},
 			{MeasureNumber: 2, PositionX: 626, PositionY: 100, Articulation: &entity.Articulation{BreathMark: &entity.ArticulationTypesBreathMark}},
-			{MeasureNumber: 2, PositionX: 754, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleHeavyLight}},
+			{MeasureNumber: 2, PositionX: 746, PositionY: 100, Barline: &musicxml.Barline{BarStyle: musicxml.BarLineStyleHeavyLight}},
 		},
 	}
+
+	_ = expectMeasures
 
 	ks := keysig.NewKeySignature(context.TODO(), measures)
 	tests := []struct {
@@ -211,8 +216,8 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 		// Named input parameters for target function.
 		canv         func(c *gomock.Controller) *canvas.MockCanvasTestify
 		numberedMock func(c *gomock.Controller) *numbered.MockNumbered
-		rhythmMock   func(c *gomock_new.Controller) *rhythm.MockRhythm
-		lyricMock    func(c *gomock.Controller) *lyric.MockLyric
+		rhythmMock   func(c *ubermock.Controller) *rhythm.MockRhythm
+		lyricMock    func(c *ubermock.Controller) *lyric.MockLyric
 		y            int
 		ts           timesig.TimeSignature
 		noteRenderer [][]*entity.NoteRenderer
@@ -241,7 +246,7 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 				canv.EXPECT().Group([]string{"class=\"gregorian\"", "style='font-family:mozart11'"})
 				canv.EXPECT().Group([]string{"class='measure-align'", "number='1'"})
 				canv.EXPECT().Group([]string{"class='measure-align'", "number='2'"})
-				canv.EXPECT().Group([]string{"class='note'", "style='font-family:Old Standard TT;font-weight:500'"}).Times(2)
+				canv.EXPECT().Group([]string{"class='note'", "style='font-family:Old Standard TT;font-size:16px'"}).Times(2)
 				canv.EXPECT().Gend().Times(9)
 				return canv
 			},
@@ -253,11 +258,11 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 
 				return mock
 			},
-			rhythmMock: func(c *gomock_new.Controller) *rhythm.MockRhythm {
+			rhythmMock: func(c *ubermock.Controller) *rhythm.MockRhythm {
 				mock := rhythm.NewMockRhythm(c)
 				ts := timesig.NewTimeSignatures(context.Background(), measures)
-				mock.EXPECT().RenderBeam(gomock.Any(), 165, gomock.Any(), ts, gomock.Any()).Times(2)
-				mock.EXPECT().RenderSlurTies(gomock.Any(), 165, gomock.Any(),
+				mock.EXPECT().RenderBeam(ubermock.Any(), 165, ubermock.Any(), ts, ubermock.Any()).Times(2)
+				mock.EXPECT().RenderSlurTies(ubermock.Any(), 165, ubermock.Any(),
 					testifyMatcher{expected: []*entity.NoteRenderer{}, t: t},
 					float64(750),
 				)
@@ -266,10 +271,10 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 
 				return mock
 			},
-			lyricMock: func(c *gomock.Controller) *lyric.MockLyric {
+			lyricMock: func(c *ubermock.Controller) *lyric.MockLyric {
 				mock := lyric.NewMockLyric(c)
-				mock.EXPECT().RenderLyrics(gomock.Any(), 165, gomock.Any(), gomock.Any()).Times(2) //&testifyMatcher{t: t, expected: expectMeasures[1]})
-				mock.EXPECT().RenderHypen(gomock.Any(), 165, 0, gomock.Any(), slices.Concat(expectMeasures[1], expectMeasures[2]))
+				mock.EXPECT().RenderLyrics(ubermock.Any(), 165, ubermock.Any(), ubermock.Any()).Times(2) //&testifyMatcher{t: t, expected: expectMeasures[1]})
+				mock.EXPECT().RenderHypen(ubermock.Any(), ubermock.Any(), ubermock.Any(), &testifyMatcher{t: t, expected: slices.Concat(expectMeasures[1], expectMeasures[2])})
 				return mock
 			},
 		},
@@ -280,9 +285,9 @@ func Test_renderStaffAlign_RenderWithAlign(t *testing.T) {
 			var rsa renderStaffAlign
 			rsa.Numbered = tt.numberedMock(ctrl)
 			rsa.Rhythm = tt.rhythmMock(ctrlUber)
-			rsa.Lyric = tt.lyricMock(ctrl)
-			gregMock := gregorian.NewMockGregorian(ctrl)
-			gregMock.EXPECT().RenderStaffLine(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+			rsa.Lyric = tt.lyricMock(ctrlUber)
+			gregMock := gregorian.NewMockGregorian(ctrlUber)
+			gregMock.EXPECT().RenderStaffLine(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			rsa.Gregorian = gregMock
 			canv := tt.canv(ctrl)
 

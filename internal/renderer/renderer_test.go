@@ -17,12 +17,16 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_rendererInteractor_Render(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 
 	creditsData := []musicxml.Credit{
 		{Type: musicxml.CreditTypeTitle, Words: "Unit Test"},
@@ -90,11 +94,11 @@ func Test_rendererInteractor_Render(t *testing.T) {
 
 		canvasMock func(ctrl *gomock.Controller) *canvas.MockCanvas
 		headerMock func(ctrl *gomock.Controller) *header.MockHeader
-		staffMock  func(ctrl *gomock.Controller) *staff.MockStaff
+		staffMock  func(ctrl *ubermock.Controller) *staff.MockStaff
 
 		// optional
 		creditsMock  func(ctrl *gomock.Controller) *credits.MockCredits
-		footnoteMock func(ctrl *gomock.Controller) *footnote.MockFootnote
+		footnoteMock func(ctrl *ubermock.Controller) *footnote.MockFootnote
 		verseMock    func(ctrl *gomock.Controller) *verse.MockVerse
 	}{
 		{
@@ -114,7 +118,8 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				canv.EXPECT().Start(800, 3000)
 				canv.EXPECT().Def()
 				canv.EXPECT().Writer().Return(writerMock)
-
+				canv.EXPECT().Group("class='header'", "style='font-family:Caladea;font-size:16px'")
+				canv.EXPECT().Gend()
 				writerMock.EXPECT().Write(gomock.Any())
 				canv.EXPECT().DefEnd()
 				canv.EXPECT().End()
@@ -129,7 +134,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				mockHeader.EXPECT().RenderKeyandTimeSignatures(gomock.Any(), gomock.Any(), keySignature, timeSignature)
 				return mockHeader
 			},
-			staffMock: func(c *gomock.Controller) *staff.MockStaff {
+			staffMock: func(c *ubermock.Controller) *staff.MockStaff {
 				mockStaff := staff.NewMockStaff(c)
 				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature, nil)
 				return mockStaff
@@ -158,12 +163,14 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				canv := canvas.NewMockCanvas(c)
 				writerMock := canvas.NewMockWriter(c)
 
-				canv.EXPECT().Start(800, 3000)
+				canv.EXPECT().Start(800, 200)
 				canv.EXPECT().Def()
 				canv.EXPECT().Writer().Return(writerMock)
 				writerMock.EXPECT().Write(gomock.Any())
 				canv.EXPECT().DefEnd()
 				canv.EXPECT().End()
+				canv.EXPECT().Group("class='header'", "style='font-family:Caladea;font-size:16px'")
+				canv.EXPECT().Gend()
 
 				return canv
 			},
@@ -175,18 +182,18 @@ func Test_rendererInteractor_Render(t *testing.T) {
 				mockHeader.EXPECT().RenderKeyandTimeSignatures(gomock.Any(), gomock.Any(), keySignature, timeSignature)
 				return mockHeader
 			},
-			staffMock: func(c *gomock.Controller) *staff.MockStaff {
+			staffMock: func(c *ubermock.Controller) *staff.MockStaff {
 				mockStaff := staff.NewMockStaff(c)
 				mockStaff.EXPECT().Render(gomock.Any(), gomock.Any(), musicxml.Part{Measures: measures}, keySignature, timeSignature, metadata).Return(100)
 				return mockStaff
 			},
 
-			footnoteMock: func(c *gomock.Controller) *footnote.MockFootnote {
+			footnoteMock: func(c *ubermock.Controller) *footnote.MockFootnote {
 				fm := footnote.NewMockFootnote(c)
 				pos := 150
-				fm.EXPECT().RenderMusicFootnotes(gomock.Any(), gomock.Any(), metadata.HymnMetadata, 100)
-				fm.EXPECT().RenderVerseFootnotes(gomock.Any(), &pos, metadata.VerseFootNotes)
-				fm.EXPECT().RenderTitleFootnotes(gomock.Any(), 150, metadata.HymnData)
+				fm.EXPECT().RenderMusicFootnotes(ubermock.Any(), ubermock.Any(), metadata.HymnMetadata, 100)
+				fm.EXPECT().RenderVerseFootnotes(ubermock.Any(), ubermock.Any(), &pos, metadata.VerseFootNotes)
+				fm.EXPECT().RenderTitleFootnotes(ubermock.Any(), ubermock.Any(), 150, metadata.HymnData)
 				return fm
 			},
 
@@ -209,7 +216,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ir := rendererInteractor{
-				Staff:  tt.staffMock(ctrl),
+				Staff:  tt.staffMock(uberCtrl),
 				Header: tt.headerMock(ctrl),
 			}
 			if tt.creditsMock != nil {
@@ -217,7 +224,7 @@ func Test_rendererInteractor_Render(t *testing.T) {
 
 			}
 			if tt.footnoteMock != nil {
-				ir.Footnote = tt.footnoteMock(ctrl)
+				ir.Footnote = tt.footnoteMock(uberCtrl)
 
 			}
 			if tt.verseMock != nil {

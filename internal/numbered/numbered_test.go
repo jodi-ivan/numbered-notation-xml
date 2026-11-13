@@ -12,6 +12,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/stretchr/testify/assert"
+	ubermock "go.uber.org/mock/gomock"
 )
 
 func Test_numberedInteractor_GetLengthNote(t *testing.T) {
@@ -349,13 +350,15 @@ func Test_numberedInteractor_GetLengthNote(t *testing.T) {
 func Test_numberedInteractor_RenderNote(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	uberCtrl := ubermock.NewController(t)
+	defer uberCtrl.Finish()
 
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		canv        func(*gomock.Controller) *canvas.MockCanvasTestify
 		lyricMock   func(*gomock.Controller) *lyric.MockLyric
-		barlineMock func(*gomock.Controller) *barline.MockBarline
+		barlineMock func(*ubermock.Controller) *barline.MockBarline
 
 		measure          []*entity.NoteRenderer
 		y                int
@@ -371,13 +374,13 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 				canv.EXPECT().Text(70, 100, "1")
 
 				canv.EXPECT().Circle(59, 72, 6, []string{`stroke="black"`, `fill="none"`, `stroke-width="1.3"`})
-				canv.EXPECT().Text(56, 75, "1", []string{`font-weight="600"`, `style="font-size:60%"`})
+				canv.EXPECT().Text(56, 75, "1", []string{`font-weight="600"`, `style="font-size:9.6px"`})
 
 				return canv
 			},
-			barlineMock: func(c *gomock.Controller) *barline.MockBarline {
+			barlineMock: func(c *ubermock.Controller) *barline.MockBarline {
 				b := barline.NewMockBarline(c)
-				b.EXPECT().RenderBarline(gomock.Any(), gomock.Any(), gomock.Any(), entity.NewCoordinate(50, 100))
+				b.EXPECT().RenderBarline(ubermock.Any(), ubermock.Any(), ubermock.Any(), entity.NewCoordinate(50, 100))
 				return b
 			},
 			measure: []*entity.NoteRenderer{
@@ -418,7 +421,7 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 				ni.Lyric = tt.lyricMock(ctrl)
 			}
 			if tt.barlineMock != nil {
-				ni.Barline = tt.barlineMock(ctrl)
+				ni.Barline = tt.barlineMock(uberCtrl)
 			}
 			canv := canvas.Canvas(nil)
 			if tt.canv != nil {
@@ -428,6 +431,127 @@ func Test_numberedInteractor_RenderNote(t *testing.T) {
 			if tt.canv != nil {
 				canv1 := canv.(*canvas.MockCanvasTestify)
 				canv1.AssertExpectations(t)
+			}
+		})
+	}
+}
+
+func TestNumberedInteractor_SplitNote(t *testing.T) {
+	ts44 := timesig.Time{Beat: 4, BeatType: 4}
+	ts34 := timesig.Time{Beat: 3, BeatType: 4}
+
+	tests := []struct {
+		name       string
+		noteLength float64
+		ts         timesig.Time
+		flag       musicxml.NoteLength
+		next       musicxml.NoteLength
+		want       []NoteLength
+	}{
+		{
+			name:       "whole note in 4/4",
+			noteLength: 4,
+			ts:         ts44,
+			flag:       musicxml.NoteLengthWhole,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthWhole, IsDotted: true},
+				{Type: musicxml.NoteLengthWhole, IsDotted: true},
+				{Type: musicxml.NoteLengthWhole, IsDotted: true},
+				{Type: musicxml.NoteLengthWhole, IsDotted: true},
+			},
+		},
+		{
+			name:       "quarter note in 4/4",
+			noteLength: 1,
+			ts:         ts44,
+			flag:       musicxml.NoteLengthQuarter,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthQuarter, IsDotted: true},
+			},
+		},
+		{
+			name:       "two quarters in 4/4",
+			noteLength: 2,
+			ts:         ts44,
+			flag:       musicxml.NoteLengthQuarter,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthQuarter, IsDotted: true},
+				{Type: musicxml.NoteLengthQuarter, IsDotted: true},
+			},
+		},
+		{
+			name:       "eighth note in 4/4",
+			noteLength: 0.5,
+			ts:         ts44,
+			flag:       musicxml.NoteLengthEighth,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthEighth, IsDotted: true},
+			},
+		},
+		{
+			// unit clamped to Quarter; not merge (unit*2=2 != 1)
+			// fullNotes=floor(2/1)=2, remaining=0 → two dotted Half notes
+			name:       "half flag clamped in 3/4 - two units",
+			noteLength: 2,
+			ts:         ts34,
+			flag:       musicxml.NoteLengthHalf,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthHalf, IsDotted: true},
+				{Type: musicxml.NoteLengthHalf, IsDotted: true},
+			},
+		},
+		{
+			// unit clamped to Quarter; fullNotes=floor(1.5/1)=1, remaining=0.5
+			// dotValue=0.5, flags[0.5]=Eighth exists, remaining>=0.5 → append dotted Eighth
+			name:       "half flag clamped in 3/4 - 1.5 units",
+			noteLength: 1.5,
+			ts:         ts34,
+			flag:       musicxml.NoteLengthHalf,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthHalf, IsDotted: true},
+				{Type: musicxml.NoteLengthEighth, IsDotted: true},
+			},
+		},
+		{
+			// kj-064: 2.5 quarters, unit=1, fullNotes=2, remaining=0.5
+			// → [dotted Q, dotted Q, dotted Eighth]
+			name:       "kj-064 two and a half quarters in 4/4",
+			noteLength: 2.5,
+			ts:         ts44,
+			flag:       musicxml.NoteLengthQuarter,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthQuarter, IsDotted: true},
+				{Type: musicxml.NoteLengthQuarter, IsDotted: true},
+				{Type: musicxml.NoteLengthEighth, IsDotted: true},
+			},
+		},
+		{
+			// merge path: 3 eighths in 3/4
+			// unit=0.5, unit*2=1 == base[flags[1]]=1 → shouldMerge
+			// fullNotes=6 >= 2 → merge branch
+			// results=[dotted Eighth]; fullNotes -= 0.5 → 5.5
+			// append Repeat(dotted Quarter, int(5.5/2)=2)
+			// noteLength = 2.5 - 2*0.5*2 = 0.5 == unit → append dotted Eighth
+			name:       "merge path - 3 eighths in 3/4",
+			noteLength: 3,
+			ts:         ts34,
+			flag:       musicxml.NoteLengthEighth,
+			want: []NoteLength{
+				{Type: musicxml.NoteLengthEighth, IsDotted: true},
+				{Type: musicxml.NoteLengthQuarter, IsDotted: true},
+				{Type: musicxml.NoteLengthQuarter, IsDotted: true},
+				{Type: musicxml.NoteLengthEighth, IsDotted: true},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ni := &numberedInteractor{}
+			got := ni.SplitNote(context.Background(), tt.noteLength, tt.ts, tt.flag, tt.next)
+			if !assert.Equal(t, tt.want, got) {
+				t.Logf("got:  %+v", got)
+				t.Logf("want: %+v", tt.want)
 			}
 		})
 	}

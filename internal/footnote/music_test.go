@@ -31,7 +31,7 @@ func Test_footnoteInteractor_RenderMusicFootnotes(t *testing.T) {
 			name: "usual",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Group("class='footnotes'", `style="font-size:60%;font-family:'Figtree';font-weight:600"`)
+				canvMock.EXPECT().Group("class='footnotes'", `style="font-size:9.6px;font-family:'Figtree';font-weight:600"`)
 				canvMock.EXPECT().Text(696, 65, "* unit = tets")
 				canvMock.EXPECT().Gend()
 				return canvMock

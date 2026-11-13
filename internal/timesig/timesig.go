@@ -9,6 +9,13 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
+type ITimeSig interface {
+	IsEmpty() bool
+	GetHumanized() string
+	GetNoteLength(ctx context.Context, measure int, note musicxml.Note) float64
+	GetTimesignatureOnMeasure(ctx context.Context, measure int) Time
+}
+
 type Time struct {
 	Measure   int
 	Beat      int

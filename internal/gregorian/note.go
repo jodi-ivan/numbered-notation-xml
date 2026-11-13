@@ -10,7 +10,6 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
-	stfline "github.com/jodi-ivan/numbered-notation-xml/internal/staff/lines"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/timesig"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 )
@@ -81,7 +80,7 @@ func setMarginTop(notes []*entity.NoteRenderer, lineStaff lines.LineStaff) {
 
 // getAdditionalNotes when a whole note length cant be represented as one note
 // we need to add additional notes and register both of them in ties.
-func getAdditionalNotes(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer, staffLines lines.LineStaff, notePos, accumulativeDirection int, groupBeam *[][]entity.CoordinateWithNoteLength) *entity.NoteRenderer {
+func getAdditionalNotes(ctx context.Context, ts timesig.ITimeSig, notes []*entity.NoteRenderer, staffLines lines.LineStaff, notePos, accumulativeDirection int, groupBeam *[][]entity.CoordinateWithNoteLength) *entity.NoteRenderer {
 	note := notes[notePos]
 
 	yPos := staffLines.GetYPos(rune(note.AbsoluteNote[0]), note.AbsoluteOctave)
@@ -168,7 +167,7 @@ func getAdditionalNotes(ctx context.Context, ts timesig.TimeSignature, notes []*
 	return result
 }
 
-func isDottedNote(notes []*entity.NoteRenderer, notePos int, ts timesig.TimeSignature) bool {
+func isDottedNote(notes []*entity.NoteRenderer, notePos int, ts timesig.ITimeSig) bool {
 
 	note := notes[notePos]
 	dottedValue := ts.GetNoteLength(context.Background(), note.MeasureNumber, musicxml.Note{Type: note.NoteLength, Dot: []*musicxml.Dot{{}}})
@@ -186,7 +185,7 @@ func isDottedNote(notes []*entity.NoteRenderer, notePos int, ts timesig.TimeSign
 	return (dottedHalf || dottedBeat) && (!merged || (merged && quarterNoteInCompound && note.NoteValue-1 == 2))
 }
 
-func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, slursties []rhythm.SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]entity.CoordinateWithNoteLength, []rhythm.SlurTieGroup) {
+func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines lines.LineStaff, groupBeam [][]entity.CoordinateWithNoteLength, slursties []rhythm.SlurTieGroup, notePos int, notes []*entity.NoteRenderer, timeSignature timesig.TimeSignature, keySignature keysig.KeySignature) (VMargin, [][]entity.CoordinateWithNoteLength, []rhythm.SlurTieGroup) {
 
 	canv.Group(`class="note"`, `style="font-size:32px"`)
 	defer func() {
@@ -229,8 +228,8 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 	}
 
 	note.StemDirection = direction
-
-	additionalNotes := getAdditionalNotes(ctx, timeSignature, notes, staffLines, notePos, accumulative, &groupBeam)
+	tsPtr := timeSignature
+	additionalNotes := getAdditionalNotes(ctx, &tsPtr, notes, staffLines, notePos, accumulative, &groupBeam)
 	if additionalNotes != nil {
 		// since this is inserted additional notes, so the grouping as ties is guaranteed
 		// just use the the existing group consensus.
@@ -274,7 +273,7 @@ func RenderNote(ctx context.Context, canv canvas.Canvas, staffLines stfline.Line
 
 	xPos := float64(note.PositionX)
 
-	isDotted := isDottedNote(notes, notePos, timeSignature)
+	isDotted := isDottedNote(notes, notePos, &tsPtr)
 	renderBean(canv,
 		entity.NewCoordinate(xPos, yPos),
 		beamType, note.AbsoluteNote, accidental, note.AbsoluteOctave, staffLines.GetTopLine(), isDotted)

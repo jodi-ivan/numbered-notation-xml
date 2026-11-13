@@ -3,6 +3,7 @@ package gregorian
 import (
 	"cmp"
 	"fmt"
+	"log"
 	"math"
 	"slices"
 
@@ -126,6 +127,7 @@ func renderStem(canv canvas.Canvas, lines [5]int, direction int, start, end []en
 		if intersect >= 0 && (start[i].NoteLength == musicxml.NoteLengthQuarter || start[i].NoteLength == musicxml.NoteLengthHalf) {
 			y3 += 0.5 * float64(direction)
 		}
+		log.Println("---->", start[i].X, start[i].Y, end[i].X, y3+additional)
 		canv.LineFloat64(start[i].X, start[i].Y, end[i].X, y3+additional, `style="fill:none;stroke:#000000;stroke-linecap:round;stroke-width:1"`)
 		if lowestYPosition.Y < y3+additional {
 			lowestYPosition = entity.NewCoordinate(start[i].X, y3+additional)

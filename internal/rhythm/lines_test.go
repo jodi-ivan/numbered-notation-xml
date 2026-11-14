@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
+	ubermock "go.uber.org/mock/gomock"
+
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
@@ -362,18 +364,21 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	ctrlUber := ubermock.NewController(t)
+	defer ctrlUber.Finish()
+
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for target function.
 		canv         func(*gomock.Controller) *canvas.MockCanvas
-		beamSplitter func(*gomock.Controller) *splitter.MockBeamSplitter
+		beamSplitter func(*ubermock.Controller) *splitter.MockBeamSplitter
 
 		ts    timesig.TimeSignature
 		notes []*entity.NoteRenderer
 	}{
 		{
 			name: "no notes",
-			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
+			beamSplitter: func(c *ubermock.Controller) *splitter.MockBeamSplitter {
 				bs := splitter.NewMockBeamSplitter(c)
 				// bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				return bs
@@ -381,7 +386,7 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 		},
 		{
 			name: "no beam",
-			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
+			beamSplitter: func(c *ubermock.Controller) *splitter.MockBeamSplitter {
 				bs := splitter.NewMockBeamSplitter(c)
 				// bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				return bs
@@ -398,7 +403,7 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 		},
 		{
 			name: "has beam",
-			beamSplitter: func(c *gomock.Controller) *splitter.MockBeamSplitter {
+			beamSplitter: func(c *ubermock.Controller) *splitter.MockBeamSplitter {
 				bs := splitter.NewMockBeamSplitter(c)
 				// bs.EXPECT().Split(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				return bs
@@ -437,7 +442,7 @@ func Test_rhythmInteractor_RenderBeam(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var ri rhythmInteractor
-			ri.BeamSplitter = tt.beamSplitter(ctrl)
+			ri.BeamSplitter = tt.beamSplitter(ctrlUber)
 
 			canv := canvas.Canvas(nil)
 			if tt.canv != nil {

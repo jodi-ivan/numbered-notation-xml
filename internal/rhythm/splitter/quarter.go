@@ -27,7 +27,7 @@ func (qs *quaterSpliiter) shouldMergeSegments(notes []*entity.NoteRenderer, s, n
 	return isBreathmark && isGapBeam && eitherHasOneNote
 }
 
-func (qs *quaterSpliiter) Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments map[int][]BeamSplitMarker) {
+func (qs *quaterSpliiter) Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, segments map[int][]BeamSplitMarker) {
 	if len(segments[2]) == 0 {
 		qs.SplitSingle(ctx, notes, ts, segments[1], 1)
 		return
@@ -213,7 +213,7 @@ func (qs *quaterSpliiter) Split(ctx context.Context, notes []*entity.NoteRendere
 	qs.SplitSingle(ctx, notes, ts, unprocessedSegment, 1)
 }
 
-func (qs *quaterSpliiter) SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments []BeamSplitMarker, beamNo int) {
+func (qs *quaterSpliiter) SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, segments []BeamSplitMarker, beamNo int) {
 	interval := Interval(segments)
 	sort.Sort(interval)
 	skipSplitSegmentIdx := map[int]bool{}

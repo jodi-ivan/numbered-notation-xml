@@ -7,7 +7,14 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
-func CleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, no int) []BeamSplitMarker {
+type Sanitizer interface {
+	CleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, no int) []BeamSplitMarker
+}
+
+type sanitizer struct {
+}
+
+func (s *sanitizer) CleanBeamByNumber(ctx context.Context, notes []*entity.NoteRenderer, no int) []BeamSplitMarker {
 
 	switches := map[int]beamMarker{}
 

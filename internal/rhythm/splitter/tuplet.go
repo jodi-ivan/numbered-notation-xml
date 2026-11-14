@@ -5,7 +5,18 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
-func splitTuplet(notes []*entity.NoteRenderer, segments []BeamSplitMarker) []BeamSplitMarker {
+type TupletSplitter interface {
+	Split(notes []*entity.NoteRenderer, segments []BeamSplitMarker) []BeamSplitMarker
+}
+
+type tuplet struct {
+}
+
+func NewTuplet() TupletSplitter {
+	return &tuplet{}
+}
+
+func (t *tuplet) Split(notes []*entity.NoteRenderer, segments []BeamSplitMarker) []BeamSplitMarker {
 	marker := BeamSplitMarker{-1, -1}
 
 	result := []BeamSplitMarker{}

@@ -204,7 +204,8 @@ func (ri *rhythmInteractor) RenderSlurTies(ctx context.Context, y int, canv canv
 }
 
 func (ri *rhythmInteractor) Split(ctx context.Context, ts timesig.TimeSignature, notes []*entity.NoteRenderer) {
-	ri.BeamSplitter.Split(ctx, notes, ts, nil)
+	tsPtr := ts
+	ri.BeamSplitter.Split(ctx, notes, &tsPtr, nil)
 
 }
 

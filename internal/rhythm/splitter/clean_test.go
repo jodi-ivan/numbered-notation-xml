@@ -1,4 +1,4 @@
-package splitter_test
+package splitter
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,16 +15,16 @@ func TestCleanBeamByNumber(t *testing.T) {
 		// Named input parameters for target function.
 		notes []*entity.NoteRenderer
 		no    int
-		want  []splitter.BeamSplitMarker
+		want  []BeamSplitMarker
 	}{
 		{
-			want: []splitter.BeamSplitMarker{},
+			want: []BeamSplitMarker{},
 		},
 		{
 			notes: []*entity.NoteRenderer{
 				{},
 			},
-			want: []splitter.BeamSplitMarker{},
+			want: []BeamSplitMarker{},
 		},
 		{
 			no: 1,
@@ -47,7 +46,7 @@ func TestCleanBeamByNumber(t *testing.T) {
 					},
 				},
 			},
-			want: []splitter.BeamSplitMarker{
+			want: []BeamSplitMarker{
 				{
 					StartIndex: 0,
 					EndIndex:   1,
@@ -106,7 +105,7 @@ func TestCleanBeamByNumber(t *testing.T) {
 					},
 				},
 			},
-			want: []splitter.BeamSplitMarker{
+			want: []BeamSplitMarker{
 				{
 					StartIndex: 1,
 					EndIndex:   2,
@@ -116,7 +115,8 @@ func TestCleanBeamByNumber(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := splitter.CleanBeamByNumber(context.Background(), tt.notes, tt.no)
+			s := &sanitizer{}
+			got := s.CleanBeamByNumber(context.Background(), tt.notes, tt.no)
 
 			assert.Equal(t, tt.want, got, "CleanBeamByNumber()")
 		})

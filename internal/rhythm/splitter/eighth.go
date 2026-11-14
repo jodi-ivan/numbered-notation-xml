@@ -13,7 +13,7 @@ import (
 type eighthSplitter struct {
 }
 
-func (es *eighthSplitter) Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments map[int][]BeamSplitMarker) {
+func (es *eighthSplitter) Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, segments map[int][]BeamSplitMarker) {
 	if len(segments[2]) == 0 {
 		es.SplitSingle(ctx, notes, ts, segments[1], 1)
 		return
@@ -78,7 +78,7 @@ func (es *eighthSplitter) Split(ctx context.Context, notes []*entity.NoteRendere
 	es.SplitSingle(ctx, notes, ts, unprocessedSegment, 1)
 
 }
-func (es *eighthSplitter) SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments []BeamSplitMarker, beamNo int) {
+func (es *eighthSplitter) SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, segments []BeamSplitMarker, beamNo int) {
 	interval := Interval(segments)
 	sort.Sort(interval)
 	skipSplitSegmentIdx := map[int]bool{}

@@ -9,20 +9,27 @@ import (
 )
 
 type BeamSplitter interface {
-	Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments map[int][]BeamSplitMarker)
-	SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments []BeamSplitMarker, beamNo int)
+	Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, segments map[int][]BeamSplitMarker)
+	SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, segments []BeamSplitMarker, beamNo int)
 }
 
 type beamSplitter struct {
-	eighth  eighthSplitter
-	quarter quaterSpliiter
+	eighth    BeamSplitter
+	quarter   BeamSplitter
+	tuplet    TupletSplitter
+	sanitizer Sanitizer
 }
 
 func New() BeamSplitter {
-	return &beamSplitter{}
+	return &beamSplitter{
+		eighth:    &eighthSplitter{},
+		quarter:   &quaterSpliiter{},
+		tuplet:    &tuplet{},
+		sanitizer: &sanitizer{},
+	}
 }
 
-func (bs *beamSplitter) Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, _ map[int][]BeamSplitMarker) {
+func (bs *beamSplitter) Split(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, _ map[int][]BeamSplitMarker) {
 	if len(notes) == 0 {
 		return
 	}
@@ -30,11 +37,14 @@ func (bs *beamSplitter) Split(ctx context.Context, notes []*entity.NoteRenderer,
 
 	beamSegments := map[int][]BeamSplitMarker{}
 
-	beamSegments[1] = CleanBeamByNumber(ctx, notes, 1)
-	beamSegments[2] = CleanBeamByNumber(ctx, notes, 2)
+	beamSegments[1] = bs.sanitizer.CleanBeamByNumber(ctx, notes, 1)
+	beamSegments[2] = bs.sanitizer.CleanBeamByNumber(ctx, notes, 2)
 
 	currentTimesig := ts.GetTimesignatureOnMeasure(ctx, measureNumber)
-	beamSegments[1] = splitTuplet(notes, beamSegments[1])
+
+	// tuplet has their own dedicated splitting algorithm
+	// also tuplet.Split would lock so the typical splitter below wont split.
+	beamSegments[1] = bs.tuplet.Split(notes, beamSegments[1])
 	switch currentTimesig.BeatType {
 	case 4, 2:
 		bs.quarter.Split(ctx, notes, ts, beamSegments)
@@ -44,7 +54,7 @@ func (bs *beamSplitter) Split(ctx context.Context, notes []*entity.NoteRenderer,
 		log.Printf("[rhythm] Unable to split, On measure: %d: Unsupported beat-type %d.  \n", measureNumber, currentTimesig.BeatType)
 	}
 }
-func (bs *beamSplitter) SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.TimeSignature, segments []BeamSplitMarker, beamNo int) {
+func (bs *beamSplitter) SplitSingle(ctx context.Context, notes []*entity.NoteRenderer, ts timesig.ITimeSig, segments []BeamSplitMarker, beamNo int) {
 	if len(notes) == 0 {
 		return
 	}

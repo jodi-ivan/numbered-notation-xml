@@ -413,7 +413,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "BE only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(771, 115, "BE 100")
+				canvMock.EXPECT().Text(721, 115, "BE 100")
 				return canvMock
 			},
 			y: 115,
@@ -428,7 +428,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "NR only",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(769, 115, "NR 100")
+				canvMock.EXPECT().Text(719, 115, "NR 100")
 				return canvMock
 			},
 			y: 115,
@@ -443,7 +443,7 @@ func Test_renderReferences(t *testing.T) {
 			name: "Both",
 			canv: func(c *gomock.Controller) *canvas.MockCanvas {
 				canvMock := canvas.NewMockCanvas(c)
-				canvMock.EXPECT().Text(735, 115, "BE 100, NR 100")
+				canvMock.EXPECT().Text(685, 115, "BE 100, NR 100")
 				return canvMock
 			},
 			y: 115,

@@ -35,7 +35,7 @@ func (hvd *HymnVariantDecorator) Lookup(ctx context.Context, term string) ([]ent
 }
 
 func (hvd *HymnVariantDecorator) Highlight(ctx context.Context, hits []entity.SearchMatch) []usecase.HighlightSearchResult {
-	return hvd.Highlight(ctx, hits)
+	return hvd.next.Highlight(ctx, hits)
 }
 
 func WithVariantRedirect(repo repository.Repository) HTTPMiddlewareAdapter {

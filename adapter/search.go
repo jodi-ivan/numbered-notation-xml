@@ -1,11 +1,12 @@
 package adapter
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/jodi-ivan/numbered-notation-xml/svc/usecase"
+	customerror "github.com/jodi-ivan/numbered-notation-xml/utils/errors"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/webserver"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -24,25 +25,19 @@ func (sah *SearchAdapterHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, 
 	term := r.FormValue("q")
 	if term == "" {
 		log.Println("[SearchAdapterHTTP] invalid query q ")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Query can't be empty"))
+		webserver.RenderErrorResponse(w, http.StatusBadRequest, customerror.New("Invalid query"))
 		return
 	}
 
 	hits, err := sah.Usecase.Lookup(ctx, term)
 	if err != nil {
 		log.Printf("[SearchAdapterHTTP] failed to lookup, err: %v", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to search."))
+		webserver.RenderErrorResponse(w, http.StatusInternalServerError, customerror.NewFromError(err, "Failed to search"))
 		return
 	}
 
 	highlights := sah.Usecase.Highlight(ctx, hits)
 
-	raw, _ := json.Marshal(highlights)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(raw)
+	webserver.RenderSuccessResponse(w, nil, highlights)
 
 }

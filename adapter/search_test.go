@@ -56,7 +56,7 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 				res.EXPECT().Header().Return(header) //.Set("Content-Type", "application/json")
 
 				res.EXPECT().WriteHeader(200)
-				res.EXPECT().Write([]byte(`[{"title":{"snippet":"","spans":null},"full_title":"Test Title","tier":0}]`))
+				res.EXPECT().Write([]byte(`{"data":[{"title":{"snippet":"","spans":null},"full_title":"Test Title","tier":0}]}`))
 				return res, header
 			},
 			wantHeader: map[string][]string{
@@ -76,9 +76,14 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 			},
 			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) (*webserver.MockResponseWriter, http.Header) {
 				res := webserver.NewMockResponseWriter(ctrl)
+				header := http.Header{}
+				res.EXPECT().Header().Return(header)
 				res.EXPECT().WriteHeader(500)
-				res.EXPECT().Write([]byte("Failed to search."))
-				return res, nil
+				res.EXPECT().Write([]byte(`{"code":"500","source":{"pointer":"github.com/jodi-ivan/numbered-notation-xml/adapter.(*SearchAdapterHTTP).ServeHTTP({}, ?, {?, ?, ?})"},"title":"Failed to search","detail":"lookup failed"}`))
+				return res, header
+			},
+			wantHeader: map[string][]string{
+				"Content-Type": []string{"application/json"},
 			},
 		},
 		{
@@ -92,10 +97,15 @@ func TestSearchAdapterHTTP_ServeHTTP(t *testing.T) {
 			},
 			initHTTPResponseWriterMock: func(ctrl *gomock.Controller) (*webserver.MockResponseWriter, http.Header) {
 				res := webserver.NewMockResponseWriter(ctrl)
+				header := http.Header{}
+				res.EXPECT().Header().Return(header)
 				res.EXPECT().WriteHeader(400)
-				res.EXPECT().Write([]byte("Query can't be empty"))
+				res.EXPECT().Write([]byte(`{"code":"400","source":{"pointer":"github.com/jodi-ivan/numbered-notation-xml/adapter.(*SearchAdapterHTTP).ServeHTTP({}, ?, {?, ?, ?})"},"title":"There is something wrong, please try again","detail":"Invalid query"}`))
 
-				return res, nil
+				return res, header
+			},
+			wantHeader: map[string][]string{
+				"Content-Type": []string{"application/json"},
 			},
 		},
 	}

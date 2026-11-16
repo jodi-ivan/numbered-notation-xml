@@ -2,9 +2,11 @@ package renderer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/category"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/credits"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
@@ -55,6 +57,15 @@ func (ir *rendererInteractor) Render(ctx context.Context, music musicxml.MusicXM
 		ns = append(ns, "background-color='#FFFFFF'")
 	}
 
+	allVariants, _ := json.Marshal(metadata.AllVariants)
+	L1, L2 := category.GetCanonicalLocation(metadata.Number)
+	locEntries, _ := json.Marshal(category.Lookup(metadata.Number, 0))
+	fmt.Fprintf(canv.Writer(),
+		`<metadata>{"loc":{"title": "%s", "L1": "%s", "L2": "%s", "usage":%s}, "total_verse": %d, "all_variants":%s,  "status": "verified", "selected_variant":"%s"}</metadata>`,
+		metadata.Title, L1, L2, string(locEntries),
+		len(metadata.Verse)+1,
+		string(allVariants),
+		metadata.Variant.String)
 	canv.Def()
 	fmt.Fprintf(canv.Writer(), fontfmt, string(googlefont()))
 	canv.DefEnd()

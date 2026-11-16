@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"errors"
+
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/category"
 )
 
 var ErrHymnNotFound = errors.New("hymn not found")
@@ -19,6 +21,8 @@ type HymnMetadata struct {
 	Verse map[int]HymnVerse
 
 	VerseFootNotes map[int]map[int]VerseFootNotes
+	AllVariants    []string
+	Usage          []category.Entry
 }
 
 type HymnIndicator struct {

@@ -14,6 +14,93 @@ type Entry struct {
 	Verse int    `json:"verse,omitempty"` // 0 means "any verse" / not specified
 }
 
+type Range struct {
+	Start int
+	End   int
+	L1    string
+	L2    string
+}
+
+var TableContent = []Range{
+	{1, 22, "Menghadap Allah", "Puji-pujian dan Pembukaan Ibadah"},
+	{23, 41, "Menghadap Allah", "Pengakuan dan Pengampunan Dosa"},
+	{42, 48, "Menghadap Allah", "Kyrie dan Gloria"},
+
+	{49, 59, "Pelayanan Firman", "Pembacaan Alkitab"},
+	{60, 69, "Pelayanan Firman", "Penciptaan dan Pemeliharaan"},
+	{70, 75, "Pelayanan Firman", "Perjanjian Lama"},
+	{76, 91, "Pelayanan Firman", "Penantian Mesias dan Masa Adven"},
+	{92, 127, "Pelayanan Firman", "Kelahiran Yesus dan Masa Natal"},
+	{128, 143, "Pelayanan Firman", "Akhir Masa Natal dan Epifania"},
+	{144, 154, "Pelayanan Firman", "Kisah Pelayanan Yesus"},
+	{155, 163, "Pelayanan Firman", "Masa Prapaskah"},
+	{164, 186, "Pelayanan Firman", "Sengsara Yesus dan Jumat Agung"},
+	{187, 217, "Pelayanan Firman", "Kebangkitan Yesus dan Masa Paskah"},
+	{218, 227, "Pelayanan Firman", "Hari Kenaikan"},
+	{228, 241, "Pelayanan Firman", "Roh Kudus dan Hari Pentakosta"},
+	{242, 246, "Pelayanan Firman", "Allah Tritunggal dan Hari Trinitatis"},
+	{247, 261, "Pelayanan Firman", "Gereja dan Kerajaan Allah"},
+	{262, 271, "Pelayanan Firman", "Kehidupan Sorgawi"},
+	{272, 279, "Pelayanan Firman", "Akhir Zaman dan Penggenapan"},
+
+	{280, 285, "Respons Terhadap Pelayanan Firman", "Penyataan Keyakinan Firman"},
+	{286, 303, "Respons Terhadap Pelayanan Firman", "Pengucapan Syukur dan Persembahan"},
+
+	{304, 309, "Pelayanan Kudus", "Baptisan Kudus dan Peneguhan Sidi"},
+	{310, 315, "Pelayanan Kudus", "Perjamuan Kudus"},
+	{316, 318, "Pelayanan Kudus", "Pernikahan"},
+	{319, 320, "Pelayanan Kudus", "Peristiwa Istimewa Gerejawi"},
+
+	{321, 323, "Waktu dan Musim", "Pagi dan Siang"},
+	{324, 329, "Waktu dan Musim", "Petang dan Malam"},
+	{330, 332, "Waktu dan Musim", "Pergantian Tahun"},
+	{333, 335, "Waktu dan Musim", "Musim dan Panen"},
+	{336, 337, "Waktu dan Musim", "Bangsa dan Negara"},
+
+	{338, 344, "Puntupan Ibadah", "Pengutusan"},
+	{345, 350, "Waktu dan Musim", "Berkat"},
+
+	{351, 360, "Hidup Beriman Sehari-hari", "Panggilan Juruselamat"},
+	{361, 376, "Hidup Beriman Sehari-hari", "Penyerahan Diri"},
+	{377, 390, "Hidup Beriman Sehari-hari", "Kebesaran Rahmat Tuhan"},
+	{391, 399, "Hidup Beriman Sehari-hari", "Sukacita dalam Tuhan"},
+	{400, 405, "Hidup Beriman Sehari-hari", "Hidup Bersama Tuhan"},
+	{406, 421, "Hidup Beriman Sehari-hari", "Tuntunan Tuhan"},
+	{422, 437, "Hidup Beriman Sehari-hari", "Tanggung Jawab Pengikut Kristus"},
+	{438, 446, "Hidup Beriman Sehari-hari", "Kemenangan dalam Perjuangan"},
+	{447, 451, "Hidup Beriman Sehari-hari", "Keluarga dan Persekutuan"},
+	{452, 471, "Hidup Beriman Sehari-hari", "Doa Setiap Waktu"},
+
+	{472, 478, "Haleluya, Amin dan Lain-lain", ""},
+}
+
+var Variants = map[int][]string{
+	24:  {"a", "b"},
+	30:  {"a", "b"},
+	31:  {"a", "b"},
+	37:  {"a", "b"},
+	50:  {"a", "b"},
+	95:  {"a", "b"},
+	144: {"a", "b"},
+	146: {"a", "b"},
+	168: {"a", "b", "c"},
+	174: {"a", "b"},
+	222: {"a", "b"},
+	229: {"a", "b"},
+	240: {"a", "b"},
+	248: {"a", "b"},
+	250: {"a", "b"},
+	287: {"a", "b"},
+	303: {"a", "b"},
+	311: {"a", "b"},
+	312: {"a", "b"},
+	365: {"a", "b", "c"},
+	369: {"a", "b"},
+	466: {"a", "b"},
+	473: {"a", "b"},
+	478: {"a", "b", "c"},
+}
+
 // rawData holds the index as [h1, h2, comma-separated token list].
 // Tokens may be:
 //   - "287"       → single number
@@ -124,4 +211,14 @@ func Lookup(num, verse int) []Entry {
 		}
 	}
 	return results
+}
+
+func GetCanonicalLocation(no int) (string, string) {
+	for _, tb := range TableContent {
+		if no >= tb.Start && no <= tb.End {
+			return tb.L1, tb.L2
+		}
+	}
+
+	return "", ""
 }

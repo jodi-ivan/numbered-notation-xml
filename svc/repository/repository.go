@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/category"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 )
 
@@ -100,6 +101,7 @@ func (r *repository) GetHymnMetaData(ctx context.Context, hymnNum int, variant .
 		HymnData:       rows[0].HymnData,
 		Verse:          map[int]HymnVerse{},
 		VerseFootNotes: map[int]map[int]VerseFootNotes{},
+		AllVariants:    category.Variants[rows[0].HymnData.Number],
 	}
 
 	for _, verse := range rows {

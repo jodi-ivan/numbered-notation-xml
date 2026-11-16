@@ -29,6 +29,12 @@ func (aah *AutocompleteAdapterHTTP) ServeHTTP(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	if len(term) < 3 {
+		log.Printf("[AutocompleteAdapterHTTP] query term too short: %s", term)
+		webserver.RenderErrorResponse(w, http.StatusBadRequest, customerror.New("Query must be at least 3 characters long"))
+		return
+	}
+
 	result, err := aah.Usecase.Autocomplete(ctx, term)
 	if err != nil {
 		log.Printf("[AutocompleteAdapterHTTP] failed to autocomplete, err: %v", err.Error())

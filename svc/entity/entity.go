@@ -6,12 +6,16 @@ type HitPosition struct {
 	End   int
 }
 
+type TitleSuggestion struct {
+	Score    float64
+	FieldHit map[string][]HitPosition
+	Title    string
+	HymnNo   int
+	Variant  string
+}
+
 type SearchMatch struct {
-	Score         float64
-	FieldHit      map[string][]HitPosition
-	Title         string
-	HymnNo        int
-	Variant       string
+	TitleSuggestion
 	Content       string
 	ContentVerse  string
 	VersePosNo    []float64

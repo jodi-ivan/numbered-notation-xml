@@ -290,6 +290,16 @@ func main() {
 		panic(err)
 	}
 
+	// index-time analyzer for autocomplete
+	if err := indexMapping.AddCustomAnalyzer("autocomplete", map[string]interface{}{
+		"type":          custom.Name,
+		"char_filters":  charFilters, // b'rikan -> berikan first
+		"tokenizer":     bleve_unicode.Name,
+		"token_filters": []string{lowercase.Name, "my_ngram"},
+	}); err != nil {
+		log.Fatal(err)
+	}
+
 	docMapping := bleve.NewDocumentMapping()
 
 	contentMapping := bleve.NewTextFieldMapping()
@@ -326,8 +336,8 @@ func main() {
 	// ngram for autocomplete
 	titleNgram := bleve.NewTextFieldMapping()
 	titleNgram.Store = true
-
-	titleNgram.Analyzer = "part_word_analyzer"
+	titleNgram.IncludeTermVectors = true
+	titleNgram.Analyzer = "autocomplete"
 
 	ogMap := bleve.NewTextFieldMapping()
 	ogMap.Store = true
@@ -356,46 +366,18 @@ func main() {
 	// 	dump(indexMapping, "part_word_analyzer", w)
 	// }
 
-	var variants = map[int][]string{
-		24:  []string{"a", "b"},
-		30:  []string{"a", "b"},
-		31:  []string{"a", "b"},
-		37:  []string{"a", "b"},
-		50:  []string{"a", "b"},
-		95:  []string{"a", "b"},
-		144: []string{"a", "b"},
-		146: []string{"a", "b"},
-		168: []string{"a", "b", "c"},
-		174: []string{"a", "b"},
-		222: []string{"a", "b"},
-		229: []string{"a", "b"},
-		240: []string{"a", "b"},
-		248: []string{"a", "b"},
-		250: []string{"a", "b"},
-		287: []string{"a", "b"},
-		303: []string{"a", "b"},
-		311: []string{"a", "b"},
-		312: []string{"a", "b"},
-		365: []string{"a", "b", "c"},
-		369: []string{"a", "b"},
-		466: []string{"a", "b"},
-		473: []string{"a", "b"},
-		478: []string{"a", "b", "c"},
-	}
 	// Add documents
 	documents := []*Document{}
 
 	for no := 1; no <= 478; no++ {
 		var doc *Document
 		var err error
-		if variant, ok := variants[no]; ok {
+		if variant, ok := category.Variants[no]; ok {
 			for _, vs := range variant {
 				doc, err = BuildDocument(repo, no, vs)
 				if err != nil {
-					if err != nil {
-						log.Fatalf("Failed to build docs: %s", err.Error())
-						return
-					}
+					log.Fatalf("Failed to build docs: %s", err.Error())
+					return
 				}
 				documents = append(documents, doc)
 

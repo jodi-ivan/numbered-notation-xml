@@ -38,6 +38,10 @@ func (hvd *HymnVariantDecorator) Highlight(ctx context.Context, hits []entity.Se
 	return hvd.next.Highlight(ctx, hits)
 }
 
+func (hvd *HymnVariantDecorator) Autocomplete(ctx context.Context, term string) ([]usecase.HighlightSearchResult, error) {
+	return hvd.next.Autocomplete(ctx, term)
+}
+
 func WithVariantRedirect(repo repository.Repository) HTTPMiddlewareAdapter {
 	return func(next usecase.Usecase) usecase.Usecase {
 		return &HymnVariantDecorator{repo: repo, next: next}

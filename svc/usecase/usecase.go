@@ -23,6 +23,7 @@ import (
 type Usecase interface {
 	RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum int, variant ...string) error
 	Lookup(ctx context.Context, term string) ([]svc.SearchMatch, error)
+	Autocomplete(ctx context.Context, term string) ([]HighlightSearchResult, error)
 	Highlight(ctx context.Context, hits []svc.SearchMatch) []HighlightSearchResult
 }
 

@@ -2,10 +2,12 @@ package search
 
 import (
 	"context"
+	"errors"
 	"log"
 	"sort"
 	"strings"
 
+	"github.com/blevesearch/bleve/v2"
 	core "github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
 	"github.com/blevesearch/bleve/v2/analysis/char/regexp"
@@ -13,6 +15,7 @@ import (
 	"github.com/blevesearch/bleve/v2/analysis/token/ngram"
 	"github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
 	"github.com/blevesearch/bleve/v2/search"
+	"github.com/blevesearch/bleve/v2/search/query"
 	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 	_ "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/entity"
@@ -69,11 +72,13 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 type Provider interface {
 	Close() error
 	Search(ctx context.Context, req *core.SearchRequest) (*core.SearchResult, error)
+	Autocomplete(ctx context.Context, term string) (*core.SearchResult, error)
 }
 type index struct {
 	bleveIndex core.Index
@@ -97,6 +102,39 @@ func (i index) Search(ctx context.Context, req *core.SearchRequest) (*core.Searc
 	}
 
 	return searchResult, nil
+}
+
+func (i index) Autocomplete(ctx context.Context, term string) (*core.SearchResult, error) {
+
+	var terms []string
+	m := i.bleveIndex.Mapping()
+	for _, t := range m.AnalyzerNamed("autocomplete").Analyze([]byte(term)) {
+		terms = append(terms, string(t.Term))
+	}
+	if len(terms) == 0 {
+		return nil, errors.New("no terms with supported map found.")
+	}
+
+	var qs []query.Query
+	for i, term := range terms {
+		if i < len(terms)-1 {
+			tq := bleve.NewMatchQuery(term) // finished words: exact
+			tq.SetField("title_ngram")
+			tq.Analyzer = "autocomplete"
+			qs = append(qs, tq)
+		} else {
+			pq := bleve.NewPrefixQuery(term) // word being typed: prefix
+			pq.SetField("title_ngram")
+			qs = append(qs, pq)
+		}
+	}
+
+	queries := core.NewConjunctionQuery(qs...)
+	searchRequest := core.NewSearchRequest(queries)
+	searchRequest.IncludeLocations = true
+	searchRequest.Fields = []string{"title", "hymn_no", "variant"}
+
+	return i.bleveIndex.Search(searchRequest)
 }
 
 func BuildQuery(ctx context.Context, term string) *core.SearchRequest {
@@ -134,11 +172,13 @@ func NewSearhProvider(conf config.Config) (Provider, error) {
 
 func NewSearchMatch(hit *search.DocumentMatch) entity.SearchMatch {
 	m := entity.SearchMatch{
-		Score:         hit.Score,
-		FieldHit:      map[string][]entity.HitPosition{},
-		Title:         asString(hit.Fields["title"]),
-		HymnNo:        asInt(hit.Fields["hymn_no"]),
-		Variant:       asString(hit.Fields["variant"]),
+		TitleSuggestion: entity.TitleSuggestion{
+			Score:    hit.Score,
+			FieldHit: map[string][]entity.HitPosition{},
+			Title:    asString(hit.Fields["title"]),
+			HymnNo:   asInt(hit.Fields["hymn_no"]),
+			Variant:  asString(hit.Fields["variant"]),
+		},
 		Content:       asString(hit.Fields["content"]),
 		ContentVerse:  asString(hit.Fields["verses.content"]),
 		VersePosNo:    asFloats(hit.Fields["verses.no"]),

@@ -2,10 +2,12 @@ package usecase
 
 import (
 	"context"
+	"math"
 	"sort"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/svc/entity"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/search"
 )
 
 var maxVersesShown = 4
@@ -49,6 +51,44 @@ func (u *interactor) Highlight(ctx context.Context, hits []entity.SearchMatch) [
 		result = append(result, highlightOne(h))
 	}
 	return result
+}
+
+func (i *interactor) Autocomplete(ctx context.Context, term string) ([]HighlightSearchResult, error) {
+	suggestions, err := i.searchProvider.Autocomplete(ctx, term)
+	if err != nil {
+		return nil, err
+	}
+
+	searchMatch := []entity.SearchMatch{}
+
+	for _, hit := range suggestions.Hits {
+		sm := search.NewSearchMatch(hit)
+		sm.Score = math.Trunc((sm.Score/suggestions.MaxScore)*100) / 100
+		searchMatch = append(searchMatch, sm)
+	}
+
+	i.rankSearchResult(ctx, searchMatch)
+
+	result := []HighlightSearchResult{}
+
+	for _, v := range searchMatch {
+		result = append(result, HighlightSearchResult{
+			Score:   v.Score,
+			HymnNo:  v.HymnNo,
+			Variant: v.Variant,
+			Title: HighlightText{
+				Snippet: v.Title,
+				Spans:   normalize(toSpans(v.FieldHit["title_ngram"]), len(v.Title)),
+			},
+			FullTitle: v.Title,
+		})
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Score > result[j].Score
+	})
+
+	return result, nil
 }
 
 func highlightOne(m entity.SearchMatch) HighlightSearchResult {

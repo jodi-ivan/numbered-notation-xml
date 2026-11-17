@@ -131,6 +131,7 @@ func (i index) Autocomplete(ctx context.Context, term string) (*core.SearchResul
 
 	queries := core.NewConjunctionQuery(qs...)
 	searchRequest := core.NewSearchRequest(queries)
+	searchRequest.Size = 5
 	searchRequest.IncludeLocations = true
 	searchRequest.Fields = []string{"title", "hymn_no", "variant"}
 

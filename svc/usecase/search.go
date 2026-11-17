@@ -11,7 +11,7 @@ import (
 )
 
 var maxVersesShown = 4
-var maxSnippetBytes = 125
+var maxSnippetBytes = 50
 var ellipsis = "..."
 
 type HitTier int

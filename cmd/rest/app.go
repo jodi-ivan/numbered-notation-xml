@@ -74,6 +74,7 @@ func main() {
 	})
 
 	ws.Register("GET", "/kidung-jemaat/search", &adapter.SearchAdapterHTTP{Usecase: usecaseMod})
+	ws.Register("GET", "/kidung-jemaat/search/unified", adapter.NewUnifiedSearchAdapter(usecaseMod))
 	ws.Register("GET", "/kidung-jemaat/autocomplete", &adapter.AutocompleteAdapterHTTP{Usecase: usecaseMod})
 
 	sigs := make(chan os.Signal, 1)

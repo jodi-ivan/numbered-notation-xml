@@ -219,9 +219,30 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}
 
 		highlights := i.Highlight(ctx, result)
-		raw, _ := json.MarshalIndent(highlights, "", "     ")
-		log.Println(string(raw))
 
+		spans := map[string][]Span{}
+
+		for _, h := range highlights {
+			if len(h.Title.Spans) > 0 {
+				spans["title"] = h.Title.Spans
+				continue
+			}
+
+			for v, verseHit := range h.Verse {
+				spans[strconv.Itoa(v)] = verseHit.Spans
+			}
+		}
+		param.Hightliter = map[string][]params.Span{}
+		for k, v := range spans {
+
+			if len(param.Hightliter[k]) == 0 {
+				param.Hightliter[k] = []params.Span{}
+			}
+
+			for _, sv := range v {
+				param.Hightliter[k] = append(param.Hightliter[k], params.Span{sv.Start, sv.End})
+			}
+		}
 	}
 
 	metaWithParsedVerse := &entity.HymnMetaData{

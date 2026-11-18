@@ -3,6 +3,7 @@ package header
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -16,6 +17,15 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/canvas"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
+
+var reg *regexp.Regexp
+
+func init() {
+	if reg == nil {
+		reg = regexp.MustCompile(`\d{1,3}[abc]?\.\s`)
+	}
+
+}
 
 type Header interface {
 	RenderSheetHeader(ctx context.Context, canv canvas.Canvas, credit []musicxml.Credit, metadata *entity.HymnMetaData)
@@ -52,6 +62,7 @@ func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas,
 		}
 
 	}
+	offset := 0
 	if metadata != nil {
 		workTitle = fmt.Sprintf(TITLE_FMT, metadata.Number, strings.ToUpper(metadata.Title))
 		if metadata.Variant.Valid {
@@ -66,14 +77,26 @@ func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas,
 				FOR_KIDS_ELMNT)
 		}
 	}
+
 	titleWidth := hi.Lyric.CalculateLyricWidth(workTitle)
 	width := constant.LAYOUT_WIDTH
 	if di, ok := params.GetDeviceDimensions(ctx); ok && di != 0 {
 		width = di + constant.LAYOUT_INDENT_LENGTH
 	}
 
+	if param, _ := params.GetParamFromContext(ctx); len(param.Hightliter) > 0 {
+		idx := reg.FindIndex([]byte(workTitle))
+		offset = idx[1] - idx[0]
+		workTitle = params.Highlight(
+			workTitle,
+			param.Hightliter["title"],
+			offset,
+			param.Verse == 0,
+		)
+	}
+
 	titleX := (float64(width) / 2) - (titleWidth * 0.5)
-	canv.Text(int(titleX), relativeY, workTitle)
+	canv.TextUnescaped(titleX, float64(relativeY), workTitle)
 
 }
 

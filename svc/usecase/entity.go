@@ -25,4 +25,6 @@ type HighlightSearchResult struct {
 	FullTitle  string                `json:"full_title"`
 	MoreVerses int                   `json:"moreverses,omitempty"`
 	Tier       HitTier               `json:"tier,omitempty"`
+
+	TotalHitVerse int `json:"total_verse,omitempty"`
 }

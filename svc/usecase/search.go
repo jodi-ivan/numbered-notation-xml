@@ -10,7 +10,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/utils/search"
 )
 
-var maxVersesShown = 4
+var maxVersesShown = 3
 var maxSnippetBytes = 50
 var ellipsis = "..."
 
@@ -129,6 +129,7 @@ func highlightOne(m entity.SearchMatch) HighlightSearchResult {
 	sort.Ints(nos)
 
 	shown := nos
+	res.TotalHitVerse = len(nos)
 	if len(nos) > maxVersesShown {
 		shown = nos[:maxVersesShown]
 		res.MoreVerses = len(nos) - maxVersesShown

@@ -13,6 +13,7 @@ type Param struct {
 	Gregorian       bool
 	Verse           int
 	SingleVerseMode bool
+	QueryHighlight  string
 
 	Diagnostic   *DiagParam
 	Render       *RenderParam

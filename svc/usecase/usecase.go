@@ -204,6 +204,26 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}()
 	}
 
+	if param.QueryHighlight != "" {
+		searchQuery := search.BuildQuery(ctx, param.QueryHighlight, search.WithDocIDs(fmt.Sprintf("%d%s", metaData.HymnID, metaData.Variant.String)))
+		hits, err := i.searchProvider.Search(ctx, searchQuery)
+		if err != nil {
+			log.Printf("[RenderHymn] failed to lookup highlight, err %s\n", err.Error())
+			return err // TODO: shouldn't this be optional?
+		}
+
+		result := []svc.SearchMatch{}
+
+		for _, hit := range hits.Hits {
+			result = append(result, search.NewSearchMatch(hit))
+		}
+
+		highlights := i.Highlight(ctx, result)
+		raw, _ := json.MarshalIndent(highlights, "", "     ")
+		log.Println(string(raw))
+
+	}
+
 	metaWithParsedVerse := &entity.HymnMetaData{
 		HymnMetadata: metaData,
 		ParsedVerse:  map[int][][]entity.LyricWordVerse{},

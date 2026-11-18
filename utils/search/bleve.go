@@ -75,6 +75,16 @@ func init() {
 
 }
 
+type queryOption struct{}
+
+type QueryOption func(*queryOption) query.Query
+
+func WithDocIDs(id ...string) QueryOption {
+	return func(qo *queryOption) query.Query {
+		return core.NewDocIDQuery(id)
+	}
+}
+
 type Provider interface {
 	Close() error
 	Search(ctx context.Context, req *core.SearchRequest) (*core.SearchResult, error)
@@ -138,8 +148,7 @@ func (i index) Autocomplete(ctx context.Context, term string) (*core.SearchResul
 	return i.bleveIndex.Search(searchRequest)
 }
 
-func BuildQuery(ctx context.Context, term string) *core.SearchRequest {
-	// should these move to usecase?
+func BuildQuery(ctx context.Context, term string, opts ...QueryOption) *core.SearchRequest {
 	q := core.NewMatchQuery(term)
 	q.SetField("content")
 
@@ -150,7 +159,15 @@ func BuildQuery(ctx context.Context, term string) *core.SearchRequest {
 	q3.SetField("title")
 
 	combined1 := core.NewDisjunctionQuery(q, q2, q3)
-	searchRequest := core.NewSearchRequest(combined1)
+
+	queries := []query.Query{combined1}
+	for _, opt := range opts {
+		qo := &queryOption{}
+		query := opt(qo)
+		queries = append(queries, query)
+	}
+
+	searchRequest := core.NewSearchRequest(core.NewConjunctionQuery(queries...))
 	searchRequest.IncludeLocations = true
 	searchRequest.Fields = []string{"hymn_no", "content", "title", "verses.no", "verses.content", "verses.start", "verses.end", "variant", "original_title"}
 	searchRequest.Highlight = core.NewHighlight()

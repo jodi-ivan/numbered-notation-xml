@@ -135,15 +135,20 @@ func (rh *RenderHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpr
 		}
 	}
 
+	q := r.FormValue("q")
+
 	prm := &params.Param{
 		Gregorian:       gregorian,
 		Verse:           verseNo,
 		SingleVerseMode: focusMode,
 		Render:          renderParam,
+		QueryHighlight:  q,
 	}
 
 	err = rh.usecase.RenderHymn(params.NewParamContext(r.Context(), prm), canv, num, variant...)
 	if err != nil {
+		log.Printf("[ServeHTTP] Failed to render: %v", err.Error())
+
 		delegator.OnError(err)
 	}
 

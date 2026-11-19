@@ -48,7 +48,7 @@ func (u *interactor) rankSearchResult(ctx context.Context, hits []entity.SearchM
 func (u *interactor) Highlight(ctx context.Context, hits []entity.SearchMatch) []HighlightSearchResult {
 	result := make([]HighlightSearchResult, 0, len(hits))
 	for _, h := range hits {
-		result = append(result, highlightOne(h))
+		result = append(result, highlightOne(h, true))
 	}
 	return result
 }
@@ -91,7 +91,7 @@ func (i *interactor) Autocomplete(ctx context.Context, term string) ([]Highlight
 	return result, nil
 }
 
-func highlightOne(m entity.SearchMatch) HighlightSearchResult {
+func highlightOne(m entity.SearchMatch, truncateVerse bool) HighlightSearchResult {
 	res := HighlightSearchResult{
 		HymnNo:  m.HymnNo,
 		Variant: m.Variant,
@@ -130,7 +130,7 @@ func highlightOne(m entity.SearchMatch) HighlightSearchResult {
 
 	shown := nos
 	res.TotalHitVerse = len(nos)
-	if len(nos) > maxVersesShown {
+	if len(nos) > maxVersesShown && truncateVerse {
 		shown = nos[:maxVersesShown]
 		res.MoreVerses = len(nos) - maxVersesShown
 	}
@@ -141,7 +141,7 @@ func highlightOne(m entity.SearchMatch) HighlightSearchResult {
 			continue
 		}
 		snippet, spans := windowAround(text, normalize(spansByVerse[no], len(text)), maxSnippetBytes)
-		res.Verse[no] = HighlightText{Snippet: snippet, Spans: spans}
+		res.Verse[no] = HighlightText{Snippet: snippet, Spans: spans, SpanVerse: spansByVerse[no]}
 	}
 
 	res.Tier = TierOf(m)

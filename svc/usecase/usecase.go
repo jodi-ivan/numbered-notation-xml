@@ -212,24 +212,21 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 			return err // TODO: shouldn't this be optional?
 		}
 
-		result := []svc.SearchMatch{}
+		highlights := []HighlightSearchResult{}
 
 		for _, hit := range hits.Hits {
-			result = append(result, search.NewSearchMatch(hit))
+			highlights = append(highlights, highlightOne(search.NewSearchMatch(hit), false))
 		}
-
-		highlights := i.Highlight(ctx, result)
 
 		spans := map[string][]Span{}
 
 		for _, h := range highlights {
 			if len(h.Title.Spans) > 0 {
 				spans["title"] = h.Title.Spans
-				continue
 			}
 
 			for v, verseHit := range h.Verse {
-				spans[strconv.Itoa(v)] = verseHit.Spans
+				spans[strconv.Itoa(v)] = verseHit.SpanVerse
 			}
 		}
 		param.Hightliter = map[string][]params.Span{}

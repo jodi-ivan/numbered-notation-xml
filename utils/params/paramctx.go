@@ -60,6 +60,9 @@ func Highlight(snippet string, spans []Span, offset int, secondary ...bool) stri
 	for _, span := range spans {
 		start := span[0] + offset
 		end := span[1] + offset
+		if end > len(snippet) {
+			end = len(snippet) - 1
+		}
 
 		// Add the plain text before the current span
 		if start > currentIndex {

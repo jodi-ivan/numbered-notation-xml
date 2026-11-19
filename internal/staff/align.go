@@ -13,6 +13,7 @@ import (
 	"github.com/jodi-ivan/numbered-notation-xml/internal/keysig"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/layout"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/lyric"
+	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/numbered"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/rhythm/splitter"
@@ -142,7 +143,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	lastNote := lastMeasure[len(lastMeasure)-1]
 
 	added, lastPos := 0.0, lastNote.PositionX
-	_, rightLayoutMargin := layout.GetMargin(ctx)
+	leftLayoutMargin, rightLayoutMargin := layout.GetMargin(ctx)
 
 	staffMarginRight := lastPos
 
@@ -202,6 +203,46 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 	yPos := y + additionalMarginBottom
 	if isGregorian {
 		yPos += gregorian.STAFF_OFFSET + (int(margin.Bottom.Y) - margin.DefaultBottom)
+
+	}
+
+	start, end := 0, 0
+	for i, n := range flatten {
+		hasHighlight := func(n *entity.NoteRenderer) bool {
+			return len(n.Lyric) > 0 && n.Lyric[0].Highlights[0] >= 0 && n.Lyric[0].Highlights[1] > 0
+		}
+
+		if hasHighlight(n) {
+			if start == 0 {
+				start = n.PositionX
+			}
+
+			if i == 0 && n.Lyric[0].Syllabic != musicxml.LyricSyllabicTypeBegin {
+				// FIXME: what if the gregorian turned off?
+				start = leftLayoutMargin + ((stafflines.GetLeftIndent(ctx, n.MeasureNumber) - leftLayoutMargin) / 2)
+			}
+
+			end = n.PositionX + int(rsa.Lyric.CalculateLyricWidth(entity.LyricVal(n.Lyric[0].Text).String()))
+			nexthl := false
+			if i < len(flatten)-1 {
+				nexthl = hasHighlight(flatten[i+1])
+			}
+			isLastNote := (i == len(flatten)-1) || (i == len(flatten)-2 && flatten[i+1].Barline != nil)
+			if isLastNote || (!nexthl && (n.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeEnd || n.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeSingle)) {
+				if start != 0 && end != 0 {
+					rectEnd := end - start
+					if isLastNote {
+						rectEnd = lastPos - start
+					}
+
+					canv.Rect(start, yPos+10, rectEnd, 24, `fill="#E3EFEC"`)
+					start, end = 0, 0
+				}
+			}
+		}
+	}
+	if start != 0 {
+		canv.Rect(start, yPos+10, lastPos-start, 24, `fill="#E3EFEC"`)
 
 	}
 

@@ -2,7 +2,6 @@ package staff
 
 import (
 	"context"
-	"log"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -20,8 +19,6 @@ func getTotalChar(note *entity.NoteRenderer) int {
 	}
 	return total
 }
-
-var counter = 0
 
 func Highligts(ctx context.Context, notes []*entity.NoteRenderer) {
 	param, ok := params.GetParamFromContext(ctx)
@@ -47,12 +44,12 @@ func Highligts(ctx context.Context, notes []*entity.NoteRenderer) {
 			note := notes[noteIndex]
 			noteLength := getTotalChar(note)
 
-			noteStart := counter
-			noteEnd := counter + noteLength
+			noteStart := param.HightliterCtr
+			noteEnd := param.HightliterCtr + noteLength
 
 			// This note is completely before the span.
 			if noteEnd <= start {
-				counter = noteEnd
+				param.HightliterCtr = noteEnd
 				noteIndex++
 				continue
 			}
@@ -71,20 +68,20 @@ func Highligts(ctx context.Context, notes []*entity.NoteRenderer) {
 				}
 				note.Lyric[0].Highlights = params.Span{0, end - start - endSubSpan}
 
-				log.Printf(
-					"=================FOUND INTERSECTION span [%d,%d) note [%d,%d) lyric=%q",
-					start,
-					end,
-					counter,
-					noteEnd,
-					entity.LyricVal(note.Lyric[0].Text).String(),
-				)
+				// log.Printf(
+				// 	"=================FOUND INTERSECTION span [%d,%d) note [%d,%d) lyric=%q",
+				// 	start,
+				// 	end,
+				// 	param.HightliterCtr,
+				// 	noteEnd,
+				// 	entity.LyricVal(note.Lyric[0].Text).String(),
+				// )
 				currentWord += noteLength
 
 			}
 
 			// Move to the next note.
-			counter = noteEnd
+			param.HightliterCtr = noteEnd
 			noteIndex++
 		}
 	}

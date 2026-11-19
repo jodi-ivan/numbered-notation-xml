@@ -18,6 +18,7 @@ type Param struct {
 	SingleVerseMode bool
 	QueryHighlight  string
 	Hightliter      map[string][]Span
+	HightliterCtr   int
 
 	Diagnostic   *DiagParam
 	Render       *RenderParam
@@ -47,9 +48,11 @@ func (pc *paramCtx) Value(key any) any {
 	return pc.ctx.Value(key)
 }
 
-func Highlight(snippet string, spans []Span, offset int, secondary ...bool) string {
+func Highlight(snippet string, spans []Span, offset int, x, y float64, secondary ...bool) (string, []string, []string) {
 	parts := []string{}
 	currentIndex := 0
+	highlights := []string{}
+	spanword := []string{}
 
 	style := `#347A70`
 	if len(secondary) > 0 && !secondary[0] {
@@ -72,6 +75,9 @@ func Highlight(snippet string, spans []Span, offset int, secondary ...bool) stri
 		// Add the highlighted text
 		highlightedText := snippet[start:end]
 		// Simple marker for highlighting in plain text output
+		highlights = append(highlights, snippet[:start])
+		spanword = append(spanword, highlightedText)
+
 		parts = append(parts, `<tspan fill="`+style+`" style="font-weight: bolder">`+highlightedText+"</tspan>")
 
 		currentIndex = end
@@ -82,7 +88,7 @@ func Highlight(snippet string, spans []Span, offset int, secondary ...bool) stri
 		parts = append(parts, snippet[currentIndex:])
 	}
 
-	return strings.Join(parts, "")
+	return strings.Join(parts, ""), highlights, spanword
 }
 
 func NewParamContext(ctx context.Context, param *Param) context.Context {

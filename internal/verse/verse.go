@@ -284,15 +284,13 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 				lineEnd,
 			)
 
-			highlighted := params.Highlight(liveVerse, lineSpans, 0)
-
 			// render highlighted line...
 
 			verseOffset = lineEnd
 			if strings.HasPrefix(liveVerse, "    ") {
 				liveVerse = strings.ReplaceAll(liveVerse, "    ", strings.Repeat("&#160;", 4))
 			}
-			canv.TextUnescaped(float64(xPos), float64(y), highlighted)
+			lyric.PrintWithHighlight(canv, liveVerse, lineSpans, 0, float64(xPos), float64(y))
 			cursor := footnote.VerseLineCursor{
 				VerseNo:    i,
 				LinePos:    line + 1,

@@ -84,19 +84,22 @@ func (hi *headerInteractor) renderTitle(ctx context.Context, canv canvas.Canvas,
 		width = di + constant.LAYOUT_INDENT_LENGTH
 	}
 
+	titleX := (float64(width) / 2) - (titleWidth * 0.5)
 	if param, _ := params.GetParamFromContext(ctx); len(param.Hightliter) > 0 {
 		idx := reg.FindIndex([]byte(workTitle))
 		offset = idx[1] - idx[0]
-		workTitle = params.Highlight(
+		lyric.PrintWithHighlight(
+			canv,
 			workTitle,
 			param.Hightliter["title"],
 			offset,
-			param.Verse == 0,
-		)
-	}
+			titleX, float64(relativeY),
+			param.Verse == 0)
 
-	titleX := (float64(width) / 2) - (titleWidth * 0.5)
-	canv.TextUnescaped(titleX, float64(relativeY), workTitle)
+	} else {
+		canv.TextUnescaped(titleX, float64(relativeY), workTitle)
+
+	}
 
 }
 

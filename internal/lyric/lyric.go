@@ -210,7 +210,10 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 				styles = append(styles, sty)
 			}
 			if l.Highlights[0] >= 0 && l.Highlights[1] > 0 {
-				elementHighlight := params.Highlight(lyricVal, []params.Span{l.Highlights}, 0)
+				elementHighlight, _, _ := params.Highlight(
+					lyricVal,
+					[]params.Span{{0, len(lyricVal)}}, 0, float64(xPos),
+					yPos)
 				canv.TextUnescaped(float64(xPos), yPos, elementHighlight)
 
 			} else {

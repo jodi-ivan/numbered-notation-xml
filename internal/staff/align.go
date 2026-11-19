@@ -136,6 +136,8 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 			}
 		}
 	}
+
+	Highligts(ctx, flatten)
 	lastMeasure := noteRenderer[len(noteRenderer)-1]
 	lastNote := lastMeasure[len(lastMeasure)-1]
 

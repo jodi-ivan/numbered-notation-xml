@@ -19,4 +19,5 @@ type HyphenPosition struct {
 type VerseInfo struct {
 	MarginBottom int
 	HasLyric     bool
+	CharLen      int
 }

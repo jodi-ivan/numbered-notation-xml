@@ -54,6 +54,7 @@ func (li *lyricInteractor) SetLyricRenderer(ctx context.Context, noteRenderer *e
 	// lyric
 	var lyricWidth, noteWidth, marginBottom int
 	countedLyric := 0
+	charLen := 0
 
 	if len(rawLyric) > 0 {
 
@@ -77,6 +78,7 @@ func (li *lyricInteractor) SetLyricRenderer(ctx context.Context, noteRenderer *e
 			l.Text = texts
 			if lyricText != "" {
 				countedLyric++
+				charLen = len(lyricText)
 			}
 
 			if currLyric.Number > len(rawLyric) {
@@ -120,6 +122,7 @@ func (li *lyricInteractor) SetLyricRenderer(ctx context.Context, noteRenderer *e
 	return VerseInfo{
 		MarginBottom: marginBottom,
 		HasLyric:     len(rawLyric) > 0,
+		CharLen:      charLen,
 	}
 }
 
@@ -206,7 +209,13 @@ func (li *lyricInteractor) RenderLyrics(ctx context.Context, y int, canv canvas.
 			if sty != "" {
 				styles = append(styles, sty)
 			}
-			canv.Text(xPos, int(yPos), lyricVal, styles...)
+			if l.Highlights[0] >= 0 && l.Highlights[1] > 0 {
+				elementHighlight := params.Highlight(lyricVal, []params.Span{l.Highlights}, 0)
+				canv.TextUnescaped(float64(xPos), yPos, elementHighlight)
+
+			} else {
+				canv.Text(xPos, int(yPos), lyricVal, styles...)
+			}
 			if noteYPositions[n.UUID] == nil {
 				noteYPositions[n.UUID] = []int64{}
 			}

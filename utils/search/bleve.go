@@ -89,10 +89,21 @@ type Provider interface {
 	Close() error
 	Search(ctx context.Context, req *core.SearchRequest) (*core.SearchResult, error)
 	Autocomplete(ctx context.Context, term string) (*core.SearchResult, error)
+	Analyzer(term string) []string
 }
 type index struct {
 	bleveIndex core.Index
 	open       bool
+}
+
+func (i index) Analyzer(term string) []string {
+	result := []string{}
+	analyzer := ((i.bleveIndex.Mapping()).AnalyzerNamed("indonesian"))
+	for _, t := range analyzer.Analyze([]byte(term)) {
+		result = append(result, string(t.Term))
+	}
+
+	return result
 }
 
 func (i index) Close() error {

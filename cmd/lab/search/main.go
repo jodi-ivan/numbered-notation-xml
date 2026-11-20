@@ -2,12 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
-	"unicode"
 
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
 	_ "github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
@@ -18,207 +14,17 @@ import (
 	_ "github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
 	bleve_unicode "github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
 	"github.com/blevesearch/bleve/v2/mapping"
+	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/document"
 	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 	_ "github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/stem"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/token/lowercase"
 	"github.com/jodi-ivan/numbered-notation-xml/cmd/lab/search/category"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
-	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
 	"github.com/jodi-ivan/numbered-notation-xml/svc/repository"
 	"github.com/jodi-ivan/numbered-notation-xml/utils/storage"
+	progressbar "github.com/schollz/progressbar/v3"
 )
-
-type VerseDoc struct {
-	No      int    `json:"no"`
-	Content string `json:"content"`
-	Start   int    `json:"start"`
-	End     int    `json:"end"`
-}
-
-type Document struct {
-	ID            string           `json:"id"`
-	Title         string           `json:"title"`
-	Content       string           `json:"content"`
-	Catergory     []category.Entry `json:"categories,omitempty"`
-	HymnNo        int              `json:"hymn_no"`
-	Variant       string           `json:"variant,omitempty"`
-	Verses        []VerseDoc       `json:"verses"`
-	OriginalTitle []string         `json:"original_title"`
-	BE            int              `json:"be_num,omitempty"`
-	NR            int              `json:"nr_num,omitempty"`
-	ForKids       bool             `json:"for_kids"`
-	Copyright     string           `json:"copyright,omitempty"`
-	MusicCredit   string           `json:"music"`
-	Title_ngram   string           `json:"title_ngram"`
-}
-
-func GetOriginalTitle(metadata *repository.HymnMetadata) []string {
-	result := []string{}
-	if strings.HasPrefix(metadata.Lyric, "<i>") {
-		index := strings.Index(metadata.Lyric, "</i>")
-		lyric := metadata.Lyric[3:index]
-		lyric = strings.TrimSpace(lyric)
-		lyric = strings.TrimSuffix(lyric, ",")
-		result = strings.Split(lyric, "/")
-	} else {
-		result = []string{metadata.Title}
-	}
-
-	for i, v := range result {
-		result[i] = strings.TrimSpace(v)
-	}
-
-	return result
-}
-
-func BuildContent(ctx context.Context, repo repository.Repository, metadata *repository.HymnMetadata, verse int) string {
-	if verse == 1 {
-		path := fmt.Sprintf("files/scores/musicxml/kj-%03d.musicxml", metadata.Number)
-		if metadata.Variant.String != "" {
-			path = fmt.Sprintf("files/scores/musicxml/kj-%03d%s.musicxml", metadata.Number, metadata.Variant.String)
-		}
-		xmls, err := repo.GetMusicXML(context.Background(), path)
-		if err != nil {
-			log.Println("failed to get the xml data, err:", err.Error())
-			return ""
-		}
-
-		lMapper := map[int]string{}
-		prevTotalLyric := -1
-		for _, measure := range xmls.Part.Measures {
-			measure.Build(ctx)
-			for _, note := range measure.Notes {
-				if len(note.Lyric) == 0 {
-					continue
-				}
-
-				if prevTotalLyric != len(note.Lyric) && prevTotalLyric != -1 {
-					lMapper[1] += lMapper[2]
-					lMapper[2] = ""
-				}
-
-				for _, l := range note.Lyric {
-					syl := ""
-
-					for _, s := range l.Text {
-						syl += s.Value
-					}
-					// li := lyric.NewLyric()
-					if unicode.IsDigit(rune(syl[0])) {
-						syl = syl[2:]
-					}
-					lMapper[l.Number] += syl
-
-					if l.Syllabic == musicxml.LyricSyllabicTypeEnd || l.Syllabic == musicxml.LyricSyllabicTypeSingle {
-						lMapper[l.Number] += " "
-					}
-
-				}
-
-				prevTotalLyric = len(note.Lyric)
-			}
-		}
-
-		for part := 2; part <= 4; part++ {
-			if lMapper[part] != "" {
-				lMapper[1] += lMapper[part] + " "
-			}
-		}
-
-		return lMapper[1]
-
-	}
-
-	result := ""
-
-	if _, ok := metadata.Verse[verse]; !ok {
-		return ""
-	}
-	whole := [][]entity.LyricWordVerse{}
-
-	err := json.Unmarshal([]byte(metadata.Verse[verse].Content.String), &whole)
-	if err != nil {
-		log.Println("[RenderVerse] failed to unmarshal, err ", err)
-	}
-
-	for _, line := range whole {
-		for _, word := range line {
-			result += word.Word + " "
-		}
-	}
-
-	return result
-}
-
-func buildContentWithOffsets(verses []VerseDoc) (string, []VerseDoc) {
-	var sb strings.Builder
-	for i := range verses {
-		verses[i].Start = sb.Len()
-		sb.WriteString(verses[i].Content)
-		verses[i].End = sb.Len()
-	}
-	return sb.String(), verses
-}
-
-func BuildDocument(repo repository.Repository, num int, vaiant ...string) (*Document, error) {
-	// get hymn meta data
-
-	metadata, err := repo.GetHymnMetaData(context.Background(), num, vaiant...)
-	if err != nil {
-		return nil, err
-	}
-
-	cats := map[string][]category.Entry{}
-
-	doc := &Document{
-		ID:            strconv.Itoa(metadata.HymnID),
-		Title_ngram:   metadata.Title,
-		Title:         metadata.Title,
-		HymnNo:        metadata.Number,
-		BE:            int(metadata.RefBE.Int16),
-		NR:            int(metadata.RefNR.Int16),
-		Copyright:     metadata.Copyright.String,
-		MusicCredit:   metadata.Music,
-		OriginalTitle: GetOriginalTitle(metadata),
-		Catergory:     []category.Entry{}, // Initialize as []category.Entry
-	}
-
-	if len(vaiant) > 0 {
-		doc.Variant = vaiant[0]
-		doc.ID += vaiant[0]
-	}
-	verses := make([]VerseDoc, len(metadata.Verse)+1)
-	for verse := 1; verse <= len(metadata.Verse)+1; verse++ {
-		currCats := category.Lookup(num, verse)
-		for _, curr := range currCats {
-			if cats[curr.H1] == nil {
-				cats[curr.H1] = []category.Entry{}
-			}
-
-			cats[curr.H1] = append(cats[curr.H1], curr)
-		}
-		verses[verse-1] = VerseDoc{No: verse, Content: BuildContent(context.Background(), repo, metadata, verse)}
-	}
-
-	h2s := map[string]bool{} // Tracks unique H2 values
-	for _, cat := range cats {
-		for _, entry := range cat {
-			if h2s[entry.H2] {
-				continue
-			}
-			h2s[entry.H2] = true
-			doc.Catergory = append(doc.Catergory, entry)
-		}
-	}
-
-	doc.Content, verses = buildContentWithOffsets(verses)
-	doc.Verses = verses
-
-	return doc, nil
-
-}
 
 func dump(m mapping.IndexMapping, analyzer, text string) {
 	an := m.AnalyzerNamed(analyzer)
@@ -230,7 +36,7 @@ func dump(m mapping.IndexMapping, analyzer, text string) {
 }
 
 func main() {
-
+	log.Println("starting the indexing...")
 	db, err := storage.NewStorage(context.Background(), "files/database/kidung-jemaat.db")
 	if err != nil {
 		log.Fatalf("Failed to connect to storage: %s", err.Error())
@@ -285,7 +91,7 @@ func main() {
 		"type":          custom.Name,
 		"char_filters":  charFilters,
 		"tokenizer":     bleve_unicode.Name,
-		"token_filters": []string{lowercase.Name, "id_spelling", "indonesian_stem"},
+		"token_filters": []string{lowercase.Name, "id_spelling", "id_redup", "indonesian_stem"},
 	}); err != nil {
 		panic(err)
 	}
@@ -295,7 +101,7 @@ func main() {
 		"type":          custom.Name,
 		"char_filters":  charFilters, // b'rikan -> berikan first
 		"tokenizer":     bleve_unicode.Name,
-		"token_filters": []string{lowercase.Name, "id_spelling", "my_ngram"},
+		"token_filters": []string{lowercase.Name, "id_spelling", "id_redup", "my_ngram"},
 	}); err != nil {
 		log.Fatal(err)
 	}
@@ -308,6 +114,7 @@ func main() {
 	contentMapping.Analyzer = "indonesian"
 
 	docMapping.AddFieldMappingsAt("content", contentMapping)
+
 	versesMapping := bleve.NewDocumentMapping()
 
 	noMapping := bleve.NewNumericFieldMapping()
@@ -356,26 +163,16 @@ func main() {
 
 	indexMapping.DefaultMapping = docMapping
 
-	index, err := bleve.New(indexPath, indexMapping)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer index.Close()
-
-	// for _, w := range []string{"telah", "t'lah", "cahaya", "cah'ya"} {
-	// 	dump(indexMapping, "indonesian", w)
-	// 	dump(indexMapping, "part_word_analyzer", w)
-	// }
-
 	// Add documents
-	documents := []*Document{}
-
+	documents := []*document.Document{}
+	log.Println("Building documents....")
+	bar := progressbar.Default(478)
 	for no := 1; no <= 478; no++ {
-		var doc *Document
+		var doc *document.Document
 		var err error
 		if variant, ok := category.Variants[no]; ok {
 			for _, vs := range variant {
-				doc, err = BuildDocument(repo, no, vs)
+				doc, err = document.BuildDocument(repo, no, vs)
 				if err != nil {
 					log.Fatalf("Failed to build docs: %s", err.Error())
 					return
@@ -384,7 +181,7 @@ func main() {
 
 			}
 		} else {
-			doc, err = BuildDocument(repo, no)
+			doc, err = document.BuildDocument(repo, no)
 			if err != nil {
 				log.Fatalf("Failed to build docs: %s", err.Error())
 				return
@@ -392,8 +189,17 @@ func main() {
 			documents = append(documents, doc)
 
 		}
-
+		bar.Add(1)
 	}
+
+	log.Println("Batch indexing starting....")
+	index, err := bleve.New(indexPath, indexMapping)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer index.Close()
+
+	indexBar := progressbar.Default(int64(len(documents)))
 
 	// Iterate and index the documents
 	batch := index.NewBatch()
@@ -404,10 +210,13 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		indexBar.Add(1)
 	}
 	if err := index.Batch(batch); err != nil {
 		log.Fatal(err)
 	}
-	stats, _ := index.Stats().MarshalJSON()
-	log.Println("success to build the index. ", string(stats))
+	// size := map[string]interface{}
+	statsraw := index.StatsMap()
+	stats, _ := statsraw["index"].(map[string]interface{})
+	log.Printf("success to build the index. Index size %.2f mb", float64((stats["CurOnDiskBytes"].(uint64)))/1e6)
 }

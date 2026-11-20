@@ -10,12 +10,9 @@ import (
 )
 
 // memujimu
-// puji vs muji
-// anak-anakmu is registered as anakanakmu
-// porakporanda
-// b'rilah
-// t'rus 268 & 26 failed.
-// ombang-ambing
+// menyelam -> selam
+
+// ombang-ambing (shiould be fixed, but untested)
 const Name = "indonesian_stem"
 
 var (
@@ -50,13 +47,24 @@ func stem(word string) string {
 		}
 	}
 
+	if strings.HasPrefix(word, "ber") && strings.HasSuffix(word, "an") {
+		stripped := strings.TrimPrefix(strings.TrimSuffix(word, "an"), "ber")
+		if stripped[0:len(stripped)/2] == stripped[len(stripped)/2:] {
+			return stripped[len(stripped)/2:]
+		}
+
+	}
+
 	return word
 }
 
 var definedSplitter = map[string][2]string{
 	"selamalamanya": {"selama", "lamanya"},
 	"anakanak":      {"anak", "anak"},
-	"porakporanda":  {"porak", "poranda"},
+	"mujimuji":      {"muji", "muji"},
+	"tolongtolong":  {"tolong", "tolong"},
+
+	"porakporanda": {"porak", "poranda"},
 }
 
 type filter struct {
@@ -89,7 +97,14 @@ func (f *filter) Filter(tokens analysis.TokenStream) analysis.TokenStream {
 				End:      t.Start + len(splitted[1])*2,
 				Type:     t.Type,
 			}
-			result = append(result, at)
+			// sat := &analysis.Token{
+			// 	Term:     []byte(splitted[0]),
+			// 	Position: t.Position,
+			// 	Start:    t.Start,
+			// 	End:      t.Start + len(splitted[1]),
+			// 	Type:     t.Type,
+			// }
+			result = append(result, at) //, sat)
 			return result
 		}
 		for _, s := range splitted {
@@ -143,6 +158,7 @@ func init() {
 			"kurnia":    "karunia",
 			"'ngajak":   "mengajak",
 			"selamanya": "selamalamanya",
+			"kanak":     "anak",
 		}}, nil
 	})
 }

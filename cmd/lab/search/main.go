@@ -285,7 +285,7 @@ func main() {
 		"type":          custom.Name,
 		"char_filters":  charFilters,
 		"tokenizer":     bleve_unicode.Name,
-		"token_filters": []string{lowercase.Name, "indonesian_stem"},
+		"token_filters": []string{lowercase.Name, "id_spelling", "indonesian_stem"},
 	}); err != nil {
 		panic(err)
 	}
@@ -295,7 +295,7 @@ func main() {
 		"type":          custom.Name,
 		"char_filters":  charFilters, // b'rikan -> berikan first
 		"tokenizer":     bleve_unicode.Name,
-		"token_filters": []string{lowercase.Name, "my_ngram"},
+		"token_filters": []string{lowercase.Name, "id_spelling", "my_ngram"},
 	}); err != nil {
 		log.Fatal(err)
 	}
@@ -316,6 +316,7 @@ func main() {
 	verseContentMapping := bleve.NewTextFieldMapping()
 	verseContentMapping.Store = true
 	verseContentMapping.Analyzer = "indonesian"
+	verseContentMapping.IncludeTermVectors = true
 
 	startMapping := bleve.NewNumericFieldMapping()
 	startMapping.Store = true

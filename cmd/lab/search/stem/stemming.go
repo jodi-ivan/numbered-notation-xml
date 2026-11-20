@@ -53,20 +53,74 @@ func stem(word string) string {
 	return word
 }
 
+var definedSplitter = map[string][2]string{
+	"selamalamanya": {"selama", "lamanya"},
+	"anakanak":      {"anak", "anak"},
+	"porakporanda":  {"porak", "poranda"},
+}
+
 type filter struct {
 	stemmer sastrawi.Stemmer
 }
 
 func (f *filter) Filter(tokens analysis.TokenStream) analysis.TokenStream {
 	result := tokens[:0]
-
 	for _, token := range tokens {
 		token.Term = []byte(stem(string(token.Term)))
 		result = append(result, token)
 
 	}
+	for _, t := range result {
+		term := string(t.Term)
+		if _, repeatExist := definedSplitter[strings.Repeat(term, 2)]; repeatExist {
+			term = strings.Repeat(term, 2)
+		}
+
+		splitted, ok := definedSplitter[term]
+		if !ok {
+			return result
+		}
+
+		if splitted[0] == splitted[1] {
+			at := &analysis.Token{
+				Term:     []byte(splitted[0] + "-" + splitted[0]),
+				Position: t.Position,
+				Start:    t.Start,
+				End:      t.Start + len(splitted[1])*2,
+				Type:     t.Type,
+			}
+			result = append(result, at)
+			return result
+		}
+		for _, s := range splitted {
+			at := &analysis.Token{
+				Term:     []byte(s),
+				Position: t.Position,
+				Start:    t.Start,
+				End:      t.End,
+				Type:     t.Type,
+			}
+			result = append(result, at)
+		}
+
+	}
 
 	return result
+}
+
+type termMapFilter struct{ m map[string]string }
+
+func (f *termMapFilter) Filter(in analysis.TokenStream) analysis.TokenStream {
+	for _, t := range in {
+		if r, ok := f.m[string(t.Term)]; ok {
+			t.Term = []byte(r) // Start/End untouched
+		}
+	}
+	return in
+}
+
+func init() {
+
 }
 
 func newFilter(_ map[string]interface{}, _ *registry.Cache) (analysis.TokenFilter, error) {
@@ -79,4 +133,16 @@ func init() {
 	if err := registry.RegisterTokenFilter(Name, newFilter); err != nil {
 		panic(err)
 	}
+
+	registry.RegisterTokenFilter("id_spelling", func(cfg map[string]interface{}, _ *registry.Cache) (analysis.TokenFilter, error) {
+		return &termMapFilter{m: map[string]string{
+			"cerlang":   "cemerlang",
+			"guruh":     "gemuruh",
+			"putra":     "putera",
+			"putri":     "puteri",
+			"kurnia":    "karunia",
+			"'ngajak":   "mengajak",
+			"selamanya": "selamalamanya",
+		}}, nil
+	})
 }

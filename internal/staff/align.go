@@ -217,7 +217,7 @@ func (rsa *renderStaffAlign) RenderWithAlign(ctx context.Context, canv canvas.Ca
 				start = n.PositionX
 			}
 
-			if i == 0 && n.Lyric[0].Syllabic != musicxml.LyricSyllabicTypeBegin {
+			if i == 0 && (n.Lyric[0].Syllabic != musicxml.LyricSyllabicTypeBegin && n.Lyric[0].Syllabic != musicxml.LyricSyllabicTypeSingle) {
 				// FIXME: what if the gregorian turned off?
 				start = leftLayoutMargin + ((stafflines.GetLeftIndent(ctx, n.MeasureNumber) - leftLayoutMargin) / 2)
 			}

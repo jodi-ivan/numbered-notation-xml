@@ -2,6 +2,7 @@ package staff
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/entity"
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
@@ -28,6 +29,10 @@ func Highligts(ctx context.Context, notes []*entity.NoteRenderer) {
 
 	spans := param.Hightliter["1"]
 	if len(spans) == 0 {
+		return
+	}
+
+	if len(notes) == 0 || len(notes[0].Lyric) == 0 {
 		return
 	}
 
@@ -66,7 +71,13 @@ func Highligts(ctx context.Context, notes []*entity.NoteRenderer) {
 				if endSubSpan == 0 {
 					endSubSpan += noteLength
 				}
+				lyricVal := entity.LyricVal(note.Lyric[0].Text).String()
+
 				note.Lyric[0].Highlights = params.Span{0, end - start - endSubSpan}
+				if strings.Contains(lyricVal, "'") && note.Lyric[0].Syllabic == musicxml.LyricSyllabicTypeSingle {
+					note.Lyric[0].Highlights = params.Span{0, len(lyricVal)}
+
+				}
 
 				// log.Printf(
 				// 	"=================FOUND INTERSECTION span [%d,%d) note [%d,%d) lyric=%q",

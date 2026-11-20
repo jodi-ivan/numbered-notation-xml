@@ -2,10 +2,13 @@ package params
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/jodi-ivan/numbered-notation-xml/utils/config"
 )
+
+type Span [2]int
 
 const PARAM_CTX_KEY = "param"
 
@@ -13,6 +16,9 @@ type Param struct {
 	Gregorian       bool
 	Verse           int
 	SingleVerseMode bool
+	QueryHighlight  string
+	Hightliter      map[string][]Span
+	HightliterCtr   int
 
 	Diagnostic   *DiagParam
 	Render       *RenderParam
@@ -40,6 +46,49 @@ func (pc *paramCtx) Value(key any) any {
 	}
 
 	return pc.ctx.Value(key)
+}
+
+func Highlight(snippet string, spans []Span, offset int, x, y float64, secondary ...bool) (string, []string, []string) {
+	parts := []string{}
+	currentIndex := 0
+	highlights := []string{}
+	spanword := []string{}
+
+	style := `#347A70`
+	if len(secondary) > 0 && !secondary[0] {
+		style = `#233D3C;`
+
+	}
+
+	for _, span := range spans {
+		start := span[0] + offset
+		end := span[1] + offset
+		if end > len(snippet) {
+			end = len(snippet) - 1
+		}
+
+		// Add the plain text before the current span
+		if start > currentIndex {
+			parts = append(parts, snippet[currentIndex:start])
+		}
+
+		// Add the highlighted text
+		highlightedText := snippet[start:end]
+		// Simple marker for highlighting in plain text output
+		highlights = append(highlights, snippet[:start])
+		spanword = append(spanword, highlightedText)
+
+		parts = append(parts, `<tspan fill="`+style+`" style="font-weight: bolder">`+highlightedText+"</tspan>")
+
+		currentIndex = end
+	}
+
+	// Add any remaining text after the last span
+	if currentIndex < len(snippet) {
+		parts = append(parts, snippet[currentIndex:])
+	}
+
+	return strings.Join(parts, ""), highlights, spanword
 }
 
 func NewParamContext(ctx context.Context, param *Param) context.Context {

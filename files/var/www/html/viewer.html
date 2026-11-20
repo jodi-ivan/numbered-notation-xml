@@ -14,10 +14,12 @@
         #viewer-container {
             margin: 20px auto;
             max-width: 800px;
-            position: relative; /* Needed for absolute positioning of overlay */
+            position: relative;
+            /* Needed for absolute positioning of overlay */
         }
 
-        svg, object {
+        svg,
+        object {
             border: 1px dashed black;
         }
 
@@ -32,6 +34,7 @@
             padding: 5px;
             border: 1px solid black;
         }
+
         .true {
             background-color: aquamarine;
         }
@@ -53,6 +56,14 @@
         #file-name {
             margin-bottom: 10px;
             color: #666;
+        }
+
+         .pill {
+            background-color: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 8px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -88,9 +99,11 @@
         <!-- add gregorian checkbox input, and add  `/kidung-jemaat/render/${currentIndex}?gregroian={gregorian}` to the URL -->
         <Label>
             Device Type:
-            <select id="deviceType" onchange="changeImage(0, document.getElementById('verse').value, this.value, document.getElementById('gregorian').checked)" style="padding: 5px;">
-                <option value="" selected>Select Device Type</option> 
-                <option value="0">One Continous Line</option> 
+            <select id="deviceType"
+                onchange="changeImage(0, document.getElementById('verse').value, this.value, document.getElementById('gregorian').checked)"
+                style="padding: 5px;">
+                <option value="" selected>Select Device Type</option>
+                <option value="0">One Continous Line</option>
                 <option value="1">iPhone 16</option>
                 <option value="2">iPhone 16 Plus</option>
                 <option value="3">iPhone 16 Pro</option>
@@ -122,17 +135,57 @@
         </Label>
         <table align="center">
             <tr id="indicator"></tr>
-        </table>
+        </table >
+        <div id="word-list-container" style="justify-content: flex-start;">
+            <h3 style="display: block;">Keywords</h3 > <br />
+            <div id="keywords-content"></div>
+        </div>
+
     </div >
     <div id="viewer-container" style="background-color: white;border:1px dashed red">
         <!-- The img tag handles local SVG files effectively -->
         <!-- <img  src="/kidung-jemaat/render/1" alt="SVG Image"> -->
         <object id="svg-display" type="image/svg+xml" data="/kidung-jemaat/render/1"></object>
-    </div >
+    </div>
 
 
     <script>
         let currentIndex = 1;
+
+        // Function to make the overlay draggable
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            const dragMouseDown = (e) => {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            };
+
+            const elementDrag = (e) => {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            };
+
+            const closeDragElement = () => {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            };
+
+            const handle = element.querySelector('#drag-handle');
+            if (handle) {
+                handle.onmousedown = dragMouseDown;
+            }
+        }
 
 
         function onVerseChange(val) {
@@ -154,12 +207,11 @@
             if (deviceType) {
                 params.push(`device_type=${deviceType}`)
             }
-            if (gregorian) {
-                params.push(`gregorian=true`);
-            } else {
-                params.push(`gregorian=false`);
-            }
-
+            // if (gregorian) {
+            //     params.push(`gregorian=true`);
+            // } else {
+            //     params.push(`gregorian=false`);
+            // }
 
             const focusElmnt = document.getElementById('focus')
 
@@ -216,7 +268,7 @@
 
             if (deviceType && deviceTypeMap[deviceType]) {
                 const dims = deviceTypeMap[deviceType];
-                
+
                 // Create and append SVG object first
                 const svgObject = document.createElement('object');
                 svgObject.id = 'svg-display';
@@ -234,42 +286,9 @@
                 overlay.style.pointerEvents = 'auto'; // Allow interaction for dragging
                 overlay.style.zIndex = '10';
                 overlay.innerHTML = `<div style="position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: white; padding: 5px; font-size: 12px;">Portrait: ${dims.PortraitW}x${dims.PortraitH}</div><div id="drag-handle" style="position: absolute; bottom: 0; right: 0; width: 15px; height: 15px; cursor: se-resize; background: rgba(0,0,0,0.5); border: 1px solid white;"></div>`;
-                viewerContainer.appendChild(overlay); 
+                viewerContainer.appendChild(overlay);
 
-                // Function to make the overlay draggable
-                function makeDraggable(element) {
-                    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-                    const dragMouseDown = (e) => {
-                        e = e || window.event;
-                        e.preventDefault();
-                        pos3 = e.clientX;
-                        pos4 = e.clientY;
-                        document.onmouseup = closeDragElement;
-                        document.onmousemove = elementDrag;
-                    };
-
-                    const elementDrag = (e) => {
-                        e = e || window.event;
-                        e.preventDefault();
-                        pos1 = pos3 - e.clientX;
-                        pos2 = pos4 - e.clientY;
-                        pos3 = e.clientX;
-                        pos4 = e.clientY;
-                        element.style.top = (element.offsetTop - pos2) + "px";
-                        element.style.left = (element.offsetLeft - pos1) + "px";
-                    };
-
-                    const closeDragElement = () => {
-                        document.onmouseup = null;
-                        document.onmousemove = null;
-                    };
-
-                    const handle = element.querySelector('#drag-handle');
-                    if (handle) {
-                        handle.onmousedown = dragMouseDown;
-                    }
-                }
                 makeDraggable(overlay);
             } else {
                 // If no deviceType or invalid, just display the SVG
@@ -279,11 +298,11 @@
                 svgObject.setAttribute('data', newFileName);
                 viewerContainer.appendChild(svgObject);
             }
-            
+
             var eventStream = newFileName.replace('kidung-jemaat/render/', 'internal/diagnostic/verse/')
             console.log(eventStream)
             const eventSource = new EventSource(eventStream);
-             document.getElementById("indicator").innerHTML = "";
+            document.getElementById("indicator").innerHTML = "";
             eventSource.addEventListener('data', (event) => {
                 // 1. Parse incoming channel data
                 console.log("Data received:", event.data);
@@ -300,8 +319,6 @@
                 document.getElementById("indicator").innerHTML = inner;
 
 
-
-
             });
 
             eventSource.addEventListener('close', (event) => {
@@ -311,25 +328,46 @@
                 eventSource.close();
             });
 
+            fetchKeywords(newFileName);
         }
 
-        // Keyboard Listener for Arrow Keys
-        document.addEventListener('keydown', (event) => {
-            const verseInput = document.getElementById('verse');
-            if (event.key === 'ArrowLeft') {
-                verseInput.value = 1
-                changeImage(-1, verseInput.value, document.getElementById('deviceType').value, document.getElementById('gregorian').checked);
-            } else if (event.key === 'ArrowRight') {
-                changeImage(1, verseInput.value, document.getElementById('deviceType').value, document.getElementById('gregorian').checked);
-                verseInput.value = 1
-            } else if (event.key === 'ArrowUp') {
-                verseInput.value++
-                changeImage(0, verseInput.value, document.getElementById('deviceType').value, document.getElementById('gregorian').checked);
-            } else if (event.key === 'ArrowDown') {
-                verseInput.value--
-                changeImage(0, verseInput.value, document.getElementById('deviceType').value, document.getElementById('gregorian').checked);
-            }
-        });
+        function updateSvgDataUrl(element) {
+            const svgDisplay = document.getElementById('svg-display');
+            let currentData = svgDisplay.getAttribute('data');
+            let baseUrl = currentData.split('?')[0];
+            let currentParams = currentData.split('?')[1] || '';
+
+            let newParams = new URLSearchParams(currentParams);
+            newParams.set('q', element.innerHTML);
+
+            svgDisplay.setAttribute('data', `${baseUrl}?${newParams.toString()}`);
+        }
+
+        function fetchKeywords(dataUrl) {
+            const path = dataUrl.split('?')[0];
+            const keywordUrl = '/internal/keywords/' + path.replace('/kidung-jemaat/render/', '');
+
+            fetch(keywordUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const keywordsContent = document.getElementById('keywords-content');
+                    if (data && Array.isArray(data.data)) { // {"data":["array", "of", "string"]}
+                        let html = '';
+                        data.data.forEach(word => {
+                            html += `<span class="pill" onclick="updateSvgDataUrl(this)">${word}</span>`;
+                        });
+                        keywordsContent.innerHTML = html;
+                        keywordsContent.style.display = 'flex';
+                        keywordsContent.style.flexWrap = 'wrap';
+                    } else {
+                        keywordsContent.innerHTML = 'No keywords available';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to fetch keywords:', error);
+                    document.getElementById('keywords-content').innerHTML = 'Failed to load keywords';
+                });
+        }
     </script>
 </body >
 

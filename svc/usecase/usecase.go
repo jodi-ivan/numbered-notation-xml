@@ -204,6 +204,44 @@ func (i *interactor) RenderHymn(ctx context.Context, canv canvas.Canvas, hymnNum
 		}()
 	}
 
+	if param.QueryHighlight != "" {
+		searchQuery := search.BuildQuery(ctx, param.QueryHighlight, search.WithDocIDs(fmt.Sprintf("%d%s", metaData.HymnID, metaData.Variant.String)))
+		hits, err := i.searchProvider.Search(ctx, searchQuery)
+		if err != nil {
+			log.Printf("[RenderHymn] failed to lookup highlight, err %s\n", err.Error())
+			return err // TODO: shouldn't this be optional?
+		}
+
+		highlights := []HighlightSearchResult{}
+
+		for _, hit := range hits.Hits {
+			highlights = append(highlights, highlightOne(search.NewSearchMatch(hit), false))
+		}
+
+		spans := map[string][]Span{}
+
+		for _, h := range highlights {
+			if len(h.Title.Spans) > 0 {
+				spans["title"] = h.Title.Spans
+			}
+
+			for v, verseHit := range h.Verse {
+				spans[strconv.Itoa(v)] = verseHit.SpanVerse
+			}
+		}
+		param.Hightliter = map[string][]params.Span{}
+		for k, v := range spans {
+
+			if len(param.Hightliter[k]) == 0 {
+				param.Hightliter[k] = []params.Span{}
+			}
+
+			for _, sv := range v {
+				param.Hightliter[k] = append(param.Hightliter[k], params.Span{sv.Start, sv.End})
+			}
+		}
+	}
+
 	metaWithParsedVerse := &entity.HymnMetaData{
 		HymnMetadata: metaData,
 		ParsedVerse:  map[int][][]entity.LyricWordVerse{},

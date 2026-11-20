@@ -12,12 +12,13 @@ type Span struct {
 }
 
 type HighlightText struct {
-	Snippet string `json:"snippet"`
-	Spans   []Span `json:"spans"`
+	Snippet   string `json:"snippet"`
+	Spans     []Span `json:"spans"`
+	SpanVerse []Span `json:"span_verses,omitempty"`
 }
 
 type HighlightSearchResult struct {
-	Score      float64               `json:"score"`
+	Score      float64               `json:"score,omitempty"`
 	Title      HighlightText         `json:"title"`
 	Verse      map[int]HighlightText `json:"verse,omitempty"`
 	HymnNo     int                   `json:"hymnno,omitempty"`
@@ -25,4 +26,6 @@ type HighlightSearchResult struct {
 	FullTitle  string                `json:"full_title"`
 	MoreVerses int                   `json:"moreverses,omitempty"`
 	Tier       HitTier               `json:"tier,omitempty"`
+
+	TotalHitVerse int `json:"total_verse,omitempty"`
 }

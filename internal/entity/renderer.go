@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/musicxml"
+	"github.com/jodi-ivan/numbered-notation-xml/utils/params"
 )
 
 type LyricVal []Text
@@ -24,9 +25,10 @@ type Text struct {
 	Italic    bool
 }
 type Lyric struct {
-	Text     []Text
-	Syllabic musicxml.LyricSyllabic
-	Verse    int
+	Text       []Text
+	Syllabic   musicxml.LyricSyllabic
+	Verse      int
+	Highlights params.Span
 }
 
 type Slur struct {

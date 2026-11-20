@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 
 	"github.com/jodi-ivan/numbered-notation-xml/internal/constant"
@@ -174,6 +175,27 @@ func (v *verseInteractor) parse(ctx context.Context, y int, metadata *entity.Hym
 	return result
 }
 
+func spansForLine(spans []params.Span, lineStart, lineEnd int) []params.Span {
+	result := make([]params.Span, 0)
+
+	for _, span := range spans {
+		// No intersection.
+		if span[1] <= lineStart || span[0] >= lineEnd {
+			continue
+		}
+
+		start := max(span[0], lineStart)
+		end := min(span[1], lineEnd)
+
+		result = append(result, params.Span{
+			start - lineStart,
+			end - lineStart + 1,
+		})
+	}
+
+	return result
+}
+
 func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y int, metadata *entity.HymnMetaData) VerseInfo {
 	canv.Group("class='verses'", "style='font-family:Caladea;font-size:16px'")
 
@@ -206,6 +228,7 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 	maxY := float64(0)
 	versesNo := utils.GetMapSortedKeys(parsedVerse.Verses)
 	for _, i := range versesNo {
+		verseOffset := 0
 
 		canv.Group("class='verse'", fmt.Sprintf("number='%d'", i))
 		yVerse := y
@@ -252,10 +275,22 @@ func (v *verseInteractor) RenderVerse(ctx context.Context, canv canvas.Canvas, y
 		prefixNum := fmt.Sprintf("%d. ", i)
 		canv.Text(xPos-5-int(v.Lyric.CalculateLyricWidth(prefixNum)), y, prefixNum)
 		for line, liveVerse := range currentVerse.Verse {
+			lineStart := verseOffset
+			lineEnd := lineStart + len(liveVerse)
+
+			lineSpans := spansForLine(
+				prm.Hightliter[strconv.Itoa(i)],
+				lineStart,
+				lineEnd,
+			)
+
+			// render highlighted line...
+
+			verseOffset = lineEnd
 			if strings.HasPrefix(liveVerse, "    ") {
 				liveVerse = strings.ReplaceAll(liveVerse, "    ", strings.Repeat("&#160;", 4))
 			}
-			canv.TextUnescaped(float64(xPos), float64(y), liveVerse)
+			lyric.PrintWithHighlight(canv, liveVerse, lineSpans, 0, float64(xPos), float64(y))
 			cursor := footnote.VerseLineCursor{
 				VerseNo:    i,
 				LinePos:    line + 1,

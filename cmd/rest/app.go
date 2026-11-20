@@ -64,6 +64,7 @@ func main() {
 	ws.Register("POST", "/internal/v2/verse-parser", &lab.LyricParserV2{
 		Db: db,
 	})
+	ws.Register("GET", "/internal/keywords/:number", &lab.KeywordsAdapter{Repo: repo, Search: provider})
 	ws.Register("PUT", "/internal/verse/hymn/:hymn/verse/:verse", &lab.VerseManagement{
 		VerseRepo: repo,
 	})

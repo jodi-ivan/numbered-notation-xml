@@ -52,7 +52,10 @@ func stem(word string) string {
 		if stripped[0:len(stripped)/2] == stripped[len(stripped)/2:] {
 			return stripped[len(stripped)/2:]
 		}
+	}
 
+	if stripped := strings.TrimPrefix(word, "me"); stripped[0:len(stripped)/2] == stripped[len(stripped)/2:] {
+		return "me" + stripped[0:len(stripped)/2]
 	}
 
 	return word
@@ -97,13 +100,7 @@ func (f *filter) Filter(tokens analysis.TokenStream) analysis.TokenStream {
 				End:      t.Start + len(splitted[1])*2,
 				Type:     t.Type,
 			}
-			// sat := &analysis.Token{
-			// 	Term:     []byte(splitted[0]),
-			// 	Position: t.Position,
-			// 	Start:    t.Start,
-			// 	End:      t.Start + len(splitted[1]),
-			// 	Type:     t.Type,
-			// }
+
 			result = append(result, at) //, sat)
 			return result
 		}
